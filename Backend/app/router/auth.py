@@ -6,6 +6,7 @@ from app.core.database import get_session
 from app.models import User
 from app.schemas.auth import (
     RegisterRequest,
+    TokenResponse,
     UserRead, AccessTokenResponse, RefreshTokenRequest
 )
 from app.services.auth_service import AuthService
@@ -18,7 +19,7 @@ def register(data: RegisterRequest,session: Session = Depends(get_session)):
     user = AuthService.register(session=session,data=data)
     return user
 
-@router.post("/login")
+@router.post("/login", response_model=TokenResponse)
 def login(
     form_data: OAuth2PasswordRequestForm = Depends(),
     session: Session = Depends(get_session),
@@ -34,7 +35,7 @@ def login(
         "token_type": "bearer"
     }
 
-@router.get("/me")
+@router.get("/me", response_model=UserRead)
 def get_me(current_user: User = Depends(get_current_user)):
     return current_user
 

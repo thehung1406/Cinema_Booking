@@ -19,8 +19,9 @@ class TokenResponse(BaseModel):
 
 class UserRead(BaseModel):
     id: int
+    username: str
     email: EmailStr
-    full_name: str
+    full_name: Optional[str]
     phone: Optional[str]
     role: str
 
