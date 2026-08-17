@@ -1,4 +1,4 @@
-# =====================
+﻿# =====================
 # Python
 # =====================
 __pycache__/
@@ -8,6 +8,8 @@ __pycache__/
 *.log
 .env
 .env.*
+!.env.example
+!.env.*.example
 .venv/
 venv/
 ENV/
