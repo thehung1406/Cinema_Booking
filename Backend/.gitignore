@@ -1,0 +1,68 @@
+# =====================
+# Python
+# =====================
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.log
+.env
+.env.*
+.venv/
+venv/
+ENV/
+env/
+
+# =====================
+# IDE
+# =====================
+.idea/
+.vscode/
+*.iml
+
+# =====================
+# OS
+# =====================
+.DS_Store
+Thumbs.db
+
+# =====================
+# Docker
+# =====================
+docker-data/
+postgres-data/
+*.pid
+
+# =====================
+# Database
+# =====================
+*.sqlite3
+
+# =====================
+# Test / Coverage
+# =====================
+.coverage
+htmlcov/
+.pytest_cache/
+
+# =====================
+# Build
+# =====================
+dist/
+build/
+*.egg-info/
+
+# =====================
+# Alembic
+# =====================
+# DON'T ignore migration files!
+# alembic/versions/ MUST be committed to Git
+alembic/__pycache__/
+
+# =====================
+# AI / Agent Skills
+# =====================
+.agents/
+.agent/
+.gemini/
+skills-lock.json
