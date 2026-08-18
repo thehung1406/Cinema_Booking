@@ -1,9 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
-
-
-const API_BASE_URL = 'http://localhost:8000';
+import api from '../config/api';
+import { setSession } from '../services/authStorage';
 
 const LoginPage = () => {
   const navigate = useNavigate();
@@ -89,7 +87,7 @@ const LoginPage = () => {
       
       if (isSignUp) {
         // Registration request
-        response = await axios.post(`${API_BASE_URL}/auth/register`, {
+        response = await api.post('/auth/register', {
           username: formData.username,
           email: formData.email,
           password: formData.password,
@@ -103,7 +101,7 @@ const LoginPage = () => {
           loginFormData.append('username', formData.username);
           loginFormData.append('password', formData.password);
           
-          const loginResponse = await axios.post(`${API_BASE_URL}/auth/login`, loginFormData, {
+          const loginResponse = await api.post('/auth/login', loginFormData, {
             headers: {
               'Content-Type': 'application/x-www-form-urlencoded'
             }
@@ -117,7 +115,7 @@ const LoginPage = () => {
         loginFormData.append('username', formData.username);
         loginFormData.append('password', formData.password);
         
-        response = await axios.post(`${API_BASE_URL}/auth/login`, loginFormData, {
+        response = await api.post('/auth/login', loginFormData, {
           headers: {
             'Content-Type': 'application/x-www-form-urlencoded'
           }
@@ -139,41 +137,25 @@ const LoginPage = () => {
 
   // Handle successful login
   const handleLoginSuccess = async (loginData, userData = null) => {
-    const { access_token, refresh_token, token_type } = loginData;
+    const { access_token } = loginData;
   
     // Save user info if available (from registration)
     if (userData) {
       // Lưu cả token và user info
-      const userInfoWithToken = {
-        ...userData,
-        access_token: access_token,
-        refresh_token: refresh_token,
-        token_type: token_type || 'bearer'
-      };
-      localStorage.setItem('userInfo', JSON.stringify(userInfoWithToken));
+      setSession(loginData, userData);
     } else {
       // Lấy thông tin user từ API /auth/me
       try {
-        const userResponse = await axios.get(`${API_BASE_URL}/auth/me`, {
+        const userResponse = await api.get('/auth/me', {
           headers: {
-            'Authorization': `${token_type} ${access_token}`
+            'Authorization': `Bearer ${access_token}`
           }
         });
-        // Lưu cả token và user info
-        const userInfoWithToken = {
-          ...userResponse.data,
-          access_token: access_token,
-          refresh_token: refresh_token,
-          token_type: token_type || 'bearer'
-        };
-        localStorage.setItem('userInfo', JSON.stringify(userInfoWithToken));
+        setSession(loginData, userResponse.data);
       } catch (error) {
         console.error('Lỗi khi lấy thông tin user:', error);
       }
     }
-    
-    // Dispatch event để HomePage cập nhật trạng thái
-    window.dispatchEvent(new Event('loginStatusChanged'));
     
     // Redirect to home page
     navigate(-1);
