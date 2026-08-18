@@ -1,4 +1,4 @@
-﻿# 🎬 Cinema Booking System
+# 🎬 Cinema Booking System
 
 Hệ thống Đặt vé Xem phim Trực tuyến Fullstack xây dựng theo kiến trúc **Monorepo** kết hợp **FastAPI** (Backend) + **React Vite** (Frontend) + **PostgreSQL 15** + **Redis 7** + **Celery Worker**.
 
@@ -9,21 +9,21 @@ Hệ thống Đặt vé Xem phim Trực tuyến Fullstack xây dựng theo kiế
 | Phân hệ | Công nghệ |
 |:---|:---|
 | **Backend** | Python 3.12, FastAPI, SQLModel / SQLAlchemy, Pydantic, Alembic |
-| **Frontend** | React 18, Vite, React Router, Axios, CSS Modules / Vanilla CSS |
+| **Frontend** | React 18, Vite, React Router, Axios, TailwindCSS / CSS Modules |
 | **Database & Cache** | PostgreSQL 15, Redis 7 (Token Blacklist & Real-time Seat Lock) |
 | **Background Tasks** | Celery Worker, Celery Beat, Flower UI Dashboard |
 | **DevOps & Container** | Docker, Docker Compose, Git Workflow |
 
 ---
 
-## 📁 Cấu Trúc Dự Án Hiện Tại (Repository Structure)
+## 📁 Cấu Trúc Dự Án Hiện Tại (Repository Structure trên `main`)
 
 ```text
 Cinema_Booking/
 ├── Backend/                                # Backend FastAPI Project
 │   ├── alembic/                            # Quản lý Database Migrations
 │   │   ├── versions/
-│   │   │   ├── 001_initial_migration.py    # Khởi tạo schema ban đầu
+│   │   │   ├── 001_initial_migration.py    # Khởi tạo schema ban đầu (theaters, rooms, films, users...)
 │   │   │   ├── 002_optimize_indexes_types_cascade.py # Composite index & Numeric
 │   │   │   └── 003_add_seat_type_table.py  # Bảng seat_types & normalize giá ghế
 │   │   └── env.py
@@ -33,20 +33,39 @@ Cinema_Booking/
 │   │   │   ├── database.py
 │   │   │   └── redis.py
 │   │   ├── models/                         # Database Models (SQLModel)
+│   │   │   ├── cinema_room.py              # Model bảng cinema_rooms
+│   │   │   ├── film.py                     # Model bảng films
+│   │   │   ├── theater.py                  # Model bảng theaters
 │   │   │   └── user.py                     # Model bảng users
 │   │   ├── repositories/                   # Tầng truy vấn Database (Data Access)
-│   │   │   └── auth_repo.py
+│   │   │   ├── auth_repo.py                # Truy vấn Users & Refresh Token
+│   │   │   ├── cinema_room_repo.py         # Truy vấn Phòng chiếu theo Cụm rạp
+│   │   │   ├── film_repo.py                # Truy vấn Phim & Lọc phim
+│   │   │   └── theater_repo.py             # Truy vấn Cụm rạp & Lọc rạp theo phim
 │   │   ├── router/                         # API Endpoints (Controllers)
-│   │   │   └── auth.py                     # Router /auth (login, register, me, logout)
+│   │   │   ├── auth.py                     # Router /auth (login, register, me, logout)
+│   │   │   ├── cinema_room.py              # Router /cinema_rooms (phòng chiếu theo rạp)
+│   │   │   ├── film.py                     # Router /films (danh sách phim, chi tiết)
+│   │   │   └── theater.py                  # Router /theater (danh sách rạp, lọc theo phim)
 │   │   ├── schemas/                        # DTO / Pydantic Request & Response
-│   │   │   └── auth.py
+│   │   │   ├── auth.py
+│   │   │   ├── cinema_room.py
+│   │   │   ├── film.py
+│   │   │   └── theater.py
 │   │   ├── services/                       # Business Logic Layer
-│   │   │   └── auth_service.py
+│   │   │   ├── auth_service.py
+│   │   │   ├── cinema_room_service.py
+│   │   │   ├── film_service.py
+│   │   │   └── theater_service.py
 │   │   └── utils/                          # Tiện ích bảo mật & dependencies
 │   │       ├── dependencies.py             # Auth middleware (get_current_user, require_staff)
 │   │       ├── enum.py                     # Enum phân quyền (UserRole)
 │   │       └── security.py                 # Bcrypt password hashing & JWT utils
+│   ├── tests/                              # Unit & Contract Tests
+│   │   ├── test_auth_contract.py           # Contract test cho Auth module
+│   │   └── test_theater_contract.py        # Contract test cho Theater & Room module
 │   ├── .dockerignore
+│   ├── .env.example                        # Mẫu biến môi trường Backend
 │   ├── .gitignore
 │   ├── alembic.ini                         # Cấu hình kết nối Alembic
 │   ├── docker-compose.yml                  # Điều phối 7 containers (App, DB, Redis, Celery...)
@@ -61,8 +80,12 @@ Cinema_Booking/
 │   ├── src/
 │   │   ├── assets/
 │   │   ├── components/                     # React UI Components
+│   │   │   ├── CinemaList.jsx              # Giao diện Danh sách rạp & lọc thành phố
 │   │   │   ├── LoginPage.jsx               # Giao diện Đăng nhập / Đăng ký
 │   │   │   ├── MainHomePage.jsx            # Header/Navbar & Auth state
+│   │   │   ├── Movie.jsx                   # Giao diện Danh sách phim
+│   │   │   ├── MovieDetail.jsx             # Giao diện Chi tiết phim & trailer
+│   │   │   ├── TicketBooking.jsx           # Giao diện Đặt vé & lọc rạp theo phim
 │   │   │   └── UserInfor.jsx               # Quản lý tài khoản & đổi mật khẩu
 │   │   ├── config/
 │   │   │   └── api.js                      # Axios instance + Bearer token interceptor
@@ -70,6 +93,7 @@ Cinema_Booking/
 │   │   ├── App.jsx                         # Cấu hình Router Frontend
 │   │   ├── index.css
 │   │   └── main.jsx                        # Entrypoint render React DOM
+│   ├── .env.example                        # Mẫu biến môi trường Frontend
 │   ├── eslint.config.js
 │   ├── index.html
 │   ├── package.json
@@ -162,8 +186,8 @@ npm run dev
 | Mã Module | Tên Module | Trạng thái trên `main` |
 |:---:|:---|:---:|
 | `MOD-01` | **Quản lý Xác thực & Tài khoản (Auth & User)** | ✅ **Đã hoàn thành** |
-| `MOD-02` | **Quản lý Phim & Danh mục (Movie Management)** | ⏳ Đang tích hợp |
-| `MOD-03` | **Quản lý Cụm Rạp & Phòng Chiếu (Theaters & Rooms)** | ⏳ Đang tích hợp |
+| `MOD-02` | **Quản lý Phim & Danh mục (Movie Management)** | ✅ **Đã hoàn thành** |
+| `MOD-03` | **Quản lý Cụm Rạp & Phòng Chiếu (Theaters & Rooms)** | ✅ **Đã hoàn thành** |
 | `MOD-04` | **Quản lý Suất Chiếu (Showtimes Scheduling)** | ⏳ Đang tích hợp |
 | `MOD-05` | **Quản lý Loại Ghế & Giữ Ghế Real-time (Seats & Redis Lock)** | ⏳ Đang tích hợp |
 | `MOD-06` | **Quản lý Đặt Vé & Đơn Hàng (Booking Management)** | ⏳ Đang tích hợp |
