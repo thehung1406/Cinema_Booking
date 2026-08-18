@@ -1,4 +1,3 @@
-import axios from "axios";
 import { useEffect, useState } from "react";
 import {
   FaArrowRight,
@@ -8,8 +7,7 @@ import {
   FaTicketAlt,
 } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
-
-const API_BASE_URL = 'http://localhost:8000';
+import api from "../config/api";
 
 function TicketBooking() {
   const navigate = useNavigate();
@@ -28,8 +26,9 @@ function TicketBooking() {
   const fetchShowtimes = async (filmId, theaterId, date) => {
     try {
       setLoading(true);
-      // Gọi API GET /showtimes/ với query parameters
-      const response = await axios.get(`${API_BASE_URL}/showtimes/`, {
+      setError(null);
+      // Gọi API GET /showtimes với query parameters
+      const response = await api.get("/showtimes", {
         params: {
           film_id: parseInt(filmId),
           theater_id: parseInt(theaterId),
@@ -51,8 +50,9 @@ function TicketBooking() {
     const fetchData = async () => {
       try {
         setLoading(true);
+        setError(null);
         // Gọi API GET /films/ từ backend
-        const moviesResponse = await axios.get(`${API_BASE_URL}/films/`);
+        const moviesResponse = await api.get("/films/");
         setMovies(moviesResponse.data);
         setLoading(false);
       } catch (err) {
@@ -79,10 +79,11 @@ function TicketBooking() {
 
     try {
       setLoading(true);
+      setError(null);
       console.log('Đang tải danh sách rạp có chiếu phim...');
       
-      // Gọi API GET /theater/{film_id} để lấy danh sách rạp chiếu phim này
-      const response = await axios.get(`${API_BASE_URL}/theater/${movieId}`);
+      // Gọi API GET /theater/by-film/{film_id} để lấy danh sách rạp chiếu phim này
+      const response = await api.get(`/theater/by-film/${movieId}`);
       
       console.log('Response từ API:', response.data);
       
@@ -232,7 +233,7 @@ function TicketBooking() {
               className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               onChange={handleDateChange}
               disabled={!selectedCinema}
-              min="2023-01-01"
+              min={new Date().toISOString().split("T")[0]}
               max="2030-12-31"
               value={selectedDate}
             />

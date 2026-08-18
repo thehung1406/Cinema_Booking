@@ -1,10 +1,11 @@
-from sqlmodel import Session
+from sqlmodel import Session, select
 from datetime import date
 from fastapi import HTTPException, status
 from app.repositories.showtime_repo import ShowtimeRepository
-from app.repositories.film_repo import FilmRepository
-from app.repositories.cinema_room_repo import CinemaRoomRepository
-from app.repositories.theater_repo import TheaterRepo
+from app.models.showtime import Showtime
+from app.models.film import Film
+from app.models.cinema_room import CinemaRoom
+from app.models.theater import Theater
 
 class ShowtimeService:
 
@@ -23,37 +24,24 @@ class ShowtimeService:
     
     @staticmethod
     def get_showtime_by_id(db: Session, showtime_id: int):
-        showtime = ShowtimeRepository.get_showtime_by_id(db=db, showtime_id=showtime_id)
-        if not showtime:
+        # Single JOIN query thay vì 4 query riêng biệt
+        stmt = (
+            select(Showtime, Film, CinemaRoom, Theater)
+            .join(Film, Film.id == Showtime.film_id)
+            .join(CinemaRoom, CinemaRoom.id == Showtime.room_id)
+            .join(Theater, Theater.id == CinemaRoom.theater_id)
+            .where(Showtime.id == showtime_id)
+        )
+        result = db.exec(stmt).first()
+
+        if not result:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Không tìm thấy suất chiếu"
             )
-        
-        # Lấy thông tin phim
-        film = FilmRepository.get_by_id(db=db, film_id=showtime.film_id)
-        if not film:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Không tìm thấy thông tin phim"
-            )
-        
-        # Lấy thông tin phòng chiếu
-        room = CinemaRoomRepository.get_by_id(db=db, room_id=showtime.room_id)
-        if not room:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Không tìm thấy thông tin phòng chiếu"
-            )
-        
-        # Lấy thông tin rạp
-        theater = TheaterRepo.get_by_id(db=db, theater_id=room.theater_id)
-        if not theater:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Không tìm thấy thông tin rạp"
-            )
-        
+
+        showtime, film, room, theater = result
+
         # Trả về đầy đủ thông tin
         return {
             "id": showtime.id,

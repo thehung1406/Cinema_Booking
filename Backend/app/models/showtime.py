@@ -1,6 +1,13 @@
 from sqlmodel import SQLModel, Field, Relationship
 from typing import Optional, List
 from datetime import date, time
+from enum import Enum
+
+
+class ShowtimeStatus(str, Enum):
+    ACTIVE = "ACTIVE"
+    CANCELLED = "CANCELLED"
+    COMPLETED = "COMPLETED"
 
 
 class Showtime(SQLModel, table=True):
@@ -16,7 +23,7 @@ class Showtime(SQLModel, table=True):
     end_time: time
 
     format: str = Field(max_length=20)
-    status: str = Field(default="ACTIVE", max_length=20)
+    status: ShowtimeStatus = Field(default=ShowtimeStatus.ACTIVE, max_length=20)
 
     # Relationships
     film: "Film" = Relationship(back_populates="showtimes")
