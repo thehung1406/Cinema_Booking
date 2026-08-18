@@ -22,12 +22,13 @@ function TicketBooking() {
   );
   const [showtimes, setShowtimes] = useState([]);
   const [selectedShowtime, setSelectedShowtime] = useState(null);
-
+  
   const fetchShowtimes = async (filmId, theaterId, date) => {
     try {
       setLoading(true);
-      // Gọi API GET /showtimes/ với query parameters
-      const response = await api.get("/showtimes/", {
+      setError(null);
+      // Gọi API GET /showtimes với query parameters
+      const response = await api.get("/showtimes", {
         params: {
           film_id: parseInt(filmId),
           theater_id: parseInt(theaterId),
@@ -49,6 +50,7 @@ function TicketBooking() {
     const fetchData = async () => {
       try {
         setLoading(true);
+        setError(null);
         // Gọi API GET /films/ từ backend
         const moviesResponse = await api.get("/films/");
         setMovies(moviesResponse.data);
@@ -77,13 +79,14 @@ function TicketBooking() {
 
     try {
       setLoading(true);
+      setError(null);
       console.log('Đang tải danh sách rạp có chiếu phim...');
-
+      
       // Gọi API GET /theater/by-film/{film_id} để lấy danh sách rạp chiếu phim này
       const response = await api.get(`/theater/by-film/${movieId}`);
-
+      
       console.log('Response từ API:', response.data);
-
+      
       // Xử lý response - đảm bảo là array
       let theaterList = [];
       if (Array.isArray(response.data)) {
@@ -92,7 +95,7 @@ function TicketBooking() {
         // Nếu là object, có thể data nằm trong một property
         theaterList = response.data.theaters || response.data.data || [response.data];
       }
-
+      
       console.log('Danh sách rạp đã xử lý:', theaterList);
       setCinemas(theaterList);
       setSelectedCinema("");
@@ -230,7 +233,7 @@ function TicketBooking() {
               className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               onChange={handleDateChange}
               disabled={!selectedCinema}
-              min="2023-01-01"
+              min={new Date().toISOString().split("T")[0]}
               max="2030-12-31"
               value={selectedDate}
             />
@@ -263,9 +266,9 @@ function TicketBooking() {
                       // Nếu là datetime đầy đủ
                       const startTime = new Date(showtime.start_time);
                       if (!isNaN(startTime.getTime())) {
-                        timeString = startTime.toLocaleTimeString('vi-VN', {
-                          hour: '2-digit',
-                          minute: '2-digit'
+                        timeString = startTime.toLocaleTimeString('vi-VN', { 
+                          hour: '2-digit', 
+                          minute: '2-digit' 
                         });
                       } else {
                         timeString = showtime.start_time;
