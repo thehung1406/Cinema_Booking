@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
-import { FaStar, FaCalendarAlt, FaClock, FaFilm, FaLanguage, FaClosedCaptioning } from "react-icons/fa";
-
-const API_BASE_URL = 'http://localhost:8000';
+import { FaCalendarAlt, FaClock, FaFilm, FaLanguage, FaClosedCaptioning } from "react-icons/fa";
+import api from "../config/api";
 
 const Movie = () => {
   const [movies, setMovies] = useState([]);
@@ -20,13 +18,13 @@ const Movie = () => {
       try {
         setLoading(true);
         // Gọi API GET /films/ từ backend
-        const response = await axios.get(`${API_BASE_URL}/films/`);
+        const response = await api.get("/films/");
         
         // Lấy chi tiết cho từng phim để có thêm thông tin language, subtitle, release_date
         const detailedMovies = await Promise.all(
           response.data.map(async (film) => {
             try {
-              const detailRes = await axios.get(`${API_BASE_URL}/films/${film.id}`);
+              const detailRes = await api.get(`/films/${film.id}`);
               return detailRes.data;
             } catch (err) {
               console.error(`Lỗi khi lấy chi tiết phim ${film.id}:`, err);
