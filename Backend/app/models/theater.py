@@ -25,4 +25,3 @@ class Theater(SQLModel, table=True):
 
     # Relationships
     cinema_rooms: List["CinemaRoom"] = Relationship(back_populates="theater")
-

@@ -1,4 +1,3 @@
-import axios from "axios";
 import { useEffect, useState } from "react";
 import {
   FaArrowRight,
@@ -8,8 +7,7 @@ import {
   FaTicketAlt,
 } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
-
-const API_BASE_URL = 'http://localhost:8000';
+import api from "../config/api";
 
 function TicketBooking() {
   const navigate = useNavigate();
@@ -24,12 +22,12 @@ function TicketBooking() {
   );
   const [showtimes, setShowtimes] = useState([]);
   const [selectedShowtime, setSelectedShowtime] = useState(null);
-  
+
   const fetchShowtimes = async (filmId, theaterId, date) => {
     try {
       setLoading(true);
       // Gọi API GET /showtimes/ với query parameters
-      const response = await axios.get(`${API_BASE_URL}/showtimes/`, {
+      const response = await api.get("/showtimes/", {
         params: {
           film_id: parseInt(filmId),
           theater_id: parseInt(theaterId),
@@ -52,7 +50,7 @@ function TicketBooking() {
       try {
         setLoading(true);
         // Gọi API GET /films/ từ backend
-        const moviesResponse = await axios.get(`${API_BASE_URL}/films/`);
+        const moviesResponse = await api.get("/films/");
         setMovies(moviesResponse.data);
         setLoading(false);
       } catch (err) {
@@ -80,12 +78,12 @@ function TicketBooking() {
     try {
       setLoading(true);
       console.log('Đang tải danh sách rạp có chiếu phim...');
-      
-      // Gọi API GET /theater/{film_id} để lấy danh sách rạp chiếu phim này
-      const response = await axios.get(`${API_BASE_URL}/theater/${movieId}`);
-      
+
+      // Gọi API GET /theater/by-film/{film_id} để lấy danh sách rạp chiếu phim này
+      const response = await api.get(`/theater/by-film/${movieId}`);
+
       console.log('Response từ API:', response.data);
-      
+
       // Xử lý response - đảm bảo là array
       let theaterList = [];
       if (Array.isArray(response.data)) {
@@ -94,7 +92,7 @@ function TicketBooking() {
         // Nếu là object, có thể data nằm trong một property
         theaterList = response.data.theaters || response.data.data || [response.data];
       }
-      
+
       console.log('Danh sách rạp đã xử lý:', theaterList);
       setCinemas(theaterList);
       setSelectedCinema("");
@@ -265,9 +263,9 @@ function TicketBooking() {
                       // Nếu là datetime đầy đủ
                       const startTime = new Date(showtime.start_time);
                       if (!isNaN(startTime.getTime())) {
-                        timeString = startTime.toLocaleTimeString('vi-VN', { 
-                          hour: '2-digit', 
-                          minute: '2-digit' 
+                        timeString = startTime.toLocaleTimeString('vi-VN', {
+                          hour: '2-digit',
+                          minute: '2-digit'
                         });
                       } else {
                         timeString = showtime.start_time;

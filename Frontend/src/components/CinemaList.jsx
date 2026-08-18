@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { FaStar,  FaMapMarkerAlt,  FaTicketAlt,  FaInfoCircle,} from "react-icons/fa";
-import axios from "axios";
+import { FaStar,  FaMapMarkerAlt,  FaTicketAlt } from "react-icons/fa";
+import { Link } from "react-router-dom";
+import api from "../config/api";
 
-const API_BASE_URL = 'http://localhost:8000';
 function CinemaList() {
   const [cinemas, setCinemas] = useState([]);
   const [selectedCity, setSelectedCity] = useState("all");
@@ -12,7 +12,7 @@ function CinemaList() {
       try {
         setLoading(true);
         // Sử dụng API GET /theater/ để lấy danh sách theaters
-        const cinemaRes = await axios.get(`${API_BASE_URL}/theater/`);
+        const cinemaRes = await api.get("/theater/");
         setCinemas(cinemaRes.data);
         setLoading(false);
       } catch (error) {
@@ -105,25 +105,18 @@ function CinemaCard({ cinema }) {
         <div className="flex items-center mb-3">
           <FaStar className="text-yellow-500 mr-2" />
           <p className="text-gray-700">
-            {cinema.rating} ({cinema.reviewCount} đánh giá)
+            {cinema.rating ? `${cinema.rating}/5` : "Chưa có đánh giá"}
           </p>
         </div>
         <div className="mb-4">
         </div>
         <div className="flex space-x-2">
-          <a
-            href={`/cinemaDetail/${cinema.id}`}
+          <Link
+            to="/TicketBooking"
             className="flex-1 bg-red-700 hover:bg-red-800 text-white text-center py-2 px-4 rounded-lg font-semibold flex items-center justify-center"
-          
           >
-            <FaInfoCircle className="mr-2" /> Chi tiết
-          </a>
-          <a
-            href={`/cinema/${cinema.id}/showtimes`}
-            className="flex-1 bg-gray-800 hover:bg-gray-900 text-white text-center py-2 px-4 rounded-lg font-semibold flex items-center justify-center"
-          >
-            <FaTicketAlt className="mr-2" /> Lịch chiếu
-          </a>
+            <FaTicketAlt className="mr-2" /> Đặt vé
+          </Link>
         </div>
       </div>
     </div>

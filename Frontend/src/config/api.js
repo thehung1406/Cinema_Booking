@@ -1,9 +1,10 @@
 import axios from 'axios';
 
-// Base URL cho API - sử dụng proxy trong development
-export const API_BASE_URL = import.meta.env.MODE === 'development' 
-  ? '/api' 
-  : 'http://localhost:8000';
+// Base URL cho API - ưu tiên env, development mặc định dùng proxy của Vite.
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
+  || (import.meta.env.MODE === 'development'
+    ? import.meta.env.VITE_API_PROXY_PATH || '/api'
+    : '/api');
 
 // Tạo axios instance với cấu hình mặc định
 export const api = axios.create({

@@ -1,5 +1,5 @@
 from sqlmodel import SQLModel
-from typing import Optional, List
+from typing import Optional
 
 
 class TheaterRead(SQLModel):
@@ -9,5 +9,5 @@ class TheaterRead(SQLModel):
     city: str
     rating: Optional[float] = None
     image: Optional[str] = None
-    technologies: List[str] = []
+    technologies: Optional[dict] = None
     special: Optional[str] = None
