@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { clearSession, getAccessToken } from '../services/authStorage';
 
 // Base URL cho API - ưu tiên env, development mặc định dùng proxy của Vite.
 export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
@@ -17,7 +18,7 @@ export const api = axios.create({
 // Interceptor để thêm token vào mọi request
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token');
+    const token = getAccessToken();
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -34,8 +35,7 @@ api.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       // Token hết hạn hoặc không hợp lệ
-      localStorage.removeItem('token');
-      localStorage.removeItem('isLoggedIn');
+      clearSession();
       window.location.href = '/LoginPage';
     }
     return Promise.reject(error);

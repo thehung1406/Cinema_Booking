@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { FaStar, FaCalendarAlt, FaClock, FaFilm, FaTicketAlt, FaPlay, FaMapMarkerAlt, FaLanguage, FaClosedCaptioning } from "react-icons/fa";
+import { FaClock, FaFilm, FaTicketAlt, FaPlay, FaMapMarkerAlt, FaLanguage, FaClosedCaptioning } from "react-icons/fa";
 import { useNavigate, useParams } from "react-router-dom";
-import axios from "axios";
-
-const API_BASE_URL = 'http://localhost:8000';
+import api from "../config/api";
 
 function MovieDetail() {
   const { id } = useParams();
@@ -33,7 +31,7 @@ function MovieDetail() {
       try {
         setLoading(true);
         // Gọi API GET /films/{film_id} từ backend
-        const response = await axios.get(`${API_BASE_URL}/films/${id}`);
+        const response = await api.get(`/films/${id}`);
         setMovie(response.data);
         setLoading(false);
       } catch (err) {

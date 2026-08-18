@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { User, Calendar, MapPin, Clock, CreditCard, Ticket, Edit3, Save, X, Filter } from 'lucide-react';
+import { User, Calendar, MapPin, Clock, CreditCard, Ticket, Edit3, Save, X } from 'lucide-react';
 
 import { useNavigate } from 'react-router-dom';
+import api from '../config/api';
+import { clearSession, getAccessToken, getCurrentUser, updateCurrentUser } from '../services/authStorage';
 
 const UserInfo = () => {
   const navigate = useNavigate();
@@ -22,37 +23,17 @@ const UserInfo = () => {
   const [filteredBookings, setFilteredBookings] = useState([]);
   const [sortBy, setSortBy] = useState('newest');
 
-  // Tạo axios instance với token
-  const api = axios.create({
-    baseURL: '/api'
-  });
-
-  // Thêm interceptor để tự động thêm token vào mỗi request
-  api.interceptors.request.use(
-    (config) => {
-      const userInfo = JSON.parse(localStorage.getItem('userInfo'));
-      if (userInfo && userInfo.access_token) {
-        config.headers.Authorization = `Bearer ${userInfo.access_token}`;
-      }
-      return config;
-    },
-    (error) => {
-      return Promise.reject(error);
-    }
-  );
-
   useEffect(() => {
     const fetchUserData = async () => {
       try {
         setLoading(true);
-        const userInfoString = localStorage.getItem('userInfo');
-        if (!userInfoString) {
+        const userInfo1 = getCurrentUser();
+        if (!userInfo1) {
           navigate('/loginpage');
           return;
         }
         
-        const userInfo1 = JSON.parse(userInfoString);
-        if (!userInfo1.access_token) {
+        if (!getAccessToken()) {
           navigate('/loginpage');
           return;
         }
@@ -70,8 +51,7 @@ const UserInfo = () => {
 
     const fetchBookingHistory = async () => {
       try {
-        const userInfoString = localStorage.getItem('userInfo');
-        const userInfo1 = JSON.parse(userInfoString);
+        const userInfo1 = getCurrentUser();
         
         if (!userInfo1 || !userInfo1.access_token) {
           return;
@@ -88,7 +68,7 @@ const UserInfo = () => {
         // Xử lý lỗi 401
         if (err.response && err.response.status === 401) {
           alert('Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.');
-          localStorage.removeItem('userInfo');
+          clearSession();
           navigate('/loginpage');
         }
       }
@@ -96,7 +76,7 @@ const UserInfo = () => {
 
     fetchUserData();
     fetchBookingHistory();
-  }, []);
+  }, [navigate]);
 
   // Filter and sort bookings
   useEffect(() => {
@@ -135,19 +115,20 @@ const UserInfo = () => {
       setLoading(true);
       const formDataToSend = new FormData();
       Object.keys(formData).forEach(key => {
-        if (key !== 'avatar' && key !== 'created_at' && key !== 'role') {
+        if (!['avatar', 'created_at', 'role', 'access_token', 'refresh_token', 'token_type'].includes(key)) {
           formDataToSend.append(key, formData[key]);
         }
       });
 
-      const response = await axios.put(
-        '/api/user/profile',
+      const response = await api.put(
+        '/user/profile',
         formDataToSend,
       );
 
       if (response.data.success) {
-        setUserInfo(response.data.user);
-        localStorage.setItem('userInfo', JSON.stringify(response.data.user));
+        const updatedUser = updateCurrentUser(response.data.user);
+        setUserInfo(updatedUser);
+        setFormData(updatedUser);
         setSuccess('Cập nhật thông tin thành công!');
         setIsEditing(false);
       } else {
