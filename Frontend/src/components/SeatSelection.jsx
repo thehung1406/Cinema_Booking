@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api from '../config/api';
 
 const SeatSelection = () => {
   const { showtimeId } = useParams();
@@ -11,25 +11,6 @@ const SeatSelection = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [dataFetched, setDataFetched] = useState(false);
-  
-  // Tạo axios instance với interceptor để tự động thêm token
-  const api = axios.create({
-    baseURL: '/api'
-  });
-
-  // Thêm interceptor để tự động thêm token vào mỗi request
-  api.interceptors.request.use(
-    (config) => {
-      const userInfo = JSON.parse(localStorage.getItem('userInfo'));
-      if (userInfo && userInfo.access_token) {
-        config.headers.Authorization = `Bearer ${userInfo.access_token}`;
-      }
-      return config;
-    },
-    (error) => {
-      return Promise.reject(error);
-    }
-  );
 
   // Sử dụng useCallback để tránh tạo hàm mới mỗi lần render
   const fetchData = useCallback(async () => {
@@ -85,7 +66,7 @@ const SeatSelection = () => {
     try {
       // Lấy thông tin người dùng từ localStorage
       const userInfo = JSON.parse(localStorage.getItem('userInfo'));
-      if (!userInfo || !userInfo.id) {
+      if (!userInfo || (!userInfo.id && !userInfo.userId)) {
         // Chuyển hướng đến trang đăng nhập nếu chưa đăng nhập
         navigate('/loginpage', { 
           state: { 
@@ -96,16 +77,16 @@ const SeatSelection = () => {
         return;
       }
 
-      // Kiểm tra có token không
-      if (!userInfo.access_token) {
-        alert('Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.');
-        navigate('/loginpage');
-        return;
-      }
+      // Giữ ghế trong Redis trước khi tạo booking
+      await api.post("/seats/hold", {
+        showtime_id: parseInt(showtimeId),
+        seat_ids: selectedSeats
+      });
 
       // Tạo dữ liệu đặt vé
+      const currentUserId = userInfo.id || userInfo.userId;
       const bookingData = {
-        userId: userInfo.id,
+        userId: currentUserId,
         showtimeId: parseInt(showtimeId),
         totalAmount: calculateTotal(),
         paymentMethod: "Online",
@@ -115,7 +96,6 @@ const SeatSelection = () => {
         }),
       };
       console.log("Dữ liệu gửi lên backend:", bookingData);
-      console.log("Token:", userInfo.access_token);
 
       // Gửi request đặt vé
       const response = await api.post("/bookings", bookingData);
@@ -222,7 +202,7 @@ const formatTime = (timeString) => {
                       </div>
                       <div>
                       <p><span className="font-semibold">Ngày chiếu:</span> {formatDate(showtimeInfo.show_date)}</p>
-<p><span className="font-semibold">Giờ chiếu:</span> {formatTime(showtimeInfo.start_time, showtimeInfo.show_date)}</p>
+<p><span className="font-semibold">Giờ chiếu:</span> {formatTime(showtimeInfo.start_time)}</p>
 
                         <p><span className="font-semibold">Thời lượng:</span> {showtimeInfo.duration}</p>
                       </div>

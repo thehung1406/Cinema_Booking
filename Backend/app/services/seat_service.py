@@ -285,9 +285,6 @@ class SeatService:
             
         except Exception as e:
             logger.error(f"Error booking seats: {str(e)}")
-            # Rollback: Unlock tất cả ghế nếu có lỗi
-            for seat_id in seat_ids:
-                SeatLockManager.unlock_seat(showtime_id, seat_id, user_id)
             raise
     
     @staticmethod

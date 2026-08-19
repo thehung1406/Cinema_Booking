@@ -35,7 +35,7 @@ def create_vnpay_url(
     create_date = datetime.now().strftime('%Y%m%d%H%M%S')
     
     # VNPay yêu cầu amount là số nguyên (đã nhân 100 để chuyển từ đồng sang xu)
-    vnp_amount = int(request.amount * 100) if request.amount < 1000000 else int(request.amount)
+    vnp_amount = int(request.amount * 100)
     
     vnp_Params = {
         'vnp_Version': '2.1.0',
@@ -58,20 +58,12 @@ def create_vnpay_url(
     # Tạo hash data - VNPay yêu cầu URL encode giá trị trước khi hash
     hash_data = '&'.join([f"{k}={urllib.parse.quote_plus(str(v))}" for k, v in sorted_params])
     
-    # Debug: In ra hash data để kiểm tra
-    print("="*50)
-    print("Hash Data:", hash_data)
-    print("Hash Secret:", vnp_HashSecret)
-    
     # Tạo secure hash
     secure_hash = hmac.new(
         vnp_HashSecret.encode('utf-8'),
         hash_data.encode('utf-8'),
         hashlib.sha512
     ).hexdigest()
-    
-    print("Secure Hash:", secure_hash)
-    print("="*50)
     
     # Query string giống với hash_data
     query_string = hash_data

@@ -99,7 +99,11 @@ class BookingService:
             # Chỉ cập nhật khi thanh toán thành công
             # Ghế vẫn giữ trạng thái HOLD hoặc sẽ được lock bởi booking này
             
-            # 7. Xóa lock Redis (nếu có)
+            # 7. Commit transaction
+            db.commit()
+            logger.info(f"Booking {booking.id} committed successfully")
+            
+            # 8. Xóa lock Redis (nếu có) sau khi commit thành công
             for seat_id in seat_ids:
                 try:
                     SeatLockManager.unlock_seat(
@@ -109,10 +113,6 @@ class BookingService:
                     )
                 except Exception as e:
                     logger.warning(f"Failed to unlock seat {seat_id}: {e}")
-            
-            # 8. Commit transaction
-            db.commit()
-            logger.info(f"Booking {booking.id} committed successfully")
             
             # Trả về response
             return BookingResponse(

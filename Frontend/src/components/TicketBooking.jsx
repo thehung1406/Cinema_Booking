@@ -1,4 +1,3 @@
-import axios from "axios";
 import { useEffect, useState } from "react";
 import {
   FaArrowRight,
@@ -8,8 +7,7 @@ import {
   FaTicketAlt,
 } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
-
-const API_BASE_URL = 'http://localhost:8000';
+import api from "../config/api";
 
 function TicketBooking() {
   const navigate = useNavigate();
@@ -29,7 +27,7 @@ function TicketBooking() {
     try {
       setLoading(true);
       // Gọi API GET /showtimes/ với query parameters
-      const response = await axios.get(`${API_BASE_URL}/showtimes/`, {
+      const response = await api.get("/showtimes/", {
         params: {
           film_id: parseInt(filmId),
           theater_id: parseInt(theaterId),
@@ -52,7 +50,7 @@ function TicketBooking() {
       try {
         setLoading(true);
         // Gọi API GET /films/ từ backend
-        const moviesResponse = await axios.get(`${API_BASE_URL}/films/`);
+        const moviesResponse = await api.get("/films/");
         setMovies(moviesResponse.data);
         setLoading(false);
       } catch (err) {
@@ -82,7 +80,7 @@ function TicketBooking() {
       console.log('Đang tải danh sách rạp có chiếu phim...');
       
       // Gọi API GET /theater/{film_id} để lấy danh sách rạp chiếu phim này
-      const response = await axios.get(`${API_BASE_URL}/theater/${movieId}`);
+      const response = await api.get(`/theater/${movieId}`);
       
       console.log('Response từ API:', response.data);
       

@@ -4,7 +4,7 @@ Quản lý lock ghế tạm thời trong Redis với TTL tự động expire
 """
 import json
 from typing import Optional, List, Dict
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from app.core.redis import redis_client
 import logging
 
@@ -60,7 +60,7 @@ class SeatLockManager:
         # Lock ghế (hoặc gia hạn nếu cùng user)
         lock_data = {
             "user_id": user_id,
-            "locked_at": datetime.utcnow().isoformat(),
+            "locked_at": datetime.now(timezone.utc).isoformat(),
             "seat_id": seat_id,
             "showtime_id": showtime_id
         }
@@ -143,13 +143,14 @@ class SeatLockManager:
         Dùng để hiển thị sơ đồ ghế
         """
         pattern = SeatLockManager._get_showtime_pattern(showtime_id)
-        keys = redis_client.keys(pattern)
+        keys = list(redis_client.scan_iter(match=pattern))
         
         locks = []
         for key in keys:
             # Parse seat_id từ key: seat_lock:showtime_id:seat_id
             try:
-                parts = key.split(":")
+                key_str = key.decode('utf-8') if isinstance(key, bytes) else str(key)
+                parts = key_str.split(":")
                 seat_id = int(parts[2])
                 
                 lock_info = SeatLockManager.get_seat_lock_info(showtime_id, seat_id)

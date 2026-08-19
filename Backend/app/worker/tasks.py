@@ -1,5 +1,5 @@
 from celery import Task
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from sqlmodel import Session, select
 from app.worker.celery_config import celery_app
 from app.core.database import engine
@@ -8,6 +8,7 @@ from app.models.booking import Booking
 from app.models.booking_detail import BookingDetail
 from app.utils.enum import SeatStatusEnum, BookingStatus, PaymentStatus
 from app.utils.email_service import send_payment_success_email
+from app.utils.redis_lock import SeatLockManager
 import logging
 
 logger = logging.getLogger(__name__)
@@ -34,7 +35,7 @@ def cleanup_expired_bookings():
     with Session(engine) as session:
         try:
             # Tìm booking PENDING quá 10 phút (tính từ booking_date)
-            ten_minutes_ago = datetime.utcnow() - timedelta(minutes=10)
+            ten_minutes_ago = datetime.now(timezone.utc) - timedelta(minutes=10)
             
             statement = select(Booking).where(
                 Booking.booking_status == BookingStatus.PENDING,
@@ -49,6 +50,16 @@ def cleanup_expired_bookings():
                 booking.booking_status = BookingStatus.CANCELLED
                 booking.payment_status = PaymentStatus.FAILED
                 session.add(booking)
+                
+                # Giải phóng ghế trong Redis nếu có
+                details = session.exec(
+                    select(BookingDetail).where(BookingDetail.booking_id == booking.id)
+                ).all()
+                for detail in details:
+                    try:
+                        SeatLockManager.unlock_seat(booking.showtime_id, detail.seat_id, booking.user_id)
+                    except Exception:
+                        pass
                 
                 count += 1
                 logger.info(f"Expired booking {booking.id}")
