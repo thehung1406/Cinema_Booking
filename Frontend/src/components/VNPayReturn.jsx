@@ -24,10 +24,11 @@ const VnpayReturn = () => {
     const updateBookingStatus = async () => {
       if (!vnp_TxnRef) return;
       try {
+        const vnpayParams = Object.fromEntries(new URLSearchParams(location.search).entries());
         // Gọi API backend để xác nhận/cập nhật trạng thái booking và ghế
         const res = await api.post("/payment/vnpay-return", {
+          ...vnpayParams,
           bookingId: vnp_TxnRef,
-          vnp_ResponseCode,
         });
         setBooking(res.data.booking);
         setStatus(res.data.status);
@@ -37,7 +38,7 @@ const VnpayReturn = () => {
       }
     };
     if (vnp_ResponseCode) updateBookingStatus();
-  }, [vnp_TxnRef, vnp_ResponseCode]);
+  }, [vnp_TxnRef, vnp_ResponseCode, location.search]);
 
   // Hiển thị thông tin
   if (status === "pending") return <div className="text-center py-10">Đang xác nhận giao dịch...</div>;

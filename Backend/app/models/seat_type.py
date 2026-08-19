@@ -1,4 +1,4 @@
-from sqlmodel import SQLModel, Field, Relationship
+from sqlmodel import SQLModel, Field, Relationship, UniqueConstraint
 from typing import Optional, List
 from decimal import Decimal
 from sqlalchemy import Column, Numeric
@@ -6,6 +6,9 @@ from sqlalchemy import Column, Numeric
 
 class SeatType(SQLModel, table=True):
     __tablename__ = "seat_types"
+    __table_args__ = (
+        UniqueConstraint("room_id", "name", name="uq_seat_type_room_name"),
+    )
 
     id: Optional[int] = Field(default=None, primary_key=True)
 

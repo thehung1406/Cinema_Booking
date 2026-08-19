@@ -1,6 +1,7 @@
 from sqlmodel import SQLModel, Field, Relationship, UniqueConstraint
 from typing import Optional
 from datetime import datetime, timezone
+from sqlalchemy import Column, DateTime
 
 
 class SeatStatus(SQLModel, table=True):
@@ -23,10 +24,19 @@ class SeatStatus(SQLModel, table=True):
     hold_by_user_id: Optional[int] = Field(
         default=None, foreign_key="users.id"
     )
-    hold_expired_at: Optional[datetime] = None
+    hold_expired_at: Optional[datetime] = Field(
+        default=None,
+        sa_column=Column(DateTime(timezone=True), nullable=True)
+    )
 
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    created_at: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc),
+        sa_column=Column(DateTime(timezone=True), nullable=False)
+    )
+    updated_at: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc),
+        sa_column=Column(DateTime(timezone=True), nullable=False)
+    )
 
     # Relationships
     seat: "Seat" = Relationship(back_populates="seat_statuses")

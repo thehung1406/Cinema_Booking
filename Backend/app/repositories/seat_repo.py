@@ -177,6 +177,70 @@ class SeatRepository:
         return False
 
     @staticmethod
+    def book_seat_optimistic(
+        db: Session,
+        showtime_id: int,
+        seat_id: int,
+        user_id: int
+    ) -> SeatStatus:
+        """Chuyển ghế HOLD của đúng user sang BOOKED bằng optimistic locking."""
+        now = datetime.now(timezone.utc)
+        seat_status = SeatRepository.get_seat_status(db, showtime_id, seat_id)
+
+        if not seat_status:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Ghế chưa được giữ hoặc đã hết hạn giữ"
+            )
+
+        if seat_status.status != SeatStatusEnum.HOLD:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Ghế không còn ở trạng thái đang giữ"
+            )
+
+        if seat_status.hold_by_user_id != user_id:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Ghế đang được giữ bởi người dùng khác"
+            )
+
+        if not seat_status.hold_expired_at or seat_status.hold_expired_at <= now:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Thời gian giữ ghế đã hết hạn"
+            )
+
+        current_version = seat_status.version
+        result = db.exec(
+            update(SeatStatus)
+            .where(
+                SeatStatus.id == seat_status.id,
+                SeatStatus.status == SeatStatusEnum.HOLD,
+                SeatStatus.hold_by_user_id == user_id,
+                SeatStatus.hold_expired_at > now,
+                SeatStatus.version == current_version
+            )
+            .values(
+                status=SeatStatusEnum.BOOKED,
+                hold_by_user_id=None,
+                hold_expired_at=None,
+                version=current_version + 1,
+                updated_at=now
+            )
+        )
+
+        if result.rowcount == 0:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Ghế vừa thay đổi trạng thái, vui lòng thử lại"
+            )
+
+        db.flush()
+        db.refresh(seat_status)
+        return seat_status
+
+    @staticmethod
     def book_seat(db: Session, showtime_id: int, seat_id: int) -> SeatStatus:
         """Đặt ghế (chuyển từ HOLD sang BOOKED)"""
         seat_status = SeatRepository.get_seat_status(db, showtime_id, seat_id)

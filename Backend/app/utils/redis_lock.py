@@ -41,6 +41,20 @@ end
 return 0
 """
 
+# Renew lock data + TTL chỉ khi owner hiện tại vẫn khớp.
+RENEW_LUA_SCRIPT = """
+local data = redis.call("GET", KEYS[1])
+if data then
+    local lock = cjson.decode(data)
+    if lock["user_id"] == tonumber(ARGV[1]) then
+        redis.call("SET", KEYS[1], ARGV[2], "EX", tonumber(ARGV[3]))
+        return 1
+    end
+    return -1
+end
+return 0
+"""
+
 
 class SeatLockManager:
     """
@@ -107,10 +121,13 @@ class SeatLockManager:
             try:
                 existing_data = json.loads(existing_lock)
                 if existing_data.get("user_id") == user_id:
-                    # Cùng user → gia hạn lock (overwrite an toàn vì cùng owner)
-                    redis_client.setex(key, ttl, lock_data)
-                    logger.info(f"Renewed lock for seat {seat_id}, user {user_id}, TTL {ttl}s")
-                    return True
+                    result = redis_client.eval(RENEW_LUA_SCRIPT, 1, key, user_id, lock_data, ttl)
+                    if result == 1:
+                        logger.info(f"Renewed lock for seat {seat_id}, user {user_id}, TTL {ttl}s")
+                        return True
+                    if result == -1:
+                        logger.warning(f"Seat {seat_id} changed owner before renew")
+                        return False
                 else:
                     logger.warning(
                         f"Seat {seat_id} already locked by user {existing_data.get('user_id')}"
