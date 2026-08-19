@@ -31,7 +31,7 @@ def upgrade() -> None:
         sa.Column('full_name', sa.String(length=100), nullable=True),
         sa.Column('avatar', sa.String(length=255), nullable=True),
         sa.Column('role', sa.String(length=20), nullable=False, server_default='USER'),
-        sa.Column('created_at', sa.DateTime(), nullable=False),
+        sa.Column('created_at', sa.DateTime(timezone=True), nullable=False),
         sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_users_username'), 'users', ['username'], unique=True)
@@ -122,9 +122,9 @@ def upgrade() -> None:
         sa.Column('showtime_id', sa.Integer(), nullable=False),
         sa.Column('status', sa.String(length=20), nullable=False, server_default='AVAILABLE'),
         sa.Column('hold_by_user_id', sa.Integer(), nullable=True),
-        sa.Column('hold_expired_at', sa.DateTime(), nullable=True),
-        sa.Column('created_at', sa.DateTime(), nullable=False),
-        sa.Column('updated_at', sa.DateTime(), nullable=False),
+        sa.Column('hold_expired_at', sa.DateTime(timezone=True), nullable=True),
+        sa.Column('created_at', sa.DateTime(timezone=True), nullable=False),
+        sa.Column('updated_at', sa.DateTime(timezone=True), nullable=False),
         sa.ForeignKeyConstraint(['seat_id'], ['seats.id'], ),
         sa.ForeignKeyConstraint(['showtime_id'], ['showtimes.id'], ),
         sa.ForeignKeyConstraint(['hold_by_user_id'], ['users.id'], ),
@@ -140,12 +140,12 @@ def upgrade() -> None:
         sa.Column('id', sa.Integer(), nullable=False),
         sa.Column('user_id', sa.Integer(), nullable=False),
         sa.Column('showtime_id', sa.Integer(), nullable=False),
-        sa.Column('booking_date', sa.DateTime(), nullable=False),
+        sa.Column('booking_date', sa.DateTime(timezone=True), nullable=False),
         sa.Column('total_amount', sa.Float(), nullable=False),
         sa.Column('payment_method', sa.String(length=50), nullable=True),
         sa.Column('payment_status', sa.String(length=20), nullable=False, server_default='PENDING'),
         sa.Column('booking_status', sa.String(length=20), nullable=False, server_default='PENDING'),
-        sa.Column('created_at', sa.DateTime(), nullable=False),
+        sa.Column('created_at', sa.DateTime(timezone=True), nullable=False),
         sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
         sa.ForeignKeyConstraint(['showtime_id'], ['showtimes.id'], ),
         sa.PrimaryKeyConstraint('id')

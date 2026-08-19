@@ -136,6 +136,12 @@ class SeatService:
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Suất chiếu không tồn tại"
             )
+
+        if len(set(seat_ids)) != len(seat_ids):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Danh sách ghế bị trùng"
+            )
         
         ttl_seconds = hold_minutes * 60
         results = []
@@ -149,6 +155,12 @@ class SeatService:
                     raise HTTPException(
                         status_code=status.HTTP_404_NOT_FOUND,
                         detail=f"Ghế {seat_id} không tồn tại"
+                    )
+
+                if seat.room_id != showtime.room_id:
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail=f"Ghế {seat.seat_name} không thuộc phòng của suất chiếu"
                     )
                 
                 # Lớp 1: Lock ghế trong Redis với TTL (nguyên tử)
@@ -259,7 +271,21 @@ class SeatService:
         booked_count = SeatRepository.get_booked_seats_count(db=db, showtime_id=showtime_id)
         
         redis_locks = SeatLockManager.get_all_locks_for_showtime(showtime_id)
-        hold_count = len(redis_locks)
+        redis_hold_ids = {lock["seat_id"] for lock in redis_locks}
+
+        now = datetime.now(timezone.utc)
+        all_db_statuses = SeatRepository.get_seats_status_by_showtime(db=db, showtime_id=showtime_id)
+        valid_db_hold_ids = {
+            seat_status.seat_id
+            for seat_status in all_db_statuses
+            if (
+                seat_status.status == SeatStatusEnum.HOLD
+                and seat_status.hold_expired_at
+                and seat_status.hold_expired_at > now
+            )
+        }
+        valid_db_hold_count = len(valid_db_hold_ids - redis_hold_ids)
+        hold_count = len(redis_hold_ids) + valid_db_hold_count
         
         available = total_seats - booked_count - hold_count
         return max(0, available)
@@ -277,8 +303,12 @@ class SeatService:
         """
         try:
             for seat_id in seat_ids:
-                # Lưu vào DB với status BOOKED
-                SeatRepository.book_seat(db=db, showtime_id=showtime_id, seat_id=seat_id)
+                SeatRepository.book_seat_optimistic(
+                    db=db,
+                    showtime_id=showtime_id,
+                    seat_id=seat_id,
+                    user_id=user_id
+                )
                 
                 # Xóa lock khỏi Redis
                 SeatLockManager.unlock_seat(showtime_id, seat_id, user_id)
