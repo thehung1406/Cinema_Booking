@@ -47,6 +47,8 @@ function TicketBooking() {
       setShowtimes([]);
       setLoading(false);
     }
+  };
+
   const loadTheatersForFilm = async (movieId) => {
     if (!movieId) {
       setCinemas([]);
