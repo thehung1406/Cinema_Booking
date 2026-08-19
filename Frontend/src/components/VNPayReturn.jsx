@@ -1,14 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { QRCode } from 'react-qr-code';
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import api from "../config/api";
-
-
-import { useLocation } from "react-router-dom";
 
 const VnpayReturn = () => {
   const navigate = useNavigate();
-
   const location = useLocation();
   const [booking, setBooking] = useState(null);
   const [status, setStatus] = useState("pending");
@@ -24,21 +20,21 @@ const VnpayReturn = () => {
     const updateBookingStatus = async () => {
       if (!vnp_TxnRef) return;
       try {
-        const vnpayParams = Object.fromEntries(new URLSearchParams(location.search).entries());
         // Gọi API backend để xác nhận/cập nhật trạng thái booking và ghế
         const res = await api.post("/payment/vnpay-return", {
-          ...vnpayParams,
           bookingId: vnp_TxnRef,
+          vnp_ResponseCode,
         });
         setBooking(res.data.booking);
         setStatus(res.data.status);
       } catch (err) {
-        setError("Không thể xác nhận giao dịch. Vui lòng liên hệ hỗ trợ.", err);
+        console.error("Lỗi xác nhận giao dịch:", err);
+        setError("Không thể xác nhận giao dịch. Vui lòng liên hệ hỗ trợ.");
         setStatus("error");
       }
     };
     if (vnp_ResponseCode) updateBookingStatus();
-  }, [vnp_TxnRef, vnp_ResponseCode, location.search]);
+  }, [vnp_TxnRef, vnp_ResponseCode]);
 
   // Hiển thị thông tin
   if (status === "pending") return <div className="text-center py-10">Đang xác nhận giao dịch...</div>;

@@ -1,5 +1,4 @@
 from typing import List, Optional
-from datetime import datetime, timezone
 from sqlmodel import Session, select
 from sqlalchemy import func
 from app.models.booking import Booking
@@ -53,8 +52,6 @@ class BookingRepository:
         if not seat_ids:
             return
         
-        now = datetime.now(timezone.utc)
-        
         # Query 1 lần lấy tất cả seat_status cần update
         statement = select(SeatStatus).where(
             SeatStatus.showtime_id == showtime_id,
@@ -68,9 +65,6 @@ class BookingRepository:
             seat_status.status = "BOOKED"
             seat_status.hold_by_user_id = None
             seat_status.hold_expired_at = None
-            seat_status.version = seat_status.version + 1
-            seat_status.updated_at = now
-            db.add(seat_status)
         
         # Tạo mới cho các ghế chưa có seat_status
         new_seat_ids = set(seat_ids) - existing_seat_ids
@@ -78,13 +72,9 @@ class BookingRepository:
             new_seat_status = SeatStatus(
                 showtime_id=showtime_id,
                 seat_id=seat_id,
-                status="BOOKED",
-                version=1,
-                created_at=now,
-                updated_at=now
+                status="BOOKED"
             )
             db.add(new_seat_status)
-        db.flush()
     
     @staticmethod
     def get_booking_by_id(db: Session, booking_id: int) -> Optional[Booking]:

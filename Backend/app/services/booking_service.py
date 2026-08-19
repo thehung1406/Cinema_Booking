@@ -45,14 +45,6 @@ class BookingService:
             
             # 3. Kiểm tra tất cả ghế
             seat_ids = [seat.seat_id for seat in booking_request.seats]
-
-            if len(set(seat_ids)) != len(seat_ids):
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="Danh sách ghế bị trùng"
-                )
-
-            now = datetime.now(timezone.utc)
             
             for seat_id in seat_ids:
                 # Kiểm tra ghế tồn tại
@@ -62,36 +54,19 @@ class BookingService:
                         status_code=status.HTTP_404_NOT_FOUND,
                         detail=f"Ghế {seat_id} không tồn tại"
                     )
-
-                if seat.room_id != showtime.room_id:
-                    raise HTTPException(
-                        status_code=status.HTTP_400_BAD_REQUEST,
-                        detail=f"Ghế {seat.seat_name} không thuộc phòng của suất chiếu"
-                    )
                 
-                # Booking chỉ hợp lệ khi user đã giữ ghế trước đó.
+                # Kiểm tra ghế đã được BOOKED chưa (chỉ kiểm tra seat_status)
+                # Redis đã xử lý HOLD rồi, chỉ cần check BOOKED thật sự
                 seat_status = SeatRepository.get_seat_status(
                     db=db,
                     showtime_id=booking_request.showtimeId,
                     seat_id=seat_id
                 )
-
-                if not seat_status or seat_status.status != SeatStatusEnum.HOLD:
+                # Chỉ reject nếu ghế đã BOOKED thật sự (đã thanh toán)
+                if seat_status and seat_status.status == SeatStatusEnum.BOOKED:
                     raise HTTPException(
                         status_code=status.HTTP_400_BAD_REQUEST,
-                        detail=f"Ghế {seat.seat_name} chưa được giữ hoặc không còn khả dụng"
-                    )
-
-                if seat_status.hold_by_user_id != current_user_id:
-                    raise HTTPException(
-                        status_code=status.HTTP_403_FORBIDDEN,
-                        detail=f"Ghế {seat.seat_name} đang được giữ bởi người dùng khác"
-                    )
-
-                if not seat_status.hold_expired_at or seat_status.hold_expired_at <= now:
-                    raise HTTPException(
-                        status_code=status.HTTP_400_BAD_REQUEST,
-                        detail=f"Thời gian giữ ghế {seat.seat_name} đã hết hạn"
+                        detail=f"Ghế {seat.seat_name} đã được đặt"
                     )
             
             # 4. Tạo booking
@@ -122,11 +97,22 @@ class BookingService:
             
             # 6. KHÔNG cập nhật seat_status thành BOOKED ngay
             # Chỉ cập nhật khi thanh toán thành công
-            # Ghế vẫn giữ trạng thái HOLD trong Redis & DB trong suốt thời gian thanh toán (10 phút)
+            # Ghế vẫn giữ trạng thái HOLD hoặc sẽ được lock bởi booking này
             
             # 7. Commit transaction
             db.commit()
             logger.info(f"Booking {booking.id} committed successfully")
+            
+            # 8. Xóa lock Redis (nếu có) sau khi commit thành công
+            for seat_id in seat_ids:
+                try:
+                    SeatLockManager.unlock_seat(
+                        showtime_id=booking_request.showtimeId,
+                        seat_id=seat_id,
+                        user_id=current_user_id
+                    )
+                except Exception as e:
+                    logger.warning(f"Failed to unlock seat {seat_id}: {e}")
             
             # Trả về response
             return BookingResponse(

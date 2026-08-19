@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../config/api';
-import { clearSession, getCurrentUser } from '../services/authStorage';
 
 const SeatSelection = () => {
   const { showtimeId } = useParams();
@@ -12,6 +11,7 @@ const SeatSelection = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [dataFetched, setDataFetched] = useState(false);
+
   // Sử dụng useCallback để tránh tạo hàm mới mỗi lần render
   const fetchData = useCallback(async () => {
     // Nếu đã fetch dữ liệu rồi thì không fetch lại
@@ -40,66 +40,17 @@ const SeatSelection = () => {
 
     fetchData();
   }, [showtimeId, fetchData]);
-  const handleSeatClick = async (seat) => {
-    const isSelected = selectedSeats.includes(seat.seat_id);
-    if (seat.status === 'BOOKED' || (seat.status === 'HOLD' && !isSelected)) return;
-
-    const userInfo = getCurrentUser();
-    if (!userInfo || !userInfo.id) {
-      navigate('/loginpage', {
-        state: {
-          redirectTo: `/seat-selection/${showtimeId}`,
-          message: 'Vui lòng đăng nhập để đặt vé'
-        }
-      });
-      return;
-    }
-
-    if (!userInfo.access_token) {
-      alert('Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.');
-      navigate('/loginpage');
-      return;
-    }
-
-    try {
-      if (isSelected) {
-        await api.post("/seats/release", {
-          showtime_id: parseInt(showtimeId),
-          seat_ids: [seat.seat_id],
-        });
-        setSelectedSeats(prev => prev.filter(id => id !== seat.seat_id));
-        setSeatData(prev => prev.map(item => (
-          item.seat_id === seat.seat_id
-            ? { ...item, status: 'AVAILABLE', hold_by_user_id: null, hold_expired_at: null }
-            : item
-        )));
-        return;
+  const handleSeatClick = (seat) => {
+    // Kiểm tra trạng thái ghế - BOOKED hoặc HOLD không cho chọn
+    if (seat.status === 'BOOKED' || seat.status === 'HOLD') return;
+    
+    setSelectedSeats(prev => {
+      if (prev.includes(seat.seat_id)) {
+        return prev.filter(id => id !== seat.seat_id);
+      } else {
+        return [...prev, seat.seat_id];
       }
-
-      const holdResponse = await api.post("/seats/hold", {
-        showtime_id: parseInt(showtimeId),
-        seat_ids: [seat.seat_id],
-      });
-      const holdInfo = holdResponse.data?.[0];
-      setSelectedSeats(prev => (
-        prev.includes(seat.seat_id) ? prev : [...prev, seat.seat_id]
-      ));
-      setSeatData(prev => prev.map(item => (
-        item.seat_id === seat.seat_id
-          ? {
-              ...item,
-              status: 'HOLD',
-              hold_by_user_id: userInfo.id,
-              hold_expired_at: holdInfo?.hold_expired_at || item.hold_expired_at,
-            }
-          : item
-      )));
-    } catch (err) {
-      console.error('Lỗi khi giữ/hủy ghế:', err);
-      alert(err.response?.data?.detail || 'Không thể cập nhật trạng thái ghế. Vui lòng thử lại.');
-      const seatsResponse = await api.get(`/seats/showtime/${showtimeId}`);
-      setSeatData(seatsResponse.data);
-    }
+    });
   };
   const calculateTotal = () => {
     return selectedSeats.reduce((total, seatId) => {
@@ -114,8 +65,8 @@ const SeatSelection = () => {
     }
     try {
       // Lấy thông tin người dùng từ localStorage
-      const userInfo = getCurrentUser();
-      if (!userInfo || !userInfo.id) {
+      const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+      if (!userInfo || (!userInfo.id && !userInfo.userId)) {
         // Chuyển hướng đến trang đăng nhập nếu chưa đăng nhập
         navigate('/loginpage', { 
           state: { 
@@ -126,16 +77,16 @@ const SeatSelection = () => {
         return;
       }
 
-      // Kiểm tra có token không
-      if (!userInfo.access_token) {
-        alert('Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.');
-        navigate('/loginpage');
-        return;
-      }
+      // Giữ ghế trong Redis trước khi tạo booking
+      await api.post("/seats/hold", {
+        showtime_id: parseInt(showtimeId),
+        seat_ids: selectedSeats
+      });
 
       // Tạo dữ liệu đặt vé
+      const currentUserId = userInfo.id || userInfo.userId;
       const bookingData = {
-        userId: userInfo.id,
+        userId: currentUserId,
         showtimeId: parseInt(showtimeId),
         totalAmount: calculateTotal(),
         paymentMethod: "Online",
@@ -145,7 +96,6 @@ const SeatSelection = () => {
         }),
       };
       console.log("Dữ liệu gửi lên backend:", bookingData);
-      console.log("Token:", userInfo.access_token);
 
       // Gửi request đặt vé
       const response = await api.post("/bookings", bookingData);
@@ -157,7 +107,7 @@ const SeatSelection = () => {
       // Xử lý lỗi 401 - Unauthorized
       if (err.response && err.response.status === 401) {
         alert('Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.');
-        clearSession();
+        localStorage.removeItem('userInfo');
         navigate('/loginpage', {
           state: {
             redirectTo: `/seat-selection/${showtimeId}`,
@@ -252,7 +202,7 @@ const formatTime = (timeString) => {
                       </div>
                       <div>
                       <p><span className="font-semibold">Ngày chiếu:</span> {formatDate(showtimeInfo.show_date)}</p>
-<p><span className="font-semibold">Giờ chiếu:</span> {formatTime(showtimeInfo.start_time, showtimeInfo.show_date)}</p>
+<p><span className="font-semibold">Giờ chiếu:</span> {formatTime(showtimeInfo.start_time)}</p>
 
                         <p><span className="font-semibold">Thời lượng:</span> {showtimeInfo.duration}</p>
                       </div>
@@ -275,8 +225,8 @@ const formatTime = (timeString) => {
                     <div className="flex flex-1 justify-center gap-2">
                       {seatsByRow[row].map(seat => {
                         const isBooked = seat.status === 'BOOKED';
+                        const isHold = seat.status === 'HOLD';
                         const isSelected = selectedSeats.includes(seat.seat_id);
-                        const isHold = seat.status === 'HOLD' && !isSelected;
                         const isAvailable = seat.status === 'AVAILABLE';
                         
                         // Xác định màu sắc theo loại ghế (case-insensitive)
