@@ -112,7 +112,7 @@ function CinemaCard({ cinema }) {
         </div>
         <div className="flex space-x-2">
           <Link
-            to="/TicketBooking"
+            to={`/TicketBooking?theaterId=${cinema.id}`}
             className="flex-1 bg-red-700 hover:bg-red-800 text-white text-center py-2 px-4 rounded-lg font-semibold flex items-center justify-center"
           >
             <FaTicketAlt className="mr-2" /> Đặt vé

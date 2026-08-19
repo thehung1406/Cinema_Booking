@@ -6,15 +6,19 @@ import {
   FaMapMarkerAlt,
   FaTicketAlt,
 } from "react-icons/fa";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import api from "../config/api";
 
 function TicketBooking() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const initialFilmId = searchParams.get("filmId") || searchParams.get("movieId") || "";
+  const initialTheaterId = searchParams.get("theaterId") || searchParams.get("cinemaId") || "";
+
   const [movies, setMovies] = useState([]);
-  const [selectedMovie, setSelectedMovie] = useState("");
+  const [selectedMovie, setSelectedMovie] = useState(initialFilmId);
   const [cinemas, setCinemas] = useState([]);
-  const [selectedCinema, setSelectedCinema] = useState("");
+  const [selectedCinema, setSelectedCinema] = useState(initialTheaterId);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedDate, setSelectedDate] = useState(
@@ -45,15 +49,61 @@ function TicketBooking() {
     }
   };
 
-  // Fetch movies on component mount
+  const loadTheatersForFilm = async (movieId) => {
+    if (!movieId) {
+      setCinemas([]);
+      setSelectedCinema("");
+      return [];
+    }
+
+    try {
+      setLoading(true);
+      setError(null);
+      console.log('Đang tải danh sách rạp có chiếu phim...');
+
+      // Gọi API GET /theater/by-film/{film_id} để lấy danh sách rạp chiếu phim này
+      const response = await api.get(`/theater/by-film/${movieId}`);
+
+      console.log('Response từ API:', response.data);
+
+      let theaterList = [];
+      if (Array.isArray(response.data)) {
+        theaterList = response.data;
+      } else if (response.data && typeof response.data === 'object') {
+        theaterList = response.data.theaters || response.data.data || [response.data];
+      }
+
+      console.log('Danh sách rạp đã xử lý:', theaterList);
+      setCinemas(theaterList);
+      setLoading(false);
+      return theaterList;
+    } catch (error) {
+      console.error("Lỗi khi lấy danh sách rạp:", error);
+      console.error("Chi tiết lỗi:", error.response?.data);
+      setError("Không thể tải danh sách rạp. Vui lòng thử lại sau.");
+      setCinemas([]);
+      setLoading(false);
+      return [];
+    }
+  };
+
+  // Fetch movies on component mount and handle pre-selected movie/theater
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        setError(null);
         // Gọi API GET /films/ từ backend
         const moviesResponse = await api.get("/films/");
         setMovies(moviesResponse.data);
+
+        if (initialFilmId) {
+          setSelectedMovie(initialFilmId);
+          const theaterList = await loadTheatersForFilm(initialFilmId);
+          if (initialTheaterId && theaterList.some(t => String(t.id) === String(initialTheaterId))) {
+            setSelectedCinema(initialTheaterId);
+            fetchShowtimes(initialFilmId, initialTheaterId, selectedDate);
+          }
+        }
         setLoading(false);
       } catch (err) {
         console.error("Lỗi khi lấy dữ liệu:", err);
@@ -62,7 +112,7 @@ function TicketBooking() {
       }
     };
     fetchData();
-  }, []);
+  }, [initialFilmId, initialTheaterId, selectedDate]);
 
   // Handle movie selection
   const handleSelectMovie = async (e) => {
@@ -70,45 +120,14 @@ function TicketBooking() {
     setSelectedMovie(movieId);
     setSelectedShowtime(null);
     setShowtimes([]);
+    setSelectedCinema("");
 
     if (!movieId) {
       setCinemas([]);
-      setSelectedCinema("");
       return;
     }
 
-    try {
-      setLoading(true);
-      setError(null);
-      console.log('Đang tải danh sách rạp có chiếu phim...');
-      
-      // Gọi API GET /theater/by-film/{film_id} để lấy danh sách rạp chiếu phim này
-      const response = await api.get(`/theater/by-film/${movieId}`);
-      
-      console.log('Response từ API:', response.data);
-      
-      // Xử lý response - đảm bảo là array
-      let theaterList = [];
-      if (Array.isArray(response.data)) {
-        theaterList = response.data;
-      } else if (response.data && typeof response.data === 'object') {
-        // Nếu là object, có thể data nằm trong một property
-        theaterList = response.data.theaters || response.data.data || [response.data];
-      }
-      
-      console.log('Danh sách rạp đã xử lý:', theaterList);
-      setCinemas(theaterList);
-      setSelectedCinema("");
-      setLoading(false);
-    } catch (error) {
-      console.error("Lỗi khi lấy danh sách rạp:", error);
-      console.error("Chi tiết lỗi:", error.response?.data);
-      setError(
-        "Không thể tải danh sách rạp. Vui lòng thử lại sau."
-      );
-      setCinemas([]);
-      setLoading(false);
-    }
+    await loadTheatersForFilm(movieId);
   };
 
   // Handle cinema selection

@@ -34,10 +34,13 @@ const Movie = () => {
     };
     fetchMovies();
   }, []);
-
-  const handleBooking = (e) => {
+  const handleBooking = (e, movieId) => {
     e.stopPropagation(); // Ngăn sự kiện click lan tỏa lên phần tử cha
-    navigate(`/TicketBooking`);
+    if (movieId) {
+      navigate(`/TicketBooking?filmId=${movieId}`);
+    } else {
+      navigate(`/TicketBooking`);
+    }
   };
 
   // Lọc phim theo trạng thái
@@ -159,14 +162,14 @@ const Movie = () => {
                   <div className="mt-4">
                     {isNowShowing(movie) ? (
                       <button 
-                        onClick={(e) => handleBooking(e)}
+                        onClick={(e) => handleBooking(e, movie.id)}
                         className="w-full bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-md transition-colors duration-300"
                       >
                         Đặt vé
                       </button>
                     ) : (
                       <button 
-                        onClick={(e) => handleBooking(e)}
+                        onClick={(e) => handleBooking(e, movie.id)}
                         className="w-full bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-md transition-colors duration-300"
                       >
                         Đặt vé trước

@@ -21,20 +21,27 @@ function App() {
     <div>
       <Routes>
         <Route path="/" element={<HomePage />}>
-          <Route index="/" element={<MainHomePage />} />
-          <Route path="cinema" element={<CinemaList/>} />
+          <Route index element={<MainHomePage />} />
+          <Route path="cinema" element={<CinemaList />} />
           <Route path="contact" element={<Contact />} />
-          <Route path="about" element=<About /> />
-          <Route path="movie" element=<Movie/> /> 
-          <Route path="/payment/:bookingId" element={<PaymentPage />} />
-          <Route path="/payment-result" element={<VNPayReturn />} />
-          <Route path="/MovieDetail/:id" element={<MovieDetail />} />
-          <Route path="/seat-selection/:showtimeId" element={<SeatSelection />} />
-          <Route path="TicketBooking" element={<TicketBooking/>}/>
-          <Route path="userInfo" element={<UserInfor/>}/>
+          <Route path="about" element={<About />} />
+          <Route path="movie" element={<Movie />} />
+          <Route path="movies" element={<Movie />} />
+          <Route path="movie/:id" element={<MovieDetail />} />
+          <Route path="MovieDetail/:id" element={<MovieDetail />} />
+          <Route path="ticket-booking" element={<TicketBooking />} />
+          <Route path="TicketBooking" element={<TicketBooking />} />
+          <Route path="booking" element={<TicketBooking />} />
+          <Route path="payment/:bookingId" element={<PaymentPage />} />
+          <Route path="payment-result" element={<VNPayReturn />} />
+          <Route path="seat-selection/:showtimeId" element={<SeatSelection />} />
+          <Route path="user-info" element={<UserInfor />} />
+          <Route path="userInfo" element={<UserInfor />} />
         </Route>
-          <Route path="*" element={<NotFound />} />
+        <Route path="login" element={<LoginPage />} />
         <Route path="loginPage" element={<LoginPage />} />
+        <Route path="loginpage" element={<LoginPage />} />
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </div>
   );
