@@ -1,5 +1,5 @@
 from sqlmodel import SQLModel
-from typing import Optional,List
+from typing import Optional, List
 from datetime import date
 
 
@@ -10,13 +10,13 @@ class FilmRead(SQLModel):
     rating: Optional[str]
     duration: Optional[str]
     genre: Optional[str]
+    language: Optional[str]
+    subtitle: Optional[str]
+    release_date: Optional[date]
+    end_date: Optional[date]
 
 
 class FilmDetailRead(FilmRead):
-    language: Optional[str]
-    subtitle: Optional[str]
-    formats:    Optional[List[str]]
-    release_date: Optional[date]
-    end_date: Optional[date]
+    formats: Optional[List[str]]
     description: Optional[str]
     trailer: Optional[str]
