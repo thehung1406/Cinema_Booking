@@ -1,7 +1,6 @@
 import React, { useEffect, useState, useMemo } from "react";
+import axios from "axios";
 import { useParams, useNavigate } from "react-router-dom";
-import api from "../config/api";
-import { clearSession, getAccessToken } from "../services/authStorage";
 
 const PaymentPage = () => {
   const { bookingId } = useParams();
@@ -19,6 +18,28 @@ const PaymentPage = () => {
     return cleaned;
   }, [bookingId]);
 
+  // Tạo axios instance - chỉ tạo 1 lần với useMemo
+  const api = useMemo(() => {
+    const instance = axios.create({
+      baseURL: '/api'
+    });
+
+    instance.interceptors.request.use(
+      (config) => {
+        const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+        if (userInfo && userInfo.access_token) {
+          config.headers.Authorization = `Bearer ${userInfo.access_token}`;
+        }
+        return config;
+      },
+      (error) => {
+        return Promise.reject(error);
+      }
+    );
+
+    return instance;
+  }, []);
+
   // Lấy thông tin booking từ API
   useEffect(() => {
     const fetchData = async () => {
@@ -31,7 +52,8 @@ const PaymentPage = () => {
         }
 
         // Kiểm tra đăng nhập
-        if (!getAccessToken()) {
+        const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+        if (!userInfo || !userInfo.access_token) {
           navigate('/loginpage');
           return;
         }
@@ -45,7 +67,7 @@ const PaymentPage = () => {
         // Xử lý lỗi 401
         if (error.response && error.response.status === 401) {
           alert('Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.');
-          clearSession();
+          localStorage.removeItem('userInfo');
           navigate('/loginpage');
         } else if (error.response && error.response.status === 404) {
           setError("Không tìm thấy thông tin đặt vé.");
@@ -99,12 +121,12 @@ const PaymentPage = () => {
     if (expired && booking && cleanBookingId) {
       api.patch(`/bookings/${cleanBookingId}/payment-status?payment_status=FAILED`);
     }
-  }, [expired, booking, cleanBookingId]);
+  }, [expired, booking, cleanBookingId, api]);
 
   const handleVNPay = async () => {
     if (!booking) return;
     try {
-      const res = await api.post('/payment/vnpay-url', {
+      const res = await axios.post(`/api/payment/vnpay-url`, {
         bookingId: booking.id,
         amount: booking.totalAmount,
         orderInfo: `Thanh toán vé phim #${booking.id}`,

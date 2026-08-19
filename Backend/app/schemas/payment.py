@@ -17,19 +17,8 @@ class VNPayURLResponse(BaseModel):
 
 class VNPayReturnRequest(BaseModel):
     """Request từ VNPay callback"""
-    bookingId: Optional[str] = Field(None, alias="bookingId")
-    vnp_TxnRef: Optional[str] = Field(None, alias="vnp_TxnRef")
+    bookingId: str = Field(..., alias="bookingId")
     vnp_ResponseCode: str = Field(..., alias="vnp_ResponseCode")
-    vnp_Amount: Optional[str] = Field(None, alias="vnp_Amount")
-    vnp_BankCode: Optional[str] = Field(None, alias="vnp_BankCode")
-    vnp_BankTranNo: Optional[str] = Field(None, alias="vnp_BankTranNo")
-    vnp_CardType: Optional[str] = Field(None, alias="vnp_CardType")
-    vnp_OrderInfo: Optional[str] = Field(None, alias="vnp_OrderInfo")
-    vnp_PayDate: Optional[str] = Field(None, alias="vnp_PayDate")
-    vnp_TransactionNo: Optional[str] = Field(None, alias="vnp_TransactionNo")
-    vnp_TransactionStatus: Optional[str] = Field(None, alias="vnp_TransactionStatus")
-    vnp_SecureHash: str = Field(..., alias="vnp_SecureHash")
-    vnp_SecureHashType: Optional[str] = Field(None, alias="vnp_SecureHashType")
     
     class Config:
         populate_by_name = True

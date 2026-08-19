@@ -1,7 +1,6 @@
 from sqlmodel import SQLModel, Field, Relationship, UniqueConstraint
 from typing import Optional
 from datetime import datetime, timezone
-from sqlalchemy import Column, DateTime
 
 
 class SeatStatus(SQLModel, table=True):
@@ -19,24 +18,13 @@ class SeatStatus(SQLModel, table=True):
     status: str = Field(default="AVAILABLE", max_length=20)
     # AVAILABLE | HOLD | BOOKED
 
-    version: int = Field(default=0)
-
     hold_by_user_id: Optional[int] = Field(
         default=None, foreign_key="users.id"
     )
-    hold_expired_at: Optional[datetime] = Field(
-        default=None,
-        sa_column=Column(DateTime(timezone=True), nullable=True)
-    )
+    hold_expired_at: Optional[datetime] = None
 
-    created_at: datetime = Field(
-        default_factory=lambda: datetime.now(timezone.utc),
-        sa_column=Column(DateTime(timezone=True), nullable=False)
-    )
-    updated_at: datetime = Field(
-        default_factory=lambda: datetime.now(timezone.utc),
-        sa_column=Column(DateTime(timezone=True), nullable=False)
-    )
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
     # Relationships
     seat: "Seat" = Relationship(back_populates="seat_statuses")

@@ -1,9 +1,6 @@
 """
 Redis Lock Manager for Seat Booking
-Quản lý lock ghế tạm thời trong Redis với TTL tự động expire.
-
-Sử dụng các thao tác nguyên tử (SET NX EX, Lua script) để tránh
-race condition khi nhiều user cùng lock/unlock ghế đồng thời.
+Quản lý lock ghế tạm thời trong Redis với TTL tự động expire
 """
 import json
 from typing import Optional, List, Dict
@@ -13,57 +10,10 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-# ── Lua Scripts (nguyên tử trên Redis) ────────────────────────────────
-# Unlock chỉ khi user_id khớp: tránh xóa nhầm lock của người khác
-# khi TTL hết giữa bước GET và DELETE.
-UNLOCK_LUA_SCRIPT = """
-local data = redis.call("GET", KEYS[1])
-if data then
-    local lock = cjson.decode(data)
-    if lock["user_id"] == tonumber(ARGV[1]) then
-        return redis.call("DEL", KEYS[1])
-    end
-    return -1
-end
-return 0
-"""
-
-# Extend TTL chỉ khi user_id khớp: tránh gia hạn nhầm lock người khác.
-EXTEND_LUA_SCRIPT = """
-local data = redis.call("GET", KEYS[1])
-if data then
-    local lock = cjson.decode(data)
-    if lock["user_id"] == tonumber(ARGV[1]) then
-        return redis.call("EXPIRE", KEYS[1], tonumber(ARGV[2]))
-    end
-    return -1
-end
-return 0
-"""
-
-# Renew lock data + TTL chỉ khi owner hiện tại vẫn khớp.
-RENEW_LUA_SCRIPT = """
-local data = redis.call("GET", KEYS[1])
-if data then
-    local lock = cjson.decode(data)
-    if lock["user_id"] == tonumber(ARGV[1]) then
-        redis.call("SET", KEYS[1], ARGV[2], "EX", tonumber(ARGV[3]))
-        return 1
-    end
-    return -1
-end
-return 0
-"""
-
 
 class SeatLockManager:
     """
-    Quản lý lock ghế trong Redis.
-    
-    Tất cả thao tác ghi đều sử dụng lệnh nguyên tử:
-    - lock_seat: SET key value NX EX ttl (chỉ ghi nếu key chưa tồn tại)
-    - unlock_seat: Lua script (check ownership + delete trong 1 lệnh)
-    - extend_lock: Lua script (check ownership + expire trong 1 lệnh)
+    Quản lý lock ghế trong Redis
     """
     
     LOCK_PREFIX = "seat_lock"
@@ -80,16 +30,6 @@ class SeatLockManager:
         return f"{SeatLockManager.LOCK_PREFIX}:{showtime_id}:*"
     
     @staticmethod
-    def _build_lock_data(user_id: int, seat_id: int, showtime_id: int) -> str:
-        """Tạo JSON data cho lock entry"""
-        return json.dumps({
-            "user_id": user_id,
-            "locked_at": datetime.utcnow().isoformat(),
-            "seat_id": seat_id,
-            "showtime_id": showtime_id
-        })
-    
-    @staticmethod
     def lock_seat(
         showtime_id: int, 
         seat_id: int, 
@@ -97,87 +37,72 @@ class SeatLockManager:
         ttl: int = DEFAULT_TTL
     ) -> bool:
         """
-        Lock ghế trong Redis với TTL — sử dụng SET NX EX nguyên tử.
-        
-        Luồng:
-        1. Thử SET NX (chỉ thành công nếu key chưa tồn tại) — nguyên tử
-        2. Nếu key đã tồn tại → kiểm tra cùng user không → gia hạn TTL
-        3. Nếu user khác đang giữ → trả False
+        Lock ghế trong Redis với TTL
         """
         key = SeatLockManager._get_lock_key(showtime_id, seat_id)
-        lock_data = SeatLockManager._build_lock_data(user_id, seat_id, showtime_id)
         
-        # Bước 1: Thử lock nguyên tử (SET NX EX)
-        # Chỉ thành công nếu key CHƯA tồn tại — không có race condition
-        success = redis_client.set(key, lock_data, nx=True, ex=ttl)
-        
-        if success:
-            logger.info(f"Locked seat {seat_id} for user {user_id} with TTL {ttl}s")
-            return True
-        
-        # Bước 2: Key đã tồn tại — kiểm tra có phải cùng user không
+        # Kiểm tra xem ghế đã bị lock chưa
         existing_lock = redis_client.get(key)
+        
         if existing_lock:
             try:
-                existing_data = json.loads(existing_lock)
-                if existing_data.get("user_id") == user_id:
-                    result = redis_client.eval(RENEW_LUA_SCRIPT, 1, key, user_id, lock_data, ttl)
-                    if result == 1:
-                        logger.info(f"Renewed lock for seat {seat_id}, user {user_id}, TTL {ttl}s")
-                        return True
-                    if result == -1:
-                        logger.warning(f"Seat {seat_id} changed owner before renew")
-                        return False
-                else:
+                lock_data = json.loads(existing_lock)
+                # Nếu đang bị lock bởi user khác
+                if lock_data.get("user_id") != user_id:
                     logger.warning(
-                        f"Seat {seat_id} already locked by user {existing_data.get('user_id')}"
+                        f"Seat {seat_id} already locked by user {lock_data.get('user_id')}"
                     )
                     return False
+                # Nếu cùng user → gia hạn lock
             except json.JSONDecodeError:
                 logger.error(f"Invalid lock data in Redis for key {key}")
-                return False
         
-        # Key biến mất giữa chừng (TTL hết) → thử lock lại
-        retry_success = redis_client.set(key, lock_data, nx=True, ex=ttl)
-        if retry_success:
-            logger.info(f"Locked seat {seat_id} for user {user_id} (retry) with TTL {ttl}s")
-            return True
+        # Lock ghế (hoặc gia hạn nếu cùng user)
+        lock_data = {
+            "user_id": user_id,
+            "locked_at": datetime.utcnow().isoformat(),
+            "seat_id": seat_id,
+            "showtime_id": showtime_id
+        }
         
-        return False
+        redis_client.setex(
+            key,
+            ttl,
+            json.dumps(lock_data)
+        )
+        
+        logger.info(f"Locked seat {seat_id} for user {user_id} with TTL {ttl}s")
+        return True
     
     @staticmethod
     def unlock_seat(showtime_id: int, seat_id: int, user_id: Optional[int] = None) -> bool:
         """
-        Unlock ghế khỏi Redis — sử dụng Lua script nguyên tử.
-        
-        Nếu có user_id: chỉ xóa key khi user_id khớp (tránh xóa nhầm lock người khác).
-        Nếu không có user_id: xóa key trực tiếp (dùng cho admin/cleanup).
+        Unlock ghế khỏi Redis
         """
         key = SeatLockManager._get_lock_key(showtime_id, seat_id)
         
+        # Nếu cần check ownership
         if user_id is not None:
-            # Lua script: check ownership + delete trong 1 lệnh nguyên tử
-            # Trả về: 1 = xóa OK, 0 = key không tồn tại, -1 = user khác đang giữ
-            result = redis_client.eval(UNLOCK_LUA_SCRIPT, 1, key, user_id)
-            
-            if result == 1:
-                logger.info(f"Unlocked seat {seat_id} for showtime {showtime_id}")
-                return True
-            elif result == -1:
-                logger.warning(
-                    f"User {user_id} tried to unlock seat {seat_id} owned by another user"
-                )
-                return False
-            else:
-                # Key không tồn tại (đã hết TTL hoặc chưa được lock)
-                return False
-        else:
-            # Không cần check ownership — xóa trực tiếp
-            deleted = redis_client.delete(key)
-            if deleted:
-                logger.info(f"Force-unlocked seat {seat_id} for showtime {showtime_id}")
-                return True
-            return False
+            existing_lock = redis_client.get(key)
+            if existing_lock:
+                try:
+                    lock_data = json.loads(existing_lock)
+                    if lock_data.get("user_id") != user_id:
+                        logger.warning(
+                            f"User {user_id} tried to unlock seat {seat_id} locked by user {lock_data.get('user_id')}"
+                        )
+                        return False
+                except json.JSONDecodeError:
+                    pass
+        
+        # Xóa key khỏi Redis
+        deleted = redis_client.delete(key)
+        
+        if deleted:
+            logger.info(f"Unlocked seat {seat_id} for showtime {showtime_id}")
+            return True
+        
+        return False
     
     @staticmethod
     def is_seat_locked(showtime_id: int, seat_id: int) -> bool:
@@ -255,23 +180,27 @@ class SeatLockManager:
     @staticmethod
     def extend_lock(showtime_id: int, seat_id: int, user_id: int, ttl: int = DEFAULT_TTL) -> bool:
         """
-        Gia hạn lock cho ghế (renew TTL) — sử dụng Lua script nguyên tử.
-        Chỉ gia hạn nếu user_id khớp với owner hiện tại.
+        Gia hạn lock cho ghế (renew TTL)
         """
         key = SeatLockManager._get_lock_key(showtime_id, seat_id)
         
-        # Lua script: check ownership + expire trong 1 lệnh nguyên tử
-        # Trả về: 1 = gia hạn OK, 0 = key không tồn tại, -1 = user khác đang giữ
-        result = redis_client.eval(EXTEND_LUA_SCRIPT, 1, key, user_id, ttl)
+        # Kiểm tra ownership
+        existing_lock = redis_client.get(key)
+        if not existing_lock:
+            return False
         
-        if result == 1:
+        try:
+            lock_data = json.loads(existing_lock)
+            if lock_data.get("user_id") != user_id:
+                logger.warning(f"User {user_id} cannot extend lock owned by {lock_data.get('user_id')}")
+                return False
+            
+            # Gia hạn TTL
+            redis_client.expire(key, ttl)
             logger.info(f"Extended lock for seat {seat_id} by {ttl}s")
             return True
-        elif result == -1:
-            logger.warning(f"User {user_id} cannot extend lock owned by another user")
-            return False
-        else:
-            logger.warning(f"Lock for seat {seat_id} not found (TTL expired?)")
+            
+        except json.JSONDecodeError:
             return False
 
 

@@ -8,7 +8,6 @@ from app.repositories.seat_repo import SeatRepository
 from app.models.booking_detail import BookingDetail
 from sqlmodel import select
 from app.worker.tasks import send_payment_success_email_task
-from app.utils.redis_lock import SeatLockManager
 
 logger = logging.getLogger(__name__)
 
@@ -45,34 +44,29 @@ class PaymentService:
             if vnp_response_code == "00":
                 # Thanh toán thành công
                 logger.info(f"VNPay payment success for booking {booking_id}")
-
-                booking_details = db.exec(
-                    select(BookingDetail).where(BookingDetail.booking_id == booking_id)
-                ).all()
                 
-                seat_ids = [detail.seat_id for detail in booking_details]
-                
-                for seat_id in seat_ids:
-                    SeatRepository.book_seat_optimistic(
-                        db=db,
-                        showtime_id=booking.showtime_id,
-                        seat_id=seat_id,
-                        user_id=booking.user_id
-                    )
-                logger.info(f"Updated {len(seat_ids)} seats to BOOKED for booking {booking_id}")
-
+                # Cập nhật trạng thái thanh toán
                 BookingRepository.update_payment_status(
                     db=db,
                     booking_id=booking_id,
                     payment_status="PAID"
                 )
                 
-                # Xóa lock khỏi Redis
-                for seat_id in seat_ids:
-                    try:
-                        SeatLockManager.unlock_seat(booking.showtime_id, seat_id, booking.user_id)
-                    except Exception as e:
-                        logger.warning(f"Failed to remove Redis lock for seat {seat_id}: {e}")
+                # ✅ BÂY GIỜ MỚI cập nhật seat_status thành BOOKED
+                # Lấy danh sách seat_id từ booking_details
+                booking_details = db.exec(
+                    select(BookingDetail).where(BookingDetail.booking_id == booking_id)
+                ).all()
+                
+                seat_ids = [detail.seat_id for detail in booking_details]
+                
+                # Cập nhật seat_status thành BOOKED
+                BookingRepository.update_seat_status_to_booked(
+                    db=db,
+                    showtime_id=booking.showtime_id,
+                    seat_ids=seat_ids
+                )
+                logger.info(f"Updated {len(seat_ids)} seats to BOOKED for booking {booking_id}")
                 
                 db.commit()
                 logger.info(f"Updated booking {booking_id} payment status to PAID")
@@ -101,22 +95,9 @@ class PaymentService:
                     db=db,
                     booking_id=booking_id,
                     payment_status="FAILED"
-                )
-                
-                # Release ghế ngay khi thanh toán thất bại
-                booking_details = db.exec(
-                    select(BookingDetail).where(BookingDetail.booking_id == booking_id)
-                ).all()
-                seat_ids = [detail.seat_id for detail in booking_details]
-                for seat_id in seat_ids:
-                    try:
-                        SeatLockManager.unlock_seat(booking.showtime_id, seat_id, booking.user_id)
-                        SeatRepository.release_seat_optimistic(db, booking.showtime_id, seat_id, booking.user_id)
-                    except Exception as e:
-                        logger.warning(f"Failed to release hold for seat {seat_id}: {e}")
-
+                )  
                 db.commit()
-                logger.info(f"Updated booking {booking_id} payment status to FAILED and released seats")
+                logger.info(f"Updated booking {booking_id} payment status to FAILED")
                 
                 return {
                     "status": "failed",
