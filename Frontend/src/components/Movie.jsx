@@ -1,61 +1,45 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { FaCalendarAlt, FaClock, FaFilm, FaLanguage, FaClosedCaptioning } from "react-icons/fa";
-import api from "../config/api";
+import { FaStar, FaCalendarAlt, FaClock, FaFilm, FaLanguage, FaClosedCaptioning } from "react-icons/fa";
+import filmService from "../services/filmService";
+import { isNowShowing, formatReleaseDate } from "../utils/filmUtils";
 
 const Movie = () => {
   const [movies, setMovies] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [filter, setFilter] = useState("all"); // Thêm bộ lọc: all, showing, upcoming
   const navigate = useNavigate();
+
   const handleMovieDetail = (movieId) => {
     const movieId1 = movieId || "";
     navigate(`/MovieDetail/${movieId1}`);
   };
+
   // Fetch all movies on component mount
   useEffect(() => {
     const fetchMovies = async () => {
       try {
         setLoading(true);
-        // Gọi API GET /films/ từ backend
-        const response = await api.get("/films/");
-        
-        // Lấy chi tiết cho từng phim để có thêm thông tin language, subtitle, release_date
-        const detailedMovies = await Promise.all(
-          response.data.map(async (film) => {
-            try {
-              const detailRes = await api.get(`/films/${film.id}`);
-              return detailRes.data;
-            } catch (err) {
-              console.error(`Lỗi khi lấy chi tiết phim ${film.id}:`, err);
-              return film; // Fallback về dữ liệu cơ bản nếu lỗi
-            }
-          })
-        );
-        
-        setMovies(detailedMovies);
+        setError(null);
+        // Gọi API GET /films/ 1 lần duy nhất từ filmService
+        const films = await filmService.getFilms();
+        setMovies(films);
         setLoading(false);
-      } catch (error) {
-        console.error('Lỗi khi lấy dữ liệu phim:', error);
+      } catch (err) {
+        console.error('Lỗi khi lấy dữ liệu phim:', err);
+        setError('Không thể tải danh sách phim. Vui lòng thử lại sau.');
         setLoading(false);
       }
     };
     fetchMovies();
   }, []);
+
   const handleBooking = (e) => {
     e.stopPropagation(); // Ngăn sự kiện click lan tỏa lên phần tử cha
     navigate(`/TicketBooking`);
   };
-  
-  // Kiểm tra phim đang chiếu dựa vào ngày hiện tại
-  const isNowShowing = (movie) => {
-    if (!movie.release_date) return false;
-    const today = new Date();
-    const releaseDate = new Date(movie.release_date);
-    const endDate = movie.end_date ? new Date(movie.end_date) : new Date(releaseDate.getTime() + 90 * 24 * 60 * 60 * 1000); // Mặc định 90 ngày
-    return today >= releaseDate && today <= endDate;
-  };
-  
+
   // Lọc phim theo trạng thái
   const filteredMovies = filter === "all" 
     ? movies 
@@ -64,17 +48,24 @@ const Movie = () => {
           ? isNowShowing(movie)
           : !isNowShowing(movie) // Sắp chiếu là chưa đến release_date
       );
-  // Format ngày phát hành
-  const formatReleaseDate = (dateString) => {
-    const options = { day: '2-digit', month: '2-digit', year: 'numeric' };
-    return new Date(dateString).toLocaleDateString('vi-VN', options);
-  };
+
   if (loading) {
     return (
       <div className="container mx-auto px-4 py-8 flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-red-600"></div>
           <p className="mt-4 text-gray-600">Đang tải danh sách phim...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="container mx-auto px-4 py-16 text-center">
+        <div className="bg-red-50 border border-red-200 text-red-700 p-6 rounded-lg max-w-md mx-auto">
+          <p className="font-medium mb-2">Đã xảy ra lỗi</p>
+          <p className="text-sm">{error}</p>
         </div>
       </div>
     );

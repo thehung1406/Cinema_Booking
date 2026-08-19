@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { FaClock, FaFilm, FaTicketAlt, FaPlay, FaMapMarkerAlt, FaLanguage, FaClosedCaptioning } from "react-icons/fa";
 import { useNavigate, useParams } from "react-router-dom";
-import api from "../config/api";
+import filmService from "../services/filmService";
+import { formatDetailDate } from "../utils/filmUtils";
 
 function MovieDetail() {
   const { id } = useParams();
@@ -16,28 +17,20 @@ function MovieDetail() {
     e.stopPropagation(); // Ngăn sự kiện click lan tỏa lên phần tử cha
     navigate(`/TicketBooking`);
   };
-  const formatDate = (dateString) => {
-    if (!dateString) return "Chưa xác định";
-    const date = new Date(dateString);
-    return date.toLocaleDateString("vi-VN", {
-      day: "numeric",
-      month: "long",
-      year: "numeric"
-    });
-  };
 
   useEffect(() => {
     const fetchMovieDetails = async () => {
       try {
         setLoading(true);
-        // Gọi API GET /films/{film_id} từ backend
-        const response = await api.get(`/films/${id}`);
-        setMovie(response.data);
+        setError(null);
+        // Gọi API GET /films/{film_id} từ filmService
+        const filmData = await filmService.getFilmDetail(id);
+        setMovie(filmData);
         setLoading(false);
       } catch (err) {
         setError("Không thể tải thông tin phim. Vui lòng thử lại sau.");
         setLoading(false);
-        console.error(err);
+        console.error("Lỗi khi tải chi tiết phim:", err);
       }
     };
 
@@ -222,7 +215,7 @@ function MovieDetail() {
                           Khởi chiếu
                         </h3>
                         <p className="text-gray-900 font-medium">
-                          {formatDate(movie.release_date)}
+                          {formatDetailDate(movie.release_date)}
                         </p>
                       </div>
                     </div>

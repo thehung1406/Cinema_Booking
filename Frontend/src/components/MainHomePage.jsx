@@ -1,7 +1,7 @@
-import React from "react";
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import api from "../config/api";
+import filmService from "../services/filmService";
+import { classifyMovies } from "../utils/filmUtils";
 
 const MainHomePage = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -9,57 +9,38 @@ const MainHomePage = () => {
   const [nowShowingMovies, setNowShowingMovies] = useState([]);
   const [upcomingMovies, setUpcomingMovies] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const navigate = useNavigate();
+
   const handleMovieDetail = (movieId) => {
     const movieId1 = movieId || "";
     navigate(`/MovieDetail/${movieId1}`);
-};
+  };
+
   const handleBooking = (e) => {
     e.stopPropagation(); // Ngăn sự kiện click lan tỏa lên phần tử cha
     navigate(`/TicketBooking`);
   };
-  
-  // Kiểm tra phim đang chiếu dựa vào ngày hiện tại
-  const isNowShowing = (movie) => {
-    if (!movie.release_date) return false;
-    const today = new Date();
-    const releaseDate = new Date(movie.release_date);
-    const endDate = movie.end_date ? new Date(movie.end_date) : new Date(releaseDate.getTime() + 90 * 24 * 60 * 60 * 1000);
-    return today >= releaseDate && today <= endDate;
-  };
-  
+
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        // Gọi API GET /films/ từ backend
-        const response = await api.get("/films/");
-        
-        // Lấy chi tiết cho từng phim
-        const detailedMovies = await Promise.all(
-          response.data.map(async (film) => {
-            try {
-              const detailRes = await api.get(`/films/${film.id}`);
-              return detailRes.data;
-            } catch (err) {
-              console.error(`Lỗi khi lấy chi tiết phim ${film.id}:`, err);
-              return film;
-            }
-          })
-        );
-        
-        // Phân loại phim
-        const nowShowing = detailedMovies.filter(movie => isNowShowing(movie));
-        const upcoming = detailedMovies.filter(movie => !isNowShowing(movie));
-        
+        setError(null);
+        // Gọi API GET /films/ 1 lần duy nhất qua filmService
+        const films = await filmService.getFilms();
+
+        // Phân loại phim bằng tiện ích chung
+        const { nowShowing, upcoming } = classifyMovies(films);
         // Featured movies là phim đang chiếu (lấy 5 phim đầu)
         setFeaturedMovies(nowShowing.slice(0, 5));
         setNowShowingMovies(nowShowing.slice(0, 8));
         setUpcomingMovies(upcoming.slice(0, 8));
-        
+
         setLoading(false);
-      } catch (error) {
-        console.error("Lỗi khi lấy dữ liệu:", error);
+      } catch (err) {
+        console.error("Lỗi khi lấy danh sách phim:", err);
+        setError("Không thể tải danh sách phim. Vui lòng thử lại sau.");
         setLoading(false);
       }
     };
@@ -79,7 +60,25 @@ const MainHomePage = () => {
     setCurrentSlide(index);
   };
   if (loading) {
-    return <div>Đang tải dữ liệu...</div>;
+    return (
+      <div className="container mx-auto px-4 py-16 flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-red-600"></div>
+          <p className="mt-4 text-gray-600">Đang tải danh sách phim...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="container mx-auto px-4 py-16 text-center">
+        <div className="bg-red-50 border border-red-200 text-red-700 p-6 rounded-lg max-w-md mx-auto">
+          <p className="font-medium mb-2">Đã xảy ra lỗi</p>
+          <p className="text-sm">{error}</p>
+        </div>
+      </div>
+    );
   }
   return (
     <div>
