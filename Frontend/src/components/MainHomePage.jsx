@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import filmService from "../services/filmService";
 import { classifyMovies } from "../utils/filmUtils";
 
@@ -17,9 +17,13 @@ const MainHomePage = () => {
     navigate(`/MovieDetail/${movieId1}`);
   };
 
-  const handleBooking = (e) => {
+  const handleBooking = (e, movieId) => {
     e.stopPropagation(); // Ngăn sự kiện click lan tỏa lên phần tử cha
-    navigate(`/TicketBooking`);
+    if (movieId) {
+      navigate(`/TicketBooking?filmId=${movieId}`);
+    } else {
+      navigate(`/TicketBooking`);
+    }
   };
 
   useEffect(() => {
@@ -134,12 +138,12 @@ const MainHomePage = () => {
         <div className="container mx-auto px-4">
           <div className="flex justify-between items-center mb-8">
             <h2 className="text-2xl font-bold">Phim Đang Chiếu</h2>
-            <a
-              href="movie"
+            <Link
+              to="/movie"
               className="text-red-600 hover:text-red-700 font-medium"
             >
               Xem tất cả
-            </a>
+            </Link>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
@@ -179,12 +183,12 @@ const MainHomePage = () => {
         <div className="container mx-auto px-4">
           <div className="flex justify-between items-center mb-8">
             <h2 className="text-2xl font-bold">Phim Sắp Chiếu</h2>
-            <a
-              href="movie"
+            <Link
+              to="/movie"
               className="text-red-600 hover:text-red-700 font-medium"
             >
               Xem tất cả
-            </a>
+            </Link>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
@@ -209,7 +213,7 @@ const MainHomePage = () => {
                   <p className="text-gray-600 text-sm mb-3">{movie.genre}</p>
                   <button
                     className="w-full bg-red-600 hover:bg-red-700 text-white py-2 rounded font-medium "
-                    onClick={handleBooking}
+                    onClick={(e) => handleBooking(e, movie.id)}
                   >
                     Đặt vé trước
                   </button>

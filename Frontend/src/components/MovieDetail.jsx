@@ -13,9 +13,14 @@ function MovieDetail() {
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
-  const handleBooking = (e) => {
+  const handleBooking = (e, movieId) => {
     e.stopPropagation(); // Ngăn sự kiện click lan tỏa lên phần tử cha
-    navigate(`/TicketBooking`);
+    const targetFilmId = movieId || movie?.id || id;
+    if (targetFilmId) {
+      navigate(`/TicketBooking?filmId=${targetFilmId}`);
+    } else {
+      navigate(`/TicketBooking`);
+    }
   };
 
   useEffect(() => {
