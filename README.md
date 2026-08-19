@@ -24,8 +24,9 @@ Cinema_Booking/
 │   ├── alembic/                            # Quản lý Database Migrations
 │   │   ├── versions/
 │   │   │   ├── 001_initial_migration.py    # Khởi tạo schema ban đầu (theaters, rooms, films, users...)
-│   │   │   ├── 002_optimize_indexes_types_cascade.py # Composite index & Numeric
-│   │   │   └── 003_add_seat_type_table.py  # Bảng seat_types & normalize giá ghế
+│   │   │   ├── 002_optimize_indexes_types_cascade.py # Composite index & Numeric types
+│   │   │   ├── 003_add_seat_type_table.py  # Bảng seat_types & chuẩn hóa giá ghế
+│   │   │   └── 004_add_version_to_seat_status.py     # Thêm version OCC cho seat_status
 │   │   └── env.py
 │   ├── app/
 │   │   ├── core/                           # Cấu hình cốt lõi (Config, DB Engine, Redis)
@@ -35,34 +36,54 @@ Cinema_Booking/
 │   │   ├── models/                         # Database Models (SQLModel)
 │   │   │   ├── cinema_room.py              # Model bảng cinema_rooms
 │   │   │   ├── film.py                     # Model bảng films
-│   │   │   ├── theater.py                  # Model bảng theaters
+│   │   │   ├── seat.py                     # Model bảng seats
+│   │   │   ├── seat_status.py              # Model bảng seat_status (trạng thái ghế, hold, OCC version)
+│   │   │   ├── seat_type.py                # Model bảng seat_types (loại ghế, hệ số giá)
+│   │   │   ├── showtime.py                 # Model bảng showtimes (suất chiếu)
+│   │   │   ├── theater.py                  # Model bảng theaters (cụm rạp)
 │   │   │   └── user.py                     # Model bảng users
-│   │   ├── repositories/                   # Tầng truy vấn Database (Data Access)
+│   │   ├── repositories/                   # Tầng truy vấn Database (Data Access Layer)
 │   │   │   ├── auth_repo.py                # Truy vấn Users & Refresh Token
 │   │   │   ├── cinema_room_repo.py         # Truy vấn Phòng chiếu theo Cụm rạp
 │   │   │   ├── film_repo.py                # Truy vấn Phim & Lọc phim
+│   │   │   ├── seat_repo.py                # Truy vấn & Khóa ghế Optimistic Concurrency
+│   │   │   ├── seat_type_repo.py           # Truy vấn Loại ghế & Giá ghế
+│   │   │   ├── showtime_repo.py            # Truy vấn Suất chiếu theo phim, rạp, ngày
 │   │   │   └── theater_repo.py             # Truy vấn Cụm rạp & Lọc rạp theo phim
 │   │   ├── router/                         # API Endpoints (Controllers)
 │   │   │   ├── auth.py                     # Router /auth (login, register, me, logout)
 │   │   │   ├── cinema_room.py              # Router /cinema_rooms (phòng chiếu theo rạp)
 │   │   │   ├── film.py                     # Router /films (danh sách phim, chi tiết)
+│   │   │   ├── seat.py                     # Router /seats (sơ đồ ghế, hold, release, extend)
+│   │   │   ├── seat_type.py                # Router /seat-types (CRUD loại ghế)
+│   │   │   ├── showtime.py                 # Router /showtimes (lịch chiếu phim theo rạp & ngày)
 │   │   │   └── theater.py                  # Router /theater (danh sách rạp, lọc theo phim)
 │   │   ├── schemas/                        # DTO / Pydantic Request & Response
 │   │   │   ├── auth.py
 │   │   │   ├── cinema_room.py
 │   │   │   ├── film.py
+│   │   │   ├── seat.py
+│   │   │   ├── seat_type.py
+│   │   │   ├── showtime.py
 │   │   │   └── theater.py
 │   │   ├── services/                       # Business Logic Layer
 │   │   │   ├── auth_service.py
 │   │   │   ├── cinema_room_service.py
 │   │   │   ├── film_service.py
+│   │   │   ├── seat_service.py             # Logic giữ ghế (Redis Lock + DB OCC)
+│   │   │   ├── seat_type_service.py
+│   │   │   ├── showtime_service.py
 │   │   │   └── theater_service.py
 │   │   └── utils/                          # Tiện ích bảo mật & dependencies
 │   │       ├── dependencies.py             # Auth middleware (get_current_user, require_staff)
-│   │       ├── enum.py                     # Enum phân quyền (UserRole)
+│   │       ├── enum.py                     # Enum vai trò & trạng thái (UserRole, SeatStatusEnum)
+│   │       ├── redis_lock.py               # Quản lý khóa phân tán Redis (SET NX EX & Lua scripts)
 │   │       └── security.py                 # Bcrypt password hashing & JWT utils
 │   ├── tests/                              # Unit & Contract Tests
-│   │   ├── test_auth_contract.py           # Contract test cho Auth module
+│   │   ├── test_auth_contract.py           # Contract test cho Auth & JWT
+│   │   ├── test_booking_flow_contract.py   # Contract test cho Luồng đặt vé & Router
+│   │   ├── test_film_contract.py           # Contract test cho Danh sách phim (chống N+1)
+│   │   ├── test_seat_lock_contract.py      # Contract test cho Khóa ghế & OCC
 │   │   └── test_theater_contract.py        # Contract test cho Theater & Room module
 │   ├── .dockerignore
 │   ├── .env.example                        # Mẫu biến môi trường Backend
@@ -81,16 +102,27 @@ Cinema_Booking/
 │   │   ├── assets/
 │   │   ├── components/                     # React UI Components
 │   │   │   ├── CinemaList.jsx              # Giao diện Danh sách rạp & lọc thành phố
+│   │   │   ├── HomePage.jsx                # Trang chủ landing page
 │   │   │   ├── LoginPage.jsx               # Giao diện Đăng nhập / Đăng ký
-│   │   │   ├── MainHomePage.jsx            # Header/Navbar & Auth state
+│   │   │   ├── MainHomePage.jsx            # Banner carousel & Danh sách phim đang/sắp chiếu
 │   │   │   ├── Movie.jsx                   # Giao diện Danh sách phim
 │   │   │   ├── MovieDetail.jsx             # Giao diện Chi tiết phim & trailer
-│   │   │   ├── TicketBooking.jsx           # Giao diện Đặt vé & lọc rạp theo phim
-│   │   │   └── UserInfor.jsx               # Quản lý tài khoản & đổi mật khẩu
+│   │   │   ├── PaymentPage.jsx             # Giao diện Thanh toán đơn hàng
+│   │   │   ├── SeatSelection.jsx           # Sơ đồ chọn ghế xem phim real-time
+│   │   │   ├── TicketBooking.jsx           # Giao diện Đặt vé, chọn rạp & suất chiếu
+│   │   │   ├── UserInfor.jsx               # Quản lý tài khoản & đổi mật khẩu
+│   │   │   └── VNPayReturn.jsx             # Xử lý kết quả trả về từ cổng VNPay
 │   │   ├── config/
 │   │   │   └── api.js                      # Axios instance + Bearer token interceptor
+│   │   ├── services/
+│   │   │   ├── authStorage.js              # Quản lý Session Storage & Auth State
+│   │   │   └── filmService.js              # Service tập trung gọi API phim (tối ưu N+1)
+│   │   ├── utils/
+│   │   │   └── filmUtils.js                # Helper phân loại phim & format ngày tháng
+│   │   ├── tests/
+│   │   │   └── authStorage.test.mjs        # Unit test cho auth storage client
 │   │   ├── App.css
-│   │   ├── App.jsx                         # Cấu hình Router Frontend
+│   │   ├── App.jsx                         # Cấu hình Router Frontend (chuẩn hóa kebab-case)
 │   │   ├── index.css
 │   │   └── main.jsx                        # Entrypoint render React DOM
 │   ├── .env.example                        # Mẫu biến môi trường Frontend
@@ -166,6 +198,23 @@ npm run dev
 
 ---
 
+## 🧪 Chạy Kiểm Thử (Testing)
+
+### Backend Contract & Unit Tests
+```bash
+# Chạy toàn bộ test suite từ thư mục gốc
+python -m pytest Backend/tests
+```
+
+### Frontend Linting
+```bash
+# Kiểm tra code style & cú pháp JSX/JS
+cd Frontend
+npm run lint
+```
+
+---
+
 ## 🌐 Danh Sách Cổng Dịch Vụ (Port Mappings)
 
 | Dịch vụ | URL / Địa chỉ | Tài khoản mặc định |
@@ -186,12 +235,12 @@ npm run dev
 | Mã Module | Tên Module | Trạng thái trên `main` |
 |:---:|:---|:---:|
 | `MOD-01` | **Quản lý Xác thực & Tài khoản (Auth & User)** | ✅ **Đã hoàn thành** |
-| `MOD-02` | **Quản lý Phim & Danh mục (Movie Management)** | ✅ **Đã hoàn thành** |
+| `MOD-02` | **Quản lý Phim & Danh mục (Movie Management - Fix N+1)** | ✅ **Đã hoàn thành** |
 | `MOD-03` | **Quản lý Cụm Rạp & Phòng Chiếu (Theaters & Rooms)** | ✅ **Đã hoàn thành** |
-| `MOD-04` | **Quản lý Suất Chiếu (Showtimes Scheduling)** | ⏳ Đang tích hợp |
-| `MOD-05` | **Quản lý Loại Ghế & Giữ Ghế Real-time (Seats & Redis Lock)** | ⏳ Đang tích hợp |
-| `MOD-06` | **Quản lý Đặt Vé & Đơn Hàng (Booking Management)** | ⏳ Đang tích hợp |
-| `MOD-07` | **Tích hợp Cổng Thanh Toán VNPay (Payment Gateway)** | ⏳ Đang tích hợp |
-| `MOD-08` | **Xử lý Nền & Gửi Email Vé (Celery & Background Tasks)** | ⏳ Đang tích hợp |
-| `MOD-09` | **Giao diện Cổng Thông Tin & Trang Tĩnh (Portal & UI)** | ⏳ Đang tích hợp |
+| `MOD-04` | **Quản lý Suất Chiếu (Showtimes Scheduling)** | ✅ **Đã hoàn thành** |
+| `MOD-05` | **Quản lý Loại Ghế & Giữ Ghế Real-time (Seats & Redis Lock)** | ✅ **Đã hoàn thành** |
+| `MOD-06` | **Quản lý Đặt Vé & Đơn Hàng (Booking Flow Context & Routing)** | ✅ **Đã hoàn thành** |
+| `MOD-07` | **Tích hợp Cổng Thanh Toán VNPay (Payment Gateway)** | ⏳ Đang hoàn thiện |
+| `MOD-08` | **Xử lý Nền & Gửi Email Vé (Celery & Background Tasks)** | ⏳ Đang hoàn thiện |
+| `MOD-09` | **Giao diện Cổng Thông Tin & Trang Tĩnh (Portal & UI)** | ⏳ Đang hoàn thiện |
 | `MOD-10` | **Hạ Tầng, Database & DevOps (Infra & Database)** | ✅ **Đã hoàn thành** |
