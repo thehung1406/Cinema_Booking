@@ -53,7 +53,9 @@ def cleanup_expired_bookings():
                 count += 1
                 logger.info(f"Expired booking {booking.id}")
             
-            # 2. Release ghế HOLD quá hạn trong DB
+            # 2. Release ghế HOLD quá hạn trong DB & Redis
+            from app.utils.redis_lock import SeatLockManager
+
             expired_holds = session.exec(
                 select(SeatStatus).where(
                     SeatStatus.status == SeatStatusEnum.HOLD,
@@ -63,6 +65,15 @@ def cleanup_expired_bookings():
             
             hold_count = 0
             for seat_status in expired_holds:
+                try:
+                    SeatLockManager.unlock_seat(
+                        showtime_id=seat_status.showtime_id,
+                        seat_id=seat_status.seat_id,
+                        user_id=seat_status.hold_by_user_id
+                    )
+                except Exception as ex:
+                    logger.warning(f"Failed to unlock Redis lock during cleanup: {ex}")
+
                 seat_status.status = SeatStatusEnum.AVAILABLE
                 seat_status.hold_by_user_id = None
                 seat_status.hold_expired_at = None
