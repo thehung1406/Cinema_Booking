@@ -54,14 +54,27 @@ const VNPayReturn = () => {
 
       setVnpayInfo(params);
 
-      // Nếu không có param VNPay
-      if (!vnp_TxnRef && !params.vnp_SecureHash) {
-        // Kiểm tra xem có nhận state từ navigation nội bộ không
-        if (location.state?.booking) {
-          setBooking(location.state.booking);
-          setStatus("success");
+      // Internal redirect for already-paid bookings: verify from backend first.
+      if (!params.vnp_SecureHash) {
+        if (params.bookingId) {
+          try {
+            const bookingRes = await api.get(`/bookings/${params.bookingId}`);
+            if (bookingRes.data?.paymentStatus === "PAID") {
+              setBooking(bookingRes.data);
+              setStatus("success");
+            } else {
+              setBooking(bookingRes.data);
+              setErrorMessage("Đơn hàng chưa được xác nhận thanh toán.");
+              setStatus("failed");
+            }
+          } catch (err) {
+            console.error("Lỗi khi kiểm tra trạng thái booking:", err);
+            setErrorMessage(err.response?.data?.detail || "Không thể xác thực trạng thái thanh toán.");
+            setStatus("error");
+          }
           return;
         }
+
         setErrorMessage("Không tìm thấy thông tin phản hồi từ cổng thanh toán.");
         setStatus("error");
         return;
@@ -93,7 +106,7 @@ const VNPayReturn = () => {
     };
 
     processReturn();
-  }, [location.search, location.state]);
+  }, [location.search]);
 
   const formatCurrency = (val) => {
     if (!val) return "0";

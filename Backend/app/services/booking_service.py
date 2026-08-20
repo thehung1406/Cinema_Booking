@@ -202,13 +202,36 @@ class BookingService:
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Bạn không có quyền cập nhật booking này"
             )
+
+        if payment_status not in ("FAILED", "CANCELLED"):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Không thể cập nhật trạng thái thanh toán này từ phía người dùng"
+            )
+
+        if booking.payment_status == "PAID":
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Không thể hủy booking đã thanh toán"
+            )
         
         # Cập nhật trạng thái
-        updated_booking = BookingRepository.update_payment_status(
+        BookingRepository.update_payment_status(
             db=db,
             booking_id=booking_id,
             payment_status=payment_status
         )
+
+        booking_detail = BookingRepository.get_booking_with_details(db=db, booking_id=booking_id)
+        for seat in (booking_detail or {}).get("seats", []):
+            seat_id = seat.get("seat_id")
+            if seat_id is None:
+                continue
+            try:
+                SeatLockManager.unlock_seat(booking.showtime_id, seat_id, booking.user_id)
+                SeatRepository.release_seat_optimistic(db, booking.showtime_id, seat_id, booking.user_id)
+            except Exception as e:
+                logger.warning(f"Failed to release hold for seat {seat_id}: {e}")
         
         db.commit()
         

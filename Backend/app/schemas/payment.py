@@ -5,9 +5,9 @@ from pydantic import BaseModel, Field, ConfigDict
 class VNPayURLRequest(BaseModel):
     """Request tạo URL thanh toán VNPay"""
     bookingId: int
-    amount: float
-    orderInfo: str
-    returnUrl: str
+    amount: Optional[float] = None
+    orderInfo: Optional[str] = None
+    returnUrl: Optional[str] = None
 
 
 class VNPayURLResponse(BaseModel):

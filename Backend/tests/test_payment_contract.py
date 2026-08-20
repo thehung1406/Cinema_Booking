@@ -141,7 +141,11 @@ def test_payment_router_endpoints_exist():
     router_source = (BACKEND_ROOT / "app" / "router" / "payment.py").read_text(encoding="utf-8")
     parsed = ast.parse(router_source)
 
-    function_names = {node.name for node in parsed.body if isinstance(node, ast.FunctionDef)}
+    function_names = {
+        node.name
+        for node in parsed.body
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
+    }
     assert "verify_vnpay_signature" in function_names
     assert "create_vnpay_url" in function_names
     assert "vnpay_return_post" in function_names
@@ -182,15 +186,49 @@ def test_payment_service_methods_and_status_transitions():
 
 
 def test_vnpay_url_generation_uses_sha512_and_amount_multiplier():
-    """Kiểm tra logic sinh URL thanh toán VNPay dùng HMAC-SHA512 và nhân 100 số tiền."""
+    """VNPay URL phải ký HMAC-SHA512 nhưng amount phải lấy từ booking server-side."""
     router_source = (BACKEND_ROOT / "app" / "router" / "payment.py").read_text(encoding="utf-8")
 
     assert "hashlib.sha512" in router_source
-    assert "request.amount * 100" in router_source
+    assert "Depends(get_current_user)" in router_source
+    assert "BookingRepository.get_booking_by_id" in router_source
+    assert "booking.total_amount" in router_source
+    assert "request.amount * 100" not in router_source
+    assert "request.returnUrl" not in router_source
     assert "vnp_SecureHash" in router_source
     assert "vnp_Version" in router_source
     assert "vnp_Command" in router_source
     assert "vnp_TmnCode" in router_source
+
+
+def test_vnpay_return_validates_amount_tmn_and_transaction_status_before_paid():
+    """Return URL không được mark PAID nếu amount/TMN/transaction status không hợp lệ."""
+    service_source = (BACKEND_ROOT / "app" / "services" / "payment_service.py").read_text(encoding="utf-8")
+    router_source = (BACKEND_ROOT / "app" / "router" / "payment.py").read_text(encoding="utf-8")
+
+    assert "vnp_params" in service_source
+    assert "validate_vnpay_payment_params" in service_source
+    assert "vnp_Amount" in service_source
+    assert "settings.TMN_CODE" in service_source
+    assert "vnp_TransactionStatus" in service_source
+    assert "vnp_params=params" in router_source
+
+
+def test_payment_status_endpoint_requires_current_user():
+    """Tra cứu payment status phải kiểm tra ownership như booking detail endpoint."""
+    router_source = (BACKEND_ROOT / "app" / "router" / "payment.py").read_text(encoding="utf-8")
+
+    assert "from app.utils.dependencies import get_current_user" in router_source
+    assert "current_user: User = Depends(get_current_user)" in router_source
+    assert "user_id=current_user.id" in router_source
+
+
+def test_vnpay_ipn_post_reads_body_or_form_params():
+    """POST IPN phải đọc body/form, không chỉ query string."""
+    router_source = (BACKEND_ROOT / "app" / "router" / "payment.py").read_text(encoding="utf-8")
+
+    assert "async def vnpay_ipn_post" in router_source
+    assert "await http_request.form()" in router_source or "await http_request.json()" in router_source
 
 
 def test_frontend_payment_components_contract():
@@ -213,6 +251,8 @@ def test_frontend_payment_components_contract():
     assert "QRCode" in vnpay_return_src
     assert "VNPAY_RESPONSE_MESSAGES" in vnpay_return_src
     assert "Thanh toán thành công" in vnpay_return_src
+    assert "location.state?.booking" not in vnpay_return_src
+    assert "/bookings/" in vnpay_return_src
 
     # App.jsx routing checks
     assert 'path="payment/:bookingId"' in app_src

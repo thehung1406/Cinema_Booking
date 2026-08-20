@@ -3,6 +3,7 @@ from sqlmodel import Session, select
 from fastapi import HTTPException, status
 import logging
 
+from app.core.config import settings
 from app.repositories.booking_repo import BookingRepository
 from app.repositories.seat_repo import SeatRepository
 from app.models.booking_detail import BookingDetail
@@ -14,10 +15,37 @@ logger = logging.getLogger(__name__)
 
 class PaymentService:
     @staticmethod
+    def validate_vnpay_payment_params(booking, params: Optional[dict]) -> Optional[str]:
+        """Validate signed VNPay payment data against the server-side booking."""
+        if not params:
+            return "Thiếu dữ liệu phản hồi VNPay"
+
+        booking_ref = params.get("vnp_TxnRef")
+        if str(booking.id) != str(booking_ref):
+            return "Mã booking trong phản hồi VNPay không khớp"
+
+        tmn_code = params.get("vnp_TmnCode")
+        if tmn_code != settings.TMN_CODE:
+            return "Mã merchant VNPay không hợp lệ"
+
+        amount = params.get("vnp_Amount")
+        try:
+            actual_amount = int(str(amount))
+            expected_amount = int(round(float(booking.total_amount) * 100))
+        except (TypeError, ValueError):
+            return "Số tiền VNPay không hợp lệ"
+
+        if actual_amount != expected_amount:
+            return "Số tiền thanh toán không khớp với booking"
+
+        return None
+
+    @staticmethod
     def confirm_vnpay_payment(
         db: Session,
         booking_id: int,
-        vnp_response_code: str
+        vnp_response_code: str,
+        vnp_params: Optional[dict] = None
     ) -> dict:
         try:
             # Lấy thông tin booking
@@ -38,6 +66,23 @@ class PaymentService:
                     "message": "Đơn hàng đã hết hạn hoặc bị hủy"
                 }
 
+            if booking.payment_status == "FAILED":
+                logger.warning(f"Booking {booking_id} đã ở trạng thái thanh toán thất bại")
+                return {
+                    "status": "failed",
+                    "booking": None,
+                    "message": "Đơn hàng không còn ở trạng thái chờ thanh toán"
+                }
+
+            validation_error = PaymentService.validate_vnpay_payment_params(booking, vnp_params)
+            if validation_error:
+                logger.warning(f"VNPay validation failed for booking {booking_id}: {validation_error}")
+                return {
+                    "status": "failed",
+                    "booking": None,
+                    "message": validation_error
+                }
+
             # Kiểm tra booking đã được thanh toán chưa (idempotent)
             if booking.payment_status == "PAID":
                 logger.warning(f"Booking {booking_id} đã được thanh toán trước đó")
@@ -47,9 +92,12 @@ class PaymentService:
                     "booking": booking_detail,
                     "message": "Booking đã được thanh toán trước đó"
                 }
-            
+
+            effective_response_code = vnp_params.get("vnp_ResponseCode", vnp_response_code)
+            vnp_transaction_status = vnp_params.get("vnp_TransactionStatus", effective_response_code)
+
             # Xử lý theo response code từ VNPay
-            if vnp_response_code == "00":
+            if effective_response_code == "00" and vnp_transaction_status == "00":
                 # Thanh toán thành công
                 logger.info(f"VNPay payment success for booking {booking_id}")
 
@@ -105,7 +153,11 @@ class PaymentService:
                 }
             else:
                 # Thanh toán thất bại
-                logger.warning(f"VNPay payment failed for booking {booking_id}, code: {vnp_response_code}")
+                logger.warning(
+                    f"VNPay payment failed for booking {booking_id}, "
+                    f"response_code: {effective_response_code}, "
+                    f"transaction_status: {vnp_transaction_status}"
+                )
                 
                 # Cập nhật trạng thái thanh toán thành FAILED
                 BookingRepository.update_payment_status(
@@ -132,7 +184,7 @@ class PaymentService:
                 return {
                     "status": "failed",
                     "booking": None,
-                    "message": f"Thanh toán thất bại với mã lỗi: {vnp_response_code}"
+                    "message": f"Thanh toán thất bại với mã lỗi: {effective_response_code}"
                 }
                 
         except HTTPException:
@@ -177,19 +229,14 @@ class PaymentService:
         if not booking:
             logger.warning(f"VNPay IPN: Booking {booking_id} not found")
             return {"RspCode": "01", "Message": "Order Not Found"}
-            
-        # Kiểm tra số tiền (vnp_Amount đơn vị xu = VND * 100)
-        vnp_amount_str = params.get("vnp_Amount")
-        if vnp_amount_str:
-            try:
-                vnp_amount = int(vnp_amount_str)
-                expected_amount = int(round(float(booking.total_amount) * 100))
-                if vnp_amount != expected_amount:
-                    logger.warning(f"VNPay IPN: Invalid amount {vnp_amount} != expected {expected_amount}")
-                    return {"RspCode": "04", "Message": "Invalid Amount"}
-            except (ValueError, TypeError):
+
+        validation_error = PaymentService.validate_vnpay_payment_params(booking, params)
+        if validation_error:
+            logger.warning(f"VNPay IPN validation failed for booking {booking_id}: {validation_error}")
+            if "Số tiền" in validation_error:
                 return {"RspCode": "04", "Message": "Invalid Amount"}
-                
+            return {"RspCode": "99", "Message": validation_error}
+
         # Kiểm tra đơn đã xác nhận trước đó chưa (idempotency)
         if booking.payment_status == "PAID":
             logger.info(f"VNPay IPN: Booking {booking_id} already confirmed")
