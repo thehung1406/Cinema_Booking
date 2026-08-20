@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import api from "../config/api";
 import { clearSession, getAccessToken } from "../services/authStorage";
+import logger from '../utils/logger';
 
 const PaymentPage = () => {
   const { bookingId } = useParams();
@@ -56,9 +57,8 @@ const PaymentPage = () => {
         
         setLoading(false);
       } catch (err) {
-        console.error("Lỗi khi lấy thông tin booking:", err);
+        logger.error("Lỗi khi lấy thông tin booking:", err);
         if (err.response && err.response.status === 401) {
-          alert("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
           clearSession();
           navigate('/loginpage');
         } else if (err.response && err.response.status === 404) {
@@ -83,7 +83,7 @@ const PaymentPage = () => {
     
     const bookingTime = new Date(bookingDateStr).getTime();
     if (isNaN(bookingTime)) {
-      console.error("Invalid booking date:", booking.bookingDate);
+      logger.error("Invalid booking date:", booking.bookingDate);
       return;
     }
     
@@ -105,7 +105,7 @@ const PaymentPage = () => {
   useEffect(() => {
     if (expired && booking && cleanBookingId) {
       api.patch(`/bookings/${cleanBookingId}/payment-status?payment_status=FAILED`).catch(err => {
-        console.warn("Lỗi khi cập nhật trạng thái hủy đơn:", err);
+        logger.warn("Lỗi khi cập nhật trạng thái hủy đơn:", err);
       });
     }
   }, [expired, booking, cleanBookingId]);
@@ -123,8 +123,8 @@ const PaymentPage = () => {
         throw new Error("Không nhận được URL thanh toán từ máy chủ");
       }
     } catch (err) {
-      console.error("Lỗi tạo URL thanh toán:", err);
-      alert(err.response?.data?.detail || "Không thể kết nối đến cổng thanh toán VNPay. Vui lòng thử lại.");
+      logger.error("Lỗi tạo URL thanh toán:", err);
+      setError(err.response?.data?.detail || "Không thể kết nối đến cổng thanh toán VNPay. Vui lòng thử lại.");
       setIsRedirecting(false);
     }
   };

@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { FaStar, FaCalendarAlt, FaClock, FaFilm, FaLanguage, FaClosedCaptioning } from "react-icons/fa";
 import filmService from "../services/filmService";
 import { isNowShowing, formatReleaseDate } from "../utils/filmUtils";
+import logger from '../utils/logger';
 
 const Movie = () => {
   const [movies, setMovies] = useState([]);
@@ -27,7 +28,7 @@ const Movie = () => {
         setMovies(films);
         setLoading(false);
       } catch (err) {
-        console.error('Lỗi khi lấy dữ liệu phim:', err);
+        logger.error('Lỗi khi lấy dữ liệu phim:', err);
         setError('Không thể tải danh sách phim. Vui lòng thử lại sau.');
         setLoading(false);
       }

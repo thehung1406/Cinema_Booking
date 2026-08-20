@@ -8,6 +8,7 @@ import {
 } from "react-icons/fa";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import api from "../config/api";
+import logger from '../utils/logger';
 
 function TicketBooking() {
   const navigate = useNavigate();
@@ -26,6 +27,7 @@ function TicketBooking() {
   );
   const [showtimes, setShowtimes] = useState([]);
   const [selectedShowtime, setSelectedShowtime] = useState(null);
+  const [notification, setNotification] = useState(null);
   
   const fetchShowtimes = async (filmId, theaterId, date) => {
     try {
@@ -39,11 +41,10 @@ function TicketBooking() {
           date: date
         }
       });
-      console.log("Dữ liệu suất chiếu từ API:", response.data);
       setShowtimes(response.data);
       setLoading(false);
     } catch (error) {
-      console.error("Lỗi khi lấy suất chiếu:", error);
+      logger.error("Lỗi khi lấy suất chiếu:", error);
       setShowtimes([]);
       setLoading(false);
     }
@@ -59,12 +60,9 @@ function TicketBooking() {
     try {
       setLoading(true);
       setError(null);
-      console.log('Đang tải danh sách rạp có chiếu phim...');
 
-      // Gọi API GET /theater/by-film/{film_id} để lấy danh sách rạp chiếu phim này
-      const response = await api.get(`/theater/by-film/${movieId}`);
-
-      console.log('Response từ API:', response.data);
+      // Gọi API GET /theaters/by-film/{film_id} để lấy danh sách rạp chiếu phim này
+      const response = await api.get(`/theaters/by-film/${movieId}`);
 
       let theaterList = [];
       if (Array.isArray(response.data)) {
@@ -73,13 +71,11 @@ function TicketBooking() {
         theaterList = response.data.theaters || response.data.data || [response.data];
       }
 
-      console.log('Danh sách rạp đã xử lý:', theaterList);
       setCinemas(theaterList);
       setLoading(false);
       return theaterList;
     } catch (error) {
-      console.error("Lỗi khi lấy danh sách rạp:", error);
-      console.error("Chi tiết lỗi:", error.response?.data);
+      logger.error("Lỗi khi lấy danh sách rạp:", error);
       setError("Không thể tải danh sách rạp. Vui lòng thử lại sau.");
       setCinemas([]);
       setLoading(false);
@@ -106,7 +102,7 @@ function TicketBooking() {
         }
         setLoading(false);
       } catch (err) {
-        console.error("Lỗi khi lấy dữ liệu:", err);
+        logger.error("Lỗi khi lấy dữ liệu:", err);
         setError("Không thể tải dữ liệu. Vui lòng thử lại sau.");
         setLoading(false);
       }
@@ -155,19 +151,19 @@ function TicketBooking() {
   // Navigate to seat booking page
   const handleNext = () => {
     if (!selectedMovie) {
-      alert("Vui lòng chọn phim");
+      setNotification("Vui lòng chọn phim");
       return;
     }
     if (!selectedCinema) {
-      alert("Vui lòng chọn rạp");
+      setNotification("Vui lòng chọn rạp");
       return;
     }
     if (!selectedDate) {
-      alert("Vui lòng chọn ngày");
+      setNotification("Vui lòng chọn ngày");
       return;
     }
     if (!selectedShowtime) {
-      alert("Vui lòng chọn suất chiếu");
+      setNotification("Vui lòng chọn suất chiếu");
       return;
     }
     navigate(`/seat-selection/${selectedShowtime}`);
@@ -197,7 +193,12 @@ function TicketBooking() {
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold text-center mb-8">Đặt vé xem phim</h1>
-
+      {notification && (
+        <div className="max-w-4xl mx-auto mb-4 p-3 bg-yellow-100 border border-yellow-400 text-yellow-800 rounded-lg flex justify-between items-center">
+          <span>{notification}</span>
+          <button onClick={() => setNotification(null)} className="ml-4 font-bold hover:text-yellow-900">&times;</button>
+        </div>
+      )}
       <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-md p-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Movie selection */}
@@ -297,7 +298,7 @@ function TicketBooking() {
                     timeString = "N/A";
                   }
                 } catch (e) {
-                  console.error("Lỗi định dạng thời gian:", e, showtime);
+                  logger.error("Lỗi định dạng thời gian:", e, showtime);
                   timeString = showtime.start_time || "N/A";
                 }
 

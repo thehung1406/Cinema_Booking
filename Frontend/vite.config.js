@@ -1,17 +1,9 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
-import dotenv from 'dotenv'
-import { nodePolyfills } from 'vite-plugin-node-polyfills'
-dotenv.config()
 
 export default defineConfig({
-  plugins: [react(), tailwindcss(),
-    nodePolyfills({
-      // Các module cần polyfill
-      include: ['events', 'timers', 'process']
-    }),
-  ],
+  plugins: [react(), tailwindcss()],
   resolve: {
     extensions: ['.js', '.jsx', '.ts', '.tsx']
   },

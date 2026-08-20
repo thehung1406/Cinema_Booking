@@ -8,12 +8,16 @@ from app.core.database import get_session
 from app.schemas.theater import TheaterRead
 from app.services.theater_service import TheaterService
 
-router = APIRouter(prefix="/theater", tags=["Theater"])
+router = APIRouter(prefix="/theaters", tags=["Theaters"])
 
 
 @router.get("/", response_model=List[TheaterRead])
-def get_theaters(db: Session = Depends(get_session)):
-    return TheaterService.get_all_theaters(db)
+def get_theaters(
+    skip: int = Query(default=0, ge=0, description="Số bản ghi bỏ qua"),
+    limit: int = Query(default=50, ge=1, le=200, description="Số bản ghi tối đa"),
+    db: Session = Depends(get_session),
+):
+    return TheaterService.get_all_theaters(db, skip=skip, limit=limit)
 
 
 @router.get("/{theater_id}", response_model=TheaterRead)
@@ -31,3 +35,4 @@ def get_theaters_by_film(
     db: Session = Depends(get_session),
 ):
     return TheaterService.get_theaters_by_film(db, film_id, from_date)
+

@@ -1,4 +1,9 @@
+import json
+from typing import List
+
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
 
 class Settings(BaseSettings):
     PROJECT_NAME: str
@@ -8,10 +13,10 @@ class Settings(BaseSettings):
     ALGORITHM: str
 
     DATABASE_URL: str
-    POSTGRES_USER : str
-    POSTGRES_PASSWORD : str
-    POSTGRES_DB : str
-    FRONTEND_URL : str
+    POSTGRES_USER: str
+    POSTGRES_PASSWORD: str
+    POSTGRES_DB: str
+    FRONTEND_URL: str
     REDIS_HOST: str
     REDIS_PORT: int
     REDIS_DB: int
@@ -25,7 +30,27 @@ class Settings(BaseSettings):
     SMTP_PASSWORD: str | None = None
     SMTP_FROM: str | None = None
     SMTP_TLS: bool = True
+
+    CORS_ORIGINS: List[str] = []
+
+    @field_validator("CORS_ORIGINS", mode="before")
+    @classmethod
+    def parse_cors_origins(cls, v):
+        """Accept JSON array string or comma-separated string."""
+        if isinstance(v, list):
+            return v
+        if isinstance(v, str):
+            v = v.strip()
+            if v.startswith("["):
+                try:
+                    return json.loads(v)
+                except json.JSONDecodeError:
+                    pass
+            return [origin.strip() for origin in v.split(",") if origin.strip()]
+        return []
+
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 
-    CORS_ORIGINS: str
+
 settings = Settings()
+

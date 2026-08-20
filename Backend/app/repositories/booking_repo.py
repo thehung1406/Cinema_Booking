@@ -164,7 +164,7 @@ class BookingRepository:
         return db.exec(statement).all()
     
     @staticmethod
-    def get_user_bookings_with_details(db: Session, user_id: int) -> List[dict]:
+    def get_user_bookings_with_details(db: Session, user_id: int, skip: int = 0, limit: int = 50) -> List[dict]:
         """Lấy tất cả bookings của user với đầy đủ chi tiết.
         Dùng JOIN batch thay vì gọi get_booking_with_details trong loop.
         """
@@ -180,6 +180,8 @@ class BookingRepository:
             .join(Theater, Theater.id == CinemaRoom.theater_id)
             .where(Booking.user_id == user_id)
             .order_by(Booking.booking_date.desc())
+            .offset(skip)
+            .limit(limit)
         )
         rows = db.exec(statement).all()
         

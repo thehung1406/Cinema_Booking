@@ -49,7 +49,7 @@ def test_ticket_booking_uses_api_config_and_distinct_theater_route():
     assert "from \"../config/api\"" in source
     assert "http://localhost:8000" not in source
     assert "/theater/${movieId}" not in source
-    assert "/theater/by-film/${movieId}" in source
+    assert "/theaters/by-film/${movieId}" in source
 
 
 def test_cinema_list_uses_existing_routes_and_api_config():

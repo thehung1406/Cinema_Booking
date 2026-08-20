@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { FaStar,  FaMapMarkerAlt,  FaTicketAlt } from "react-icons/fa";
 import { Link } from "react-router-dom";
 import api from "../config/api";
+import logger from '../utils/logger';
 
 function CinemaList() {
   const [cinemas, setCinemas] = useState([]);
@@ -11,12 +12,12 @@ function CinemaList() {
     const fetchData = async () => {
       try {
         setLoading(true);
-        // Sử dụng API GET /theater/ để lấy danh sách theaters
-        const cinemaRes = await api.get("/theater/");
+        // Sử dụng API GET /theaters/ để lấy danh sách theaters
+        const cinemaRes = await api.get("/theaters/");
         setCinemas(cinemaRes.data);
         setLoading(false);
       } catch (error) {
-        console.error("Lỗi khi lấy dữ liệu:", error);
+        logger.error("Lỗi khi lấy dữ liệu:", error);
         setLoading(false);
       }
     };

@@ -26,7 +26,7 @@ os.environ.setdefault("REDIS_URL", "redis://localhost:6379/0")
 os.environ.setdefault("TMN_CODE", "test")
 os.environ.setdefault("HASH_SECRET", "test")
 os.environ.setdefault("VNPAY_URL", "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html")
-os.environ.setdefault("CORS_ORIGINS", "http://localhost:5173")
+os.environ.setdefault("CORS_ORIGINS", '["http://localhost:5173"]')
 
 from app.schemas.auth import UserRead
 

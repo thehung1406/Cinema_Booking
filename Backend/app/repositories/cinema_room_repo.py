@@ -7,11 +7,11 @@ class CinemaRoomRepository:
         return db.get(CinemaRoom, room_id)
 
     @staticmethod
-    def get_all(db: Session):
-        statement = select(CinemaRoom)
+    def get_all(db: Session, skip: int = 0, limit: int = 50):
+        statement = select(CinemaRoom).offset(skip).limit(limit)
         return db.exec(statement).all()
 
     @staticmethod
-    def get_by_theater(db: Session, theater_id: int):
-        statement = select(CinemaRoom).where(CinemaRoom.theater_id == theater_id)
+    def get_by_theater(db: Session, theater_id: int, skip: int = 0, limit: int = 50):
+        statement = select(CinemaRoom).where(CinemaRoom.theater_id == theater_id).offset(skip).limit(limit)
         return db.exec(statement).all()

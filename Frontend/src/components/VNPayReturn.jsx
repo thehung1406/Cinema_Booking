@@ -18,6 +18,7 @@ import {
   Loader2 
 } from "lucide-react";
 import api from "../config/api";
+import logger from '../utils/logger';
 
 const VNPAY_RESPONSE_MESSAGES = {
   "00": "Giao dịch thành công",
@@ -68,7 +69,7 @@ const VNPayReturn = () => {
               setStatus("failed");
             }
           } catch (err) {
-            console.error("Lỗi khi kiểm tra trạng thái booking:", err);
+            logger.error("Lỗi khi kiểm tra trạng thái booking:", err);
             setErrorMessage(err.response?.data?.detail || "Không thể xác thực trạng thái thanh toán.");
             setStatus("error");
           }
@@ -97,7 +98,7 @@ const VNPayReturn = () => {
           setErrorMessage(msg);
         }
       } catch (err) {
-        console.error("Lỗi khi xác nhận giao dịch VNPay:", err);
+        logger.error("Lỗi khi xác nhận giao dịch VNPay:", err);
         setStatus("error");
         setErrorMessage(
           err.response?.data?.detail || "Không thể xác thực chữ ký giao dịch từ VNPay. Vui lòng liên hệ bộ phận hỗ trợ."

@@ -126,6 +126,7 @@ class SeatService:
     ) -> List[Dict]:
         """
         Giữ nhiều ghế cùng lúc:
+        - Pre-check: Validate tất cả ghế trước khi lock (all-or-nothing)
         - Lớp 1: Lock ghế trong Redis với TTL tự động expire
         - Lớp 2: Ghi HOLD vào DB với Optimistic Locking
         """
@@ -142,27 +143,41 @@ class SeatService:
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Danh sách ghế bị trùng"
             )
-        
+
+        # ── Pre-check Phase: validate TẤT CẢ ghế TRƯỚC khi lock ──
+        seats_map = {}  # seat_id -> Seat object
+        for seat_id in seat_ids:
+            seat = SeatRepository.get_seat_by_id(db=db, seat_id=seat_id)
+            if not seat:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=f"Ghế {seat_id} không tồn tại"
+                )
+            if seat.room_id != showtime.room_id:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Ghế {seat.seat_name} không thuộc phòng của suất chiếu"
+                )
+            # Kiểm tra ghế chưa BOOKED
+            seat_status = SeatRepository.get_seat_status(
+                db=db, showtime_id=showtime_id, seat_id=seat_id
+            )
+            if seat_status and seat_status.status == SeatStatusEnum.BOOKED:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Ghế {seat.seat_name} đã được đặt"
+                )
+            seats_map[seat_id] = seat
+
+        # ── Lock Phase: Redis + DB cho từng ghế ──
         ttl_seconds = hold_minutes * 60
         results = []
         locked_redis_seats = []
         
         try:
             for seat_id in seat_ids:
-                # Kiểm tra ghế có tồn tại không
-                seat = SeatRepository.get_seat_by_id(db=db, seat_id=seat_id)
-                if not seat:
-                    raise HTTPException(
-                        status_code=status.HTTP_404_NOT_FOUND,
-                        detail=f"Ghế {seat_id} không tồn tại"
-                    )
+                seat = seats_map[seat_id]
 
-                if seat.room_id != showtime.room_id:
-                    raise HTTPException(
-                        status_code=status.HTTP_400_BAD_REQUEST,
-                        detail=f"Ghế {seat.seat_name} không thuộc phòng của suất chiếu"
-                    )
-                
                 # Lớp 1: Lock ghế trong Redis với TTL (nguyên tử)
                 lock_success = SeatLockManager.lock_seat(
                     showtime_id=showtime_id,

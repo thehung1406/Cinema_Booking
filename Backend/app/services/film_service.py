@@ -6,10 +6,10 @@ from app.repositories.film_repo import FilmRepository
 class FilmService:
 
     @staticmethod
-    def list_films(db: Session, now_showing: bool = False):
+    def list_films(db: Session, now_showing: bool = False, skip: int = 0, limit: int = 50):
         if now_showing:
-            return FilmRepository.get_now_showing(db)
-        return FilmRepository.get_all(db)
+            return FilmRepository.get_now_showing(db, skip=skip, limit=limit)
+        return FilmRepository.get_all(db, skip=skip, limit=limit)
 
     @staticmethod
     def get_film_detail(db: Session, film_id: int):
@@ -20,3 +20,4 @@ class FilmService:
                 detail="Film not found"
             )
         return film
+

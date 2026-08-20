@@ -4,6 +4,7 @@ import { User, Calendar, MapPin, Clock, CreditCard, Ticket, Edit3, Save, X } fro
 import { useNavigate } from 'react-router-dom';
 import api from '../config/api';
 import { clearSession, getAccessToken, getCurrentUser, updateCurrentUser } from '../services/authStorage';
+import logger from '../utils/logger';
 
 const UserInfo = () => {
   const navigate = useNavigate();
@@ -40,10 +41,9 @@ const UserInfo = () => {
 
         setUserInfo(userInfo1);
         setFormData(userInfo1);
-        console.log('ID người dùng:', userInfo1.id);
         setLoading(false);
       } catch (err) {
-        console.error('Lỗi khi lấy thông tin người dùng:', err);
+        logger.error('Lỗi khi lấy thông tin người dùng:', err);
         setError('Không thể lấy thông tin người dùng. Vui lòng đăng nhập lại.');
         setLoading(false);
       }
@@ -59,15 +59,14 @@ const UserInfo = () => {
 
         // Sử dụng endpoint đúng: GET /bookings (lấy tất cả bookings của user hiện tại)
         const response = await api.get('/bookings');
-        console.log('Lịch sử đặt vé:', response.data);
         setBookingHistory(response.data);
         setFilteredBookings(response.data);
       } catch (err) {
-        console.error('Lỗi khi lấy lịch sử đặt vé:', err);
+        logger.error('Lỗi khi lấy lịch sử đặt vé:', err);
         
         // Xử lý lỗi 401
         if (err.response && err.response.status === 401) {
-          alert('Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.');
+          setError('Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.');
           clearSession();
           navigate('/loginpage');
         }
@@ -136,7 +135,7 @@ const UserInfo = () => {
       }
       setLoading(false);
     } catch (err) {
-      console.error('Lỗi khi cập nhật thông tin:', err);
+      logger.error('Lỗi khi cập nhật thông tin:', err);
       setError(err.response?.data?.message || 'Đã có lỗi xảy ra khi cập nhật thông tin.');
       setLoading(false);
     }

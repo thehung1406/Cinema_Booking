@@ -10,8 +10,8 @@ class TheaterRepo:
         return db.get(Theater, theater_id)
 
     @staticmethod
-    def get_all(db: Session):
-        statement = select(Theater)
+    def get_all(db: Session, skip: int = 0, limit: int = 50):
+        statement = select(Theater).offset(skip).limit(limit)
         return db.exec(statement).all()
 
     @staticmethod

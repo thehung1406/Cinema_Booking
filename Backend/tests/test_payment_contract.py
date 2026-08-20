@@ -30,7 +30,7 @@ os.environ.setdefault("REDIS_URL", "redis://localhost:6379/0")
 os.environ.setdefault("TMN_CODE", "SANDBOX_TMN")
 os.environ.setdefault("HASH_SECRET", "SANDBOX_HASH_SECRET_KEY")
 os.environ.setdefault("VNPAY_URL", "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html")
-os.environ.setdefault("CORS_ORIGINS", "http://localhost:5173")
+os.environ.setdefault("CORS_ORIGINS", '["http://localhost:5173"]')
 
 from app.schemas.payment import (
     VNPayURLRequest,

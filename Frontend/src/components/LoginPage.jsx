@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../config/api';
 import { setSession } from '../services/authStorage';
+import logger from '../utils/logger';
 
 const LoginPage = () => {
   const navigate = useNavigate();
@@ -124,7 +125,7 @@ const LoginPage = () => {
         handleLoginSuccess(response.data);
       }
     } catch (err) {
-      console.error(isSignUp ? 'Lỗi đăng ký:' : 'Lỗi đăng nhập:', err);
+      logger.error(isSignUp ? 'Lỗi đăng ký:' : 'Lỗi đăng nhập:', err);
       const errorMessage = err.response?.data?.detail || 
         err.response?.data?.message ||
         (isSignUp ? 'Đã có lỗi xảy ra khi đăng ký. Vui lòng thử lại.' : 
@@ -153,7 +154,7 @@ const LoginPage = () => {
         });
         setSession(loginData, userResponse.data);
       } catch (error) {
-        console.error('Lỗi khi lấy thông tin user:', error);
+        logger.error('Lỗi khi lấy thông tin user:', error);
       }
     }
     

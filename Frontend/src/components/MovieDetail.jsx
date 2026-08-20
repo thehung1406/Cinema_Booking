@@ -3,6 +3,7 @@ import { FaClock, FaFilm, FaTicketAlt, FaPlay, FaMapMarkerAlt, FaLanguage, FaClo
 import { useNavigate, useParams } from "react-router-dom";
 import filmService from "../services/filmService";
 import { formatDetailDate } from "../utils/filmUtils";
+import logger from '../utils/logger';
 
 function MovieDetail() {
   const { id } = useParams();
@@ -35,7 +36,7 @@ function MovieDetail() {
       } catch (err) {
         setError("Không thể tải thông tin phim. Vui lòng thử lại sau.");
         setLoading(false);
-        console.error("Lỗi khi tải chi tiết phim:", err);
+        logger.error("Lỗi khi tải chi tiết phim:", err);
       }
     };
 

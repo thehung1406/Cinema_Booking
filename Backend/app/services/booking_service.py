@@ -173,22 +173,21 @@ class BookingService:
         return BookingDetailResponse(**booking_detail)
     
     @staticmethod
-    def get_user_bookings(db: Session, user_id: int) -> List[BookingDetailResponse]:
+    def get_user_bookings(db: Session, user_id: int, skip: int = 0, limit: int = 50) -> List[BookingDetailResponse]:
         """Lấy tất cả bookings của user.
         Dùng batch JOIN query thay vì loop gọi get_booking_with_details.
         """
-        bookings_data = BookingRepository.get_user_bookings_with_details(db=db, user_id=user_id)
+        bookings_data = BookingRepository.get_user_bookings_with_details(db=db, user_id=user_id, skip=skip, limit=limit)
         return [BookingDetailResponse(**data) for data in bookings_data]
     
     @staticmethod
     def update_payment_status(
         db: Session, 
         booking_id: int, 
-        payment_status: str,
-        user_id: int
+        payment_status: str
     ) -> BookingDetailResponse:
-        """Cập nhật trạng thái thanh toán"""
-        # Kiểm tra booking tồn tại và thuộc về user
+        """Cập nhật trạng thái thanh toán (Staff/Admin only)"""
+        # Kiểm tra booking tồn tại
         booking = BookingRepository.get_booking_by_id(db=db, booking_id=booking_id)
         
         if not booking:
@@ -196,17 +195,11 @@ class BookingService:
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Booking không tồn tại"
             )
-        
-        if booking.user_id != user_id:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Bạn không có quyền cập nhật booking này"
-            )
 
         if payment_status not in ("FAILED", "CANCELLED"):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Không thể cập nhật trạng thái thanh toán này từ phía người dùng"
+                detail="Chỉ cho phép cập nhật sang FAILED hoặc CANCELLED"
             )
 
         if booking.payment_status == "PAID":
@@ -238,3 +231,4 @@ class BookingService:
         # Trả về thông tin chi tiết
         booking_detail = BookingRepository.get_booking_with_details(db=db, booking_id=booking_id)
         return BookingDetailResponse(**booking_detail)
+

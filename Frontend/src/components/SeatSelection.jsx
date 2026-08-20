@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../config/api';
 import { clearSession, getCurrentUser } from '../services/authStorage';
+import logger from '../utils/logger';
 
 const SeatSelection = () => {
   const { showtimeId } = useParams();
@@ -11,6 +12,7 @@ const SeatSelection = () => {
   const [selectedSeats, setSelectedSeats] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [notification, setNotification] = useState(null);
   const [dataFetched, setDataFetched] = useState(false);
   // Sử dụng useCallback để tránh tạo hàm mới mỗi lần render
   const fetchData = useCallback(async () => {
@@ -21,16 +23,14 @@ const SeatSelection = () => {
       setError(null);
       // Lấy thông tin suất chiếu
       const showtimeResponse = await api.get(`/showtimes/${showtimeId}`);
-      console.log("Thông tin suất chiếu:", showtimeResponse.data);
       setShowtimeInfo(showtimeResponse.data);
       // Lấy thông tin ghế
       const seatsResponse = await api.get(`/seats/showtime/${showtimeId}`);
-      console.log("Thông tin ghế:", seatsResponse.data);
       setSeatData(seatsResponse.data);
       // Đánh dấu đã fetch dữ liệu
       setDataFetched(true);
     } catch (err) {
-      console.error('Lỗi khi tải dữ liệu:', err);
+      logger.error('Lỗi khi tải dữ liệu:', err);
       setError('Không thể tải thông tin. Vui lòng thử lại sau.');
     } finally {
       setLoading(false);
@@ -56,7 +56,7 @@ const SeatSelection = () => {
     }
 
     if (!userInfo.access_token) {
-      alert('Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.');
+      setNotification('Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.');
       navigate('/loginpage');
       return;
     }
@@ -95,8 +95,8 @@ const SeatSelection = () => {
           : item
       )));
     } catch (err) {
-      console.error('Lỗi khi giữ/hủy ghế:', err);
-      alert(err.response?.data?.detail || 'Không thể cập nhật trạng thái ghế. Vui lòng thử lại.');
+      logger.error('Lỗi khi giữ/hủy ghế:', err);
+      setNotification(err.response?.data?.detail || 'Không thể cập nhật trạng thái ghế. Vui lòng thử lại.');
       const seatsResponse = await api.get(`/seats/showtime/${showtimeId}`);
       setSeatData(seatsResponse.data);
     }
@@ -109,7 +109,7 @@ const SeatSelection = () => {
   };
   const handleBooking = async () => {
     if (selectedSeats.length === 0) {
-      alert('Vui lòng chọn ít nhất một ghế');
+      setNotification('Vui lòng chọn ít nhất một ghế');
       return;
     }
     try {
@@ -128,7 +128,7 @@ const SeatSelection = () => {
 
       // Kiểm tra có token không
       if (!userInfo.access_token) {
-        alert('Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.');
+        setNotification('Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.');
         navigate('/loginpage');
         return;
       }
@@ -144,19 +144,15 @@ const SeatSelection = () => {
           return { seat_id: seatId, price: seat ? seat.price : 0 };
         }),
       };
-      console.log("Dữ liệu gửi lên backend:", bookingData);
-      console.log("Token:", userInfo.access_token);
 
       // Gửi request đặt vé
       const response = await api.post("/bookings", bookingData);
-      console.log("Kết quả đặt vé:", response.data);
       navigate(`/payment/${response.data.bookingId}`);
     } catch (err) {
-      console.error("Lỗi khi đặt vé:", err);
+      logger.error("Lỗi khi đặt vé:", err);
       
       // Xử lý lỗi 401 - Unauthorized
       if (err.response && err.response.status === 401) {
-        alert('Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.');
         clearSession();
         navigate('/loginpage', {
           state: {
@@ -166,7 +162,7 @@ const SeatSelection = () => {
         });
       } else {
         const errorMessage = err.response?.data?.detail || "Đã xảy ra lỗi khi đặt vé. Vui lòng thử lại.";
-        alert(errorMessage);
+        setNotification(errorMessage);
       }
     }
   };
@@ -226,6 +222,12 @@ const formatTime = (timeString) => {
     <div className="min-h-screen bg-gray-100 py-8">
       <div className="container mx-auto px-4">
         <h1 className="text-3xl font-bold text-gray-800 mb-6">Đặt vé xem phim</h1>
+        {notification && (
+          <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg flex justify-between items-center">
+            <span>{notification}</span>
+            <button onClick={() => setNotification(null)} className="ml-4 text-red-700 font-bold hover:text-red-900">&times;</button>
+          </div>
+        )}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2">
             {/* Thông tin phim */}

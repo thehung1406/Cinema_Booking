@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import filmService from "../services/filmService";
 import { classifyMovies } from "../utils/filmUtils";
+import logger from '../utils/logger';
 
 const MainHomePage = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -43,7 +44,7 @@ const MainHomePage = () => {
 
         setLoading(false);
       } catch (err) {
-        console.error("Lỗi khi lấy danh sách phim:", err);
+        logger.error("Lỗi khi lấy danh sách phim:", err);
         setError("Không thể tải danh sách phim. Vui lòng thử lại sau.");
         setLoading(false);
       }

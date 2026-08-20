@@ -12,7 +12,7 @@ def test_ticket_booking_reads_query_params():
     assert "searchParams.get" in source
     assert "filmId" in source
     assert "theaterId" in source
-    assert "/theater/by-film/" in source
+    assert "/theaters/by-film/" in source
 
 
 def test_home_page_passes_film_id_to_booking():
