@@ -17,8 +17,8 @@ class Settings(BaseSettings):
     REDIS_DB: int
     REDIS_URL: str
     TMN_CODE: str
-    HASH_SECRET : str
-    VNPAY_URL : str
+    HASH_SECRET: str
+    VNPAY_URL: str
     SMTP_HOST: str | None = None
     SMTP_PORT: int = 587
     SMTP_USER: str | None = None

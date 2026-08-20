@@ -1,9 +1,10 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlmodel import Session
 import hashlib
 import hmac
 import urllib.parse
-from datetime import datetime
+from datetime import datetime, timedelta
+import logging
 
 from app.core.database import get_session
 from app.core.config import settings
@@ -11,76 +12,130 @@ from app.schemas.payment import (
     VNPayURLRequest, 
     VNPayURLResponse,
     VNPayReturnRequest, 
-    PaymentConfirmResponse
+    PaymentConfirmResponse,
+    VNPayIPNResponse
 )
 from app.services.payment_service import PaymentService
 
+logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/payment", tags=["Payment"])
+
+
+def verify_vnpay_signature(params: dict) -> bool:
+    """
+    Xác thực chữ ký HMAC-SHA512 của VNPay.
+    Lọc bỏ vnp_SecureHash, vnp_SecureHashType và các giá trị rỗng/None.
+    Sắp xếp các tham số theo thứ tự alphabet và băm dữ liệu với HASH_SECRET.
+    """
+    secure_hash = params.get("vnp_SecureHash")
+    if not secure_hash:
+        return False
+
+    signed_params = {
+        key: value
+        for key, value in params.items()
+        if key.startswith("vnp_")
+        and key not in {"vnp_SecureHash", "vnp_SecureHashType"}
+        and value is not None
+        and str(value) != ""
+    }
+    sorted_params = sorted(signed_params.items())
+    hash_data = "&".join(
+        f"{key}={urllib.parse.quote_plus(str(value))}"
+        for key, value in sorted_params
+    )
+    expected_hash = hmac.new(
+        settings.HASH_SECRET.encode("utf-8"),
+        hash_data.encode("utf-8"),
+        hashlib.sha512
+    ).hexdigest()
+    return hmac.compare_digest(expected_hash.lower(), str(secure_hash).lower())
 
 
 @router.post("/vnpay-url", response_model=VNPayURLResponse)
 def create_vnpay_url(
     request: VNPayURLRequest,
+    http_request: Request,
     db: Session = Depends(get_session)
 ):
     """
-    Tạo URL thanh toán VNPay Sandbox
+    Tạo URL thanh toán VNPay Sandbox với mã checksum HMAC-SHA512
     """
-    # VNPay config từ .env
     vnp_TmnCode = settings.TMN_CODE
     vnp_HashSecret = settings.HASH_SECRET
     vnp_Url = settings.VNPAY_URL
     
-    # Tạo các tham số
-    create_date = datetime.now().strftime('%Y%m%d%H%M%S')
+    # Thời gian tạo và thời gian hết hạn (15 phút sau)
+    now = datetime.now()
+    create_date = now.strftime('%Y%m%d%H%M%S')
+    expire_date = (now + timedelta(minutes=15)).strftime('%Y%m%d%H%M%S')
     
-    # VNPay yêu cầu amount là số nguyên (đã nhân 100 để chuyển từ đồng sang xu)
-    vnp_amount = int(request.amount * 100)
+    # VNPay yêu cầu amount là số nguyên (nhân 100 để đổi từ VND sang xu/đồng nhỏ nhất)
+    vnp_amount = int(round(request.amount * 100))
+    
+    # Lấy IP client
+    client_ip = "127.0.0.1"
+    if http_request.client and http_request.client.host:
+        client_ip = http_request.client.host
+    forwarded = http_request.headers.get("x-forwarded-for")
+    if forwarded:
+        client_ip = forwarded.split(",")[0].strip()
     
     vnp_Params = {
         'vnp_Version': '2.1.0',
         'vnp_Command': 'pay',
         'vnp_TmnCode': vnp_TmnCode,
-        'vnp_Amount': str(vnp_amount),  # Phải là chuỗi số nguyên
+        'vnp_Amount': str(vnp_amount),
         'vnp_CurrCode': 'VND',
         'vnp_TxnRef': str(request.bookingId),
-        'vnp_OrderInfo': f"Thanh toan ve phim booking {request.bookingId}",  # Không dùng ký tự đặc biệt
+        'vnp_OrderInfo': request.orderInfo or f"Thanh toan ve phim booking {request.bookingId}",
         'vnp_OrderType': 'other',
         'vnp_Locale': 'vn',
         'vnp_ReturnUrl': request.returnUrl,
         'vnp_CreateDate': create_date,
-        'vnp_IpAddr': '127.0.0.1'
+        'vnp_ExpireDate': expire_date,
+        'vnp_IpAddr': client_ip
     }
     
     # Sắp xếp params theo alphabet
     sorted_params = sorted(vnp_Params.items())
     
-    # Tạo hash data - VNPay yêu cầu URL encode giá trị trước khi hash
+    # Tạo hash data - URL encode giá trị theo chuẩn VNPay
     hash_data = '&'.join([f"{k}={urllib.parse.quote_plus(str(v))}" for k, v in sorted_params])
     
-    # Tạo secure hash
+    # Tạo secure hash HMAC-SHA512
     secure_hash = hmac.new(
         vnp_HashSecret.encode('utf-8'),
         hash_data.encode('utf-8'),
         hashlib.sha512
     ).hexdigest()
     
-    # Query string giống với hash_data
-    query_string = hash_data
-    
-    # URL cuối cùng
-    payment_url = f"{vnp_Url}?{query_string}&vnp_SecureHash={secure_hash}"
+    # URL chuyển hướng tới VNPay Sandbox
+    payment_url = f"{vnp_Url}?{hash_data}&vnp_SecureHash={secure_hash}"
+    logger.info(f"Generated VNPay URL for booking {request.bookingId}")
     
     return VNPayURLResponse(paymentUrl=payment_url)
 
+
 @router.post("/vnpay-return", response_model=PaymentConfirmResponse)
-def vnpay_return(
+def vnpay_return_post(
     payment_data: VNPayReturnRequest,
     db: Session = Depends(get_session)
 ):
+    """
+    Xác nhận giao dịch VNPay qua Return URL (POST từ Frontend)
+    """
+    params = payment_data.model_dump(by_alias=True, exclude_none=True)
+    if not verify_vnpay_signature(params):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Chữ ký VNPay không hợp lệ"
+        )
+
+    booking_ref = payment_data.vnp_TxnRef or payment_data.bookingId
     try:
-        booking_id = int(payment_data.bookingId)
-    except ValueError:
+        booking_id = int(booking_ref)
+    except (TypeError, ValueError):
         return PaymentConfirmResponse(
             status="failed",
             booking=None,
@@ -96,11 +151,75 @@ def vnpay_return(
     return PaymentConfirmResponse(**result)
 
 
+@router.get("/vnpay-return", response_model=PaymentConfirmResponse)
+def vnpay_return_get(
+    http_request: Request,
+    db: Session = Depends(get_session)
+):
+    """
+    Xác nhận giao dịch VNPay qua Return URL (GET trực tiếp)
+    """
+    params = dict(http_request.query_params)
+    if not verify_vnpay_signature(params):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Chữ ký VNPay không hợp lệ"
+        )
+
+    booking_ref = params.get("vnp_TxnRef")
+    try:
+        booking_id = int(booking_ref)
+    except (TypeError, ValueError):
+        return PaymentConfirmResponse(
+            status="failed",
+            booking=None,
+            message="Booking ID không hợp lệ"
+        )
+    
+    response_code = params.get("vnp_ResponseCode", "")
+    result = PaymentService.confirm_vnpay_payment(
+        db=db,
+        booking_id=booking_id,
+        vnp_response_code=response_code
+    )
+    
+    return PaymentConfirmResponse(**result)
+
+
+@router.get("/vnpay-ipn", response_model=VNPayIPNResponse)
+def vnpay_ipn_get(
+    http_request: Request,
+    db: Session = Depends(get_session)
+):
+    """
+    Webhook tiếp nhận Instant Payment Notification (IPN) từ VNPay Server (GET)
+    """
+    params = dict(http_request.query_params)
+    result = PaymentService.process_vnpay_ipn(db=db, params=params)
+    return VNPayIPNResponse(**result)
+
+
+@router.post("/vnpay-ipn", response_model=VNPayIPNResponse)
+def vnpay_ipn_post(
+    http_request: Request,
+    db: Session = Depends(get_session)
+):
+    """
+    Webhook tiếp nhận Instant Payment Notification (IPN) từ VNPay Server (POST)
+    """
+    params = dict(http_request.query_params)
+    result = PaymentService.process_vnpay_ipn(db=db, params=params)
+    return VNPayIPNResponse(**result)
+
+
 @router.get("/status/{booking_id}")
 def get_payment_status(
     booking_id: int,
     db: Session = Depends(get_session)
 ):
+    """
+    Tra cứu trạng thái thanh toán của booking
+    """
     return PaymentService.get_payment_status(
         db=db,
         booking_id=booking_id

@@ -46,20 +46,16 @@ class BookingDetailResponse(BaseModel):
     showtimeId: int = Field(..., alias="showtimeId")
     bookingDate: datetime = Field(..., alias="bookingDate")
     totalAmount: float = Field(..., alias="totalAmount")
-    paymentMethod: Optional[str] = Field(None, alias="paymentMethod")
+    paymentMethod: str = Field(..., alias="paymentMethod")
     paymentStatus: str = Field(..., alias="paymentStatus")
     bookingStatus: str = Field(..., alias="bookingStatus")
     
-    # Thông tin phim & suất chiếu & người dùng
+    # Thông tin phim & suất chiếu
     filmTitle: Optional[str] = Field(None, alias="filmTitle")
-    filmImage: Optional[str] = Field(None, alias="filmImage")
     theaterName: Optional[str] = Field(None, alias="theaterName")
     roomName: Optional[str] = Field(None, alias="roomName")
     showDate: Optional[str] = Field(None, alias="showDate")
     startTime: Optional[str] = Field(None, alias="startTime")
-    fullName: Optional[str] = Field(None, alias="fullName")
-    email: Optional[str] = Field(None, alias="email")
-    phone: Optional[str] = Field(None, alias="phone")
     
     # Danh sách ghế đã đặt
     seats: List[dict]

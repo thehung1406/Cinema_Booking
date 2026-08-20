@@ -1,7 +1,8 @@
 from typing import List, Optional, Tuple
 from datetime import datetime, timedelta, timezone
 from sqlmodel import Session, select
-from sqlalchemy import func
+from sqlalchemy import func, update
+from fastapi import HTTPException, status
 from app.models.seat import Seat
 from app.models.seat_type import SeatType
 from app.models.seat_status import SeatStatus
@@ -68,91 +69,202 @@ class SeatRepository:
         return list(db.exec(statement).all())
     
     @staticmethod
-    def create_seat_status(
+    def hold_seat_optimistic(
         db: Session,
-        showtime_id: int, 
-        seat_id: int, 
+        showtime_id: int,
+        seat_id: int,
         user_id: int,
-        hold_minutes: int = 3
+        hold_minutes: int = 10
     ) -> SeatStatus:
-        """Tạo mới seat_status khi giữ ghế lần đầu"""
+        """
+        Giữ ghế trong DB với Optimistic Lock.
+        Chỉ thành công nếu ghế đang AVAILABLE, cùng user, hoặc HOLD đã quá hạn.
+        """
         now = datetime.now(timezone.utc)
-        seat_status = SeatStatus(
-            showtime_id=showtime_id,
-            seat_id=seat_id,
-            status=SeatStatusEnum.HOLD,
-            hold_by_user_id=user_id,
-            hold_expired_at=now + timedelta(minutes=hold_minutes),
-            created_at=now,
-            updated_at=now
-        )
-        db.add(seat_status)
-        db.flush()
-        db.refresh(seat_status)
-        return seat_status
-    
-    @staticmethod
-    def update_seat_status_hold(
-        db: Session,
-        seat_status: SeatStatus,
-        user_id: int,
-        hold_minutes: int = 3
-    ) -> SeatStatus:
-        """Cập nhật trạng thái ghế sang HOLD"""
-        now = datetime.now(timezone.utc)
-        seat_status.status = SeatStatusEnum.HOLD
-        seat_status.hold_by_user_id = user_id
-        seat_status.hold_expired_at = now + timedelta(minutes=hold_minutes)
-        seat_status.updated_at = now
-        db.add(seat_status)
-        db.flush()
-        db.refresh(seat_status)
-        return seat_status
-    
-    @staticmethod
-    def hold_seat(
-        db: Session,
-        showtime_id: int, 
-        seat_id: int, 
-        user_id: int,
-        hold_minutes: int = 3
-    ) -> SeatStatus:
-        """Giữ ghế trong thời gian nhất định"""
+        expired_at = now + timedelta(minutes=hold_minutes)
         seat_status = SeatRepository.get_seat_status(db, showtime_id, seat_id)
-        
+
         if not seat_status:
-            # Tạo mới nếu chưa có
-            return SeatRepository.create_seat_status(db, showtime_id, seat_id, user_id, hold_minutes)
-        else:
-            # Cập nhật trạng thái
-            return SeatRepository.update_seat_status_hold(db, seat_status, user_id, hold_minutes)
-    
-    @staticmethod
-    def release_seat(db: Session, showtime_id: int, seat_id: int) -> bool:
-        """Hủy giữ ghế"""
-        seat_status = SeatRepository.get_seat_status(db, showtime_id, seat_id)
-        
-        if seat_status and seat_status.status == SeatStatusEnum.HOLD:
-            seat_status.status = SeatStatusEnum.AVAILABLE
-            seat_status.hold_by_user_id = None
-            seat_status.hold_expired_at = None
-            seat_status.updated_at = datetime.now(timezone.utc)
-            db.add(seat_status)
+            # Chưa có record trong DB -> INSERT mới
+            new_status = SeatStatus(
+                showtime_id=showtime_id,
+                seat_id=seat_id,
+                status=SeatStatusEnum.HOLD,
+                hold_by_user_id=user_id,
+                hold_expired_at=expired_at,
+                version=1,
+                created_at=now,
+                updated_at=now
+            )
+            db.add(new_status)
             db.flush()
-            return True
+            db.refresh(new_status)
+            return new_status
+
+        # Đã có record -> Kiểm tra trạng thái hiện tại
+        if seat_status.status == SeatStatusEnum.BOOKED:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Ghế đã được đặt"
+            )
+
+        # Nếu ghế đang HOLD bởi người khác và chưa hết hạn
+        if (
+            seat_status.status == SeatStatusEnum.HOLD
+            and seat_status.hold_expired_at
+            and seat_status.hold_expired_at > now
+            and seat_status.hold_by_user_id != user_id
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Ghế đang được giữ bởi người khác"
+            )
+
+        current_version = seat_status.version
+
+        # Optimistic Lock update: WHERE id = ? AND version = current_version
+        result = db.exec(
+            update(SeatStatus)
+            .where(
+                SeatStatus.id == seat_status.id,
+                SeatStatus.version == current_version
+            )
+            .values(
+                status=SeatStatusEnum.HOLD,
+                hold_by_user_id=user_id,
+                hold_expired_at=expired_at,
+                version=current_version + 1,
+                updated_at=now
+            )
+        )
+
+        if result.rowcount == 0:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Ghế vừa bị người khác chọn, vui lòng thử lại"
+            )
+
+        db.flush()
+        db.refresh(seat_status)
+        return seat_status
+
+    @staticmethod
+    def release_seat_optimistic(db: Session, showtime_id: int, seat_id: int, user_id: int) -> bool:
+        """Hủy giữ ghế của user trong DB"""
+        seat_status = SeatRepository.get_seat_status(db, showtime_id, seat_id)
+        if not seat_status:
+            return False
+
+        if seat_status.status == SeatStatusEnum.HOLD and seat_status.hold_by_user_id == user_id:
+            now = datetime.now(timezone.utc)
+            current_version = seat_status.version
+            result = db.exec(
+                update(SeatStatus)
+                .where(
+                    SeatStatus.id == seat_status.id,
+                    SeatStatus.version == current_version
+                )
+                .values(
+                    status=SeatStatusEnum.AVAILABLE,
+                    hold_by_user_id=None,
+                    hold_expired_at=None,
+                    version=current_version + 1,
+                    updated_at=now
+                )
+            )
+            db.flush()
+            return result.rowcount > 0
         return False
-    
+
+    @staticmethod
+    def book_seat_optimistic(
+        db: Session,
+        showtime_id: int,
+        seat_id: int,
+        user_id: int
+    ) -> SeatStatus:
+        """Chuyển ghế HOLD của đúng user sang BOOKED bằng optimistic locking."""
+        now = datetime.now(timezone.utc)
+        seat_status = SeatRepository.get_seat_status(db, showtime_id, seat_id)
+
+        if not seat_status:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Ghế chưa được giữ hoặc đã hết hạn giữ"
+            )
+
+        if seat_status.status != SeatStatusEnum.HOLD:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Ghế không còn ở trạng thái đang giữ"
+            )
+
+        if seat_status.hold_by_user_id != user_id:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Ghế đang được giữ bởi người dùng khác"
+            )
+
+        if not seat_status.hold_expired_at or seat_status.hold_expired_at <= now:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Thời gian giữ ghế đã hết hạn"
+            )
+
+        current_version = seat_status.version
+        result = db.exec(
+            update(SeatStatus)
+            .where(
+                SeatStatus.id == seat_status.id,
+                SeatStatus.status == SeatStatusEnum.HOLD,
+                SeatStatus.hold_by_user_id == user_id,
+                SeatStatus.hold_expired_at > now,
+                SeatStatus.version == current_version
+            )
+            .values(
+                status=SeatStatusEnum.BOOKED,
+                hold_by_user_id=None,
+                hold_expired_at=None,
+                version=current_version + 1,
+                updated_at=now
+            )
+        )
+
+        if result.rowcount == 0:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Ghế vừa thay đổi trạng thái, vui lòng thử lại"
+            )
+
+        db.flush()
+        db.refresh(seat_status)
+        return seat_status
+
     @staticmethod
     def book_seat(db: Session, showtime_id: int, seat_id: int) -> SeatStatus:
         """Đặt ghế (chuyển từ HOLD sang BOOKED)"""
         seat_status = SeatRepository.get_seat_status(db, showtime_id, seat_id)
+        now = datetime.now(timezone.utc)
         
         if not seat_status:
-            raise ValueError(f"Seat status not found for seat {seat_id} in showtime {showtime_id}")
+            new_status = SeatStatus(
+                showtime_id=showtime_id,
+                seat_id=seat_id,
+                status=SeatStatusEnum.BOOKED,
+                version=1,
+                created_at=now,
+                updated_at=now
+            )
+            db.add(new_status)
+            db.flush()
+            db.refresh(new_status)
+            return new_status
         
         seat_status.status = SeatStatusEnum.BOOKED
+        seat_status.hold_by_user_id = None
         seat_status.hold_expired_at = None
-        seat_status.updated_at = datetime.now(timezone.utc)
+        seat_status.version = seat_status.version + 1
+        seat_status.updated_at = now
         db.add(seat_status)
         db.flush()
         db.refresh(seat_status)
@@ -173,9 +285,7 @@ class SeatRepository:
     
     @staticmethod
     def get_available_seats_count(db: Session, showtime_id: int) -> int:
-        """Đếm số ghế còn trống bằng COUNT(*).
-        Đếm ghế AVAILABLE hoặc chưa có trong seat_status.
-        """
+        """Đếm số ghế còn trống bằng COUNT(*)."""
         statement = (
             select(func.count())
             .select_from(SeatStatus)
