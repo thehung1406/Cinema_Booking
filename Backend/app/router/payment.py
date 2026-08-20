@@ -224,4 +224,3 @@ def get_payment_status(
         db=db,
         booking_id=booking_id
     )
-

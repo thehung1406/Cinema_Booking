@@ -8,6 +8,7 @@ from app.models.booking import Booking
 from app.models.booking_detail import BookingDetail
 from app.utils.enum import SeatStatusEnum, BookingStatus, PaymentStatus
 from app.utils.email_service import send_payment_success_email
+from app.utils.redis_lock import SeatLockManager
 import logging
 
 logger = logging.getLogger(__name__)
@@ -30,15 +31,14 @@ def cleanup_expired_bookings():
     Chạy mỗi 1 phút để:
     - Hủy booking PENDING quá 10 phút chưa thanh toán
     - Cập nhật payment_status thành FAILED
-    - Release các ghế HOLD quá hạn (hold_expired_at <= now) về AVAILABLE
+    - Release các ghế HOLD quá hạn (hold_expired_at <= now) về AVAILABLE trong DB & Redis
     """
     with Session(engine) as session:
         try:
             now = datetime.now(timezone.utc)
-            
-            # 1. Tìm booking PENDING quá 10 phút (tính từ booking_date)
             ten_minutes_ago = now - timedelta(minutes=10)
             
+            # 1. Tìm booking PENDING quá 10 phút (tính từ booking_date)
             statement = select(Booking).where(
                 Booking.booking_status == BookingStatus.PENDING,
                 Booking.booking_date <= ten_minutes_ago
@@ -50,12 +50,21 @@ def cleanup_expired_bookings():
                 booking.booking_status = BookingStatus.CANCELLED
                 booking.payment_status = PaymentStatus.FAILED
                 session.add(booking)
+                
+                # Giải phóng ghế trong Redis nếu có
+                details = session.exec(
+                    select(BookingDetail).where(BookingDetail.booking_id == booking.id)
+                ).all()
+                for detail in details:
+                    try:
+                        SeatLockManager.unlock_seat(booking.showtime_id, detail.seat_id, booking.user_id)
+                    except Exception:
+                        pass
+                
                 count += 1
                 logger.info(f"Expired booking {booking.id}")
             
             # 2. Release ghế HOLD quá hạn trong DB & Redis
-            from app.utils.redis_lock import SeatLockManager
-
             expired_holds = session.exec(
                 select(SeatStatus).where(
                     SeatStatus.status == SeatStatusEnum.HOLD,

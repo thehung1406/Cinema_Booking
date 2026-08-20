@@ -29,6 +29,15 @@ class PaymentService:
                     detail="Booking không tồn tại"
                 )
             
+            # Kiểm tra booking đã bị hủy hoặc hết hạn chưa
+            if booking.booking_status in ("CANCELLED", "EXPIRED"):
+                logger.warning(f"Booking {booking_id} đã bị hủy hoặc hết hạn")
+                return {
+                    "status": "failed",
+                    "booking": None,
+                    "message": "Đơn hàng đã hết hạn hoặc bị hủy"
+                }
+
             # Kiểm tra booking đã được thanh toán chưa (idempotent)
             if booking.payment_status == "PAID":
                 logger.warning(f"Booking {booking_id} đã được thanh toán trước đó")
@@ -284,4 +293,3 @@ class PaymentService:
             "total_amount": booking.total_amount,
             "booking_date": booking.booking_date
         }
-
