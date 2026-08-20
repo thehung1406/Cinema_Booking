@@ -244,6 +244,8 @@ class BookingRepository:
             booking.payment_status = payment_status
             if payment_status == "PAID":
                 booking.booking_status = "CONFIRMED"
+            elif payment_status in ("FAILED", "CANCELLED"):
+                booking.booking_status = "CANCELLED"
             db.add(booking)
             db.flush()
             db.refresh(booking)

@@ -8,6 +8,8 @@ import logging
 
 from app.core.database import get_session
 from app.core.config import settings
+from app.models.user import User
+from app.repositories.booking_repo import BookingRepository
 from app.schemas.payment import (
     VNPayURLRequest, 
     VNPayURLResponse,
@@ -16,6 +18,7 @@ from app.schemas.payment import (
     VNPayIPNResponse
 )
 from app.services.payment_service import PaymentService
+from app.utils.dependencies import get_current_user
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/payment", tags=["Payment"])
@@ -56,22 +59,48 @@ def verify_vnpay_signature(params: dict) -> bool:
 def create_vnpay_url(
     request: VNPayURLRequest,
     http_request: Request,
-    db: Session = Depends(get_session)
+    db: Session = Depends(get_session),
+    current_user: User = Depends(get_current_user)
 ):
     """
-    Tạo URL thanh toán VNPay Sandbox với mã checksum HMAC-SHA512
+    Tạo URL thanh toán VNPay Sandbox với mã checksum HMAC-SHA512.
+    Amount, order info và return URL được lấy/derive server-side từ booking.
     """
+    booking = BookingRepository.get_booking_by_id(db=db, booking_id=request.bookingId)
+    if not booking:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Booking không tồn tại"
+        )
+
+    if booking.user_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Bạn không có quyền thanh toán booking này"
+        )
+
+    if booking.payment_status != "PENDING" or booking.booking_status != "PENDING":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Booking không còn ở trạng thái chờ thanh toán"
+        )
+
     vnp_TmnCode = settings.TMN_CODE
     vnp_HashSecret = settings.HASH_SECRET
     vnp_Url = settings.VNPAY_URL
     
-    # Thời gian tạo và thời gian hết hạn (15 phút sau)
+    # Đồng bộ với thời gian giữ ghế/booking pending 10 phút.
     now = datetime.now()
     create_date = now.strftime('%Y%m%d%H%M%S')
-    expire_date = (now + timedelta(minutes=15)).strftime('%Y%m%d%H%M%S')
+    expire_date = (now + timedelta(minutes=10)).strftime('%Y%m%d%H%M%S')
     
     # VNPay yêu cầu amount là số nguyên (nhân 100 để đổi từ VND sang xu/đồng nhỏ nhất)
-    vnp_amount = int(round(request.amount * 100))
+    vnp_amount = int(round(float(booking.total_amount) * 100))
+    if vnp_amount <= 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Số tiền booking không hợp lệ"
+        )
     
     # Lấy IP client
     client_ip = "127.0.0.1"
@@ -87,11 +116,11 @@ def create_vnpay_url(
         'vnp_TmnCode': vnp_TmnCode,
         'vnp_Amount': str(vnp_amount),
         'vnp_CurrCode': 'VND',
-        'vnp_TxnRef': str(request.bookingId),
-        'vnp_OrderInfo': request.orderInfo or f"Thanh toan ve phim booking {request.bookingId}",
+        'vnp_TxnRef': str(booking.id),
+        'vnp_OrderInfo': f"Thanh toan ve phim booking {booking.id}",
         'vnp_OrderType': 'other',
         'vnp_Locale': 'vn',
-        'vnp_ReturnUrl': request.returnUrl,
+        'vnp_ReturnUrl': f"{settings.FRONTEND_URL.rstrip('/')}/payment-result",
         'vnp_CreateDate': create_date,
         'vnp_ExpireDate': expire_date,
         'vnp_IpAddr': client_ip
@@ -145,7 +174,8 @@ def vnpay_return_post(
     result = PaymentService.confirm_vnpay_payment(
         db=db,
         booking_id=booking_id,
-        vnp_response_code=payment_data.vnp_ResponseCode
+        vnp_response_code=payment_data.vnp_ResponseCode,
+        vnp_params=params
     )
     
     return PaymentConfirmResponse(**result)
@@ -180,7 +210,8 @@ def vnpay_return_get(
     result = PaymentService.confirm_vnpay_payment(
         db=db,
         booking_id=booking_id,
-        vnp_response_code=response_code
+        vnp_response_code=response_code,
+        vnp_params=params
     )
     
     return PaymentConfirmResponse(**result)
@@ -200,7 +231,7 @@ def vnpay_ipn_get(
 
 
 @router.post("/vnpay-ipn", response_model=VNPayIPNResponse)
-def vnpay_ipn_post(
+async def vnpay_ipn_post(
     http_request: Request,
     db: Session = Depends(get_session)
 ):
@@ -208,6 +239,16 @@ def vnpay_ipn_post(
     Webhook tiếp nhận Instant Payment Notification (IPN) từ VNPay Server (POST)
     """
     params = dict(http_request.query_params)
+    try:
+        if "application/json" in http_request.headers.get("content-type", ""):
+            body_params = await http_request.json()
+            if isinstance(body_params, dict):
+                params.update(body_params)
+        else:
+            form_params = await http_request.form()
+            params.update(dict(form_params))
+    except Exception as exc:
+        logger.warning(f"Could not parse VNPay IPN POST body: {exc}")
     result = PaymentService.process_vnpay_ipn(db=db, params=params)
     return VNPayIPNResponse(**result)
 
@@ -215,12 +256,14 @@ def vnpay_ipn_post(
 @router.get("/status/{booking_id}")
 def get_payment_status(
     booking_id: int,
-    db: Session = Depends(get_session)
+    db: Session = Depends(get_session),
+    current_user: User = Depends(get_current_user)
 ):
     """
     Tra cứu trạng thái thanh toán của booking
     """
     return PaymentService.get_payment_status(
         db=db,
-        booking_id=booking_id
+        booking_id=booking_id,
+        user_id=current_user.id
     )

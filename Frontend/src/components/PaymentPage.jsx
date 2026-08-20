@@ -51,9 +51,7 @@ const PaymentPage = () => {
         
         // Nếu đơn hàng đã được thanh toán, chuyển hướng đến trang kết quả
         if (response.data.paymentStatus === "PAID") {
-          navigate('/payment-result', { 
-            state: { booking: response.data, message: "Đơn hàng đã được thanh toán thành công." } 
-          });
+          navigate(`/payment-result?bookingId=${response.data.id || response.data.bookingId}`);
         }
         
         setLoading(false);
@@ -117,10 +115,7 @@ const PaymentPage = () => {
     try {
       setIsRedirecting(true);
       const res = await api.post('/payment/vnpay-url', {
-        bookingId: booking.id,
-        amount: booking.totalAmount,
-        orderInfo: `Thanh toan ve phim booking ${booking.id}`,
-        returnUrl: `${window.location.origin}/payment-result`
+        bookingId: booking.id
       });
       if (res.data && res.data.paymentUrl) {
         window.location.href = res.data.paymentUrl;
