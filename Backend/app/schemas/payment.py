@@ -1,5 +1,5 @@
 from typing import Optional
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class VNPayURLRequest(BaseModel):
@@ -16,7 +16,7 @@ class VNPayURLResponse(BaseModel):
 
 
 class VNPayReturnRequest(BaseModel):
-    """Request từ VNPay callback"""
+    """Request từ VNPay callback / Return URL"""
     bookingId: Optional[str] = Field(None, alias="bookingId")
     vnp_TxnRef: Optional[str] = Field(None, alias="vnp_TxnRef")
     vnp_ResponseCode: str = Field(..., alias="vnp_ResponseCode")
@@ -30,9 +30,9 @@ class VNPayReturnRequest(BaseModel):
     vnp_TransactionStatus: Optional[str] = Field(None, alias="vnp_TransactionStatus")
     vnp_SecureHash: str = Field(..., alias="vnp_SecureHash")
     vnp_SecureHashType: Optional[str] = Field(None, alias="vnp_SecureHashType")
-    
-    class Config:
-        populate_by_name = True
+    vnp_TmnCode: Optional[str] = Field(None, alias="vnp_TmnCode")
+
+    model_config = ConfigDict(populate_by_name=True, extra="allow")
 
 
 class PaymentConfirmResponse(BaseModel):
@@ -40,3 +40,10 @@ class PaymentConfirmResponse(BaseModel):
     status: str  # success | failed
     booking: Optional[dict] = None
     message: str
+
+
+class VNPayIPNResponse(BaseModel):
+    """Response cho VNPay IPN Server-to-Server Webhook"""
+    RspCode: str
+    Message: str
+

@@ -16,10 +16,9 @@ class Settings(BaseSettings):
     REDIS_PORT: int
     REDIS_DB: int
     REDIS_URL: str
-    TMN_CODE: str
-    HASH_SECRET : str
-    TMN_CODE : str
-    VNPAY_URL : str
+    TMN_CODE: str = "your_vnpay_tmn_code"
+    HASH_SECRET: str = "your_vnpay_hash_secret"
+    VNPAY_URL: str = "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html"
     SMTP_HOST: str | None = None
     SMTP_PORT: int = 587
     SMTP_USER: str | None = None
