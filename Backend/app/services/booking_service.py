@@ -9,7 +9,7 @@ from app.repositories.seat_repo import SeatRepository
 from app.repositories.showtime_repo import ShowtimeRepository
 from app.schemas.booking import BookingCreateRequest, BookingResponse, BookingDetailResponse
 from app.utils.redis_lock import SeatLockManager
-from app.utils.enum import SeatStatusEnum
+from app.utils.enum import BookingStatus, PaymentStatus, SeatStatusEnum
 import logging
 
 logger = logging.getLogger(__name__)
@@ -101,8 +101,8 @@ class BookingService:
                 "booking_date": datetime.now(timezone.utc),
                 "total_amount": booking_request.totalAmount,
                 "payment_method": booking_request.paymentMethod,
-                "payment_status": "PENDING",
-                "booking_status": "PENDING"
+                "payment_status": PaymentStatus.PENDING.value,
+                "booking_status": BookingStatus.PENDING.value
             }
             
             booking = BookingRepository.create_booking(db=db, booking_data=booking_data)
@@ -203,13 +203,13 @@ class BookingService:
                 detail="Bạn không có quyền cập nhật booking này"
             )
 
-        if payment_status not in ("FAILED", "CANCELLED"):
+        if payment_status not in (PaymentStatus.FAILED, PaymentStatus.CANCELLED):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Không thể cập nhật trạng thái thanh toán này từ phía người dùng"
             )
 
-        if booking.payment_status == "PAID":
+        if booking.payment_status == PaymentStatus.PAID:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Không thể hủy booking đã thanh toán"

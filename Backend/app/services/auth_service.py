@@ -1,4 +1,5 @@
-from datetime import datetime
+from datetime import datetime, timezone
+from typing import Optional
 from jose import jwt, JWTError
 from app.core.config import settings
 
@@ -36,7 +37,7 @@ class AuthService:
             phone =data.phone,
             full_name=data.full_name,
             role=UserRole.USER,
-            created_at=datetime.now(),
+            created_at=datetime.now(timezone.utc),
         )
         return AuthRepository.create_user(session, new_user)
 
@@ -97,16 +98,25 @@ class AuthService:
 
 
     @staticmethod
-    def logout(user_id: int,access_token: str):
-        redis_client.delete(f"refresh_token:{user_id}")
+    def logout(access_token: str, user_id: Optional[int] = None):
+        try:
+            payload = jwt.decode(
+                access_token,
+                settings.SECRET_KEY,
+                algorithms=[settings.ALGORITHM],
+                options={"verify_exp": False}
+            )
+            user_id = user_id or payload.get("sub")
+            if user_id:
+                redis_client.delete(f"refresh_token:{user_id}")
 
-        payload = jwt.decode(
-            access_token,
-            settings.SECRET_KEY,
-            algorithms=[settings.ALGORITHM]
-        )
-        exp = payload.get("exp")
-        ttl = exp - int(datetime.utcnow().timestamp())
+            exp = payload.get("exp")
+            if not exp:
+                return
 
-        if ttl > 0:
-            redis_client.setex(f"blacklist:{access_token}",ttl,"1")
+            ttl = int(exp) - int(datetime.now(timezone.utc).timestamp())
+            if ttl > 0:
+                redis_client.setex(f"blacklist:{access_token}", ttl, "1")
+        except (JWTError, TypeError, ValueError):
+            if user_id:
+                redis_client.delete(f"refresh_token:{user_id}")

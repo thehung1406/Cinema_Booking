@@ -8,6 +8,7 @@ from app.repositories.booking_repo import BookingRepository
 from app.repositories.seat_repo import SeatRepository
 from app.models.booking_detail import BookingDetail
 from app.worker.tasks import send_payment_success_email_task
+from app.utils.enum import BookingStatus, PaymentStatus
 from app.utils.redis_lock import SeatLockManager
 
 logger = logging.getLogger(__name__)
@@ -58,7 +59,7 @@ class PaymentService:
                 )
             
             # Kiểm tra booking đã bị hủy hoặc hết hạn chưa
-            if booking.booking_status in ("CANCELLED", "EXPIRED"):
+            if booking.booking_status in (BookingStatus.CANCELLED, BookingStatus.EXPIRED):
                 logger.warning(f"Booking {booking_id} đã bị hủy hoặc hết hạn")
                 return {
                     "status": "failed",
@@ -66,7 +67,7 @@ class PaymentService:
                     "message": "Đơn hàng đã hết hạn hoặc bị hủy"
                 }
 
-            if booking.payment_status == "FAILED":
+            if booking.payment_status == PaymentStatus.FAILED:
                 logger.warning(f"Booking {booking_id} đã ở trạng thái thanh toán thất bại")
                 return {
                     "status": "failed",
@@ -84,7 +85,7 @@ class PaymentService:
                 }
 
             # Kiểm tra booking đã được thanh toán chưa (idempotent)
-            if booking.payment_status == "PAID":
+            if booking.payment_status == PaymentStatus.PAID:
                 logger.warning(f"Booking {booking_id} đã được thanh toán trước đó")
                 booking_detail = BookingRepository.get_booking_with_details(db=db, booking_id=booking_id)
                 return {
@@ -120,7 +121,7 @@ class PaymentService:
                 BookingRepository.update_payment_status(
                     db=db,
                     booking_id=booking_id,
-                    payment_status="PAID"
+                    payment_status=PaymentStatus.PAID.value
                 )
                 
                 # Xóa lock khỏi Redis
@@ -163,7 +164,7 @@ class PaymentService:
                 BookingRepository.update_payment_status(
                     db=db,
                     booking_id=booking_id,
-                    payment_status="FAILED"
+                    payment_status=PaymentStatus.FAILED.value
                 )
                 
                 # Release ghế ngay khi thanh toán thất bại
@@ -238,7 +239,7 @@ class PaymentService:
             return {"RspCode": "99", "Message": validation_error}
 
         # Kiểm tra đơn đã xác nhận trước đó chưa (idempotency)
-        if booking.payment_status == "PAID":
+        if booking.payment_status == PaymentStatus.PAID:
             logger.info(f"VNPay IPN: Booking {booking_id} already confirmed")
             return {"RspCode": "02", "Message": "Order already confirmed"}
             
@@ -264,7 +265,7 @@ class PaymentService:
                 BookingRepository.update_payment_status(
                     db=db,
                     booking_id=booking_id,
-                    payment_status="PAID"
+                    payment_status=PaymentStatus.PAID.value
                 )
                 
                 for seat_id in seat_ids:
@@ -293,7 +294,7 @@ class PaymentService:
                 BookingRepository.update_payment_status(
                     db=db,
                     booking_id=booking_id,
-                    payment_status="FAILED"
+                    payment_status=PaymentStatus.FAILED.value
                 )
                 
                 booking_details = db.exec(

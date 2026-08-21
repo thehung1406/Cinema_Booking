@@ -57,6 +57,32 @@ class AuthContractTest(unittest.TestCase):
         self.assertIsInstance(response_model, ast.Name)
         self.assertEqual(response_model.id, "UserRead")
 
+    def test_logout_decodes_expired_tokens_safely_and_ignores_invalid_tokens(self):
+        auth_service_source = (BACKEND_ROOT / "app" / "services" / "auth_service.py").read_text()
+
+        self.assertIn("options={\"verify_exp\": False}", auth_service_source)
+        self.assertIn("except JWTError", auth_service_source)
+        self.assertIn("redis_client.delete(f\"refresh_token:{user_id}\")", auth_service_source)
+
+    def test_logout_route_allows_expired_token_to_reach_service(self):
+        auth_router_source = (BACKEND_ROOT / "app" / "router" / "auth.py").read_text()
+        parsed = ast.parse(auth_router_source)
+        logout_fn = next(node for node in parsed.body if isinstance(node, ast.FunctionDef) and node.name == "logout")
+        arg_names = {arg.arg for arg in logout_fn.args.args}
+
+        self.assertNotIn("current_user", arg_names)
+        self.assertIn("access_token", arg_names)
+        self.assertIn("AuthService.logout(access_token=access_token)", auth_router_source)
+
+    def test_auth_token_time_handling_uses_timezone_aware_utc(self):
+        auth_service_source = (BACKEND_ROOT / "app" / "services" / "auth_service.py").read_text()
+        security_source = (BACKEND_ROOT / "app" / "utils" / "security.py").read_text()
+
+        self.assertNotIn("datetime.utcnow()", auth_service_source)
+        self.assertNotIn("datetime.utcnow()", security_source)
+        self.assertIn("timezone.utc", auth_service_source)
+        self.assertIn("timezone.utc", security_source)
+
 
 if __name__ == "__main__":
     unittest.main()

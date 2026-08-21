@@ -39,6 +39,7 @@ from app.schemas.payment import (
     PaymentConfirmResponse,
     VNPayIPNResponse,
 )
+from app.utils.enum import BookingStatus, PaymentStatus
 
 
 def verify_vnpay_signature_standalone(params: dict, secret_key: str) -> bool:
@@ -163,18 +164,22 @@ def test_payment_router_endpoints_exist():
 def test_payment_service_methods_and_status_transitions():
     """Kiểm tra PaymentService có đầy đủ logic cập nhật trạng thái PAID, BOOKED, FAILED và IPN."""
     service_source = (BACKEND_ROOT / "app" / "services" / "payment_service.py").read_text(encoding="utf-8")
+    repo_source = (BACKEND_ROOT / "app" / "repositories" / "booking_repo.py").read_text(encoding="utf-8")
 
     assert "def confirm_vnpay_payment" in service_source
     assert "def process_vnpay_ipn" in service_source
     assert "def get_payment_status" in service_source
 
-    # Kiểm tra chuyển trạng thái sang PAID và gọi book_seat_optimistic
-    assert 'payment_status="PAID"' in service_source
+    # Kiểm tra chuyển trạng thái sang PAID bằng enum và gọi book_seat_optimistic
+    assert PaymentStatus.PAID.value == "PAID"
+    assert "PaymentStatus.PAID" in service_source
+    assert "PaymentStatus.PAID" in repo_source
+    assert 'payment_status="PAID"' not in service_source
     assert "SeatRepository.book_seat_optimistic" in service_source
     assert "SeatLockManager.unlock_seat" in service_source
 
     # Kiểm tra xử lý khi thanh toán thất bại (FAILED)
-    assert 'payment_status="FAILED"' in service_source
+    assert "PaymentStatus.FAILED" in service_source
     assert "SeatRepository.release_seat_optimistic" in service_source
 
     # Kiểm tra IPN return codes chuẩn VNPay
@@ -183,6 +188,15 @@ def test_payment_service_methods_and_status_transitions():
     assert '"RspCode": "01"' in service_source
     assert '"RspCode": "02"' in service_source
     assert '"RspCode": "04"' in service_source
+
+
+def test_expired_booking_cleanup_uses_expired_status():
+    """Booking quá hạn phải được đánh dấu EXPIRED, không trộn với hủy chủ động."""
+    tasks_source = (BACKEND_ROOT / "app" / "worker" / "tasks.py").read_text(encoding="utf-8")
+
+    assert BookingStatus.EXPIRED.value == "EXPIRED"
+    assert "booking.booking_status = BookingStatus.EXPIRED" in tasks_source
+    assert "booking.booking_status = BookingStatus.CANCELLED" not in tasks_source
 
 
 def test_vnpay_url_generation_uses_sha512_and_amount_multiplier():

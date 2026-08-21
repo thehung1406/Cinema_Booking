@@ -12,6 +12,7 @@ from app.models.theater import Theater
 from app.models.seat import Seat
 from app.models.seat_type import SeatType
 from app.models.user import User
+from app.utils.enum import BookingStatus, PaymentStatus
 
 
 class BookingRepository:
@@ -242,10 +243,10 @@ class BookingRepository:
         booking = BookingRepository.get_booking_by_id(db, booking_id)
         if booking:
             booking.payment_status = payment_status
-            if payment_status == "PAID":
-                booking.booking_status = "CONFIRMED"
-            elif payment_status in ("FAILED", "CANCELLED"):
-                booking.booking_status = "CANCELLED"
+            if payment_status == PaymentStatus.PAID:
+                booking.booking_status = BookingStatus.CONFIRMED
+            elif payment_status in (PaymentStatus.FAILED, PaymentStatus.CANCELLED):
+                booking.booking_status = BookingStatus.CANCELLED
             db.add(booking)
             db.flush()
             db.refresh(booking)
