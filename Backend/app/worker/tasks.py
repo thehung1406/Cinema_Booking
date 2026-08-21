@@ -47,7 +47,7 @@ def cleanup_expired_bookings():
             
             count = 0
             for booking in expired_bookings:
-                booking.booking_status = BookingStatus.CANCELLED
+                booking.booking_status = BookingStatus.EXPIRED
                 booking.payment_status = PaymentStatus.FAILED
                 session.add(booking)
                 

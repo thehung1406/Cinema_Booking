@@ -46,8 +46,7 @@ def refresh_token(data: RefreshTokenRequest):
 
 @router.post("/logout")
 def logout(
-    current_user: User = Depends(get_current_user),
     access_token: str = Depends(oauth2_scheme),
 ):
-    AuthService.logout(user_id=current_user.id, access_token=access_token)
+    AuthService.logout(access_token=access_token)
     return {"success": True, "message": "Logged out successfully"}
