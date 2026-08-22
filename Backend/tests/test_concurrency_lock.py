@@ -162,6 +162,14 @@ def test_book_seats_after_payment_removes_redis_locks():
     assert "SeatRepository.book_seat_optimistic" in source
 
 
+def test_payment_confirmation_uses_distributed_lock():
+    """confirm_vnpay_payment và process_vnpay_ipn phải dùng Redis distributed lock để tránh race condition."""
+    source = (BACKEND_ROOT / "app" / "services" / "payment_service.py").read_text(encoding="utf-8")
+    assert "payment_confirm:" in source
+    assert "redis_client.lock" in source
+
+
 if __name__ == "__main__":
     import pytest
     pytest.main([__file__, "-v"])
+

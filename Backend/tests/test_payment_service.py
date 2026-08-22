@@ -176,6 +176,142 @@ def test_payment_service_has_get_payment_status():
     assert "booking.user_id != user_id" in source  # ownership check
 
 
+from unittest.mock import MagicMock, patch
+from contextlib import nullcontext
+from app.utils.enum import BookingStatus, PaymentStatus
+
+
+def test_confirm_vnpay_payment_with_lock_success():
+    """Kiểm tra confirm_vnpay_payment chạy thành công trong distributed lock và cập nhật trạng thái."""
+    mock_db = MagicMock()
+    mock_booking = MagicMock(
+        id=10,
+        booking_status=BookingStatus.PENDING,
+        payment_status=PaymentStatus.PENDING,
+        showtime_id=1,
+        user_id=5,
+        total_amount=50000.0
+    )
+    mock_detail = MagicMock(seat_id=101)
+    mock_db.exec.return_value.all.return_value = [mock_detail]
+    
+    valid_params = {
+        "vnp_TxnRef": "10",
+        "vnp_TmnCode": settings.TMN_CODE,
+        "vnp_Amount": "5000000",
+        "vnp_ResponseCode": "00",
+        "vnp_TransactionStatus": "00",
+    }
+    
+    with patch("app.services.payment_service.BookingRepository.get_booking_by_id", return_value=mock_booking), \
+         patch("app.services.payment_service.BookingRepository.get_booking_with_details", return_value={"id": 10, "email": "test@example.com"}), \
+         patch("app.services.payment_service.BookingRepository.update_payment_status") as mock_update, \
+         patch("app.services.payment_service.SeatRepository.book_seat_optimistic") as mock_book, \
+         patch("app.services.payment_service.SeatLockManager.unlock_seat") as mock_unlock, \
+         patch("app.services.payment_service.send_payment_success_email_task.delay") as mock_email, \
+         patch("app.services.payment_service.redis_client.lock", return_value=nullcontext()):
+        
+        result = PaymentService.confirm_vnpay_payment(
+            db=mock_db,
+            booking_id=10,
+            vnp_response_code="00",
+            vnp_params=valid_params
+        )
+        
+        assert result["status"] == "success"
+        mock_book.assert_called_once_with(db=mock_db, showtime_id=1, seat_id=101, user_id=5)
+        mock_update.assert_called_once_with(db=mock_db, booking_id=10, payment_status=PaymentStatus.PAID.value)
+        mock_unlock.assert_called_once_with(1, 101, 5)
+        mock_db.commit.assert_called_once()
+        mock_email.assert_called_once()
+
+
+def test_confirm_vnpay_payment_already_paid_idempotency():
+    """Kiểm tra nếu booking đã PAID thì confirm_vnpay_payment trả về idempotent success mà không book lại ghế hay gửi email."""
+    mock_db = MagicMock()
+    mock_booking = MagicMock(
+        id=10,
+        booking_status=BookingStatus.CONFIRMED,
+        payment_status=PaymentStatus.PAID,
+        showtime_id=1,
+        user_id=5,
+        total_amount=50000.0
+    )
+    
+    with patch("app.services.payment_service.BookingRepository.get_booking_by_id", return_value=mock_booking), \
+         patch("app.services.payment_service.BookingRepository.get_booking_with_details", return_value={"id": 10, "email": "test@example.com"}), \
+         patch("app.services.payment_service.BookingRepository.update_payment_status") as mock_update, \
+         patch("app.services.payment_service.SeatRepository.book_seat_optimistic") as mock_book, \
+         patch("app.services.payment_service.send_payment_success_email_task.delay") as mock_email, \
+         patch("app.services.payment_service.redis_client.lock", return_value=nullcontext()):
+        
+        result = PaymentService.confirm_vnpay_payment(
+            db=mock_db,
+            booking_id=10,
+            vnp_response_code="00",
+            vnp_params={"vnp_TxnRef": "10", "vnp_TmnCode": settings.TMN_CODE, "vnp_Amount": "5000000"}
+        )
+        
+        assert result["status"] == "success"
+        assert "trước đó" in result["message"]
+        mock_book.assert_not_called()
+        mock_update.assert_not_called()
+        mock_email.assert_not_called()
+
+
+def test_process_vnpay_ipn_success_and_idempotency():
+    """Kiểm tra IPN xử lý lần đầu thành công và lần 2 trả về 02 (Order already confirmed)."""
+    mock_db = MagicMock()
+    mock_booking = MagicMock(
+        id=10,
+        booking_status=BookingStatus.PENDING,
+        payment_status=PaymentStatus.PENDING,
+        showtime_id=1,
+        user_id=5,
+        total_amount=50000.0
+    )
+    mock_detail = MagicMock(seat_id=101)
+    mock_db.exec.return_value.all.return_value = [mock_detail]
+    
+    valid_params = {
+        "vnp_TxnRef": "10",
+        "vnp_TmnCode": settings.TMN_CODE,
+        "vnp_Amount": "5000000",
+        "vnp_ResponseCode": "00",
+        "vnp_TransactionStatus": "00",
+    }
+    
+    with patch("app.router.payment.verify_vnpay_signature", return_value=True), \
+         patch("app.services.payment_service.BookingRepository.get_booking_by_id", return_value=mock_booking), \
+         patch("app.services.payment_service.BookingRepository.get_booking_with_details", return_value={"id": 10, "email": "test@example.com"}), \
+         patch("app.services.payment_service.BookingRepository.update_payment_status") as mock_update, \
+         patch("app.services.payment_service.SeatRepository.book_seat_optimistic") as mock_book, \
+         patch("app.services.payment_service.SeatLockManager.unlock_seat") as mock_unlock, \
+         patch("app.services.payment_service.send_payment_success_email_task.delay") as mock_email, \
+         patch("app.services.payment_service.redis_client.lock", return_value=nullcontext()):
+        
+        # Lần 1: Chưa confirm -> thành công RspCode 00
+        res1 = PaymentService.process_vnpay_ipn(db=mock_db, params=valid_params)
+        assert res1["RspCode"] == "00"
+        mock_book.assert_called_once()
+        mock_update.assert_called_once()
+        mock_email.assert_called_once()
+        
+        # Reset mocks
+        mock_book.reset_mock()
+        mock_update.reset_mock()
+        mock_email.reset_mock()
+        
+        # Lần 2: Đã PAID -> RspCode 02 (Order already confirmed)
+        mock_booking.payment_status = PaymentStatus.PAID
+        res2 = PaymentService.process_vnpay_ipn(db=mock_db, params=valid_params)
+        assert res2["RspCode"] == "02"
+        mock_book.assert_not_called()
+        mock_update.assert_not_called()
+        mock_email.assert_not_called()
+
+
 if __name__ == "__main__":
     import pytest
     pytest.main([__file__, "-v"])
+
