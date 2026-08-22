@@ -1,3 +1,4 @@
+from typing import Optional
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import jwt, JWTError
@@ -12,6 +13,7 @@ from app.repositories.auth_repo import AuthRepository
 from app.utils.enum import UserRole
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
+oauth2_scheme_optional = OAuth2PasswordBearer(tokenUrl="/auth/login", auto_error=False)
 
 def get_current_user(
     token: str = Depends(oauth2_scheme),
@@ -53,6 +55,39 @@ def get_current_user(
         )
 
     return user
+
+def get_optional_current_user(
+    token: Optional[str] = Depends(oauth2_scheme_optional),
+    session: Session = Depends(get_session)
+) -> Optional[User]:
+    if not token:
+        return None
+
+    if redis_client.get(f"blacklist:{token}"):
+        return None
+
+    try:
+        payload = jwt.decode(
+            token,
+            settings.SECRET_KEY,
+            algorithms=[settings.ALGORITHM]
+        )
+    except JWTError:
+        return None
+
+    if payload.get("type") != "access":
+        return None
+
+    sub = payload.get("sub")
+    if not sub:
+        return None
+
+    try:
+        user_id = int(sub)
+    except (ValueError, TypeError):
+        return None
+
+    return AuthRepository.get_user(session, user_id)
 
 def require_staff(user: User = Depends(get_current_user)):
     if user.role not in (UserRole.STAFF, UserRole.ADMIN):

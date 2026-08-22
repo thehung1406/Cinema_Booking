@@ -27,6 +27,10 @@ const SeatSelection = () => {
       const seatsResponse = await api.get(`/seats/showtime/${showtimeId}`);
       console.log("Thông tin ghế:", seatsResponse.data);
       setSeatData(seatsResponse.data);
+      const myHeldSeats = seatsResponse.data.filter(s => s.is_held_by_me).map(s => s.seat_id);
+      if (myHeldSeats.length > 0) {
+        setSelectedSeats(myHeldSeats);
+      }
       // Đánh dấu đã fetch dữ liệu
       setDataFetched(true);
     } catch (err) {
@@ -70,7 +74,7 @@ const SeatSelection = () => {
         setSelectedSeats(prev => prev.filter(id => id !== seat.seat_id));
         setSeatData(prev => prev.map(item => (
           item.seat_id === seat.seat_id
-            ? { ...item, status: 'AVAILABLE', hold_by_user_id: null, hold_expired_at: null }
+            ? { ...item, status: 'AVAILABLE', is_held_by_me: false, hold_expired_at: null }
             : item
         )));
         return;
@@ -89,7 +93,7 @@ const SeatSelection = () => {
           ? {
               ...item,
               status: 'HOLD',
-              hold_by_user_id: userInfo.id,
+              is_held_by_me: true,
               hold_expired_at: holdInfo?.hold_expired_at || item.hold_expired_at,
             }
           : item

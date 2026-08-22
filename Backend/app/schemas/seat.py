@@ -23,8 +23,8 @@ class SeatStatusResponse(BaseModel):
     seat_type: str
     price: float
     status: SeatStatusEnum
-    hold_by_user_id: Optional[int] = None
     hold_expired_at: Optional[datetime] = None
+    is_held_by_me: bool = False
 
     class Config:
         from_attributes = True

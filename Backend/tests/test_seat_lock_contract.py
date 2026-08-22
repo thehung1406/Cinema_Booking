@@ -134,3 +134,17 @@ def test_alembic_migration_004_exists():
     content = migration_file.read_text(encoding="utf-8")
     assert "add_column" in content
     assert "version" in content
+
+
+def test_seat_status_response_does_not_leak_hold_user_id():
+    """SeatStatusResponse và get_seats_by_showtime không được để lộ hold_by_user_id."""
+    schema_source = (BACKEND_ROOT / "app" / "schemas" / "seat.py").read_text(encoding="utf-8")
+    router_source = (BACKEND_ROOT / "app" / "router" / "seat.py").read_text(encoding="utf-8")
+    service_source = (BACKEND_ROOT / "app" / "services" / "seat_service.py").read_text(encoding="utf-8")
+
+    assert "hold_by_user_id" not in schema_source
+    assert "is_held_by_me: bool = False" in schema_source
+    assert "get_optional_current_user" in router_source
+    assert "current_user_id" in router_source
+    assert "is_held_by_me" in service_source
+
