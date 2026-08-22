@@ -148,3 +148,17 @@ def test_seat_status_response_does_not_leak_hold_user_id():
     assert "current_user_id" in router_source
     assert "is_held_by_me" in service_source
 
+
+def test_showtime_repository_exposes_method_used_by_seat_and_booking_services():
+    """Seat/booking service gọi get_showtime_by_id nên repository phải có method này."""
+    source = (BACKEND_ROOT / "app" / "repositories" / "showtime_repo.py").read_text(encoding="utf-8")
+
+    assert "def get_showtime_by_id" in source
+
+
+def test_sqlmodel_pin_supports_current_pydantic_runtime():
+    """SQLModel 0.0.18 lỗi import model với Pydantic 2.12 trong runtime hiện tại."""
+    requirements = (BACKEND_ROOT / "requirements.txt").read_text(encoding="utf-16")
+
+    assert "sqlmodel==0.0.39" in requirements
+
