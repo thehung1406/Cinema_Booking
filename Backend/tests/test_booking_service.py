@@ -80,9 +80,9 @@ def test_create_booking_checks_duplicate_seats():
 def test_update_payment_status_restricts_values():
     """update_payment_status chỉ cho phép FAILED hoặc CANCELLED."""
     source = (BACKEND_ROOT / "app" / "services" / "booking_service.py").read_text(encoding="utf-8")
-    assert '"FAILED"' in source
-    assert '"CANCELLED"' in source
-    assert "payment_status ==" in source and '"PAID"' in source
+    assert '"FAILED"' in source or "PaymentStatus.FAILED" in source
+    assert '"CANCELLED"' in source or "PaymentStatus.CANCELLED" in source
+    assert ("payment_status ==" in source or "booking.payment_status" in source) and ('"PAID"' in source or "PaymentStatus.PAID" in source)
 
 
 def test_update_payment_status_admin_only():

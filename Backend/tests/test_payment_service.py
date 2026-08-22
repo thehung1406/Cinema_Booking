@@ -118,23 +118,24 @@ def test_confirm_vnpay_handles_all_status_transitions():
     source = (BACKEND_ROOT / "app" / "services" / "payment_service.py").read_text(encoding="utf-8")
 
     # Success path: mark PAID + book seats
-    assert 'payment_status="PAID"' in source
+    assert 'payment_status="PAID"' in source or "PaymentStatus.PAID" in source
     assert "SeatRepository.book_seat_optimistic" in source
 
     # Failed path: mark FAILED + release seats
-    assert 'payment_status="FAILED"' in source
+    assert 'payment_status="FAILED"' in source or "PaymentStatus.FAILED" in source
     assert "SeatRepository.release_seat_optimistic" in source
 
     # Cancelled/Expired check
-    assert "CANCELLED" in source
-    assert "EXPIRED" in source
+    assert "CANCELLED" in source or "PaymentStatus.CANCELLED" in source
+    assert "EXPIRED" in source or "PaymentStatus.EXPIRED" in source
 
 
 def test_confirm_vnpay_checks_idempotency():
     """confirm_vnpay_payment phải xử lý idempotent khi booking đã PAID."""
     source = (BACKEND_ROOT / "app" / "services" / "payment_service.py").read_text(encoding="utf-8")
-    assert 'booking.payment_status == "PAID"' in source
+    assert 'booking.payment_status == "PAID"' in source or "booking.payment_status == PaymentStatus.PAID" in source
     assert "đã được thanh toán trước đó" in source
+
 
 
 def test_confirm_vnpay_validates_before_marking_paid():

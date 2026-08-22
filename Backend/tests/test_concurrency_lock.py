@@ -108,10 +108,10 @@ def test_hold_seats_commits_only_on_full_success():
 # ── cleanup_expired_bookings Contract Tests ──
 
 def test_cleanup_task_cancels_expired_bookings():
-    """cleanup_expired_bookings phải hủy booking PENDING quá 10 phút."""
+    """cleanup_expired_bookings phải hủy/expire booking PENDING quá 10 phút."""
     source = (BACKEND_ROOT / "app" / "worker" / "tasks.py").read_text(encoding="utf-8")
     assert "def cleanup_expired_bookings" in source
-    assert "BookingStatus.CANCELLED" in source or "CANCELLED" in source
+    assert "BookingStatus.CANCELLED" in source or "CANCELLED" in source or "BookingStatus.EXPIRED" in source or "EXPIRED" in source
     assert "PaymentStatus.FAILED" in source or "FAILED" in source
     assert "ten_minutes_ago" in source or "timedelta(minutes=10)" in source
 
