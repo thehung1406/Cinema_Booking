@@ -134,3 +134,31 @@ def test_alembic_migration_004_exists():
     content = migration_file.read_text(encoding="utf-8")
     assert "add_column" in content
     assert "version" in content
+
+
+def test_seat_status_response_does_not_leak_hold_user_id():
+    """SeatStatusResponse và get_seats_by_showtime không được để lộ hold_by_user_id."""
+    schema_source = (BACKEND_ROOT / "app" / "schemas" / "seat.py").read_text(encoding="utf-8")
+    router_source = (BACKEND_ROOT / "app" / "router" / "seat.py").read_text(encoding="utf-8")
+    service_source = (BACKEND_ROOT / "app" / "services" / "seat_service.py").read_text(encoding="utf-8")
+
+    assert "hold_by_user_id" not in schema_source
+    assert "is_held_by_me: bool = False" in schema_source
+    assert "get_optional_current_user" in router_source
+    assert "current_user_id" in router_source
+    assert "is_held_by_me" in service_source
+
+
+def test_showtime_repository_exposes_method_used_by_seat_and_booking_services():
+    """Seat/booking service gọi get_showtime_by_id nên repository phải có method này."""
+    source = (BACKEND_ROOT / "app" / "repositories" / "showtime_repo.py").read_text(encoding="utf-8")
+
+    assert "def get_showtime_by_id" in source
+
+
+def test_sqlmodel_pin_supports_current_pydantic_runtime():
+    """SQLModel 0.0.18 lỗi import model với Pydantic 2.12 trong runtime hiện tại."""
+    requirements = (BACKEND_ROOT / "requirements.txt").read_text(encoding="utf-16")
+
+    assert "sqlmodel==0.0.39" in requirements
+

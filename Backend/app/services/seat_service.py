@@ -1,4 +1,4 @@
-from typing import List, Dict
+from typing import List, Dict, Optional
 from datetime import datetime, timedelta, timezone
 from sqlmodel import Session, select
 from fastapi import HTTPException, status
@@ -15,11 +15,16 @@ logger = logging.getLogger(__name__)
 class SeatService:
     
     @staticmethod
-    def get_seats_by_showtime(db: Session, showtime_id: int) -> List[Dict]:
+    def get_seats_by_showtime(
+        db: Session, 
+        showtime_id: int, 
+        current_user_id: Optional[int] = None
+    ) -> List[Dict]:
         """
         Lấy danh sách ghế và trạng thái theo suất chiếu
         Kết hợp: DB (ghế BOOKED + HOLD dự phòng) + Redis (ghế đang HOLD)
         Có Lazy Check: nếu DB có record HOLD nhưng đã quá hạn -> coi như AVAILABLE
+        Ẩn hold_by_user_id công khai, chỉ trả về is_held_by_me tương ứng với user hiện tại
         """
         # Kiểm tra showtime có tồn tại không
         showtime = ShowtimeRepository.get_showtime_by_id(db=db, showtime_id=showtime_id)
@@ -67,8 +72,8 @@ class SeatService:
                     "seat_type": seat_type.name,
                     "price": float(seat_type.base_price),
                     "status": SeatStatusEnum.BOOKED,
-                    "hold_by_user_id": None,
-                    "hold_expired_at": None
+                    "hold_expired_at": None,
+                    "is_held_by_me": False
                 })
                 continue
             
@@ -77,6 +82,7 @@ class SeatService:
                 lock_info = redis_lock_map[seat.id]
                 locked_at = datetime.fromisoformat(lock_info["locked_at"])
                 hold_expired_at = locked_at + timedelta(seconds=lock_info["ttl_remaining"])
+                is_held_by_me = (current_user_id is not None and lock_info.get("user_id") == current_user_id)
                 
                 result.append({
                     "seat_id": seat.id,
@@ -84,22 +90,23 @@ class SeatService:
                     "seat_type": seat_type.name,
                     "price": float(seat_type.base_price),
                     "status": SeatStatusEnum.HOLD,
-                    "hold_by_user_id": lock_info["user_id"],
-                    "hold_expired_at": hold_expired_at
+                    "hold_expired_at": hold_expired_at,
+                    "is_held_by_me": is_held_by_me
                 })
                 continue
             
             # 3. Kiểm tra ghế đang HOLD trong DB (phòng trường hợp Redis mất key/restart)
             if seat.id in valid_db_hold_map:
                 db_hold = valid_db_hold_map[seat.id]
+                is_held_by_me = (current_user_id is not None and db_hold.hold_by_user_id == current_user_id)
                 result.append({
                     "seat_id": seat.id,
                     "seat_name": seat.seat_name,
                     "seat_type": seat_type.name,
                     "price": float(seat_type.base_price),
                     "status": SeatStatusEnum.HOLD,
-                    "hold_by_user_id": db_hold.hold_by_user_id,
-                    "hold_expired_at": db_hold.hold_expired_at
+                    "hold_expired_at": db_hold.hold_expired_at,
+                    "is_held_by_me": is_held_by_me
                 })
                 continue
             
@@ -110,8 +117,8 @@ class SeatService:
                 "seat_type": seat_type.name,
                 "price": float(seat_type.base_price),
                 "status": SeatStatusEnum.AVAILABLE,
-                "hold_by_user_id": None,
-                "hold_expired_at": None
+                "hold_expired_at": None,
+                "is_held_by_me": False
             })
         
         return result

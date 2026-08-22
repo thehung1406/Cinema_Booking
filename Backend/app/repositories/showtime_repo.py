@@ -12,6 +12,11 @@ class ShowtimeRepository:
         return db.get(Showtime, showtime_id)
 
     @staticmethod
+    def get_showtime_by_id(db: Session, showtime_id: int):
+        """Alias dùng bởi seat/booking services."""
+        return ShowtimeRepository.get_by_id(db, showtime_id)
+
+    @staticmethod
     def get_showtimes_by_film_theater_date(
             db: Session,
             film_id: int,

@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 from fastapi import APIRouter, Depends, status
 from sqlmodel import Session
 from app.core.database import get_session
@@ -9,7 +9,7 @@ from app.schemas.seat import (
     SeatStatusResponse, 
     HoldSeatResponse
 )
-from app.utils.dependencies import get_current_user
+from app.utils.dependencies import get_current_user, get_optional_current_user
 from app.models.user import User
 
 router = APIRouter(prefix="/seats", tags=["Seats"])
@@ -18,9 +18,15 @@ router = APIRouter(prefix="/seats", tags=["Seats"])
 @router.get("/showtime/{showtime_id}", response_model=List[SeatStatusResponse])
 def get_seats_by_showtime(
     showtime_id: int,
-    db: Session = Depends(get_session)
+    db: Session = Depends(get_session),
+    current_user: Optional[User] = Depends(get_optional_current_user)
 ):
-    return SeatService.get_seats_by_showtime(db=db, showtime_id=showtime_id)
+    current_user_id = current_user.id if current_user else None
+    return SeatService.get_seats_by_showtime(
+        db=db,
+        showtime_id=showtime_id,
+        current_user_id=current_user_id
+    )
 
 
 @router.post("/hold", response_model=List[HoldSeatResponse], status_code=status.HTTP_200_OK)
