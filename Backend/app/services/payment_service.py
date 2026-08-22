@@ -17,6 +17,19 @@ logger = logging.getLogger(__name__)
 
 class PaymentService:
     @staticmethod
+    def _queue_payment_success_email(booking_detail: Optional[dict]) -> None:
+        if not booking_detail or not booking_detail.get("email"):
+            return
+
+        try:
+            send_payment_success_email_task.delay(
+                to_email=booking_detail.get("email"),
+                booking_detail=booking_detail
+            )
+        except Exception as e:
+            logger.warning(f"Failed to queue payment success email: {e}")
+
+    @staticmethod
     def validate_vnpay_payment_params(booking, params: Optional[dict]) -> Optional[str]:
         """Validate signed VNPay payment data against the server-side booking."""
         if not params:
@@ -50,8 +63,9 @@ class PaymentService:
         vnp_params: Optional[dict] = None
     ) -> dict:
         lock_key = f"payment_confirm:{booking_id}"
+        email_booking_detail = None
         try:
-            with redis_client.lock(lock_key, timeout=30):
+            with redis_client.lock(lock_key, timeout=60, blocking_timeout=10):
                 # Lấy thông tin booking (reload state mới nhất bên trong lock)
                 booking = BookingRepository.get_booking_by_id(db=db, booking_id=booking_id)
                 
@@ -140,16 +154,7 @@ class PaymentService:
                     # Lấy thông tin chi tiết booking
                     booking_detail = BookingRepository.get_booking_with_details(db=db, booking_id=booking_id)
 
-                    # Gửi email xác nhận (chạy nền qua Celery, bọc try-except an toàn)
-                    if booking_detail and booking_detail.get("email"):
-                        try:
-                            send_payment_success_email_task.delay(
-                                to_email=booking_detail.get("email"),
-                                booking_detail=booking_detail
-                            )
-                        except Exception as e:
-                            logger.warning(f"Failed to queue payment success email: {e}")
-                    
+                    email_booking_detail = booking_detail
                     return {
                         "status": "success",
                         "booking": booking_detail,
@@ -201,6 +206,8 @@ class PaymentService:
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"Lỗi khi xác nhận thanh toán: {str(e)}"
             )
+        finally:
+            PaymentService._queue_payment_success_email(email_booking_detail)
 
     @staticmethod
     def process_vnpay_ipn(db: Session, params: dict) -> dict:
@@ -230,8 +237,9 @@ class PaymentService:
             return {"RspCode": "01", "Message": "Order Not Found"}
 
         lock_key = f"payment_confirm:{booking_id}"
+        email_booking_detail = None
         try:
-            with redis_client.lock(lock_key, timeout=30):
+            with redis_client.lock(lock_key, timeout=60, blocking_timeout=10):
                 booking = BookingRepository.get_booking_by_id(db=db, booking_id=booking_id)
                 if not booking:
                     logger.warning(f"VNPay IPN: Booking {booking_id} not found")
@@ -286,16 +294,8 @@ class PaymentService:
                     db.commit()
                     logger.info(f"VNPay IPN: Successfully processed payment for booking {booking_id}")
                     
-                    # Gửi email xác nhận
                     booking_detail = BookingRepository.get_booking_with_details(db=db, booking_id=booking_id)
-                    if booking_detail and booking_detail.get("email"):
-                        try:
-                            send_payment_success_email_task.delay(
-                                to_email=booking_detail.get("email"),
-                                booking_detail=booking_detail
-                            )
-                        except Exception as e:
-                            logger.warning(f"Failed to queue email task: {e}")
+                    email_booking_detail = booking_detail
                             
                     return {"RspCode": "00", "Message": "Confirm Success"}
                 else:
@@ -324,6 +324,8 @@ class PaymentService:
             db.rollback()
             logger.error(f"VNPay IPN error for booking {booking_id}: {str(e)}")
             return {"RspCode": "99", "Message": "Unknown error"}
+        finally:
+            PaymentService._queue_payment_success_email(email_booking_detail)
 
     @staticmethod
     def get_payment_status(db: Session, booking_id: int, user_id: Optional[int] = None) -> dict:

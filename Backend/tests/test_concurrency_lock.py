@@ -169,6 +169,27 @@ def test_payment_confirmation_uses_distributed_lock():
     assert "redis_client.lock" in source
 
 
+def test_payment_confirmation_lock_has_bounded_wait_and_longer_lease():
+    """Payment confirmation lock phải có lease đủ dài và không chờ vô hạn."""
+    source = (BACKEND_ROOT / "app" / "services" / "payment_service.py").read_text(encoding="utf-8")
+    assert "timeout=60" in source
+    assert "blocking_timeout=10" in source
+
+
+def test_cleanup_expired_bookings_uses_payment_confirmation_lock():
+    """cleanup_expired_bookings phải dùng cùng lock với VNPay callback trước khi expire booking."""
+    source = (BACKEND_ROOT / "app" / "worker" / "tasks.py").read_text(encoding="utf-8")
+    assert "payment_confirm:" in source
+    assert "redis_client.lock" in source
+
+
+def test_cleanup_expired_bookings_rechecks_pending_status_inside_lock():
+    """cleanup_expired_bookings phải re-check trạng thái sau khi lấy lock để không expire booking vừa PAID."""
+    source = (BACKEND_ROOT / "app" / "worker" / "tasks.py").read_text(encoding="utf-8")
+    assert "session.refresh(booking)" in source
+    assert "booking.payment_status != PaymentStatus.PENDING" in source
+
+
 if __name__ == "__main__":
     import pytest
     pytest.main([__file__, "-v"])
