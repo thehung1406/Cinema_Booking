@@ -1,4 +1,3 @@
-from celery import Task
 from datetime import datetime, timedelta, timezone
 from sqlmodel import Session, select
 from sqlalchemy import update
@@ -16,15 +15,6 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-
-class DatabaseTask(Task):
-    _session = None
-
-    @property
-    def session(self):
-        if self._session is None:
-            self._session = Session(engine)
-        return self._session
 
 @celery_app.task
 def cleanup_expired_bookings():

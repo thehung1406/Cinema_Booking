@@ -125,7 +125,9 @@ def test_verify_vnpay_signature_missing_or_empty():
 def test_payment_schemas_fields():
     """Kiểm tra định nghĩa các schema thanh toán."""
     url_req_fields = set(VNPayURLRequest.model_fields.keys())
-    assert {"bookingId", "amount", "orderInfo", "returnUrl"}.issubset(url_req_fields)
+    assert "bookingId" in url_req_fields
+    # Đảm bảo không có các trường thừa dễ gây rủi ro bảo mật (Issue #40)
+    assert {"amount", "orderInfo", "returnUrl"}.isdisjoint(url_req_fields)
 
     url_res_fields = set(VNPayURLResponse.model_fields.keys())
     assert "paymentUrl" in url_res_fields
