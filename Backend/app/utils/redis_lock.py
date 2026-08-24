@@ -225,7 +225,7 @@ class SeatLockManager:
             return []
 
         # 2. Dùng Pipeline để batch tất cả các lệnh GET và TTL trong 1 round-trip
-        pipe = redis_client.pipeline()
+        pipe = redis_client.pipeline(transaction=False)
         for key in keys:
             pipe.get(key)
             pipe.ttl(key)

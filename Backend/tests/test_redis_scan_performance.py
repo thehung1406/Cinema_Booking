@@ -48,7 +48,7 @@ def test_get_all_locks_uses_scan_and_pipeline():
     
     lock_data_101 = json.dumps({"user_id": 1, "locked_at": "2026-08-24T00:00:00", "seat_id": 101, "showtime_id": 10})
     lock_data_102 = json.dumps({"user_id": 2, "locked_at": "2026-08-24T00:01:00", "seat_id": 102, "showtime_id": 10})
-    
+
     pipeline_results = [
         lock_data_101, 300,  # get, ttl cho key 101
         lock_data_102, 450   # get, ttl cho key 102
@@ -63,6 +63,7 @@ def test_get_all_locks_uses_scan_and_pipeline():
         locks = SeatLockManager.get_all_locks_for_showtime(showtime_id)
 
         mock_scan.assert_called_once_with(match=f"seat_lock:{showtime_id}:*", count=100)
+        mock_pipeline.assert_called_once_with(transaction=False)
         assert mock_pipe.get.call_count == 2
         assert mock_pipe.ttl.call_count == 2
         mock_pipe.execute.assert_called_once()
