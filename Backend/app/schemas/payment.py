@@ -4,10 +4,8 @@ from pydantic import BaseModel, Field, ConfigDict
 
 class VNPayURLRequest(BaseModel):
     """Request tạo URL thanh toán VNPay"""
-    bookingId: int
-    amount: Optional[float] = None
-    orderInfo: Optional[str] = None
-    returnUrl: Optional[str] = None
+    bookingId: int = Field(..., description="ID của đơn đặt vé")
+
 
 
 class VNPayURLResponse(BaseModel):
