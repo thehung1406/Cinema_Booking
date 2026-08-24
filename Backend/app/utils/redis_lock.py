@@ -214,26 +214,47 @@ class SeatLockManager:
     @staticmethod
     def get_all_locks_for_showtime(showtime_id: int) -> List[Dict]:
         """
-        Lấy tất cả locks của 1 suất chiếu
-        Dùng để hiển thị sơ đồ ghế
+        Lấy tất cả locks của 1 suất chiếu (Non-blocking SCAN + Pipeline batching).
+        Dùng để hiển thị sơ đồ ghế mà không gây block Redis server.
         """
         pattern = SeatLockManager._get_showtime_pattern(showtime_id)
-        keys = redis_client.keys(pattern)
         
-        locks = []
+        # 1. Dùng scan_iter thay cho keys() để tránh block O(N) Redis server
+        keys = list(redis_client.scan_iter(match=pattern, count=100))
+        if not keys:
+            return []
+
+        # 2. Dùng Pipeline để batch tất cả các lệnh GET và TTL trong 1 round-trip
+        pipe = redis_client.pipeline()
         for key in keys:
-            # Parse seat_id từ key: seat_lock:showtime_id:seat_id
-            try:
-                parts = key.split(":")
-                seat_id = int(parts[2])
-                
-                lock_info = SeatLockManager.get_seat_lock_info(showtime_id, seat_id)
-                if lock_info:
-                    locks.append(lock_info)
-            except (IndexError, ValueError) as e:
-                logger.error(f"Error parsing key {key}: {e}")
+            pipe.get(key)
+            pipe.ttl(key)
+        results = pipe.execute()
+
+        locks = []
+        for i, key in enumerate(keys):
+            lock_data_str = results[2 * i]
+            ttl = results[2 * i + 1]
+
+            if not lock_data_str or ttl is None or ttl <= 0:
                 continue
-        
+
+            try:
+                key_str = key.decode("utf-8") if isinstance(key, bytes) else str(key)
+                parts = key_str.split(":")
+                seat_id = int(parts[2])
+                lock_data = json.loads(lock_data_str)
+                locks.append({
+                    "user_id": lock_data.get("user_id"),
+                    "locked_at": lock_data.get("locked_at"),
+                    "ttl_remaining": ttl,
+                    "seat_id": seat_id,
+                    "showtime_id": showtime_id
+                })
+            except (IndexError, ValueError, json.JSONDecodeError) as e:
+                logger.error(f"Error parsing lock data for key {key}: {e}")
+                continue
+
         return locks
     
     @staticmethod
