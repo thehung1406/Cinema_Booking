@@ -63,3 +63,12 @@ class BookingDetailResponse(BaseModel):
     class Config:
         populate_by_name = True
         from_attributes = True
+
+
+class BookingPaymentStatusUpdateRequest(BaseModel):
+    """Request cập nhật trạng thái thanh toán của booking"""
+    payment_status: str = Field(
+        ...,
+        description="Trạng thái thanh toán mới (FAILED hoặc CANCELLED)"
+    )
+

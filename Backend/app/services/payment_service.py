@@ -141,20 +141,21 @@ class PaymentService:
                         payment_status=PaymentStatus.PAID.value
                     )
                     
-                    # Xóa lock khỏi Redis
+                    # Commit DB trước khi xóa Redis lock
+                    db.commit()
+                    logger.info(f"Updated booking {booking_id} payment status to PAID")
+
+                    # Xóa lock khỏi Redis SAU KHI commit DB thành công
                     for seat_id in seat_ids:
                         try:
                             SeatLockManager.unlock_seat(booking.showtime_id, seat_id, booking.user_id)
                         except Exception as e:
                             logger.warning(f"Failed to remove Redis lock for seat {seat_id}: {e}")
                     
-                    db.commit()
-                    logger.info(f"Updated booking {booking_id} payment status to PAID")
-                    
                     # Lấy thông tin chi tiết booking
                     booking_detail = BookingRepository.get_booking_with_details(db=db, booking_id=booking_id)
-
                     email_booking_detail = booking_detail
+
                     return {
                         "status": "success",
                         "booking": booking_detail,
@@ -182,13 +183,20 @@ class PaymentService:
                     seat_ids = [detail.seat_id for detail in booking_details]
                     for seat_id in seat_ids:
                         try:
-                            SeatLockManager.unlock_seat(booking.showtime_id, seat_id, booking.user_id)
                             SeatRepository.release_seat_optimistic(db, booking.showtime_id, seat_id, booking.user_id)
                         except Exception as e:
                             logger.warning(f"Failed to release hold for seat {seat_id}: {e}")
 
+                    # Commit DB trước khi xóa Redis lock
                     db.commit()
                     logger.info(f"Updated booking {booking_id} payment status to FAILED and released seats")
+
+                    # Xóa lock khỏi Redis SAU KHI commit DB thành công
+                    for seat_id in seat_ids:
+                        try:
+                            SeatLockManager.unlock_seat(booking.showtime_id, seat_id, booking.user_id)
+                        except Exception as e:
+                            logger.warning(f"Failed to remove Redis lock for seat {seat_id}: {e}")
                     
                     return {
                         "status": "failed",
@@ -285,14 +293,16 @@ class PaymentService:
                         payment_status=PaymentStatus.PAID.value
                     )
                     
+                    # Commit DB trước khi xóa Redis lock
+                    db.commit()
+                    logger.info(f"VNPay IPN: Successfully processed payment for booking {booking_id}")
+                    
+                    # Xóa Redis lock SAU KHI commit DB thành công
                     for seat_id in seat_ids:
                         try:
                             SeatLockManager.unlock_seat(booking.showtime_id, seat_id, booking.user_id)
                         except Exception as e:
                             logger.warning(f"Failed to remove Redis lock for seat {seat_id}: {e}")
-                            
-                    db.commit()
-                    logger.info(f"VNPay IPN: Successfully processed payment for booking {booking_id}")
                     
                     booking_detail = BookingRepository.get_booking_with_details(db=db, booking_id=booking_id)
                     email_booking_detail = booking_detail
@@ -312,13 +322,21 @@ class PaymentService:
                     seat_ids = [detail.seat_id for detail in booking_details]
                     for seat_id in seat_ids:
                         try:
-                            SeatLockManager.unlock_seat(booking.showtime_id, seat_id, booking.user_id)
                             SeatRepository.release_seat_optimistic(db, booking.showtime_id, seat_id, booking.user_id)
                         except Exception as e:
                             logger.warning(f"Failed to release seat {seat_id}: {e}")
                             
+                    # Commit DB trước khi xóa Redis lock
                     db.commit()
                     logger.info(f"VNPay IPN: Processed failed payment for booking {booking_id}")
+
+                    # Xóa Redis lock SAU KHI commit DB thành công
+                    for seat_id in seat_ids:
+                        try:
+                            SeatLockManager.unlock_seat(booking.showtime_id, seat_id, booking.user_id)
+                        except Exception as e:
+                            logger.warning(f"Failed to release seat lock on Redis {seat_id}: {e}")
+
                     return {"RspCode": "00", "Message": "Confirm Success"}
         except Exception as e:
             db.rollback()
