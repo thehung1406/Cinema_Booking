@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, Query, status
 from sqlmodel import Session
-from typing import List
+from typing import List, Literal
 
 from app.core.database import get_session
 from app.models.user import User
@@ -59,7 +59,10 @@ def get_user_bookings(
 @router.patch("/{booking_id}/payment-status", response_model=BookingDetailResponse)
 def update_payment_status(
     booking_id: int,
-    payment_status: str,
+    payment_status: Literal["FAILED", "CANCELLED"] = Query(
+        ...,
+        description="Trạng thái thanh toán mới (chỉ chấp nhận FAILED hoặc CANCELLED)"
+    ),
     db: Session = Depends(get_session),
     current_user: User = Depends(require_staff)
 ):
@@ -69,3 +72,4 @@ def update_payment_status(
         booking_id=booking_id,
         payment_status=payment_status
     )
+

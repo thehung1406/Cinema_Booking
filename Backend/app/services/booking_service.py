@@ -208,27 +208,49 @@ class BookingService:
                 detail="Không thể hủy booking đã thanh toán"
             )
         
-        # Cập nhật trạng thái
-        BookingRepository.update_payment_status(
-            db=db,
-            booking_id=booking_id,
-            payment_status=payment_status
-        )
+        try:
+            # Cập nhật trạng thái
+            BookingRepository.update_payment_status(
+                db=db,
+                booking_id=booking_id,
+                payment_status=payment_status
+            )
 
-        booking_detail = BookingRepository.get_booking_with_details(db=db, booking_id=booking_id)
-        for seat in (booking_detail or {}).get("seats", []):
-            seat_id = seat.get("seat_id")
-            if seat_id is None:
-                continue
-            try:
-                SeatLockManager.unlock_seat(booking.showtime_id, seat_id, booking.user_id)
-                SeatRepository.release_seat_optimistic(db, booking.showtime_id, seat_id, booking.user_id)
-            except Exception as e:
-                logger.warning(f"Failed to release hold for seat {seat_id}: {e}")
-        
-        db.commit()
-        
-        # Trả về thông tin chi tiết
-        booking_detail = BookingRepository.get_booking_with_details(db=db, booking_id=booking_id)
-        return BookingDetailResponse(**booking_detail)
+            booking_detail = BookingRepository.get_booking_with_details(db=db, booking_id=booking_id)
+            seats = (booking_detail or {}).get("seats", [])
+            for seat in seats:
+                seat_id = seat.get("seat_id")
+                if seat_id is None:
+                    continue
+                try:
+                    SeatRepository.release_seat_optimistic(db, booking.showtime_id, seat_id, booking.user_id)
+                except Exception as e:
+                    logger.warning(f"Failed to release hold for seat {seat_id}: {e}")
+            
+            # Commit DB trước khi xóa Redis lock
+            db.commit()
+
+            # Xóa lock khỏi Redis SAU KHI commit DB thành công
+            for seat in seats:
+                seat_id = seat.get("seat_id")
+                if seat_id is None:
+                    continue
+                try:
+                    SeatLockManager.unlock_seat(booking.showtime_id, seat_id, booking.user_id)
+                except Exception as e:
+                    logger.warning(f"Failed to remove Redis lock for seat {seat_id}: {e}")
+            
+            # Trả về thông tin chi tiết
+            booking_detail = BookingRepository.get_booking_with_details(db=db, booking_id=booking_id)
+            return BookingDetailResponse(**booking_detail)
+        except HTTPException:
+            db.rollback()
+            raise
+        except Exception as e:
+            db.rollback()
+            logger.error(f"Error updating payment status for booking {booking_id}: {str(e)}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Lỗi khi cập nhật trạng thái thanh toán: {str(e)}"
+            )
 
