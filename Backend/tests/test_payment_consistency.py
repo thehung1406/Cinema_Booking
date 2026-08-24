@@ -31,6 +31,7 @@ os.environ.setdefault("HASH_SECRET", "SANDBOX_HASH_SECRET_KEY")
 os.environ.setdefault("VNPAY_URL", "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html")
 os.environ.setdefault("CORS_ORIGINS", '["http://localhost:5173"]')
 
+from contextlib import nullcontext
 from app.services.payment_service import PaymentService
 from app.services.booking_service import BookingService
 from app.models.booking import Booking
@@ -61,7 +62,8 @@ def test_payment_confirm_commits_db_before_redis_unlock():
     db_mock.commit.side_effect = fake_commit
     db_mock.exec.return_value.all.return_value = [mock_detail]
 
-    with patch("app.services.payment_service.BookingRepository.get_booking_by_id", return_value=mock_booking), \
+    with patch("app.services.payment_service.redis_client.lock", return_value=nullcontext()), \
+         patch("app.services.payment_service.BookingRepository.get_booking_by_id", return_value=mock_booking), \
          patch("app.services.payment_service.BookingRepository.get_booking_with_details", return_value={"id": 100, "email": None}), \
          patch("app.services.payment_service.SeatRepository.book_seat_optimistic") as mock_book, \
          patch("app.services.payment_service.BookingRepository.update_payment_status") as mock_update_status, \

@@ -1,8 +1,11 @@
 from celery import Task
 from datetime import datetime, timedelta, timezone
 from sqlmodel import Session, select
+from sqlalchemy import update
+from redis.exceptions import LockError
 from app.worker.celery_config import celery_app
 from app.core.database import engine
+from app.core.redis import redis_client
 from app.models.seat_status import SeatStatus
 from app.models.booking import Booking
 from app.models.booking_detail import BookingDetail
@@ -47,22 +50,35 @@ def cleanup_expired_bookings():
             
             count = 0
             for booking in expired_bookings:
-                booking.booking_status = BookingStatus.EXPIRED
-                booking.payment_status = PaymentStatus.FAILED
-                session.add(booking)
-                
-                # Giải phóng ghế trong Redis nếu có
-                details = session.exec(
-                    select(BookingDetail).where(BookingDetail.booking_id == booking.id)
-                ).all()
-                for detail in details:
-                    try:
-                        SeatLockManager.unlock_seat(booking.showtime_id, detail.seat_id, booking.user_id)
-                    except Exception:
-                        pass
-                
-                count += 1
-                logger.info(f"Expired booking {booking.id}")
+                lock_key = f"payment_confirm:{booking.id}"
+                try:
+                    with redis_client.lock(lock_key, timeout=60, blocking_timeout=10):
+                        session.refresh(booking)
+                        if (
+                            booking.booking_status != BookingStatus.PENDING
+                            or booking.payment_status != PaymentStatus.PENDING
+                            or booking.booking_date > ten_minutes_ago
+                        ):
+                            continue
+
+                        booking.booking_status = BookingStatus.EXPIRED
+                        booking.payment_status = PaymentStatus.FAILED
+                        session.add(booking)
+
+                        # Giải phóng ghế trong Redis nếu có
+                        details = session.exec(
+                            select(BookingDetail).where(BookingDetail.booking_id == booking.id)
+                        ).all()
+                        for detail in details:
+                            try:
+                                SeatLockManager.unlock_seat(booking.showtime_id, detail.seat_id, booking.user_id)
+                            except Exception:
+                                pass
+
+                        count += 1
+                        logger.info(f"Expired booking {booking.id}")
+                except LockError:
+                    logger.warning(f"Skipped expiring booking {booking.id}: payment confirmation lock is busy")
             
             # 2. Release ghế HOLD quá hạn trong DB & Redis
             expired_holds = session.exec(
@@ -83,13 +99,24 @@ def cleanup_expired_bookings():
                 except Exception as ex:
                     logger.warning(f"Failed to unlock Redis lock during cleanup: {ex}")
 
-                seat_status.status = SeatStatusEnum.AVAILABLE
-                seat_status.hold_by_user_id = None
-                seat_status.hold_expired_at = None
-                seat_status.version = seat_status.version + 1
-                seat_status.updated_at = now
-                session.add(seat_status)
-                hold_count += 1
+                result = session.exec(
+                    update(SeatStatus)
+                    .where(
+                        SeatStatus.id == seat_status.id,
+                        SeatStatus.status == SeatStatusEnum.HOLD,
+                        SeatStatus.hold_expired_at <= now,
+                        SeatStatus.version == seat_status.version
+                    )
+                    .values(
+                        status=SeatStatusEnum.AVAILABLE,
+                        hold_by_user_id=None,
+                        hold_expired_at=None,
+                        version=seat_status.version + 1,
+                        updated_at=now
+                    )
+                )
+                if result.rowcount > 0:
+                    hold_count += 1
             
             session.commit()
             logger.info(f"Cleaned up {count} expired bookings and released {hold_count} expired seat holds")
