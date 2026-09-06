@@ -66,6 +66,8 @@ services:
       - backend
     environment:
       - DATABASE_URL=postgresql+psycopg2://postgres:pass123@postgres:5432/BackendTTCS
+      - REDIS_HOST=redis
+      - REDIS_URL=redis://redis:6379/0
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/"]
       interval: 10s
@@ -92,6 +94,8 @@ services:
       - backend
     environment:
       - DATABASE_URL=postgresql+psycopg2://postgres:pass123@postgres:5432/BackendTTCS
+      - REDIS_HOST=redis
+      - REDIS_URL=redis://redis:6379/0
 
   celery_beat:
     build:
@@ -112,6 +116,8 @@ services:
       - backend
     environment:
       - DATABASE_URL=postgresql+psycopg2://postgres:pass123@postgres:5432/BackendTTCS
+      - REDIS_HOST=redis
+      - REDIS_URL=redis://redis:6379/0
 
   flower:
     build:
@@ -128,6 +134,9 @@ services:
       - celery_worker
     networks:
       - backend
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_URL=redis://redis:6379/0
 
 networks:
   backend:
