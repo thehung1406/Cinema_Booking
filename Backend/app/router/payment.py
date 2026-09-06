@@ -4,6 +4,7 @@ import hashlib
 import hmac
 import urllib.parse
 from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 import logging
 
 from app.core.database import get_session
@@ -90,7 +91,7 @@ def create_vnpay_url(
     vnp_Url = settings.VNPAY_URL
     
     # Đồng bộ với thời gian giữ ghế/booking pending 10 phút.
-    now = datetime.now()
+    now = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh"))
     create_date = now.strftime('%Y%m%d%H%M%S')
     expire_date = (now + timedelta(minutes=10)).strftime('%Y%m%d%H%M%S')
     

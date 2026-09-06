@@ -36,7 +36,7 @@ api.interceptors.response.use(
     if (error.response?.status === 401) {
       // Token hết hạn hoặc không hợp lệ
       clearSession();
-      window.location.href = '/LoginPage';
+      window.location.href = '/login';
     }
     return Promise.reject(error);
   }

@@ -8,7 +8,6 @@ from app.core.config import settings
 from app.core.database import init_db
 import uvicorn
 import logging
-from app.core.redis import redis_client
 from app.router.auth import router as auth_router
 from app.router.cinema_room import router as cinema_room_router
 from app.router.theater import router as theater_router
@@ -62,10 +61,6 @@ def root():
 async def say_hello(name: str):
     return {"message": f"Hello {name}"}
 
-@app.get("/redis-test")
-def redis_test():
-    redis_client.set("hello", "world")
-    return {"value": redis_client.get("hello")}
 
 
 app.include_router(auth_router)
