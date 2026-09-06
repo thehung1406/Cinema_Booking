@@ -7,7 +7,7 @@ race condition khi nhiều user cùng lock/unlock ghế đồng thời.
 """
 import json
 from typing import Optional, List, Dict
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from app.core.redis import redis_client
 import logging
 
@@ -84,7 +84,7 @@ class SeatLockManager:
         """Tạo JSON data cho lock entry"""
         return json.dumps({
             "user_id": user_id,
-            "locked_at": datetime.utcnow().isoformat(),
+            "locked_at": datetime.now(timezone.utc).isoformat(),
             "seat_id": seat_id,
             "showtime_id": showtime_id
         })

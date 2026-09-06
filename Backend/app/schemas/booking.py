@@ -52,10 +52,16 @@ class BookingDetailResponse(BaseModel):
     
     # Thông tin phim & suất chiếu
     filmTitle: Optional[str] = Field(None, alias="filmTitle")
+    filmImage: Optional[str] = Field(None, alias="filmImage")
     theaterName: Optional[str] = Field(None, alias="theaterName")
     roomName: Optional[str] = Field(None, alias="roomName")
     showDate: Optional[str] = Field(None, alias="showDate")
     startTime: Optional[str] = Field(None, alias="startTime")
+
+    # Thông tin người dùng
+    fullName: Optional[str] = Field(None, alias="fullName")
+    email: Optional[str] = Field(None, alias="email")
+    phone: Optional[str] = Field(None, alias="phone")
     
     # Danh sách ghế đã đặt
     seats: List[dict]

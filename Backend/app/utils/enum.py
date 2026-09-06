@@ -2,9 +2,9 @@ from enum import Enum
 
 
 class UserRole(str, Enum):
-    STAFF = "staff"
-    USER = "user"
-    ADMIN = "admin"
+    STAFF = "STAFF"
+    USER = "USER"
+    ADMIN = "ADMIN"
 
 class SeatStatusEnum(str, Enum):
     AVAILABLE = "AVAILABLE"
@@ -20,6 +20,5 @@ class BookingStatus(str, Enum):
 class PaymentStatus(str, Enum):
     PENDING = "PENDING"
     PAID = "PAID"
-    SUCCESS = "PAID"
     FAILED = "FAILED"
     CANCELLED = "CANCELLED"

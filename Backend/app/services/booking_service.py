@@ -2,6 +2,7 @@ from typing import List
 from sqlmodel import Session
 from fastapi import HTTPException, status
 from datetime import datetime, timezone
+from decimal import Decimal
 
 from app.models.booking import Booking
 from app.repositories.booking_repo import BookingRepository
@@ -94,12 +95,36 @@ class BookingService:
                         detail=f"Thời gian giữ ghế {seat.seat_name} đã hết hạn"
                     )
             
-            # 4. Tạo booking
+            # 4. Tạo booking — validate giá từ DB, không tin client
+            seats_data = []
+            computed_total = Decimal("0")
+            for seat_id in seat_ids:
+                seat_with_type = SeatRepository.get_seat_with_type(db=db, seat_id=seat_id)
+                if not seat_with_type:
+                    raise HTTPException(
+                        status_code=status.HTTP_404_NOT_FOUND,
+                        detail=f"Ghế {seat_id} không tồn tại hoặc chưa gán loại ghế"
+                    )
+                seat_obj, seat_type_obj = seat_with_type
+                seats_data.append({
+                    "seat_id": seat_id,
+                    "price": seat_type_obj.base_price
+                })
+                computed_total += seat_type_obj.base_price
+
+            # Validate totalAmount từ client khớp với tổng giá server
+            client_total = Decimal(str(booking_request.totalAmount))
+            if client_total != computed_total:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Tổng tiền không khớp: client={client_total}, server={computed_total}"
+                )
+
             booking_data = {
                 "user_id": booking_request.userId,
                 "showtime_id": booking_request.showtimeId,
                 "booking_date": datetime.now(timezone.utc),
-                "total_amount": booking_request.totalAmount,
+                "total_amount": computed_total,
                 "payment_method": booking_request.paymentMethod,
                 "payment_status": PaymentStatus.PENDING.value,
                 "booking_status": BookingStatus.PENDING.value
@@ -108,11 +133,7 @@ class BookingService:
             booking = BookingRepository.create_booking(db=db, booking_data=booking_data)
             logger.info(f"Created booking {booking.id} for user {current_user_id}")
             
-            # 5. Tạo booking_details
-            seats_data = [
-                {"seat_id": seat.seat_id, "price": seat.price}
-                for seat in booking_request.seats
-            ]
+            # 5. Tạo booking_details (giá từ DB)
             booking_details = BookingRepository.create_booking_details(
                 db=db,
                 booking_id=booking.id,

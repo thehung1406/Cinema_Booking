@@ -80,8 +80,7 @@ class SeatService:
             # 2. Kiểm tra ghế đang HOLD trong Redis
             if seat.id in redis_lock_map:
                 lock_info = redis_lock_map[seat.id]
-                locked_at = datetime.fromisoformat(lock_info["locked_at"])
-                hold_expired_at = locked_at + timedelta(seconds=lock_info["ttl_remaining"])
+                hold_expired_at = now + timedelta(seconds=lock_info["ttl_remaining"])
                 is_held_by_me = (current_user_id is not None and lock_info.get("user_id") == current_user_id)
                 
                 result.append({
