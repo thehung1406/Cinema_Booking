@@ -58,7 +58,7 @@ const MainHomePage = () => {
       setCurrentSlide((prevSlide) =>
         prevSlide === featuredMovies.length - 1 ? 0 : prevSlide + 1
       );
-    }, 5000);
+    }, 3000);
     return () => clearInterval(interval);
   }, [featuredMovies.length]);
   const goToSlide = (index) => {
@@ -93,9 +93,8 @@ const MainHomePage = () => {
           {featuredMovies.map((movie, index) => (
             <div
               key={movie.id}
-              className={`absolute w-full h-full transition-opacity duration-1000 ease-in-out ${
-                index === currentSlide ? "opacity-100" : "opacity-0"
-              }`}
+              className={`absolute w-full h-full transition-opacity duration-1000 ease-in-out ${index === currentSlide ? "opacity-100" : "opacity-0"
+                }`}
             >
               <img
                 src={movie.image}
@@ -109,7 +108,7 @@ const MainHomePage = () => {
                   </h2>
                   <p className="text-gray-300 mb-4">{movie.genre}</p>
                   <button className="bg-red-600 hover:bg-red-700 px-6 py-3 rounded-md text-white font-medium"
-                  onClick={(e) => handleBooking(e, movie.id)}>
+                    onClick={(e) => handleBooking(e, movie.id)}>
                     Đặt vé ngay
                   </button>
                 </div>
@@ -121,19 +120,18 @@ const MainHomePage = () => {
         {/* Carousel indicators */}
         <div className="absolute bottom-4 left-0 right-0">
           <div className="flex justify-center space-x-2">
-          {featuredMovies.map((movie, index) => (
+            {featuredMovies.map((movie, index) => (
               <button
                 key={movie.id}
                 onClick={() => goToSlide(index)}
-                className={`h-2 rounded-full transition-all ${
-                  currentSlide === index ? "w-8 bg-red-600" : "w-2 bg-gray-400"
-                }`}
+                className={`h-2 rounded-full transition-all ${currentSlide === index ? "w-8 bg-red-600" : "w-2 bg-gray-400"
+                  }`}
               ></button>
             ))}
           </div>
         </div>
       </div>
-     
+
       {/* Now Showing */}
       <section className="py-12 m-20">
         <div className="container mx-auto px-4">
@@ -176,7 +174,7 @@ const MainHomePage = () => {
                 </div>
               </div>
             ))}
-          </div>  
+          </div>
         </div>
       </section>
       {/* Upcoming Movies */}
