@@ -4,7 +4,7 @@ services:
   postgres:
     image: postgres:15-alpine
     container_name: postgres
-    restart: always
+    restart: "no"
     env_file: .env
     volumes:
       - pgdata:/var/lib/postgresql/data
@@ -21,7 +21,7 @@ services:
   pgadmin:
     image: dpage/pgadmin4:latest
     container_name: pgadmin
-    restart: always
+    restart: "no"
     environment:
       PGADMIN_DEFAULT_EMAIL: admin@gmail.com
       PGADMIN_DEFAULT_PASSWORD: admin123
@@ -36,7 +36,7 @@ services:
   redis:
     image: redis:7-alpine
     container_name: redis
-    restart: always
+    restart: "no"
     ports:
       - "6379:6379"
     volumes:
@@ -49,7 +49,7 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: fastapi_app
-    restart: unless-stopped
+    restart: "no"
     env_file: .env
     ports:
       - "8000:8000"
@@ -80,7 +80,7 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: celery_worker
-    restart: unless-stopped
+    restart: "no"
     command: celery -A app.worker.celery_config worker --loglevel=info
     env_file: .env
     volumes:
@@ -102,7 +102,7 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: celery_beat
-    restart: unless-stopped
+    restart: "no"
     command: celery -A app.worker.celery_config beat --loglevel=info
     env_file: .env
     volumes:
@@ -124,7 +124,7 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: flower
-    restart: unless-stopped
+    restart: "no"
     command: celery -A app.worker.celery_config flower --port=5555
     env_file: .env
     ports:
