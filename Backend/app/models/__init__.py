@@ -8,3 +8,4 @@ from .showtime import Showtime
 from .seat_status import SeatStatus
 from .booking import Booking
 from .booking_detail import BookingDetail
+from .ai import Review, ReviewSentiment, KnowledgeDocument, KnowledgeChunk

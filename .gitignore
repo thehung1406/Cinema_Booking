@@ -111,3 +111,8 @@ redisdata/
 .agent/
 .gemini/
 skills-lock.json
+
+# Local training data, checkpoints and frozen evaluation runs
+Backend/artifacts/
+Backend/ml/data/reviewed/
+Backend/ml/runs/

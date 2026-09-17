@@ -1,0 +1,6 @@
+FROM python:3.11-slim
+WORKDIR /app
+COPY requirements.txt requirements-ai-inference.txt ./
+RUN pip install --no-cache-dir -r requirements.txt -r requirements-ai-inference.txt
+COPY app ./app
+CMD ["celery", "-A", "app.worker.celery_config", "worker", "-Q", "sentiment", "--concurrency=1", "--loglevel=info"]

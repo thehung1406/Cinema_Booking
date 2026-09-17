@@ -62,6 +62,7 @@ const HomePage = () => {
   return (
     <div className="min-h-screen bg-gray-100">
       {/* Header */}
+      {['ADMIN', 'STAFF'].includes(userInfo?.role) && <div className="bg-gray-800 text-white text-right px-6 py-2 text-sm"><Link to="/review-moderation">Duyệt đánh giá phim</Link></div>}
       <header className="bg-gray-900 text-white">
         <div className="container mx-auto px-4 py-4">
           <div className="flex justify-between items-center">

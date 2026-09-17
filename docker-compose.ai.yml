@@ -1,0 +1,22 @@
+# Optional overlay: docker compose -f docker-compose.yml -f docker-compose.ai.yml up --build -d
+# The normal booking worker keeps its default queue; ML work has its own process.
+services:
+  sentiment_worker:
+    build:
+      context: ./Backend
+      dockerfile: Dockerfile.ai-worker
+    restart: unless-stopped
+    env_file: ./Backend/.env
+    environment:
+      REDIS_HOST: redis
+      REDIS_URL: redis://redis:6379/0
+      SENTIMENT_MODEL_PATH: /app/artifacts/sentiment
+    volumes:
+      - ./Backend/artifacts:/app/artifacts:ro
+    depends_on:
+      fastapi:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    networks:
+      - cinema_network

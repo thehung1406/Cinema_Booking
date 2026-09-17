@@ -1,0 +1,11 @@
+# Install in a separate training environment; record pip freeze with each run.
+scikit-learn>=1.6,<2
+joblib>=1.4,<2
+torch>=2.6,<3
+transformers>=4.49,<5
+datasets>=3.3,<4
+peft>=0.14,<0.18
+accelerate>=1.3,<2
+py-vncorenlp==0.1.4
+fastapi==0.128.0
+uvicorn==0.24.0
