@@ -4,6 +4,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import filmService from "../services/filmService";
 import { formatDetailDate } from "../utils/filmUtils";
 import logger from '../utils/logger';
+import FilmReviews from './FilmReviews';
 
 function MovieDetail() {
   const { id } = useParams();
@@ -270,6 +271,7 @@ function MovieDetail() {
             </div>
           </div>
         </div>
+        <FilmReviews key={movie.id} filmId={movie.id} />
         {/* Additional Info */}
         <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="bg-white p-6 rounded-lg shadow-md">

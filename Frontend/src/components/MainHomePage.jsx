@@ -3,6 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import filmService from "../services/filmService";
 import { classifyMovies } from "../utils/filmUtils";
 import logger from '../utils/logger';
+import PositiveFilms from './PositiveFilms';
 
 const MainHomePage = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -177,6 +178,7 @@ const MainHomePage = () => {
           </div>
         </div>
       </section>
+      <PositiveFilms />
       {/* Upcoming Movies */}
       <section className="py-12 m-20">
         <div className="container mx-auto px-4">

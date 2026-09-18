@@ -13,6 +13,8 @@ import MovieDetail from "./components/MovieDetail";
 import TicketBooking from "./components/TicketBooking";
 import VNPayReturn from "./components/VNPayReturn";
 import PaymentPage from "./components/PaymentPage";
+import AIAssistant from "./components/AIAssistant";
+import ReviewModeration from "./components/ReviewModeration";
 
 
 
@@ -37,12 +39,14 @@ function App() {
           <Route path="seat-selection/:showtimeId" element={<SeatSelection />} />
           <Route path="user-info" element={<UserInfor />} />
           <Route path="userInfo" element={<UserInfor />} />
+          <Route path="review-moderation" element={<ReviewModeration />} />
         </Route>
         <Route path="login" element={<LoginPage />} />
         <Route path="loginPage" element={<LoginPage />} />
         <Route path="loginpage" element={<LoginPage />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
+      <AIAssistant />
     </div>
   );
 }

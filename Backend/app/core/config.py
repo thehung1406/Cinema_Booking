@@ -1,7 +1,7 @@
 import json
 from typing import List
 
-from pydantic import field_validator
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -30,6 +30,17 @@ class Settings(BaseSettings):
     SMTP_PASSWORD: str | None = None
     SMTP_FROM: str | None = None
     SMTP_TLS: bool = True
+    # Disabled inference remains retryable until a reviewed artifact is installed.
+    SENTIMENT_BACKEND: str = "disabled"  # disabled | sklearn | transformers
+    SENTIMENT_MODEL_PATH: str = "artifacts/sentiment"
+    SENTIMENT_REVIEW_THRESHOLD: float = Field(default=0.65, ge=0, le=1)
+    REVIEW_AUTO_APPROVE: bool = False
+    SENTIMENT_WINDOW_DAYS: int = Field(default=30, ge=1, le=365)
+    SENTIMENT_MIN_REVIEWS: int = Field(default=10, ge=1)
+    AI_MODEL_URL: str = ""  # private inference service, e.g. http://ai-model:8010
+    AI_MODEL_TIMEOUT_SECONDS: float = Field(default=15.0, gt=0, le=60)
+    AI_REQUESTS_PER_MINUTE: int = Field(default=10, ge=1, le=1000)
+    AI_CONTEXT_TTL_SECONDS: int = Field(default=1800, ge=60, le=86400)
 
     CORS_ORIGINS: List[str] = []
 

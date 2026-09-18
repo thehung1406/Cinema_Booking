@@ -1,0 +1,24 @@
+# Optional overlay: docker compose -f Backend/docker-compose.yml -f docker-compose.ai.yml up --build -d
+# Relative paths resolve from the first Compose file, in Backend/.
+# The normal booking worker keeps its default queue; ML work has its own process.
+services:
+  sentiment_worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.ai-worker
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql+psycopg2://postgres:pass123@postgres:5432/BackendTTCS
+      REDIS_HOST: redis
+      REDIS_URL: redis://redis:6379/0
+      SENTIMENT_MODEL_PATH: /app/artifacts/sentiment
+    volumes:
+      - ./artifacts:/app/artifacts:ro
+    depends_on:
+      fastapi:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    networks:
+      - backend

@@ -1,0 +1,62 @@
+[
+  {
+    "source_id": "booking",
+    "title": "Hướng dẫn đặt vé",
+    "content": "Để đặt vé, đăng nhập, chọn phim, rạp, ngày và suất chiếu. Tiếp tục chọn ghế trên giao diện, kiểm tra thông tin đơn rồi thực hiện thanh toán.",
+    "source_url": "/ticket-booking",
+    "version": "draft-1",
+    "effective_at": "2026-09-17T00:00:00+00:00",
+    "approved": false,
+    "provenance": "Repository behavior; human policy review required"
+  },
+  {
+    "source_id": "scope",
+    "title": "Phạm vi trợ lý",
+    "content": "Trợ lý chỉ tra cứu phim, suất chiếu, giá vé và tình trạng ghế. Người dùng tự giữ ghế, tạo đơn và xác nhận thanh toán trên giao diện. Trợ lý chưa tra cứu đơn hàng cá nhân.",
+    "source_url": "/ticket-booking",
+    "version": "draft-1",
+    "effective_at": "2026-09-17T00:00:00+00:00",
+    "approved": false,
+    "provenance": "Repository behavior; human policy review required"
+  },
+  {
+    "source_id": "hold",
+    "title": "Giữ ghế khi đặt vé",
+    "content": "Luồng đặt vé hiện tại giữ ghế trong 10 phút. Ghế hết thời gian giữ sẽ được giải phóng nếu chưa hoàn tất thanh toán. Tình trạng ghế cần được kiểm tra lại lúc chọn.",
+    "source_url": "/ticket-booking",
+    "version": "draft-1",
+    "effective_at": "2026-09-17T00:00:00+00:00",
+    "approved": false,
+    "provenance": "Repository behavior; human policy review required"
+  },
+  {
+    "source_id": "ranking",
+    "title": "Căn cứ giới thiệu phim",
+    "content": "Danh sách phim tích cực chỉ dùng đánh giá đã duyệt, phân tích thành công và còn hiệu lực trong 30 ngày. Mặc định cần ít nhất 10 đánh giá và còn suất chiếu. Xếp hạng bằng cận dưới Wilson. Trung lập được hiển thị riêng với tiêu cực.",
+    "source_url": "/movie",
+    "version": "draft-1",
+    "effective_at": "2026-09-17T00:00:00+00:00",
+    "approved": false,
+    "provenance": "Repository behavior; human policy review required"
+  },
+  {
+    "source_id": "review",
+    "title": "Viết và chỉnh sửa đánh giá",
+    "content": "Sau khi đăng nhập, bạn có thể viết một đánh giá cho mỗi phim tại trang chi tiết phim. Bạn có thể chỉnh sửa hoặc xóa đánh giá của mình. Đánh giá mới và nội dung chỉnh sửa cần được kiểm duyệt; chỉ kết quả khớp phiên bản hiện tại mới được tính.",
+    "source_url": "/movie",
+    "version": "draft-1",
+    "effective_at": "2026-09-17T00:00:00+00:00",
+    "approved": false,
+    "provenance": "Repository behavior; human policy review required"
+  },
+  {
+    "source_id": "fallback",
+    "title": "Khi trợ lý không khả dụng",
+    "content": "Khi trợ lý hoặc mô hình không khả dụng, bạn vẫn có thể chọn phim và đặt vé trực tiếp trên giao diện.",
+    "source_url": "/ticket-booking",
+    "version": "draft-1",
+    "effective_at": "2026-09-17T00:00:00+00:00",
+    "approved": false,
+    "provenance": "Repository behavior; human policy review required"
+  }
+]
