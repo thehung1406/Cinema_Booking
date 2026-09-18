@@ -19,6 +19,7 @@ from app.services.ai_tools import validate_context, missing_fields, run_tool
 from app.services.rag_service import folded, retrieve
 
 LABELS = {"film_id": "phim", "theater_id": "rạp", "show_date": "ngày xem", "showtime_id": "mã suất chiếu"}
+SHOWTIME_PATTERN = r"(?:ma suat|suat chieu so)\s*(\d+)"
 RATE_SCRIPT = """
 local n = redis.call('INCR', KEYS[1])
 if n == 1 then redis.call('EXPIRE', KEYS[1], 60) end
@@ -62,10 +63,31 @@ def infer_context(db, message, context):
         matches = [row for row in db.exec(select(model)).all() if len(folded(getattr(row, attribute))) > 2 and folded(getattr(row, attribute)) in text]
         if len(matches) == 1:
             setattr(context, field, matches[0].id)
-    match = re.search(r"(?:ma suat|suat chieu so)\s*(\d+)", text)
+    match = re.search(SHOWTIME_PATTERN, text)
     if match:
         context.showtime_id = int(match[1])
     return context
+
+
+def resolve_intent(db, message, context, pending_tool=None):
+    intent = detect_intent(message)
+    if not pending_tool or intent == "out_of_scope":
+        return intent
+    # Entity names and showtime identifiers can contain intent keywords.
+    remainder = folded(message)
+    for field, model, attribute, prefix in (
+        ("film_id", Film, "title", "phim"), ("theater_id", Theater, "name", "rap")
+    ):
+        value = getattr(context, field)
+        row = db.get(model, value) if value is not None else None
+        if row:
+            name = re.escape(folded(getattr(row, attribute)))
+            remainder = re.sub(rf"\b(?:{prefix}\s+)?{name}\b", " ", remainder)
+    remainder = re.sub(SHOWTIME_PATTERN, " ", remainder)
+    explicit_topic = any(w in remainder for w in ("cach", "chinh sach", "huong dan", "hoan", "huy", "thanh toan"))
+    if detect_intent(remainder) == "knowledge" and not explicit_topic and len(remainder.split()) <= 8:
+        return pending_tool
+    return intent
 
 
 def select_evidence(question, evidence):
@@ -102,13 +124,17 @@ def chat(db, user_id, request, redis=None):
     if request.conversation_id and previous_raw is None:
         raise HTTPException(404, "Hội thoại đã hết hạn; hãy bắt đầu cuộc trò chuyện mới.")
     previous = json.loads(previous_raw) if previous_raw else {}
+    previous_context = ToolContext.model_validate(previous.get("context", {}))
     values = previous.get("context", {}) | request.context.model_dump(mode="json", exclude_unset=True)
     context = infer_context(db, request.message, ToolContext.model_validate(values))
+    selection_changed = any(getattr(context, field) != getattr(previous_context, field)
+                            for field in ("film_id", "theater_id", "show_date"))
+    # The UI echoes the full context, so an unchanged ID may still be stale.
+    if (context.showtime_id is not None and context.showtime_id == previous_context.showtime_id
+            and selection_changed and not re.search(SHOWTIME_PATTERN, folded(request.message))):
+        context.showtime_id = None
     validate_context(db, context)
-    intent = detect_intent(request.message)
-    explicit_topic = any(w in folded(request.message) for w in ("cach", "chinh sach", "huong dan", "hoan", "huy", "thanh toan"))
-    if intent == "knowledge" and not explicit_topic and previous.get("pending_tool") and len(request.message.split()) <= 8:
-        intent = previous["pending_tool"]
+    intent = resolve_intent(db, request.message, context, previous.get("pending_tool"))
     evening = "toi nay" in folded(request.message) or (previous.get("evening", False) and intent == previous.get("pending_tool"))
     sources, missing = [], []
     status, mode = "ok", "retrieval_only"

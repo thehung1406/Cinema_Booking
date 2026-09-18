@@ -57,10 +57,10 @@ python -m venv .venv
 Nếu chạy Docker Compose ở thư mục gốc:
 
 ```powershell
-docker compose -f docker-compose.yml -f docker-compose.ai.yml up --build -d
+docker compose -f Backend/docker-compose.yml -f docker-compose.ai.yml up --build -d
 ```
 
-Overlay thêm worker sklearn riêng và mount `Backend/artifacts` chỉ đọc. `DATABASE_URL` trong `.env` của worker phải trỏ đúng DB trong mạng container (`postgres:5432`) và cùng DB với FastAPI; đối chiếu cấu hình Compose hiện có trước khi chạy. Overlay không sửa dịch vụ sẵn có. Với PhoBERT, xây image worker riêng từ môi trường huấn luyện có Java/VnCoreNLP và transformers; image sklearn mặc định chưa chứa các dependency này.
+Overlay thêm worker sklearn riêng trên network `backend` và mount `Backend/artifacts` chỉ đọc. Các đường dẫn tương đối được tính từ file Compose đầu tiên trong `Backend`. `DATABASE_URL` của worker được đặt cùng giá trị với FastAPI và worker nghiệp vụ, trỏ tới `postgres:5432`; khi thay cấu hình DB, cập nhật đồng bộ các dịch vụ này. Với PhoBERT, xây image worker riêng từ môi trường huấn luyện có Java/VnCoreNLP và transformers; image sklearn mặc định chưa chứa các dependency này.
 
 Frontend chạy trong thư mục `Frontend`:
 

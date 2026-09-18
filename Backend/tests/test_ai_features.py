@@ -204,6 +204,107 @@ def test_new_policy_question_overrides_pending_tool(db):
     assert next_turn["status"] == "no_evidence" and next_turn["tool"] is None
 
 
+def test_film_name_completes_pending_showtime_lookup(db):
+    redis = FakeRedis()
+    first = chat.chat(db, 1, ChatRequest(message="Lich chieu?", context=ToolContext(
+        theater_id=1, show_date=db.get(Showtime, 1).show_date)), redis)
+    assert first["missing_fields"] == ["film_id"]
+    reply = chat.chat(db, 1, ChatRequest(message="Phim thử nghiệm",
+        conversation_id=first["conversation_id"]), redis)
+    assert reply["tool"] == "get_showtimes" and reply["status"] == "ok"
+    assert reply["sources"][0]["id"] == "showtime:1"
+
+
+@pytest.mark.parametrize("message", ["Suat chieu so 1", "Ma suat 1"])
+def test_showtime_number_completes_pending_price_lookup(db, message):
+    redis = FakeRedis()
+    first = chat.chat(db, 1, ChatRequest(message="Gia ve bao nhieu?"), redis)
+    assert first["missing_fields"] == ["showtime_id"]
+    reply = chat.chat(db, 1, ChatRequest(message=message,
+        conversation_id=first["conversation_id"]), redis)
+    assert reply["tool"] == "get_ticket_prices" and reply["status"] == "ok"
+    assert "75,000" in reply["answer"]
+
+
+@pytest.mark.parametrize("message, expected_tool", [
+    ("Noi dung Phim thử nghiệm", "search_films"),
+    ("Gia ve ma suat 1", "get_ticket_prices"),
+    ("Cach dat ve Phim thử nghiệm", None),
+    ("Dat ho Phim thử nghiệm", None),
+])
+def test_explicit_new_request_overrides_pending_lookup(db, message, expected_tool):
+    redis = FakeRedis()
+    first = chat.chat(db, 1, ChatRequest(message="Lich chieu?"), redis)
+    reply = chat.chat(db, 1, ChatRequest(message=message,
+        conversation_id=first["conversation_id"]), redis)
+    assert reply["tool"] == expected_tool
+
+
+@pytest.mark.parametrize("field", ["film_id", "theater_id", "show_date"])
+@pytest.mark.parametrize("via_message", [True, False])
+def test_changed_selection_clears_carried_showtime(db, field, via_message):
+    db.add(Theater(id=2, name="Rap moi", address="Dia chi", city="Ha Noi"))
+    db.commit()
+    show_date = db.get(Showtime, 1).show_date
+    changes = {
+        "film_id": (2, "Noi dung Phim không có suất"),
+        "theater_id": (2, "Lich chieu Rap moi"),
+        "show_date": ((show_date + timedelta(days=1)).isoformat(),
+                      f"Lich chieu {show_date + timedelta(days=1):%Y-%m-%d}"),
+    }
+    redis = FakeRedis()
+    first = chat.chat(db, 1, ChatRequest(message="Gia ve?", context=ToolContext(
+        film_id=1, theater_id=1, show_date=show_date, showtime_id=1)), redis)
+    value, message = changes[field]
+    # The frontend sends all context fields, including the previous showtime ID.
+    submitted = first["context"].copy()
+    if not via_message:
+        submitted[field] = value
+        message = "Noi dung phim" if field == "film_id" else "Lich chieu?"
+    reply = chat.chat(db, 1, ChatRequest(message=message, context=ToolContext(**submitted),
+        conversation_id=first["conversation_id"]), redis)
+    assert reply["context"][field] == value
+    assert reply["context"]["showtime_id"] is None
+    assert reply["status"] == ("ok" if field == "film_id" else "no_results")
+    saved = json.loads(redis.values[f"ai:context:1:{first['conversation_id']}"])
+    assert saved["context"]["showtime_id"] is None
+
+
+def test_unchanged_selection_preserves_showtime(db):
+    redis = FakeRedis()
+    first = chat.chat(db, 1, ChatRequest(message="Gia ve?", context=ToolContext(
+        film_id=1, theater_id=1, show_date=db.get(Showtime, 1).show_date, showtime_id=1)), redis)
+    reply = chat.chat(db, 1, ChatRequest(message="Gia ve Phim thử nghiệm?",
+        context=ToolContext(**first["context"]), conversation_id=first["conversation_id"]), redis)
+    assert reply["context"]["showtime_id"] == 1
+    assert reply["status"] == "ok" and "75,000" in reply["answer"]
+
+
+@pytest.mark.parametrize("via_message", [True, False])
+@pytest.mark.parametrize("matching", [True, False])
+def test_explicit_showtime_is_validated_after_selection_change(db, via_message, matching):
+    db.add(Showtime(id=2, film_id=2, room_id=1, show_date=db.get(Showtime, 1).show_date,
+        start_time=time(21), end_time=time(23), format="2D"))
+    db.commit()
+    redis = FakeRedis()
+    first = chat.chat(db, 1, ChatRequest(message="Gia ve?", context=ToolContext(
+        film_id=1, showtime_id=1)), redis)
+    # A fresh explicit ID must not be silently dropped, even when it is invalid.
+    showtime_id = 2 if matching or not via_message else 1
+    film_id = 2 if matching or via_message else 1
+    message = f"Gia ve Phim không có suất, ma suat {showtime_id}" if via_message else "Gia ve?"
+    context = first["context"] if via_message else {"film_id": film_id, "showtime_id": showtime_id}
+    request = ChatRequest(message=message, context=ToolContext(**context),
+        conversation_id=first["conversation_id"])
+    if matching:
+        reply = chat.chat(db, 1, request, redis)
+        assert reply["context"]["showtime_id"] == 2 and reply["status"] == "ok"
+    else:
+        with pytest.raises(HTTPException) as error:
+            chat.chat(db, 1, request, redis)
+        assert error.value.status_code == 422
+
+
 def test_chat_readonly_prices_and_invalid_tools(db):
     result = chat.chat(db, 1, ChatRequest(message="Giá vé bao nhiêu?", context=ToolContext(showtime_id=1)), FakeRedis())
     assert "75,000" in result["answer"] and result["sources"][0]["kind"] == "live"
