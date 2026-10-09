@@ -1,6 +1,7 @@
 from sqlmodel import SQLModel, Field, Relationship
 from typing import Optional, List
 from datetime import datetime, timezone
+from sqlalchemy import Column, DateTime
 
 
 class User(SQLModel, table=True):
@@ -16,10 +17,15 @@ class User(SQLModel, table=True):
     full_name: Optional[str] = Field(default=None, max_length=100)
     avatar: Optional[str] = Field(default=None, max_length=255)
 
-    role: str = Field(default="USER", max_length=20)
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    role_id: int = Field(foreign_key="roles.id", ondelete="RESTRICT", index=True)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc), sa_column=Column(DateTime(timezone=True), nullable=False))
 
     # Relationships
     bookings: List["Booking"] = Relationship(back_populates="user")
     seat_statuses: List["SeatStatus"] = Relationship(back_populates="hold_user")
+    role_item: "Role" = Relationship(sa_relationship_kwargs={"lazy": "joined"})
+
+    @property
+    def role(self) -> str:
+        return self.role_item.code
 

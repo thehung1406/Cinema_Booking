@@ -37,6 +37,17 @@ from app.services.booking_service import BookingService
 from app.models.booking import Booking
 from app.models.booking_detail import BookingDetail
 from app.utils.enum import BookingStatus, PaymentStatus
+from app.models import Payment
+import pytest
+
+
+@pytest.fixture(autouse=True)
+def payment_ledger_for_mock_sessions(monkeypatch):
+    monkeypatch.setattr(PaymentService, "_payment_attempt", lambda db, booking, params:
+        Payment(booking_id=booking.id, provider="VNPAY", payment_method="VNPAY",
+                merchant_ref=str(booking.id), amount=booking.total_amount))
+    monkeypatch.setattr("app.services.payment_service.PaymentRepository.record_result", lambda *args: None)
+    monkeypatch.setattr("app.services.payment_service.TicketService.issue_for_booking", lambda *args: None)
 
 
 def test_payment_confirm_commits_db_before_redis_unlock():

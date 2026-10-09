@@ -103,6 +103,7 @@ redisdata/
 ~$*.xlsx
 ~$*.docx
 *.tmp
+/tmp/
 
 # =====================
 # AI / Agent Skills

@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, Request, status
-from sqlmodel import Session
+from sqlmodel import Session, select
 import hashlib
 import hmac
 import urllib.parse
@@ -10,6 +10,7 @@ import logging
 from app.core.database import get_session
 from app.core.config import settings
 from app.models.user import User
+from app.models.payment import Payment
 from app.repositories.booking_repo import BookingRepository
 from app.schemas.payment import (
     VNPayURLRequest, 
@@ -19,6 +20,8 @@ from app.schemas.payment import (
     VNPayIPNResponse
 )
 from app.services.payment_service import PaymentService
+from app.repositories.payment_repo import PaymentRepository
+from decimal import Decimal
 from app.utils.dependencies import get_current_user
 
 logger = logging.getLogger(__name__)
@@ -67,7 +70,7 @@ def create_vnpay_url(
     Tạo URL thanh toán VNPay Sandbox với mã checksum HMAC-SHA512.
     Amount, order info và return URL được lấy/derive server-side từ booking.
     """
-    booking = BookingRepository.get_booking_by_id(db=db, booking_id=request.bookingId)
+    booking = BookingRepository.get_booking_by_id(db=db, booking_id=request.bookingId, for_update=True)
     if not booking:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -85,6 +88,10 @@ def create_vnpay_url(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Booking không còn ở trạng thái chờ thanh toán"
         )
+    collected_payment = db.exec(select(Payment.id).where(Payment.booking_id == booking.id,
+                                                        Payment.status == "PAID")).first()
+    if collected_payment is not None:
+        raise HTTPException(409, "Giao dịch đã thu tiền; đơn cần được kiểm tra trước khi thanh toán tiếp")
 
     vnp_TmnCode = settings.TMN_CODE
     vnp_HashSecret = settings.HASH_SECRET
@@ -93,10 +100,17 @@ def create_vnpay_url(
     # Đồng bộ với thời gian giữ ghế/booking pending 10 phút.
     now = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh"))
     create_date = now.strftime('%Y%m%d%H%M%S')
-    expire_date = (now + timedelta(minutes=10)).strftime('%Y%m%d%H%M%S')
+    deadline = booking.expires_at
+    if deadline is not None:
+        if deadline.tzinfo is None:
+            deadline = deadline.replace(tzinfo=ZoneInfo("UTC"))
+        deadline = deadline.astimezone(ZoneInfo("Asia/Ho_Chi_Minh"))
+        if deadline <= now:
+            raise HTTPException(409, "Đơn hàng đã hết hạn thanh toán")
+    expire_date = min(deadline or now + timedelta(minutes=10), now + timedelta(minutes=10)).strftime('%Y%m%d%H%M%S')
     
     # VNPay yêu cầu amount là số nguyên (nhân 100 để đổi từ VND sang xu/đồng nhỏ nhất)
-    vnp_amount = int(round(float(booking.total_amount) * 100))
+    vnp_amount = int(Decimal(str(booking.total_amount)) * 100)
     if vnp_amount <= 0:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -111,13 +125,14 @@ def create_vnpay_url(
     if forwarded:
         client_ip = forwarded.split(",")[0].strip()
     
+    attempt = PaymentRepository.create_attempt(db, booking)
     vnp_Params = {
         'vnp_Version': '2.1.0',
         'vnp_Command': 'pay',
         'vnp_TmnCode': vnp_TmnCode,
         'vnp_Amount': str(vnp_amount),
         'vnp_CurrCode': 'VND',
-        'vnp_TxnRef': str(booking.id),
+        'vnp_TxnRef': attempt.merchant_ref,
         'vnp_OrderInfo': f"Thanh toan ve phim booking {booking.id}",
         'vnp_OrderType': 'other',
         'vnp_Locale': 'vn',
@@ -142,6 +157,7 @@ def create_vnpay_url(
     
     # URL chuyển hướng tới VNPay Sandbox
     payment_url = f"{vnp_Url}?{hash_data}&vnp_SecureHash={secure_hash}"
+    db.commit()
     logger.info(f"Generated VNPay URL for booking {request.bookingId}")
     
     return VNPayURLResponse(paymentUrl=payment_url)
@@ -164,8 +180,8 @@ def vnpay_return_post(
 
     booking_ref = payment_data.vnp_TxnRef or payment_data.bookingId
     try:
-        booking_id = int(booking_ref)
-    except (TypeError, ValueError):
+        booking_id = PaymentService.resolve_booking_id(db, booking_ref)
+    except (HTTPException, TypeError, ValueError):
         return PaymentConfirmResponse(
             status="failed",
             booking=None,
@@ -199,8 +215,8 @@ def vnpay_return_get(
 
     booking_ref = params.get("vnp_TxnRef")
     try:
-        booking_id = int(booking_ref)
-    except (TypeError, ValueError):
+        booking_id = PaymentService.resolve_booking_id(db, booking_ref)
+    except (HTTPException, TypeError, ValueError):
         return PaymentConfirmResponse(
             status="failed",
             booking=None,

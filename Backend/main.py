@@ -19,6 +19,8 @@ from app.router.booking import router as booking_router
 from app.router.payment import router as payment_router
 from app.router.reviews import router as reviews_router
 from app.router.ai import router as ai_router
+from app.router.ticket import router as ticket_router
+from app.router.access_control import router as access_control_router
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -76,5 +78,7 @@ app.include_router(seat_type_router)
 app.include_router(booking_router)
 app.include_router(payment_router)
 app.include_router(ai_router)
+app.include_router(ticket_router)
+app.include_router(access_control_router)
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)

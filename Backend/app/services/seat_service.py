@@ -62,6 +62,12 @@ class SeatService:
         
         result = []
         for seat, seat_type in seat_rows:
+            if seat.status != "ACTIVE":
+                result.append({"seat_id": seat.id, "seat_name": seat.seat_name,
+                    "seat_type": seat_type.name, "price": float(seat_type.base_price),
+                    "status": SeatStatusEnum.UNAVAILABLE, "hold_expired_at": None,
+                    "is_held_by_me": False})
+                continue
             # Priority: BOOKED (DB) > HOLD (Redis) > HOLD (DB backup) > AVAILABLE
             
             # 1. Kiểm tra ghế đã BOOKED trong DB
@@ -164,6 +170,8 @@ class SeatService:
                     status_code=status.HTTP_400_BAD_REQUEST,
                     detail=f"Ghế {seat.seat_name} không thuộc phòng của suất chiếu"
                 )
+            if seat.status != "ACTIVE":
+                raise HTTPException(409, f"Ghế {seat.seat_name} đang ngừng sử dụng")
             # Kiểm tra ghế chưa BOOKED
             seat_status = SeatRepository.get_seat_status(
                 db=db, showtime_id=showtime_id, seat_id=seat_id
@@ -277,39 +285,9 @@ class SeatService:
     
     @staticmethod
     def get_available_seats_count(db: Session, showtime_id: int) -> int:
-        """
-        Đếm số ghế còn trống
-        = Tổng ghế - Ghế BOOKED (DB) - Ghế HOLD (Redis)
-        """
-        showtime = ShowtimeRepository.get_showtime_by_id(db=db, showtime_id=showtime_id)
-        if not showtime:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Suất chiếu không tồn tại"
-            )
-        
-        total_seats = SeatRepository.get_seats_count_by_room(db=db, room_id=showtime.room_id)
-        booked_count = SeatRepository.get_booked_seats_count(db=db, showtime_id=showtime_id)
-        
-        redis_locks = SeatLockManager.get_all_locks_for_showtime(showtime_id)
-        redis_hold_ids = {lock["seat_id"] for lock in redis_locks}
-
-        now = datetime.now(timezone.utc)
-        all_db_statuses = SeatRepository.get_seats_status_by_showtime(db=db, showtime_id=showtime_id)
-        valid_db_hold_ids = {
-            seat_status.seat_id
-            for seat_status in all_db_statuses
-            if (
-                seat_status.status == SeatStatusEnum.HOLD
-                and seat_status.hold_expired_at
-                and seat_status.hold_expired_at > now
-            )
-        }
-        valid_db_hold_count = len(valid_db_hold_ids - redis_hold_ids)
-        hold_count = len(redis_hold_ids) + valid_db_hold_count
-        
-        available = total_seats - booked_count - hold_count
-        return max(0, available)
+        """Đếm theo sơ đồ ghế, loại cả HOLD dự phòng và ghế ngừng sử dụng."""
+        return sum(seat["status"] == SeatStatusEnum.AVAILABLE
+                   for seat in SeatService.get_seats_by_showtime(db, showtime_id))
     
     @staticmethod
     def book_seats_after_payment(

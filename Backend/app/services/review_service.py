@@ -8,13 +8,13 @@ from sqlalchemy.exc import IntegrityError
 from sqlmodel import select
 
 from app.core.config import settings
-from app.models import Review, ReviewSentiment, Film, User, Booking, Showtime, CinemaRoom
+from app.models import Review, ReviewSentiment, Film, User, Booking, Showtime, CinemaRoom, Theater
 from app.models.ai import utcnow
 
 
 def require_film(db, film_id):
     film = db.get(Film, film_id)
-    if film is None:
+    if film is None or film.deleted_at is not None:
         raise HTTPException(404, "Phim không tồn tại")
     return film
 
@@ -175,7 +175,9 @@ def future_showtimes(db, film_id=None, theater_id=None, show_date=None, evening=
     from sqlalchemy import or_, and_
     from app.models.showtime import ShowtimeStatus
     now = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh"))
-    stmt = select(Showtime).join(CinemaRoom, Showtime.room_id == CinemaRoom.id).where(
+    stmt = select(Showtime).join(CinemaRoom, Showtime.room_id == CinemaRoom.id).join(Film).join(Theater).where(
+        Film.deleted_at.is_(None), Theater.deleted_at.is_(None),
+        CinemaRoom.deleted_at.is_(None), CinemaRoom.status == "ACTIVE",
         Showtime.status == ShowtimeStatus.ACTIVE,
         or_(Showtime.show_date > now.date(), and_(Showtime.show_date == now.date(), Showtime.start_time > now.time().replace(tzinfo=None))))
     if film_id is not None:

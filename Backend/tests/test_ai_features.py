@@ -26,7 +26,7 @@ from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.pool import StaticPool
 from sqlmodel import SQLModel, Session, create_engine, select
 from app.core.config import settings
-from app.models import User, Film, Review, ReviewSentiment, Theater, CinemaRoom, Showtime, SeatType
+from app.models import User, Film, Review, ReviewSentiment, Theater, CinemaRoom, Showtime, SeatType, Role, Format, FilmFormat, Permission, RolePermission
 from app.models.ai import utcnow
 from app.schemas.ai import ReviewEdit, ModerationWrite, ChatRequest, ToolContext, ToolCall
 from app.services import review_service as reviews, sentiment_service as sentiment, chat_service as chat
@@ -62,14 +62,20 @@ def db(monkeypatch):
     monkeypatch.setattr(settings, "AI_MODEL_URL", "")
     monkeypatch.setattr(reviews, "enqueue", lambda *args: None)
     with Session(engine) as session:
-        session.add_all([User(id=1, username="owner", email="owner@example.test", password="unused"),
-                         User(id=2, username="other", email="other@example.test", password="unused"),
-                         User(id=3, username="staff", email="staff@example.test", password="unused", role="STAFF"),
+        session.add_all([Role(id=1, code="USER", name="User"), Role(id=2, code="STAFF", name="Staff"),
+                         Format(id=1, code="2D", name="2D")])
+        session.flush()
+        session.add(Permission(id=1, code="reviews.moderate", name="Moderate"))
+        session.flush()
+        session.add(RolePermission(role_id=2, permission_id=1))
+        session.add_all([User(id=1, username="owner", email="owner@example.test", password="unused", role_id=1),
+                         User(id=2, username="other", email="other@example.test", password="unused", role_id=1),
+                         User(id=3, username="staff", email="staff@example.test", password="unused", role_id=2),
                          Film(id=1, title="Phim thử nghiệm", description="Một chuyến đi về quê."),
                          Film(id=2, title="Phim không có suất"),
                          Theater(id=1, name="Rạp thử nghiệm", address="Địa chỉ thử nghiệm", city="Hà Nội"),
                          CinemaRoom(id=1, theater_id=1, name="Phòng 1", capacity=10),
-                         Showtime(id=1, film_id=1, room_id=1, show_date=date.today()+timedelta(days=1), start_time=time(20), end_time=time(22), format="2D"),
+                         Showtime(id=1, film_id=1, room_id=1, show_date=date.today()+timedelta(days=1), start_time=time(20), end_time=time(22), format_id=1),
                          SeatType(id=1, room_id=1, name="Standard", base_price=75000)])
         session.commit()
         yield session
@@ -284,7 +290,7 @@ def test_unchanged_selection_preserves_showtime(db):
 @pytest.mark.parametrize("matching", [True, False])
 def test_explicit_showtime_is_validated_after_selection_change(db, via_message, matching):
     db.add(Showtime(id=2, film_id=2, room_id=1, show_date=db.get(Showtime, 1).show_date,
-        start_time=time(21), end_time=time(23), format="2D"))
+        start_time=time(21), end_time=time(23), format_id=1))
     db.commit()
     redis = FakeRedis()
     first = chat.chat(db, 1, ChatRequest(message="Gia ve?", context=ToolContext(

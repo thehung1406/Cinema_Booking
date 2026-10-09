@@ -1,7 +1,8 @@
 from sqlmodel import SQLModel, Field, Relationship
 from typing import Optional, Dict, List
 from decimal import Decimal
-from sqlalchemy import Column
+from datetime import datetime
+from sqlalchemy import Column, DateTime
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy import Numeric as SaNumeric
 
@@ -22,6 +23,7 @@ class Theater(SQLModel, table=True):
         sa_column=Column(JSONB)
     )
     special: Optional[str] = Field(default=None, max_length=50)
+    deleted_at: Optional[datetime] = Field(default=None, sa_column=Column(DateTime(timezone=True)))
 
     # Relationships
     cinema_rooms: List["CinemaRoom"] = Relationship(back_populates="theater")

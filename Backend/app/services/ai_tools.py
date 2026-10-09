@@ -39,7 +39,7 @@ def run_tool(db, call: ToolCall, evening=False):
         raise HTTPException(422, "Thiếu tham số công cụ")
     c = call.context
     if call.name == "search_films":
-        stmt = select(Film)
+        stmt = select(Film).where(Film.deleted_at.is_(None))
         if c.film_id:
             stmt = stmt.where(Film.id == c.film_id)
         elif call.query.strip():

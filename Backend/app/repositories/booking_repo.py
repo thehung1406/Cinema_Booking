@@ -88,9 +88,11 @@ class BookingRepository:
         db.flush()
     
     @staticmethod
-    def get_booking_by_id(db: Session, booking_id: int) -> Optional[Booking]:
+    def get_booking_by_id(db: Session, booking_id: int, for_update: bool = False) -> Optional[Booking]:
         """Lấy booking theo ID"""
         statement = select(Booking).where(Booking.id == booking_id)
+        if for_update:
+            statement = statement.with_for_update().execution_options(populate_existing=True)
         return db.exec(statement).first()
     
     @staticmethod

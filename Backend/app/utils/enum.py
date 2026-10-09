@@ -7,6 +7,7 @@ class UserRole(str, Enum):
     ADMIN = "ADMIN"
 
 class SeatStatusEnum(str, Enum):
+    UNAVAILABLE = "UNAVAILABLE"
     AVAILABLE = "AVAILABLE"
     HOLD = "HOLD"
     BOOKED = "BOOKED"

@@ -3,10 +3,11 @@ from typing import Optional
 from jose import jwt, JWTError
 from app.core.config import settings
 
-from sqlmodel import Session
+from sqlmodel import Session, select
 from fastapi import HTTPException, status
 from app.utils.enum import UserRole
 from app.models.user import User
+from app.models.access_control import Role
 from app.repositories.auth_repo import AuthRepository
 from app.utils.security import (
     hash_password,
@@ -30,13 +31,14 @@ class AuthService:
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Email already exists"
             )
+        default_role = session.exec(select(Role).where(Role.code == UserRole.USER.value)).one()
         new_user = User(
             username=data.username,
             password=hash_password(data.password),
             email=data.email,
             phone =data.phone,
             full_name=data.full_name,
-            role=UserRole.USER,
+            role_id=default_role.id,
             created_at=datetime.now(timezone.utc),
         )
         return AuthRepository.create_user(session, new_user)

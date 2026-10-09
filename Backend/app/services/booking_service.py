@@ -46,6 +46,7 @@ class BookingService:
             
             # 3. Kiểm tra tất cả ghế
             seat_ids = [seat.seat_id for seat in booking_request.seats]
+            hold_deadlines = []
 
             if len(set(seat_ids)) != len(seat_ids):
                 raise HTTPException(
@@ -69,6 +70,8 @@ class BookingService:
                         status_code=status.HTTP_400_BAD_REQUEST,
                         detail=f"Ghế {seat.seat_name} không thuộc phòng của suất chiếu"
                     )
+                if seat.status != "ACTIVE":
+                    raise HTTPException(409, f"Ghế {seat.seat_name} đang ngừng sử dụng")
                 
                 # Booking chỉ hợp lệ khi user đã giữ ghế trước đó.
                 seat_status = SeatRepository.get_seat_status(
@@ -94,6 +97,7 @@ class BookingService:
                         status_code=status.HTTP_400_BAD_REQUEST,
                         detail=f"Thời gian giữ ghế {seat.seat_name} đã hết hạn"
                     )
+                hold_deadlines.append(seat_status.hold_expired_at)
             
             # 4. Tạo booking — validate giá từ DB, không tin client
             seats_data = []
@@ -127,7 +131,8 @@ class BookingService:
                 "total_amount": computed_total,
                 "payment_method": booking_request.paymentMethod,
                 "payment_status": PaymentStatus.PENDING.value,
-                "booking_status": BookingStatus.PENDING.value
+                "booking_status": BookingStatus.PENDING.value,
+                "expires_at": min(hold_deadlines)
             }
             
             booking = BookingRepository.create_booking(db=db, booking_data=booking_data)

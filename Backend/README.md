@@ -2,6 +2,8 @@
 
 Backend RESTful API cho Hệ thống Đặt vé Xem phim Trực tuyến xây dựng trên nền tảng **FastAPI**, **SQLModel / SQLAlchemy**, **PostgreSQL 15**, **Redis 7**, **Celery Worker** và tích hợp cổng thanh toán **VNPay**.
 
+DB hiện tại dùng **23 bảng, revision 006**, gồm phân loại phim chuẩn hóa, giao dịch thanh toán, vé và phân quyền. Xem [hướng dẫn schema và nâng cấp](../docs/database-v2.md). DB có sẵn nâng cấp bằng `python -m alembic upgrade head`; DB trống có thể dùng [SQL schema đầy đủ](migrations/006_full_database.sql).
+
 ---
 
 ## 🛠️ Công Nghệ Sử Dụng (Tech Stack)
