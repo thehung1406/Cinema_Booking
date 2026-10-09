@@ -122,6 +122,17 @@ let filmsFail = false,
   bookingFail = false,
   returnState = "success";
 const calls = [];
+const savedChatId = "11111111-1111-4111-8111-111111111111";
+const newChatId = "22222222-2222-4222-8222-222222222222";
+let chats = [{
+  id: savedChatId, title: "Hội thoại đã lưu", context: {},
+  created_at: new Date().toISOString(), updated_at: new Date().toISOString(),
+  messages: Array.from({ length: 102 }, (_, index) => ({
+    id: index + 1, role: index % 2 ? "assistant" : "user",
+    content: index === 0 ? "Câu hỏi đầu tiên" : index === 101 ? "Hướng dẫn đã lưu" : `Tin nhắn cũ ${index + 1}`,
+    metadata: {}, created_at: new Date().toISOString(),
+  })),
+}];
 await context.route("**/*", async (route) => {
   const request = route.request();
   if (!["fetch", "xhr"].includes(request.resourceType()))
@@ -137,6 +148,40 @@ await context.route("**/*", async (route) => {
       status = 503;
       body = { detail: "Test unavailable" };
     }
+  } else if (path === "/ai/conversations") {
+    body = chats.slice(Number(url.searchParams.get("offset") || 0))
+      .slice(0, Number(url.searchParams.get("limit") || 50))
+      .map(({ id, title, created_at, updated_at }) => ({ id, title, created_at, updated_at }));
+  } else if (path.startsWith("/ai/conversations/")) {
+    const id = path.split("/").pop();
+    const chat = chats.find(c => c.id === id);
+    if (!chat) { status = 404; body = { detail: "Không tìm thấy hội thoại." }; }
+    else if (request.method() === "DELETE") {
+      chats = chats.filter(c => c.id !== id); status = 204;
+    } else {
+      const before = Number(url.searchParams.get("before_id") || Infinity);
+      const limit = Number(url.searchParams.get("limit") || 100);
+      const matching = chat.messages.filter(m => m.id < before);
+      const messages = matching.slice(-limit);
+      body = { ...chat, messages, next_before_id: matching.length > limit ? messages[0].id : null };
+    }
+  } else if (path === "/ai/chat") {
+    const payload = request.postDataJSON();
+    let chat = chats.find(c => c.id === payload.conversation_id);
+    if (!chat) {
+      assert.equal(payload.conversation_id, null);
+      chat = { id: newChatId, title: payload.message, context: {}, messages: [],
+        created_at: new Date().toISOString(), updated_at: new Date().toISOString() };
+      chats.unshift(chat);
+    }
+    body = { conversation_id: chat.id, answer: "Câu trả lời vừa lưu", context: {},
+      sources: [], links: [], status: "ok", mode: "retrieval_only", as_of: new Date().toISOString() };
+    const lastId = chat.messages.at(-1)?.id || 0;
+    chat.messages.push(
+      { id: lastId + 1, role: "user", content: payload.message, metadata: {}, created_at: body.as_of },
+      { id: lastId + 2, role: "assistant", content: body.answer, metadata: body, created_at: body.as_of },
+    );
+    chat.updated_at = body.as_of;
   } else if (path === "/films/positive-trending") body = [];
   else if (/^\/films\/\d+$/.test(path))
     body = films.find((f) => f.id === Number(path.split("/").pop()));
@@ -223,7 +268,7 @@ await context.route("**/*", async (route) => {
   await route.fulfill({
     status,
     contentType: "application/json",
-    body: JSON.stringify(body),
+    body: status === 204 ? "" : JSON.stringify(body),
   });
 });
 const page = await context.newPage();
@@ -526,7 +571,30 @@ try {
     .getByRole("button", { name: "Đóng trợ lý", exact: true })
     .waitFor();
   await layout("assistant-375", true);
+  const history = page.getByLabel("Lịch sử hội thoại", { exact: true });
+  await history.selectOption(savedChatId);
+  await page.getByText("Hướng dẫn đã lưu", { exact: true }).waitFor();
+  await page.getByRole("button", { name: "Tải tin nhắn cũ hơn", exact: true }).click();
+  await page.getByText("Câu hỏi đầu tiên", { exact: true }).waitFor();
+  await page.getByLabel("Câu hỏi cho trợ lý").fill("Cách đặt vé?");
+  await page.getByRole("button", { name: "Gửi", exact: true }).click();
+  await page.getByText("Câu trả lời vừa lưu", { exact: true }).waitFor();
+  assert.equal(calls.filter(c => c.path === "/ai/chat").at(-1).body.includes(savedChatId), true);
+  await page.getByRole("button", { name: "Hội thoại mới", exact: true }).click();
+  await page.getByLabel("Câu hỏi cho trợ lý").fill("Hội thoại mới để kiểm tra tải lại");
+  await page.getByRole("button", { name: "Gửi", exact: true }).click();
+  await page.getByText("Câu trả lời vừa lưu", { exact: true }).waitFor();
+  await page.reload();
+  await page.getByRole("button", { name: "Hỏi trợ lý", exact: true }).click();
+  await page.getByLabel("Lịch sử hội thoại", { exact: true }).selectOption(newChatId);
+  await page.getByRole("log").getByText("Hội thoại mới để kiểm tra tải lại", { exact: true }).waitFor();
+  await page.getByRole("button", { name: "Xóa hội thoại", exact: true }).click();
+  await page.getByRole("log").getByText("Hội thoại mới để kiểm tra tải lại", { exact: true }).waitFor({ state: "detached" });
+  assert.equal(await page.locator(`option[value="${newChatId}"]`).count(), 0);
+  assert.equal(await page.locator(":focus").getAttribute("id"), "ai-conversation-history");
+  await layout("assistant-history-375", true);
   await page.keyboard.press("Escape");
+  await page.locator("#cinema-assistant").waitFor({ state: "detached" });
   assert.equal(await page.locator("#cinema-assistant").count(), 0);
   await page.emulateMedia({ reducedMotion: "reduce" });
   await open("/movie", "Chọn phim cho buổi hẹn tiếp theo");
@@ -566,6 +634,7 @@ try {
           "API retry",
           "empty",
           "assistant",
+          "chat history, older messages, continuation, reload and deletion",
           "backend hold reconciliation",
           "login returns to seat selection",
           "focus",

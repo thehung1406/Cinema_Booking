@@ -2,21 +2,26 @@
 
 No model-generated action, URL, policy, price or SQL is executed or accepted.
 Redis retains only user-scoped context, with a TTL, never raw conversation text.
+PostgreSQL persists conversations, messages and the authoritative context.
 """
 import json
 import re
 from datetime import datetime, timedelta
-from uuid import uuid4
+from uuid import UUID, uuid4
 from zoneinfo import ZoneInfo
 from fastapi import HTTPException
+from fastapi.encoders import jsonable_encoder
+from sqlalchemy import update
+from sqlalchemy.exc import SQLAlchemyError
 from sqlmodel import select
 from app.core.config import settings
 from app.core.redis import redis_client
-from app.models import Film, Theater
+from app.models import Film, Theater, AIConversation, AIMessage
 from app.models.ai import utcnow
 from app.schemas.ai import ToolCall, ToolContext
 from app.services.ai_tools import validate_context, missing_fields, run_tool
 from app.services.rag_service import folded, retrieve
+from app.services.chat_history_service import owned_conversation
 
 LABELS = {"film_id": "phim", "theater_id": "rạp", "show_date": "ngày xem", "showtime_id": "mã suất chiếu"}
 SHOWTIME_PATTERN = r"(?:ma suat|suat chieu so)\s*(\d+)"
@@ -116,14 +121,15 @@ def chat(db, user_id, request, redis=None):
             raise HTTPException(429, "Bạn gửi quá nhiều câu hỏi. Vui lòng thử lại sau một phút.")
         conversation_id = str(request.conversation_id or uuid4())
         key = f"ai:context:{user_id}:{conversation_id}"
-        previous_raw = redis.get(key) if request.conversation_id else None
     except HTTPException:
         raise
     except Exception:
         raise HTTPException(503, "Trợ lý tạm thời không khả dụng. Bạn vẫn có thể đặt vé trực tiếp.")
-    if request.conversation_id and previous_raw is None:
-        raise HTTPException(404, "Hội thoại đã hết hạn; hãy bắt đầu cuộc trò chuyện mới.")
-    previous = json.loads(previous_raw) if previous_raw else {}
+    if request.conversation_id:
+        conversation = owned_conversation(db, user_id, request.conversation_id)
+        previous, previous_updated_at = conversation.context, conversation.updated_at
+    else:
+        previous, previous_updated_at = {}, None
     previous_context = ToolContext.model_validate(previous.get("context", {}))
     values = previous.get("context", {}) | request.context.model_dump(mode="json", exclude_unset=True)
     context = infer_context(db, request.message, ToolContext.model_validate(values))
@@ -170,10 +176,38 @@ def chat(db, user_id, request, redis=None):
                 status = "tool_unavailable"
     links = [dict(title=s["title"], url=s["url"]) for s in sources if s["kind"] != "document"]
     state = dict(context=context.model_dump(mode="json"), pending_tool=intent if missing else None, evening=evening)
+    result = dict(conversation_id=conversation_id, answer=answer, sources=sources, links=links,
+                status=status, mode=mode, missing_fields=missing, context=context.model_dump(mode="json"),
+                as_of=utcnow(), tool=intent if intent.startswith(("get_", "search_")) else None)
+    now = result["as_of"]
+    try:
+        if request.conversation_id:
+            # Do not overwrite a concurrent turn or recreate a deleted conversation.
+            changed = db.execute(update(AIConversation).where(
+                AIConversation.id == request.conversation_id,
+                AIConversation.user_id == user_id,
+                AIConversation.updated_at == previous_updated_at
+            ).values(context=state, updated_at=now).execution_options(synchronize_session=False))
+            if changed.rowcount != 1:
+                db.rollback()
+                raise HTTPException(409, "Hội thoại đã thay đổi. Vui lòng tải lại lịch sử trước khi gửi tiếp.")
+        else:
+            db.add(AIConversation(id=UUID(conversation_id), user_id=user_id,
+                title=" ".join(request.message.split())[:200], context=state,
+                created_at=now, updated_at=now))
+            db.flush()
+        db.add(AIMessage(conversation_id=UUID(conversation_id), role="user",
+                         content=request.message, created_at=now))
+        db.flush()
+        metadata = jsonable_encoder({k: v for k, v in result.items() if k not in ("answer", "conversation_id")})
+        db.add(AIMessage(conversation_id=UUID(conversation_id), role="assistant",
+                         content=answer, details=metadata, created_at=now))
+        db.commit()
+    except SQLAlchemyError:
+        db.rollback()
+        raise HTTPException(503, "Không thể lưu hội thoại; vui lòng thử lại sau.")
     try:
         redis.setex(key, settings.AI_CONTEXT_TTL_SECONDS, json.dumps(state))
     except Exception:
-        raise HTTPException(503, "Không thể lưu ngữ cảnh; hãy thử lại hoặc đặt vé trực tiếp.")
-    return dict(conversation_id=conversation_id, answer=answer, sources=sources, links=links,
-                status=status, mode=mode, missing_fields=missing, context=context.model_dump(mode="json"),
-                as_of=utcnow(), tool=intent if intent.startswith(("get_", "search_")) else None)
+        pass  # A failed cache write must not turn a committed response into an error.
+    return result

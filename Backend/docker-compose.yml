@@ -57,6 +57,7 @@ services:
       - ./app:/app/app
       - ./migrations:/app/migrations
       - ./alembic.ini:/app/alembic.ini
+      - ./alembic:/app/alembic
     depends_on:
       postgres:
         condition: service_healthy

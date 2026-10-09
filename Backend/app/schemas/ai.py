@@ -61,6 +61,28 @@ class ChatRequest(BaseModel):
         return value.strip()
 
 
+class ConversationRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: UUID
+    title: str
+    created_at: datetime
+    updated_at: datetime
+
+
+class MessageRead(BaseModel):
+    id: int
+    role: Literal["user", "assistant"]
+    content: str
+    metadata: dict
+    created_at: datetime
+
+
+class ConversationDetail(ConversationRead):
+    context: ToolContext
+    messages: list[MessageRead]
+    next_before_id: int | None = None
+
+
 class ToolCall(BaseModel):
     model_config = ConfigDict(extra="forbid")
     name: Literal["search_films", "get_showtimes", "get_ticket_prices", "get_seat_availability", "get_positive_films"]

@@ -134,6 +134,9 @@ Backend chỉ chấp nhận mã chứng cứ thuộc lần truy xuất hiện t�
 | `GET /films/{id}/sentiment-summary` | `window_days` 1–365; số ba nhãn, pending, needs_review, total, score, eligible, as_of |
 | `GET /films/positive-trending` | `theater_id`, `show_date`, `window_days`, `limit`; chỉ đủ dữ liệu/còn suất ACTIVE ở tương lai |
 | `POST /ai/chat` | Đăng nhập; ví dụ bên dưới |
+| `GET /ai/conversations` | Đăng nhập; chỉ hội thoại của mình, `limit` 1–100 (mặc định 50), `offset` |
+| `GET /ai/conversations/{id}` | Chủ sở hữu; `limit` 1–200 (mặc định 100), `before_id` để tải tin nhắn cũ |
+| `DELETE /ai/conversations/{id}` | Chủ sở hữu; xóa hội thoại và tin nhắn, 204 |
 
 ```json
 {
@@ -143,9 +146,11 @@ Backend chỉ chấp nhận mã chứng cứ thuộc lần truy xuất hiện t�
 }
 ```
 
-Chat trả `answer`, `sources`, `links`, `status`, `mode`, `missing_fields`, `context`, `conversation_id`, `as_of`, `tool`. Gửi lại ID và context cho lượt tiếp. Bộ lọc cho phép chọn rõ phim/rạp/ngày/mã suất; ID phải tồn tại và khớp nhau. Ngày hiểu theo Asia/Ho_Chi_Minh, “tối nay” lọc từ 18:00. Hết hạn hoặc sai tài khoản trả 404; frontend có nút hội thoại mới. Giới hạn mặc định 10 câu/phút/tài khoản; Redis không khả dụng thì chỉ trợ lý trả 503.
+Chat trả `answer`, `sources`, `links`, `status`, `mode`, `missing_fields`, `context`, `conversation_id`, `as_of`, `tool`. Gửi lại ID và context cho lượt tiếp. Bộ lọc cho phép chọn rõ phim/rạp/ngày/mã suất; ID phải tồn tại và khớp nhau. Ngày hiểu theo Asia/Ho_Chi_Minh, “tối nay” lọc từ 18:00. Hội thoại không tồn tại hoặc sai tài khoản trả 404. Hai lượt ghi đồng thời hoặc hội thoại bị xóa trong lúc trả lời trả 409; tải lại hội thoại trước khi gửi tiếp. Giới hạn mặc định 10 câu/phút/tài khoản; Redis không khả dụng khi kiểm tra tần suất thì trợ lý trả 503. Lỗi ghi cache sau khi đã lưu DB không làm mất câu trả lời.
 
-Context Redis giữ tối đa 30 phút mặc định, chỉ gồm ID phim/rạp/ngày/suất và công cụ đang hỏi lại, không lưu câu hỏi/câu trả lời. Kết quả Celery AI không lưu result backend. Log đánh giá offline chỉ lưu mã mẫu, mã chứng cứ, nhãn, lỗi và độ trễ. Không đưa token, đơn hàng cá nhân hoặc thông tin thanh toán vào tập huấn luyện.
+Từ migration 007, PostgreSQL lưu lịch sử lâu dài trong `ai_conversations` và `ai_messages`: chủ tài khoản, tiêu đề từ câu hỏi đầu (tối đa 200 ký tự), ngữ cảnh, nội dung hỏi/đáp, nguồn, liên kết và thời điểm tra cứu. Mỗi lượt lưu câu hỏi, câu trả lời và ngữ cảnh trong cùng một transaction. Lịch sử không tự hết hạn; chủ tài khoản có thể xóa bằng API hoặc nút “Xóa hội thoại”. Ngữ cảnh DB là nguồn chuẩn nên vẫn tiếp tục được sau khi cache hết hạn. Frontend có danh sách hội thoại, tải tin nhắn cũ và nút hội thoại mới; nội dung hiển thị lại giữ thời điểm dữ liệu gốc, giá/ghế phải tra cứu lại trước khi đặt vé. Ngày xem cũ cần đổi sang hôm nay hoặc tương lai.
+
+Context Redis giữ tối đa 30 phút mặc định, chỉ gồm ID phim/rạp/ngày/suất và công cụ đang hỏi lại, không lưu câu hỏi/câu trả lời. Chat cũ chỉ tồn tại trong bộ nhớ trình duyệt trước migration không được khôi phục vào DB. Kết quả Celery AI không lưu result backend. Log đánh giá offline chỉ lưu mã mẫu, mã chứng cứ, nhãn, lỗi và độ trễ. Không đưa token, đơn hàng cá nhân hoặc thông tin thanh toán vào tập huấn luyện.
 
 ## 7. Kiểm tra và demo
 

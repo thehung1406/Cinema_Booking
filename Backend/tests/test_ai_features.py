@@ -7,6 +7,7 @@ import os
 import sys
 from datetime import date, datetime, time, timedelta, timezone
 from pathlib import Path
+from uuid import UUID, uuid4
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 for key, value in {
@@ -26,7 +27,7 @@ from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.pool import StaticPool
 from sqlmodel import SQLModel, Session, create_engine, select
 from app.core.config import settings
-from app.models import User, Film, Review, ReviewSentiment, Theater, CinemaRoom, Showtime, SeatType, Role, Format, FilmFormat, Permission, RolePermission
+from app.models import User, Film, Review, ReviewSentiment, Theater, CinemaRoom, Showtime, SeatType, Role, Format, FilmFormat, Permission, RolePermission, AIConversation, AIMessage
 from app.models.ai import utcnow
 from app.schemas.ai import ReviewEdit, ModerationWrite, ChatRequest, ToolContext, ToolCall
 from app.services import review_service as reviews, sentiment_service as sentiment, chat_service as chat
@@ -201,6 +202,135 @@ def test_chat_clarifies_and_scopes_context_without_text(db):
     with pytest.raises(HTTPException) as wrong_owner:
         chat.chat(db, 2, ChatRequest(message="tiếp tục", conversation_id=first["conversation_id"]), redis)
     assert wrong_owner.value.status_code == 404
+
+
+def test_chat_persists_messages_sources_and_recovers_expired_context(db):
+    from app.services.chat_history_service import read_conversation
+    redis = FakeRedis()
+    question = "Giá vé bao nhiêu?"
+    first = chat.chat(db, 1, ChatRequest(message=question), redis)
+    conversation_id = UUID(first["conversation_id"])
+    saved = db.get(AIConversation, conversation_id)
+    assert saved.user_id == 1 and saved.title == question
+    redis.values.clear()  # TTL expiry or Redis restart.
+    second = chat.chat(db, 1, ChatRequest(message="Ma suat 1", conversation_id=conversation_id), redis)
+    assert second["tool"] == "get_ticket_prices" and "75,000" in second["answer"]
+    # Read using a new DB session, as happens after a browser refresh.
+    with Session(db.bind) as reopened:
+        history = read_conversation(reopened, 1, conversation_id, 100)
+    assert [m["role"] for m in history["messages"]] == ["user", "assistant", "user", "assistant"]
+    assert history["messages"][0]["content"] == question
+    assert history["messages"][-1]["content"] == second["answer"]
+    assert history["messages"][-1]["metadata"]["sources"] == second["sources"]
+    assert history["messages"][-1]["metadata"]["links"] == second["links"]
+    assert history["context"]["showtime_id"] == 1
+    assert history["next_before_id"] is None
+
+
+def test_history_routes_require_owner_paginate_and_delete(db, monkeypatch):
+    from app.router.ai import router
+    from app.core.database import get_session
+    from app.utils.dependencies import get_current_user
+    from app.services import chat_history_service
+    redis = FakeRedis()
+    monkeypatch.setattr(chat, "redis_client", redis)
+    monkeypatch.setattr(chat_history_service, "redis_client", redis)
+    app = FastAPI(); app.include_router(router)
+    app.dependency_overrides[get_session] = lambda: db
+    client = TestClient(app)
+    assert client.get("/ai/conversations").status_code == 401
+    assert client.get(f"/ai/conversations/{uuid4()}").status_code == 401
+    assert client.delete(f"/ai/conversations/{uuid4()}").status_code == 401
+    app.dependency_overrides[get_current_user] = lambda: db.get(User, 1)
+    first = client.post("/ai/chat", json={"message": "Gia ve?"}).json()
+    cid = first["conversation_id"]
+    second = client.post("/ai/chat", json={"message": "Ma suat 1", "conversation_id": cid})
+    assert second.status_code == 200
+    another = client.post("/ai/chat", json={"message": "Hoi thoai moi"}).json()["conversation_id"]
+    listing = client.get("/ai/conversations", params={"limit": 1}).json()
+    assert [c["id"] for c in listing] == [another]
+    assert "context" not in listing[0]
+    assert client.get("/ai/conversations", params={"limit": 1, "offset": 1}).json()[0]["id"] == cid
+    assert client.get("/ai/conversations", params={"limit": 0}).status_code == 422
+    assert client.get("/ai/conversations/not-a-uuid").status_code == 422
+    newest = client.get(f"/ai/conversations/{cid}", params={"limit": 2}).json()
+    older = client.get(f"/ai/conversations/{cid}", params={"limit": 2, "before_id": newest["next_before_id"]}).json()
+    assert older["next_before_id"] is None
+    ids = [m["id"] for m in older["messages"] + newest["messages"]]
+    assert ids == sorted(set(ids)) and len(ids) == 4
+    assert newest["messages"][-1]["metadata"]["sources"]
+    app.dependency_overrides[get_current_user] = lambda: db.get(User, 2)
+    assert client.get("/ai/conversations").json() == []
+    for method in (client.get, client.delete):
+        assert method(f"/ai/conversations/{cid}").status_code == 404
+    # Even a forged/stale cache entry cannot authorize another user.
+    redis.values[f"ai:context:2:{cid}"] = redis.values[f"ai:context:1:{cid}"]
+    assert client.post("/ai/chat", json={"message": "Tiep tuc", "conversation_id": cid}).status_code == 404
+    app.dependency_overrides[get_current_user] = lambda: db.get(User, 1)
+    assert client.delete(f"/ai/conversations/{cid}").status_code == 204
+    assert db.get(AIConversation, UUID(cid)) is None
+    assert db.exec(select(AIMessage).where(AIMessage.conversation_id == UUID(cid))).all() == []
+    assert client.post("/ai/chat", json={"message": "Tiep tuc", "conversation_id": cid}).status_code == 404
+    assert client.get(f"/ai/conversations/{another}").status_code == 200
+
+
+def test_chat_failed_commit_does_not_leave_partial_history(db, monkeypatch):
+    from sqlalchemy.exc import SQLAlchemyError
+    redis = FakeRedis()
+    def fail_commit():
+        raise SQLAlchemyError("simulated database failure")
+    monkeypatch.setattr(db, "commit", fail_commit)
+    with pytest.raises(HTTPException) as failure:
+        chat.chat(db, 1, ChatRequest(message="Xin chao"), redis)
+    assert failure.value.status_code == 503
+    assert db.exec(select(AIConversation)).all() == []
+    assert db.exec(select(AIMessage)).all() == []
+    assert redis.values == {}
+
+
+def test_chat_cache_write_failure_still_returns_saved_reply(db):
+    class WriteFailureRedis(FakeRedis):
+        def setex(self, *args): raise ConnectionError()
+    redis = WriteFailureRedis()
+    first = chat.chat(db, 1, ChatRequest(message="Gia ve?"), redis)
+    second = chat.chat(db, 1, ChatRequest(message="Ma suat 1", conversation_id=first["conversation_id"]), redis)
+    assert second["status"] == "ok"
+    assert len(db.exec(select(AIMessage)).all()) == 4
+
+
+@pytest.mark.parametrize("deleted", [False, True])
+def test_chat_does_not_overwrite_concurrent_turn_or_recreate_deleted_chat(db, monkeypatch, deleted):
+    from sqlalchemy import delete, update
+    redis = FakeRedis()
+    first = chat.chat(db, 1, ChatRequest(message="Xin chao"), redis)
+    cid = UUID(first["conversation_id"])
+    def concurrent_change(*args):
+        if deleted:
+            db.execute(delete(AIMessage).where(AIMessage.conversation_id == cid))
+            db.execute(delete(AIConversation).where(AIConversation.id == cid))
+        else:
+            db.execute(update(AIConversation).where(AIConversation.id == cid)
+                .values(updated_at=utcnow(), context={"context": {}, "pending_tool": "get_showtimes"}))
+        db.commit()
+        return [], "retrieval_only"
+    monkeypatch.setattr(chat, "select_evidence", concurrent_change)
+    with pytest.raises(HTTPException) as conflict:
+        chat.chat(db, 1, ChatRequest(message="Cach dat ve?", conversation_id=cid), redis)
+    assert conflict.value.status_code == 409
+    if deleted:
+        assert db.get(AIConversation, cid) is None
+        assert db.exec(select(AIMessage)).all() == []
+    else:
+        assert db.get(AIConversation, cid).context["pending_tool"] == "get_showtimes"
+        assert len(db.exec(select(AIMessage)).all()) == 2
+
+
+def test_invalid_chat_context_creates_no_history(db):
+    with pytest.raises(HTTPException) as invalid:
+        chat.chat(db, 1, ChatRequest(message="Gia ve?", context=ToolContext(showtime_id=999)), FakeRedis())
+    assert invalid.value.status_code == 422
+    assert db.exec(select(AIConversation)).all() == []
+    assert db.exec(select(AIMessage)).all() == []
 
 
 def test_new_policy_question_overrides_pending_tool(db):

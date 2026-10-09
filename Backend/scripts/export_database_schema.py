@@ -1,4 +1,4 @@
-"""Export the final 23-table PostgreSQL schema, without legacy intermediate tables."""
+"""Export the current PostgreSQL schema, without legacy intermediate tables."""
 import importlib.util
 import sys
 from pathlib import Path
@@ -19,9 +19,9 @@ def export(path):
     spec = importlib.util.spec_from_file_location("schema_006", migration_path)
     migration = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(migration)
-    assert len(SQLModel.metadata.tables) == 23
+    assert len(SQLModel.metadata.tables) == 25
     with path.open("w", encoding="utf-8") as handle:
-        handle.write("-- Cinema Booking schema 006: 23 application tables.\n")
+        handle.write("-- Cinema Booking schema 007: 25 application tables.\n")
         handle.write("-- FRESH DATABASE ONLY. Existing databases: python -m alembic upgrade head.\n\nBEGIN;\n")
         for table in SQLModel.metadata.sorted_tables:
             handle.write(str(CreateTable(table).compile(dialect=dialect)) + ";\n")
@@ -46,7 +46,7 @@ INSERT INTO role_permissions(role_id,permission_id)
             migration._install_integrity_triggers()
         handle.write("""
 CREATE TABLE alembic_version (version_num varchar(32) NOT NULL PRIMARY KEY);
-INSERT INTO alembic_version VALUES ('006');
+INSERT INTO alembic_version VALUES ('007');
 COMMIT;
 """)
     path.write_text("\n".join(line.rstrip() for line in path.read_text(encoding="utf-8").splitlines()) + "\n",
@@ -55,4 +55,4 @@ COMMIT;
 
 
 if __name__ == "__main__":
-    export(backend / "migrations/006_full_database.sql")
+    export(backend / "migrations/007_full_database.sql")

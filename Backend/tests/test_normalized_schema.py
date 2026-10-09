@@ -6,7 +6,7 @@ import os
 from contextlib import nullcontext
 from datetime import date, datetime, time, timedelta, timezone
 from decimal import Decimal
-from uuid import uuid4
+from uuid import UUID, uuid4
 import pytest
 from fastapi import FastAPI, HTTPException
 from fastapi.testclient import TestClient
@@ -92,14 +92,47 @@ def provider(monkeypatch):
     monkeypatch.setattr("app.router.payment.verify_vnpay_signature", lambda params: True)
 
 
-def test_all_23_tables_and_api_compatibility(pg, catalog):
-    assert len(SQLModel.metadata.tables) == 23
+def test_all_25_tables_and_api_compatibility(pg, catalog):
+    assert len(SQLModel.metadata.tables) == 25
     assert set(SQLModel.metadata.tables) <= set(inspect(pg.bind).get_table_names())
     film = FilmDetailRead.model_validate(catalog["film"])
     assert film.duration == "120 phút" and film.genre.startswith("Genre ")
     assert film.formats == [catalog["format"].name]
     assert "genre" not in Film.__table__.columns and "formats" not in Film.__table__.columns
     assert UserRead.model_validate(catalog["user"], from_attributes=True).role == "USER"
+
+
+def test_postgres_chat_persistence_resume_and_cascade(pg, catalog):
+    from sqlalchemy import delete
+    from app.models import AIConversation, AIMessage
+    from app.schemas.ai import ChatRequest
+    from app.services.chat_service import chat
+    from app.services.chat_history_service import read_conversation
+    class RedisCache:
+        def __init__(self): self.values = {}
+        def eval(self, *args): return 1
+        def setex(self, key, ttl, value): self.values[key] = value
+    redis = RedisCache()
+    user_id = catalog["user"].id
+    first = chat(pg, user_id, ChatRequest(message="Gia ve?"), redis)
+    cid = UUID(first["conversation_id"])
+    redis.values.clear()
+    second = chat(pg, user_id, ChatRequest(message=f"Ma suat {catalog['show'].id}", conversation_id=cid), redis)
+    assert second["status"] == "ok" and second["tool"] == "get_ticket_prices"
+    history = read_conversation(pg, user_id, cid, 100)
+    assert len(history["messages"]) == 4
+    assert history["messages"][-1]["metadata"]["sources"] == second["sources"]
+    with pytest.raises(IntegrityError):
+        with pg.begin_nested():
+            pg.add(AIMessage(conversation_id=cid, role="invalid", content="invalid"))
+            pg.flush()
+    with pytest.raises(IntegrityError):
+        with pg.begin_nested():
+            pg.add(AIMessage(conversation_id=uuid4(), role="user", content="orphan"))
+            pg.flush()
+    pg.execute(delete(AIConversation).where(AIConversation.id == cid))
+    pg.flush()
+    assert pg.exec(select(AIMessage).where(AIMessage.conversation_id == cid)).all() == []
 
 
 def test_format_must_be_supported_by_film(pg, catalog):
