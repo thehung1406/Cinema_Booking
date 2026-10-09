@@ -1,339 +1,144 @@
-import React, { useState, useEffect } from "react";
-import { FaClock, FaFilm, FaTicketAlt, FaPlay, FaMapMarkerAlt, FaLanguage, FaClosedCaptioning } from "react-icons/fa";
-import { useNavigate, useParams } from "react-router-dom";
-import filmService from "../services/filmService";
-import { formatDetailDate } from "../utils/filmUtils";
-import logger from '../utils/logger';
-import FilmReviews from './FilmReviews';
+import { useEffect, useRef, useState } from "react";
+import { useParams } from "react-router-dom";
+import { Clock, Play, Ticket, X } from "lucide-react";
+import useFilms from "../hooks/useFilms";
+import { formatDate } from "../utils/formatters";
+import { Button, PageState, Poster } from "./ui/Primitives";
+import FilmReviews from "./FilmReviews";
 
-function MovieDetail() {
+export default function MovieDetail() {
   const { id } = useParams();
-  const [isTrailerOpen, setIsTrailerOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState("synopsis");
-  const [loading, setLoading] = useState(true);
-  const [movie, setMovie] = useState(null);
-  const [error, setError] = useState(null);
-  const navigate = useNavigate();
-
-  const handleBooking = (e, movieId) => {
-    e.stopPropagation(); // Ngăn sự kiện click lan tỏa lên phần tử cha
-    const targetFilmId = movieId || movie?.id || id;
-    if (targetFilmId) {
-      navigate(`/TicketBooking?filmId=${targetFilmId}`);
-    } else {
-      navigate(`/TicketBooking`);
-    }
-  };
-
+  const { data: movie, loading, error, retry } = useFilms(id);
+  const [trailerOpen, setTrailerOpen] = useState(false);
+  const dialog = useRef(null);
   useEffect(() => {
-    const fetchMovieDetails = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        // Gọi API GET /films/{film_id} từ filmService
-        const filmData = await filmService.getFilmDetail(id);
-        setMovie(filmData);
-        setLoading(false);
-      } catch (err) {
-        setError("Không thể tải thông tin phim. Vui lòng thử lại sau.");
-        setLoading(false);
-        logger.error("Lỗi khi tải chi tiết phim:", err);
-      }
-    };
-
-    fetchMovieDetails();
-    // Scroll to top when component mounts
-    window.scrollTo(0, 0);
+    if (trailerOpen) dialog.current?.showModal();
+    else dialog.current?.close();
+  }, [trailerOpen]);
+  useEffect(() => {
+    setTrailerOpen(false);
   }, [id]);
-
-  if (loading) {
+  if (loading) return <PageState loading title="Đang tải thông tin phim…" />;
+  if (error)
     return (
-      <div className="flex justify-center items-center min-h-screen bg-gray-50">
-        <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-blue-600"></div>
-      </div>
+      <PageState
+        title="Chưa tải được thông tin phim"
+        message={error}
+        onRetry={retry}
+      />
     );
-  }
-
-  if (error) {
+  if (!movie)
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 px-4">
-        <div className="bg-white p-8 rounded-lg shadow-lg max-w-md w-full text-center">
-          <div className="text-red-500 text-5xl mb-4">
-            <FaFilm className="mx-auto" />
-          </div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-4">Đã xảy ra lỗi</h2>
-          <p className="text-gray-600 mb-6">{error}</p>
-          <button
-            onClick={() => navigate("/")}
-            className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded-lg transition duration-300"
-          >
-            Quay lại trang chủ
-          </button>
-        </div>
-      </div>
+      <PageState title="Không tìm thấy phim">
+        <Button to="/movie">Khám phá phim khác</Button>
+      </PageState>
     );
-  }
-
-  if (!movie) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 px-4">
-        <div className="bg-white p-8 rounded-lg shadow-lg max-w-md w-full text-center">
-          <div className="text-yellow-500 text-5xl mb-4">
-            <FaFilm className="mx-auto" />
-          </div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-4">Không tìm thấy phim</h2>
-          <p className="text-gray-600 mb-6">
-            Phim bạn đang tìm kiếm không tồn tại hoặc đã bị xóa.
-          </p>
-          <button
-            onClick={() => navigate("/")}
-            className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded-lg transition duration-300"
-          >
-            Quay lại trang chủ
-          </button>
-        </div>
-      </div>
-    );
-  }
+  const details = [
+    ["Thể loại", movie.genre],
+    ["Thời lượng", movie.duration],
+    ["Khởi chiếu", formatDate(movie.release_date)],
+    ["Ngôn ngữ", movie.language],
+    ["Phụ đề", movie.subtitle],
+    ["Định dạng", movie.formats?.join(", ")],
+  ];
   return (
-    <div className="bg-gray-50 min-h-screen pb-12">
-      {/* Hero Section with Backdrop */}
-      <div
-        className="w-full h-80 bg-cover bg-center relative"
-        style={{
-          backgroundImage: `linear-gradient(to bottom, rgba(0,0,0,0.7), rgba(0,0,0,0.8)), url(${
-            movie.image || "https://via.placeholder.com/1200x600?text=No+Image"
-          })`,
-          backgroundPosition: "center 20%",
-        }}
-      >
-        <div className="container mx-auto px-4 h-full flex items-end">
-          <div className="pb-8">
-            <h1 className="text-4xl md:text-5xl font-bold text-white mb-2">
-              {movie.title}
-            </h1>
-            <div className="flex flex-wrap items-center text-white opacity-90 gap-4">
+    <>
+      <section className="detail-hero">
+        <div className="shell grid gap-7 md:grid-cols-[240px_1fr] items-center">
+          <Poster
+            src={movie.image}
+            title={movie.title}
+            className="rounded-xl max-w-[200px] md:max-w-none mx-auto"
+          />
+          <div>
+            <p className="text-red-300 text-xs font-bold uppercase tracking-widest">
+              Thông tin phim
+            </p>
+            <h1 className="page-title">{movie.title}</h1>
+            <div className="flex flex-wrap gap-3 text-sm text-gray-300 mb-6">
               {movie.rating && (
-                <span className="bg-red-600 text-white text-sm font-bold px-2 py-1 rounded">
+                <span className="bg-red-700 text-white px-2 py-1 rounded">
                   {movie.rating}
                 </span>
               )}
               {movie.duration && (
-                <div className="flex items-center">
-                  <FaClock className="mr-1" />
-                  <span>{movie.duration}</span>
-                </div>
+                <span className="flex gap-2 items-center">
+                  <Clock size={16} />
+                  {movie.duration}
+                </span>
               )}
               {movie.genre && <span>{movie.genre}</span>}
             </div>
+            <p className="text-gray-300 mb-6">
+              Chọn rạp và suất chiếu để đặt ghế yêu thích của bạn.
+            </p>
+            <div className="flex flex-wrap gap-3">
+              <Button to={`/TicketBooking?filmId=${movie.id}`}>
+                <Ticket size={18} />
+                Đặt vé ngay
+              </Button>
+              {movie.trailer && (
+                <button
+                  className="btn border border-gray-600 text-white"
+                  onClick={() => setTrailerOpen(true)}
+                >
+                  <Play size={16} />
+                  Xem trailer
+                </button>
+              )}
+            </div>
           </div>
         </div>
-      </div>
-      {/* Main Content */}
-      <div className="container mx-auto px-4 -mt-16 relative z-10">
-        <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-          <div className="md:flex">
-            {/* Poster Column */}
-            <div className="md:w-1/3 p-6">
-              <img
-                src={
-                  movie.image ||
-                  "https://via.placeholder.com/400x600?text=No+Image"
-                }
-                alt={movie.title}
-                className="w-full h-64 object-cover "
-                onError={(e) => {
-                  e.target.src =
-                    "https://via.placeholder.com/400x600?text=No+Image";
-                }}
-              />
-              <div className="mt-6 space-y-3">
-                <button
-                  onClick={() => setIsTrailerOpen(true)}
-                  className="w-full bg-red-600 hover:bg-red-700 text-white py-3 px-4 rounded-lg flex items-center justify-center transition duration-300"
-                >
-                  <FaPlay className="mr-2" /> Xem trailer
-                </button>
-                <button
-                 onClick={(e) => handleBooking(e,movie.id)}
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 rounded-lg flex items-center justify-center transition duration-300"
-                >
-                  <FaTicketAlt className="mr-2" /> Đặt vé ngay
-                </button>
-              </div>
-            </div>
-            {/* Details Column */}
-            <div className="md:w-2/3 p-6">
-              {/* Tabs */}
-              <div className="border-b border-gray-200 mb-6">
-                <div className="flex space-x-8">
-                  <button
-                    className={`py-3 px-1 font-medium ${
-                      activeTab === "synopsis"
-                        ? "border-b-2 border-blue-600 text-blue-600"
-                        : "text-gray-500 hover:text-gray-700"
-                    } transition duration-200`}
-                    onClick={() => setActiveTab("synopsis")}
-                  >
-                    Nội dung
-                  </button>
-                  <button
-                    className={`py-3 px-1 font-medium ${
-                      activeTab === "details"
-                        ? "border-b-2 border-blue-600 text-blue-600"
-                        : "text-gray-500 hover:text-gray-700"
-                    } transition duration-200`}
-                    onClick={() => setActiveTab("details")}
-                  >
-                    Chi tiết
-                  </button>
+      </section>
+      <div className="shell page-section">
+        <div className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
+          <section className="surface">
+            <h2 className="text-xl font-bold mb-4">Nội dung phim</h2>
+            <p className="text-gray-600 leading-8 whitespace-pre-line">
+              {movie.description || "Nội dung phim đang được cập nhật."}
+            </p>
+          </section>
+          <section className="surface">
+            <h2 className="text-xl font-bold mb-4">Chi tiết phim</h2>
+            <dl className="grid grid-cols-2 gap-x-4 gap-y-5">
+              {details.map(([label, value]) => (
+                <div key={label}>
+                  <dt className="text-gray-500 text-sm mb-1">{label}</dt>
+                  <dd className="font-semibold text-sm">
+                    {value || "Chưa cập nhật"}
+                  </dd>
                 </div>
-              </div>
-              {/* Tab Content */}
-              <div className="min-h-[300px]">
-                {activeTab === "synopsis" && (
-                  <div className="prose max-w-none">
-                    <p className="text-gray-700 leading-relaxed">
-                      {movie.description || "Chưa có nội dung cho phim này."}
-                    </p>
-                  </div>
-                )}
-                {activeTab === "details" && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-4">
-                      <div>
-                        <h3 className="text-gray-500 text-sm font-medium mb-1">
-                          Thể loại
-                        </h3>
-                        <p className="text-gray-900 font-medium">
-                          {movie.genre || "Chưa xác định"}
-                        </p>
-                      </div>
-                      <div>
-                        <h3 className="text-gray-500 text-sm font-medium mb-1">
-                          Thời lượng
-                        </h3>
-                        <p className="text-gray-900 font-medium">
-                          {movie.duration || "Chưa xác định"}
-                        </p>
-                      </div>
-                      <div>
-                        <h3 className="text-gray-500 text-sm font-medium mb-1">
-                          Khởi chiếu
-                        </h3>
-                        <p className="text-gray-900 font-medium">
-                          {formatDetailDate(movie.release_date)}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="space-y-4">
-                      <div>
-                        <h3 className="text-gray-500 text-sm font-medium mb-1">
-                          Ngôn ngữ
-                        </h3>
-                        <p className="text-gray-900 font-medium">
-                          {movie.language || "Tiếng Anh"}
-                        </p>
-                      </div>
-                      <div>
-                        <h3 className="text-gray-500 text-sm font-medium mb-1">
-                          Phụ đề
-                        </h3>
-                        <p className="text-gray-900 font-medium">
-                          {movie.subtitle || "Tiếng Việt"}
-                        </p>
-                      </div>
-                      <div>
-                        <h3 className="text-gray-500 text-sm font-medium mb-1">
-                          Định dạng
-                        </h3>
-                        <div className="flex flex-wrap gap-2">
-                          {movie.formats && movie.formats.length > 0 ? (
-                            movie.formats.map((format, index) => (
-                              <span
-                                key={index}
-                                className="bg-gray-100 text-gray-800 text-xs font-medium px-2.5 py-1 rounded"
-                              >
-                                {format}
-                              </span>
-                            ))
-                          ) : (
-                            <span className="bg-gray-100 text-gray-800 text-xs font-medium px-2.5 py-1 rounded">
-                              2D
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
+              ))}
+            </dl>
+          </section>
         </div>
         <FilmReviews key={movie.id} filmId={movie.id} />
-        {/* Additional Info */}
-        <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="bg-white p-6 rounded-lg shadow-md">
-            <div className="text-blue-600 text-xl mb-4">
-              <FaMapMarkerAlt className="inline-block mr-2" />
-              <span className="font-bold">Rạp chiếu</span>
-            </div>
-            <p className="text-gray-700">
-              Phim đang được chiếu tại nhiều rạp trên toàn quốc. Nhấn "Đặt vé
-              ngay" để xem danh sách rạp.
-            </p>
-          </div>
-          <div className="bg-white p-6 rounded-lg shadow-md">
-            <div className="text-blue-600 text-xl mb-4">
-              <FaLanguage className="inline-block mr-2" />
-              <span className="font-bold">Ngôn ngữ</span>
-            </div>
-            <p className="text-gray-700">
-              Phim được chiếu bằng tiếng {movie.language || "Anh"} với phụ đề{" "}
-              {movie.subtitle || "Việt"}.
-            </p>
-          </div>
-          <div className="bg-white p-6 rounded-lg shadow-md">
-            <div className="text-blue-600 text-xl mb-4">
-              <FaClosedCaptioning className="inline-block mr-2" />
-              <span className="font-bold">Định dạng</span>
-            </div>
-            <p className="text-gray-700">
-              Phim được chiếu với các định dạng:{" "}
-              {movie.formats && movie.formats.length > 0
-                ? movie.formats.join(", ")
-                : "2D"}
-            </p>
-          </div>
-        </div>
       </div>
-      {/* Trailer Modal */}
-      {isTrailerOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg overflow-hidden w-full max-w-4xl">
-            <div className="w-full aspect-video">
-              <iframe
-                className="w-full h-full"
-                src={movie.trailer}
-                title={`${movie.title} Trailer`}
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-              ></iframe>
-            </div>
-            <div className="p-4 flex justify-end">
-              <button
-                onClick={() => setIsTrailerOpen(false)}
-                className="bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded transition duration-300"
-              >
-                Đóng
-              </button>
-            </div>
-          </div>
+      <dialog
+        ref={dialog}
+        aria-label={`Trailer phim ${movie.title}`}
+        onClose={() => setTrailerOpen(false)}
+      >
+        <div className="bg-white p-3 flex justify-between items-center">
+          <h2 className="font-semibold">Trailer phim</h2>
+          <button
+            className="btn"
+            aria-label="Đóng trailer"
+            onClick={() => setTrailerOpen(false)}
+          >
+            <X />
+          </button>
         </div>
-      )}
-    </div>
+        {trailerOpen && (
+          <iframe
+            className="w-full aspect-video"
+            src={movie.trailer}
+            title={`Trailer ${movie.title}`}
+            allow="autoplay; encrypted-media; picture-in-picture"
+            allowFullScreen
+          />
+        )}
+      </dialog>
+    </>
   );
 }
-
-export default MovieDetail;

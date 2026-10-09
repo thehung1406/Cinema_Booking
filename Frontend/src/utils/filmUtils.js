@@ -1,3 +1,5 @@
+import { localDateInput } from "./formatters.js";
+
 /**
  * Tiện ích xử lý dữ liệu phim dùng chung giữa các component
  */
@@ -10,14 +12,19 @@
  */
 export const isNowShowing = (movie, referenceDate = new Date()) => {
   if (!movie || !movie.release_date) return false;
-  const today = new Date(referenceDate);
-  const releaseDate = new Date(movie.release_date);
-  const endDate = movie.end_date
-    ? new Date(movie.end_date)
-    : new Date(releaseDate.getTime() + 90 * 24 * 60 * 60 * 1000); // Mặc định 90 ngày nếu không có end_date
-
-  return today >= releaseDate && today <= endDate;
+  const today = localDateInput(referenceDate);
+  const releaseDate = String(movie.release_date).slice(0, 10);
+  const endDate = movie.end_date ? String(movie.end_date).slice(0, 10) : null;
+  return (
+    /^\d{4}-\d{2}-\d{2}$/.test(releaseDate) &&
+    today >= releaseDate &&
+    (!endDate || today <= endDate)
+  );
 };
+
+export const isUpcoming = (movie, referenceDate = new Date()) =>
+  Boolean(movie?.release_date) &&
+  String(movie.release_date).slice(0, 10) > localDateInput(referenceDate);
 
 /**
  * Format ngày phát hành theo định dạng ngày/tháng/năm
@@ -25,9 +32,9 @@ export const isNowShowing = (movie, referenceDate = new Date()) => {
  * @param {string} [locale='vi-VN'] - Mã ngôn ngữ
  * @returns {string} Chuỗi ngày đã format
  */
-export const formatReleaseDate = (dateString, locale = 'vi-VN') => {
-  if (!dateString) return 'Chưa xác định';
-  const options = { day: '2-digit', month: '2-digit', year: 'numeric' };
+export const formatReleaseDate = (dateString, locale = "vi-VN") => {
+  if (!dateString) return "Chưa xác định";
+  const options = { day: "2-digit", month: "2-digit", year: "numeric" };
   return new Date(dateString).toLocaleDateString(locale, options);
 };
 
@@ -37,13 +44,13 @@ export const formatReleaseDate = (dateString, locale = 'vi-VN') => {
  * @param {string} [locale='vi-VN'] - Mã ngôn ngữ
  * @returns {string} Chuỗi ngày chi tiết
  */
-export const formatDetailDate = (dateString, locale = 'vi-VN') => {
-  if (!dateString) return 'Chưa xác định';
+export const formatDetailDate = (dateString, locale = "vi-VN") => {
+  if (!dateString) return "Chưa xác định";
   const date = new Date(dateString);
   return date.toLocaleDateString(locale, {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
+    day: "numeric",
+    month: "long",
+    year: "numeric",
   });
 };
 
@@ -59,7 +66,7 @@ export const classifyMovies = (movies = []) => {
   for (const movie of movies) {
     if (isNowShowing(movie)) {
       nowShowing.push(movie);
-    } else {
+    } else if (isUpcoming(movie)) {
       upcoming.push(movie);
     }
   }

@@ -1,363 +1,319 @@
 import { useEffect, useState } from "react";
-import {
-  FaArrowRight,
-  FaCalendarAlt,
-  FaFilm,
-  FaMapMarkerAlt,
-  FaTicketAlt,
-} from "react-icons/fa";
+import { ArrowRight, CalendarDays, Film, MapPin } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import api from "../config/api";
-import logger from '../utils/logger';
+import { formatDate, formatTime, localDateInput } from "../utils/formatters";
+import { BookingSteps, Button, PageState } from "./ui/Primitives";
 
-function TicketBooking() {
+export default function TicketBooking() {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const initialFilmId = searchParams.get("filmId") || searchParams.get("movieId") || "";
-  const initialTheaterId = searchParams.get("theaterId") || searchParams.get("cinemaId") || "";
-
+  const [params] = useSearchParams();
+  const initialFilmId = params.get("filmId") || params.get("movieId") || "";
+  const initialTheaterId =
+    params.get("theaterId") || params.get("cinemaId") || "";
+  const [movieId, setMovieId] = useState(initialFilmId);
+  const [cinemaId, setCinemaId] = useState(initialTheaterId);
+  const [date, setDate] = useState(localDateInput);
   const [movies, setMovies] = useState([]);
-  const [selectedMovie, setSelectedMovie] = useState(initialFilmId);
   const [cinemas, setCinemas] = useState([]);
-  const [selectedCinema, setSelectedCinema] = useState(initialTheaterId);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [selectedDate, setSelectedDate] = useState(
-    new Date().toISOString().split("T")[0]
-  );
   const [showtimes, setShowtimes] = useState([]);
-  const [selectedShowtime, setSelectedShowtime] = useState(null);
-  const [notification, setNotification] = useState(null);
-  
-  const fetchShowtimes = async (filmId, theaterId, date) => {
-    try {
-      setLoading(true);
-      setError(null);
-      // Gọi API GET /showtimes với query parameters
-      const response = await api.get("/showtimes", {
-        params: {
-          film_id: parseInt(filmId),
-          theater_id: parseInt(theaterId),
-          date: date
-        }
-      });
-      setShowtimes(response.data);
-      setLoading(false);
-    } catch (error) {
-      logger.error("Lỗi khi lấy suất chiếu:", error);
-      setShowtimes([]);
-      setLoading(false);
-    }
-  };
-
-  const loadTheatersForFilm = async (movieId) => {
-    if (!movieId) {
-      setCinemas([]);
-      setSelectedCinema("");
-      return [];
-    }
-
-    try {
-      setLoading(true);
-      setError(null);
-
-      // Gọi API GET /theaters/by-film/{film_id} để lấy danh sách rạp chiếu phim này
-      const response = await api.get(`/theaters/by-film/${movieId}`);
-
-      let theaterList = [];
-      if (Array.isArray(response.data)) {
-        theaterList = response.data;
-      } else if (response.data && typeof response.data === 'object') {
-        theaterList = response.data.theaters || response.data.data || [response.data];
-      }
-
-      setCinemas(theaterList);
-      setLoading(false);
-      return theaterList;
-    } catch (error) {
-      logger.error("Lỗi khi lấy danh sách rạp:", error);
-      setError("Không thể tải danh sách rạp. Vui lòng thử lại sau.");
-      setCinemas([]);
-      setLoading(false);
-      return [];
-    }
-  };
-
-  // Fetch movies on component mount and handle pre-selected movie/theater
+  const [showtimeId, setShowtimeId] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [theatersLoading, setTheatersLoading] = useState(false);
+  const [timesLoading, setTimesLoading] = useState(false);
+  const [filmError, setFilmError] = useState("");
+  const [theaterError, setTheaterError] = useState("");
+  const [timesError, setTimesError] = useState("");
+  const [attempt, setAttempt] = useState(0);
+  const retry = () => setAttempt((v) => v + 1);
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        // Gọi API GET /films/ từ backend
-        const moviesResponse = await api.get("/films/");
-        setMovies(moviesResponse.data);
-
-        if (initialFilmId) {
-          setSelectedMovie(initialFilmId);
-          const theaterList = await loadTheatersForFilm(initialFilmId);
-          if (initialTheaterId && theaterList.some(t => String(t.id) === String(initialTheaterId))) {
-            setSelectedCinema(initialTheaterId);
-            fetchShowtimes(initialFilmId, initialTheaterId, selectedDate);
-          }
-        }
-        setLoading(false);
-      } catch (err) {
-        logger.error("Lỗi khi lấy dữ liệu:", err);
-        setError("Không thể tải dữ liệu. Vui lòng thử lại sau.");
-        setLoading(false);
-      }
-    };
-    fetchData();
-  }, [initialFilmId, initialTheaterId, selectedDate]);
-
-  // Handle movie selection
-  const handleSelectMovie = async (e) => {
-    const movieId = e.target.value;
-    setSelectedMovie(movieId);
-    setSelectedShowtime(null);
-    setShowtimes([]);
-    setSelectedCinema("");
-
+    setMovieId(initialFilmId);
+    setCinemaId(initialTheaterId);
+    setShowtimeId(null);
+  }, [initialFilmId, initialTheaterId]);
+  useEffect(() => {
+    const controller = new AbortController();
+    setLoading(true);
+    setFilmError("");
+    api
+      .get("/films/", { signal: controller.signal })
+      .then((r) => setMovies(r.data))
+      .catch((e) => {
+        if (e.code !== "ERR_CANCELED")
+          setFilmError("Không thể tải danh sách phim.");
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setLoading(false);
+      });
+    return () => controller.abort();
+  }, [attempt]);
+  useEffect(() => {
+    const controller = new AbortController();
+    setCinemas([]);
+    setTheaterError("");
     if (!movieId) {
-      setCinemas([]);
-      return;
+      setTheatersLoading(false);
+      return () => controller.abort();
     }
-
-    await loadTheatersForFilm(movieId);
-  };
-
-  // Handle cinema selection
-  const handleSelectCinema = (e) => {
-    const cinemaId = e.target.value;
-    setSelectedCinema(cinemaId);
+    setTheatersLoading(true);
+    api
+      .get(`/theaters/by-film/${movieId}`, { signal: controller.signal })
+      .then((r) => {
+        const list = Array.isArray(r.data)
+          ? r.data
+          : r.data.theaters || r.data.data || [r.data];
+        setCinemas(list);
+        setCinemaId((current) =>
+          list.some((t) => String(t.id || t.theater_id) === String(current))
+            ? current
+            : "",
+        );
+      })
+      .catch((e) => {
+        if (e.code !== "ERR_CANCELED")
+          setTheaterError("Không thể tải danh sách rạp cho phim này.");
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setTheatersLoading(false);
+      });
+    return () => controller.abort();
+  }, [movieId, attempt]);
+  useEffect(() => {
+    const controller = new AbortController();
     setShowtimes([]);
-    setSelectedShowtime(null);
-
-    if (cinemaId && selectedMovie && selectedDate) {
-      fetchShowtimes(selectedMovie, cinemaId, selectedDate);
+    setShowtimeId(null);
+    setTimesError("");
+    if (!movieId || !cinemaId || !date || theatersLoading) {
+      setTimesLoading(false);
+      return () => controller.abort();
     }
-  };
-
-  // Handle date selection
-  const handleDateChange = (e) => {
-    const newDate = e.target.value;
-    setSelectedDate(newDate);
-
-    if (selectedMovie && selectedCinema && newDate) {
-      fetchShowtimes(selectedMovie, selectedCinema, newDate);
-    }
-  };
-
-  // Navigate to seat booking page
-  const handleNext = () => {
-    if (!selectedMovie) {
-      setNotification("Vui lòng chọn phim");
-      return;
-    }
-    if (!selectedCinema) {
-      setNotification("Vui lòng chọn rạp");
-      return;
-    }
-    if (!selectedDate) {
-      setNotification("Vui lòng chọn ngày");
-      return;
-    }
-    if (!selectedShowtime) {
-      setNotification("Vui lòng chọn suất chiếu");
-      return;
-    }
-    navigate(`/seat-selection/${selectedShowtime}`);
-  };
-  // Loading state
-  if (loading && movies.length === 0) {
+    setTimesLoading(true);
+    api
+      .get("/showtimes", {
+        signal: controller.signal,
+        params: {
+          film_id: parseInt(movieId),
+          theater_id: parseInt(cinemaId),
+          date,
+        },
+      })
+      .then((r) => setShowtimes(r.data))
+      .catch((e) => {
+        if (e.code !== "ERR_CANCELED")
+          setTimesError("Không thể tải suất chiếu. Vui lòng thử lại.");
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setTimesLoading(false);
+      });
+    return () => controller.abort();
+  }, [movieId, cinemaId, date, theatersLoading, attempt]);
+  if (loading && !movies.length)
+    return <PageState loading title="Đang tải lịch chiếu…" />;
+  if (filmError)
     return (
-      <div className="flex justify-center items-center h-screen">
-        <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-500"></div>
-      </div>
+      <PageState
+        title="Chưa tải được phim"
+        message={filmError}
+        onRetry={retry}
+      />
     );
-  }
-  // Error state
-  if (error && movies.length === 0) {
-    return (
-      <div className="flex justify-center items-center h-screen">
-        <div
-          className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative"
-          role="alert"
-        >
-          <strong className="font-bold">Lỗi! </strong>
-          <span className="block sm:inline">{error}</span>
-        </div>
-      </div>
-    );
-  }
+  const movie = movies.find((m) => String(m.id) === String(movieId));
+  const cinema = cinemas.find(
+    (c) => String(c.id || c.theater_id) === String(cinemaId),
+  );
+  const time = showtimes.find((s) => (s.id || s.showtime_id) === showtimeId);
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold text-center mb-8">Đặt vé xem phim</h1>
-      {notification && (
-        <div className="max-w-4xl mx-auto mb-4 p-3 bg-yellow-100 border border-yellow-400 text-yellow-800 rounded-lg flex justify-between items-center">
-          <span>{notification}</span>
-          <button onClick={() => setNotification(null)} className="ml-4 font-bold hover:text-yellow-900">&times;</button>
-        </div>
-      )}
-      <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-md p-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Movie selection */}
-          <div className="space-y-2">
-            <label className="block text-gray-700 font-medium mb-2">
-              <FaFilm className="inline mr-2" />
-              Chọn phim
-            </label>
-            <select
-              className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              value={selectedMovie}
-              onChange={handleSelectMovie}
-            >
-              <option value="">-- Chọn phim --</option>
-              {movies.map((movie) => (
-                <option key={movie.id} value={movie.id}>
-                  {movie.title}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Cinema selection */}
-          <div className={`space-y-2 ${!selectedMovie ? "opacity-50" : ""}`}>
-            <label className="block text-gray-700 font-medium mb-2">
-              <FaMapMarkerAlt className="inline mr-2" />
-              Chọn rạp
-            </label>
-            <select
-              className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              value={selectedCinema}
-              onChange={handleSelectCinema}
-              disabled={!selectedMovie}
-            >
-              <option value="">-- Chọn rạp --</option>
-              {cinemas.map((cinema) => (
-                <option key={cinema.id || cinema.theater_id} value={cinema.id || cinema.theater_id}>
-                  {cinema.name || cinema.theater_name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Date selection */}
-          <div className={`space-y-2 ${!selectedCinema ? "opacity-50" : ""}`}>
-            <label className="block text-gray-700 font-medium mb-2">
-              <FaCalendarAlt className="inline mr-2" />
-              Chọn ngày
-            </label>
-            <input
-              type="date"
-              className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              onChange={handleDateChange}
-              disabled={!selectedCinema}
-              min={new Date().toISOString().split("T")[0]}
-              max="2030-12-31"
-              value={selectedDate}
-            />
-          </div>
-        </div>
-
-        {/* Showtimes */}
-        <div className="mt-8">
-          <h2 className="text-xl font-semibold mb-4">
-            <FaTicketAlt className="inline mr-2" />
-            Suất chiếu
-          </h2>
-
-          {loading ? (
-            <div className="flex justify-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
-            </div>
-          ) : showtimes.length > 0 ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-              {showtimes.map((showtime) => {
-                let timeString;
-                try {
-                  // start_time có dạng 'HH:MM:SS' hoặc datetime
-                  if (showtime.start_time) {
-                    // Nếu là string thời gian thuần (HH:MM:SS)
-                    if (typeof showtime.start_time === 'string' && showtime.start_time.includes(':')) {
-                      const timeParts = showtime.start_time.split(':');
-                      timeString = `${timeParts[0]}:${timeParts[1]}`;
-                    } else {
-                      // Nếu là datetime đầy đủ
-                      const startTime = new Date(showtime.start_time);
-                      if (!isNaN(startTime.getTime())) {
-                        timeString = startTime.toLocaleTimeString('vi-VN', { 
-                          hour: '2-digit', 
-                          minute: '2-digit' 
-                        });
-                      } else {
-                        timeString = showtime.start_time;
-                      }
-                    }
-                  } else {
-                    timeString = "N/A";
-                  }
-                } catch (e) {
-                  logger.error("Lỗi định dạng thời gian:", e, showtime);
-                  timeString = showtime.start_time || "N/A";
-                }
-
-                return (
-                  <button
-                    key={showtime.id || showtime.showtime_id}
-                    className={`py-3 px-4 rounded-lg border ${
-                      selectedShowtime === (showtime.id || showtime.showtime_id)
-                        ? "bg-gray-500 text-white border-gray-600"
-                        : "bg-white text-gray-800 border-gray-300 hover:bg-gray-100"
-                    }`}
-                    onClick={() => setSelectedShowtime(showtime.id || showtime.showtime_id)}
-                  >
-                    <div className="text-center">
-                      <div className="font-medium">{timeString}</div>
-                      <div className="text-sm mt-1">
-                        {showtime.room_name || `Phòng ${showtime.room_id}`}
-                      </div>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          ) : (
-            <div className="text-center py-8 text-gray-500">
-              {selectedMovie && selectedCinema && selectedDate ? (
-                <p>
-                  Không có suất chiếu nào cho phim và rạp này vào ngày đã chọn
-                </p>
-              ) : (
-                <p>Vui lòng chọn phim, rạp và ngày để xem suất chiếu</p>
+    <div className="shell page-section">
+      <BookingSteps />
+      <div className="text-center mb-8">
+        <p className="eyebrow">Bắt đầu buổi xem phim</p>
+        <h1 className="page-title">Chọn lịch chiếu</h1>
+        <p className="text-gray-500">
+          Chọn lần lượt phim, rạp, ngày và suất chiếu.
+        </p>
+      </div>
+      <div className="grid gap-6 lg:grid-cols-[1fr_320px] items-start">
+        <section className="surface">
+          <div className="grid gap-6 sm:grid-cols-2">
+            <div className="form-field">
+              <label htmlFor="booking-film" className="flex items-center gap-2">
+                <Film size={18} />
+                1. Chọn phim
+              </label>
+              <select
+                id="booking-film"
+                value={movieId}
+                onChange={(e) => {
+                  setMovieId(e.target.value);
+                  setCinemaId("");
+                  setShowtimeId(null);
+                }}
+                disabled={loading}
+              >
+                <option value="">Chọn phim muốn xem</option>
+                {movies.map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {m.title}
+                  </option>
+                ))}
+              </select>
+              {!movies.length && (
+                <p className="text-sm text-gray-500">Chưa có phim để đặt vé.</p>
               )}
             </div>
+            <div className="form-field">
+              <label
+                htmlFor="booking-theater"
+                className="flex items-center gap-2"
+              >
+                <MapPin size={18} />
+                2. Chọn rạp
+              </label>
+              <select
+                id="booking-theater"
+                value={cinemaId}
+                disabled={!movieId || theatersLoading}
+                onChange={(e) => {
+                  setCinemaId(e.target.value);
+                  setShowtimeId(null);
+                }}
+              >
+                <option value="">
+                  {theatersLoading ? "Đang tải rạp…" : "Chọn rạp chiếu"}
+                </option>
+                {cinemas.map((c) => (
+                  <option
+                    key={c.id || c.theater_id}
+                    value={c.id || c.theater_id}
+                  >
+                    {c.name || c.theater_name}
+                  </option>
+                ))}
+              </select>
+              {movieId &&
+                !theatersLoading &&
+                !theaterError &&
+                !cinemas.length && (
+                  <p className="text-sm text-gray-500">
+                    Phim chưa có rạp chiếu khả dụng.
+                  </p>
+                )}
+            </div>
+            <div className="form-field">
+              <label htmlFor="booking-date" className="flex items-center gap-2">
+                <CalendarDays size={18} />
+                3. Chọn ngày
+              </label>
+              <input
+                id="booking-date"
+                type="date"
+                value={date}
+                min={localDateInput()}
+                disabled={!cinemaId || theatersLoading}
+                onChange={(e) => {
+                  setDate(e.target.value);
+                  setShowtimeId(null);
+                }}
+              />
+            </div>
+          </div>
+          {theaterError && (
+            <PageState
+              title="Chưa tải được rạp"
+              message={theaterError}
+              onRetry={retry}
+            />
           )}
-        </div>
-
-        {/* Navigation buttons */}
-        <div className="mt-8 flex justify-between">
-          <button
-            className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-lg flex items-center"
+          <div className="border-t border-gray-200 mt-7 pt-6">
+            <h2 className="text-lg font-bold mb-4">4. Chọn suất chiếu</h2>
+            {timesLoading ? (
+              <PageState loading title="Đang tìm suất chiếu…" />
+            ) : timesError ? (
+              <PageState
+                title="Chưa tải được lịch chiếu"
+                message={timesError}
+                onRetry={retry}
+              />
+            ) : showtimes.length ? (
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {showtimes.map((s) => {
+                  const sid = s.id || s.showtime_id;
+                  const start = formatTime(s.start_time);
+                  const hasPassed =
+                    new Date(`${date}T${start}:00+07:00`).getTime() <=
+                    Date.now();
+                  const unavailable =
+                    !sid || start === "Chưa xác định" || hasPassed;
+                  return (
+                    <button
+                      key={sid}
+                      disabled={unavailable}
+                      aria-pressed={showtimeId === sid}
+                      className={`rounded-xl border p-4 text-center disabled:opacity-45 ${showtimeId === sid ? "bg-red-50 border-red-600 text-red-700" : "border-gray-200 hover:border-red-400"}`}
+                      onClick={() => setShowtimeId(sid)}
+                    >
+                      <span className="block font-bold text-lg">{start}</span>
+                      <span className="block text-xs mt-1">
+                        {s.room_name ||
+                          (s.room_id
+                            ? `Phòng ${s.room_id}`
+                            : "Chưa có tên phòng")}
+                        {s.format ? ` · ${s.format}` : ""}
+                      </span>
+                      {hasPassed && (
+                        <span className="block text-xs mt-1">Đã bắt đầu</span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            ) : (
+              <PageState
+                title={
+                  movieId && cinemaId && date
+                    ? "Chưa có suất chiếu trong ngày này"
+                    : "Lịch chiếu sẽ xuất hiện tại đây"
+                }
+                message={
+                  movieId && cinemaId
+                    ? "Thử chọn ngày hoặc rạp khác."
+                    : "Hãy chọn phim và rạp để tiếp tục."
+                }
+              />
+            )}
+          </div>
+        </section>
+        <aside className="surface booking-summary">
+          <h2 className="text-lg font-bold mb-5">Lựa chọn của bạn</h2>
+          <dl className="space-y-4 text-sm">
+            {[
+              ["Phim", movie?.title],
+              ["Rạp", cinema?.name || cinema?.theater_name],
+              ["Ngày", date ? formatDate(date) : "Chưa chọn"],
+              ["Suất chiếu", time ? formatTime(time.start_time) : null],
+            ].map(([label, value]) => (
+              <div key={label}>
+                <dt className="text-gray-500 mb-1">{label}</dt>
+                <dd className="font-semibold">{value || "Chưa chọn"}</dd>
+              </div>
+            ))}
+          </dl>
+          <Button
+            className="w-full mt-6"
+            disabled={!showtimeId || timesLoading || theatersLoading}
+            onClick={() => navigate(`/seat-selection/${showtimeId}`)}
+          >
+            Tiếp tục chọn ghế <ArrowRight size={17} />
+          </Button>
+          <Button
+            variant="ghost"
+            className="w-full mt-2"
             onClick={() => navigate(-1)}
           >
             Quay lại
-          </button>
-
-          <button
-            className={`bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg flex items-center ${
-              !selectedShowtime ? "opacity-50 cursor-not-allowed" : ""
-            }`}
-            onClick={handleNext}
-            disabled={!selectedShowtime}
-          >
-            Tiếp tục
-            <FaArrowRight className="ml-2" />
-          </button>
-        </div>
+          </Button>
+        </aside>
       </div>
     </div>
   );
 }
-
-export default TicketBooking;
