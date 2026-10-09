@@ -12,7 +12,7 @@ class SeatType(SQLModel, table=True):
 
     id: Optional[int] = Field(default=None, primary_key=True)
 
-    room_id: int = Field(foreign_key="cinema_rooms.id", index=True)
+    room_id: int = Field(foreign_key="cinema_rooms.id", ondelete="RESTRICT", index=True)
     name: str = Field(max_length=30)  # "VIP", "Standard", "Couple"
     base_price: Decimal = Field(sa_column=Column(Numeric(12, 2), nullable=False))
 

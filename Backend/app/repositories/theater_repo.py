@@ -7,11 +7,11 @@ from typing import Optional
 class TheaterRepo:
     @staticmethod
     def get_by_id(db: Session, theater_id: int) -> Theater | None:
-        return db.get(Theater, theater_id)
+        return db.exec(select(Theater).where(Theater.id == theater_id, Theater.deleted_at.is_(None))).first()
 
     @staticmethod
     def get_all(db: Session, skip: int = 0, limit: int = 50):
-        statement = select(Theater).offset(skip).limit(limit)
+        statement = select(Theater).where(Theater.deleted_at.is_(None)).offset(skip).limit(limit)
         return db.exec(statement).all()
 
     @staticmethod
@@ -25,6 +25,9 @@ class TheaterRepo:
             .where(
                 and_(
                     Showtime.film_id == film_id,
+                    Theater.deleted_at.is_(None),
+                    CinemaRoom.deleted_at.is_(None),
+                    CinemaRoom.status == "ACTIVE",
                     Showtime.status == "ACTIVE",
                     Showtime.show_date >= from_date,
                 )
@@ -32,4 +35,4 @@ class TheaterRepo:
             .distinct()
             .order_by(Theater.name)
         )
-        return db.exec(stmt).all()
+        return db.exec(stmt).all()

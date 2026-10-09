@@ -29,6 +29,19 @@ os.environ.setdefault("CORS_ORIGINS", '["http://localhost:5173"]')
 
 from app.services.payment_service import PaymentService
 from app.core.config import settings
+import pytest
+from app.models import Payment
+
+
+@pytest.fixture(autouse=True)
+def payment_ledger_for_mock_sessions(monkeypatch):
+    """These unit tests mock DB; real ledger/ticket behavior is tested in PostgreSQL."""
+    monkeypatch.setattr(PaymentService, "_payment_attempt", lambda db, booking, params:
+        Payment(booking_id=booking.id, provider="VNPAY", payment_method="VNPAY",
+                merchant_ref=str(booking.id), amount=booking.total_amount))
+    monkeypatch.setattr(PaymentService, "resolve_booking_id", lambda db, ref: int(ref))
+    monkeypatch.setattr("app.services.payment_service.PaymentRepository.record_result", lambda *args: None)
+    monkeypatch.setattr("app.services.payment_service.TicketService.issue_for_booking", lambda *args: None)
 
 
 # ── PaymentService.validate_vnpay_payment_params Tests ──

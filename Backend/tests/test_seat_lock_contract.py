@@ -22,7 +22,10 @@ def test_seat_status_model_has_version():
     """Kiểm tra model SeatStatus có trường version phục vụ Optimistic Locking."""
     source = (BACKEND_ROOT / "app" / "models" / "seat_status.py").read_text(encoding="utf-8")
     
-    assert "version: int = Field(default=0)" in source
+    model = next(node for node in ast.parse(source).body if isinstance(node, ast.ClassDef))
+    version = next(node for node in model.body if isinstance(node, ast.AnnAssign) and node.target.id == "version")
+    assert version.annotation.id == "int"
+    assert next(kw.value.value for kw in version.value.keywords if kw.arg == "default") == 0
 
 
 def test_seat_repo_has_optimistic_methods():
@@ -70,7 +73,7 @@ def test_available_count_includes_db_holds_when_redis_is_empty():
     """Available count phải trừ cả HOLD hợp lệ trong DB backup."""
     source = (BACKEND_ROOT / "app" / "services" / "seat_service.py").read_text(encoding="utf-8")
 
-    assert "valid_db_hold_count" in source
+    assert "for seat in SeatService.get_seats_by_showtime(db, showtime_id)" in source
     assert "hold_expired_at > now" in source
 
 

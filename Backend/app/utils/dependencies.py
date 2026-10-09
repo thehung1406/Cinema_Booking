@@ -2,15 +2,14 @@ from typing import Optional
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import jwt, JWTError
-from sqlmodel import Session
+from sqlmodel import Session, select
 
 from app.core.config import settings
 from app.core.redis import redis_client
 from app.core.database import get_session
 from app.models import User
-from app.services.auth_service import AuthService
 from app.repositories.auth_repo import AuthRepository
-from app.utils.enum import UserRole
+from app.models.access_control import Permission, RolePermission
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 oauth2_scheme_optional = OAuth2PasswordBearer(tokenUrl="/auth/login", auto_error=False)
@@ -89,8 +88,16 @@ def get_optional_current_user(
 
     return AuthRepository.get_user(session, user_id)
 
-def require_staff(user: User = Depends(get_current_user)):
-    if user.role not in (UserRole.STAFF, UserRole.ADMIN):
-        raise HTTPException(status_code=403, detail="Staff only")
-    return user
+def require_permission(code: str):
+    def dependency(user: User = Depends(get_current_user), session: Session = Depends(get_session)):
+        permitted = session.exec(select(Permission.id).join(RolePermission)
+            .where(RolePermission.role_id == user.role_id, Permission.code == code)).first()
+        if permitted is None:
+            raise HTTPException(403, "Bạn không có quyền thực hiện chức năng này")
+        return user
+    return dependency
+
+
+def require_staff(user: User = Depends(get_current_user), session: Session = Depends(get_session)):
+    return require_permission("reviews.moderate")(user=user, session=session)
 

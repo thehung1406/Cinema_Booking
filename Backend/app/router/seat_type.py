@@ -4,7 +4,7 @@ from sqlmodel import Session
 from app.core.database import get_session
 from app.services.seat_type_service import SeatTypeService
 from app.schemas.seat_type import SeatTypeRead, SeatTypeCreate, SeatTypeUpdatePrice
-from app.utils.dependencies import get_current_user, require_staff
+from app.utils.dependencies import require_permission
 from app.models.user import User
 
 router = APIRouter(prefix="/seat-types", tags=["Seat Types"])
@@ -22,7 +22,7 @@ def get_seat_types_by_room(
 @router.post("/", response_model=SeatTypeRead, status_code=status.HTTP_201_CREATED)
 def create_seat_type(
     request: SeatTypeCreate,
-    current_user: User = Depends(require_staff),
+    current_user: User = Depends(require_permission("seat_types.manage")),
     db: Session = Depends(get_session)
 ):
     """Tạo loại ghế mới (Staff/Admin only)"""
@@ -38,7 +38,7 @@ def create_seat_type(
 def update_seat_type_price(
     seat_type_id: int,
     request: SeatTypeUpdatePrice,
-    current_user: User = Depends(require_staff),
+    current_user: User = Depends(require_permission("seat_types.manage")),
     db: Session = Depends(get_session)
 ):
     """Cập nhật giá loại ghế (Staff/Admin only).
@@ -54,7 +54,7 @@ def update_seat_type_price(
 @router.delete("/{seat_type_id}", status_code=status.HTTP_200_OK)
 def delete_seat_type(
     seat_type_id: int,
-    current_user: User = Depends(require_staff),
+    current_user: User = Depends(require_permission("seat_types.manage")),
     db: Session = Depends(get_session)
 ):
     """Xóa loại ghế (Staff/Admin only).

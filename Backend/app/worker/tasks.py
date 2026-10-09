@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta, timezone
 from sqlmodel import Session, select
-from sqlalchemy import update
+from sqlalchemy import update, or_, and_
 from redis.exceptions import LockError
 from app.worker.celery_config import celery_app
 from app.core.database import engine
@@ -34,7 +34,8 @@ def cleanup_expired_bookings():
             # 1. Tìm booking PENDING quá 10 phút (tính từ booking_date)
             statement = select(Booking).where(
                 Booking.booking_status == BookingStatus.PENDING,
-                Booking.booking_date <= ten_minutes_ago
+                or_(Booking.expires_at <= now,
+                    and_(Booking.expires_at.is_(None), Booking.booking_date <= ten_minutes_ago))
             )
             expired_bookings = session.exec(statement).all()
             
@@ -47,7 +48,7 @@ def cleanup_expired_bookings():
                         if (
                             booking.booking_status != BookingStatus.PENDING
                             or booking.payment_status != PaymentStatus.PENDING
-                            or booking.booking_date > ten_minutes_ago
+                            or (booking.expires_at > now if booking.expires_at else booking.booking_date > ten_minutes_ago)
                         ):
                             continue
 
