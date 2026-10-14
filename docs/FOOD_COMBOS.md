@@ -31,7 +31,19 @@ File: [CinemaBooking_Sequence_Diagrams_Food_Combos.vpp](diagrams/CinemaBooking_S
 - Thêm `SD12f - Chọn bỏng, nước và combo`, gồm tải thực đơn, chọn số lượng, tính tạm tiền, tiếp tục/bỏ qua và ghế hết hạn.
 - Cập nhật `SD12b` với giá vé + đồ ăn, lưu snapshot cùng transaction và ký URL VNPay theo tổng tiền.
 - Cập nhật `SD14` với đồ ăn và thành phần combo trong chi tiết đơn.
-- Giữ đủ 43 sơ đồ gốc và thêm một sơ đồ; mở sẵn `SD12f` để dễ tìm bước chọn đồ ăn. Các sơ đồ lớp/ERD cũ trong VPP vẫn là schema trước phần đồ ăn; schema mới được mô tả trong migration và SQL `008`.
+- Use case chính và `UC12` chi tiết có “Chọn bỏng, nước và combo” dưới dạng `extend` tùy chọn của “Đặt vé trực tuyến”. UC12 mô tả xác nhận/thanh toán cả vé và đồ ăn; UC14 mô tả snapshot món trong chi tiết đơn.
+- Biểu đồ lớp thực thể và ERD được cập nhật schema `008`: 28 thực thể/bảng và 34 quan hệ. Thêm `FoodItem`/`food_items`, `ComboItem`/`combo_items`, `BookingFoodItem`/`booking_food_items` cùng liên kết tới đơn vé và món trong danh mục.
+- Giữ đủ 43 sơ đồ gốc và thêm một sequence; mở sẵn `SD12f` để dễ tìm bước chọn đồ ăn.
+
+File VPP có tổng cộng 44 sơ đồ:
+
+| Loại | Số lượng | Nội dung liên quan đồ ăn |
+| --- | ---: | --- |
+| Use case chính | 1 | Chọn món là bước mở rộng tùy chọn của đặt vé |
+| Use case chi tiết | 15 | UC12 đặt vé/thanh toán; UC14 xem chi tiết đơn |
+| Sequence | 26 | SD12f chọn món; SD12b tạo đơn; SD14 lịch sử |
+| Lớp thực thể | 1 | 28 lớp thực thể, 34 quan hệ |
+| ERD | 1 | 28 bảng, 34 khóa ngoại; trường của 3 bảng mới khớp code |
 
 Bản giao đã được điều chỉnh tương thích Visual Paradigm 17.3 và kiểm tra đọc/xuất hình bằng công cụ chuẩn, không cần bỏ qua kiểm tra phiên bản. Bản đánh giá của Visual Paradigm thêm watermark vào ảnh xuất.
 
