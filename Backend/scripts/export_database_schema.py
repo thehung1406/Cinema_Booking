@@ -19,9 +19,12 @@ def export(path):
     spec = importlib.util.spec_from_file_location("schema_006", migration_path)
     migration = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(migration)
-    assert len(SQLModel.metadata.tables) == 25
+    food_spec = importlib.util.spec_from_file_location("schema_008", backend / "alembic/versions/008_food_combos.py")
+    food_migration = importlib.util.module_from_spec(food_spec)
+    food_spec.loader.exec_module(food_migration)
+    assert len(SQLModel.metadata.tables) == 28
     with path.open("w", encoding="utf-8") as handle:
-        handle.write("-- Cinema Booking schema 007: 25 application tables.\n")
+        handle.write("-- Cinema Booking schema 008: 28 application tables.\n")
         handle.write("-- FRESH DATABASE ONLY. Existing databases: python -m alembic upgrade head.\n\nBEGIN;\n")
         for table in SQLModel.metadata.sorted_tables:
             handle.write(str(CreateTable(table).compile(dialect=dialect)) + ";\n")
@@ -44,9 +47,10 @@ INSERT INTO role_permissions(role_id,permission_id)
             opts={"as_sql": True, "output_buffer": handle})
         with Operations.context(context):
             migration._install_integrity_triggers()
+            food_migration.seed_menu()
         handle.write("""
 CREATE TABLE alembic_version (version_num varchar(32) NOT NULL PRIMARY KEY);
-INSERT INTO alembic_version VALUES ('007');
+INSERT INTO alembic_version VALUES ('008');
 COMMIT;
 """)
     path.write_text("\n".join(line.rstrip() for line in path.read_text(encoding="utf-8").splitlines()) + "\n",
@@ -55,4 +59,4 @@ COMMIT;
 
 
 if __name__ == "__main__":
-    export(backend / "migrations/007_full_database.sql")
+    export(backend / "migrations/008_full_database.sql")

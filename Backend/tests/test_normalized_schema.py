@@ -92,8 +92,8 @@ def provider(monkeypatch):
     monkeypatch.setattr("app.router.payment.verify_vnpay_signature", lambda params: True)
 
 
-def test_all_25_tables_and_api_compatibility(pg, catalog):
-    assert len(SQLModel.metadata.tables) == 25
+def test_all_tables_and_api_compatibility(pg, catalog):
+    assert len(SQLModel.metadata.tables) == 28
     assert set(SQLModel.metadata.tables) <= set(inspect(pg.bind).get_table_names())
     film = FilmDetailRead.model_validate(catalog["film"])
     assert film.duration == "120 phút" and film.genre.startswith("Genre ")

@@ -8,6 +8,7 @@ from app.models.booking import Booking
 from app.repositories.booking_repo import BookingRepository
 from app.repositories.seat_repo import SeatRepository
 from app.repositories.showtime_repo import ShowtimeRepository
+from app.services.food_service import FoodService
 from app.schemas.booking import BookingCreateRequest, BookingResponse, BookingDetailResponse
 from app.utils.redis_lock import SeatLockManager
 from app.utils.enum import BookingStatus, PaymentStatus, SeatStatusEnum
@@ -116,6 +117,9 @@ class BookingService:
                 })
                 computed_total += seat_type_obj.base_price
 
+            food_lines, food_total = FoodService.quote(db, booking_request.foodItems)
+            computed_total += food_total
+
             # Validate totalAmount từ client khớp với tổng giá server
             client_total = Decimal(str(booking_request.totalAmount))
             if client_total != computed_total:
@@ -145,6 +149,7 @@ class BookingService:
                 seats=seats_data
             )
             logger.info(f"Created {len(booking_details)} booking details")
+            FoodService.save(db, booking.id, food_lines)
             
             # 6. KHÔNG cập nhật seat_status thành BOOKED ngay
             # Chỉ cập nhật khi thanh toán thành công
@@ -164,7 +169,9 @@ class BookingService:
                 paymentMethod=booking.payment_method,
                 paymentStatus=booking.payment_status,
                 bookingStatus=booking.booking_status,
-                seats=seats_data
+                seats=seats_data,
+                foodItems=[dict(**line, line_total=line["unit_price"] * line["quantity"])
+                    for line in food_lines]
             )
             
         except HTTPException:

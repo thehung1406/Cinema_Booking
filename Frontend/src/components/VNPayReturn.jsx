@@ -102,7 +102,7 @@ export default function VNPayReturn() {
   const Icon = copy[2];
   return (
     <div className="shell page-section max-w-3xl">
-      <BookingSteps current={status === "success" ? 3 : 2} />
+      <BookingSteps current={status === "success" ? 4 : 3} />
       <div className="text-center mb-8" role="status">
         <div className={`inline-flex p-4 rounded-full mb-4 ${copy[3]}`}>
           <Icon size={36} aria-hidden="true" />

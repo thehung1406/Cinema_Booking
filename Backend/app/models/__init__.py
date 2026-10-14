@@ -14,3 +14,4 @@ from .payment import Payment
 from .ticket import Ticket
 from .ai import Review, ReviewSentiment, KnowledgeDocument, KnowledgeChunk
 from .chat import AIConversation, AIMessage
+from .food import FoodItem, ComboItem, BookingFoodItem
