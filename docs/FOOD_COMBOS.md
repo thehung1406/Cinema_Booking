@@ -31,9 +31,9 @@ File: [CinemaBooking_Sequence_Diagrams_Food_Combos.vpp](diagrams/CinemaBooking_S
 - Thêm `SD12f - Chọn bỏng, nước và combo`, gồm tải thực đơn, chọn số lượng, tính tạm tiền, tiếp tục/bỏ qua và ghế hết hạn.
 - Cập nhật `SD12b` với giá vé + đồ ăn, lưu snapshot cùng transaction và ký URL VNPay theo tổng tiền.
 - Cập nhật `SD14` với đồ ăn và thành phần combo trong chi tiết đơn.
-- File nguồn được giữ nguyên. Các sơ đồ lớp/ERD cũ trong VPP vẫn là schema trước phần đồ ăn; schema mới được mô tả trong migration và SQL `008`.
+- Giữ đủ 43 sơ đồ gốc và thêm một sơ đồ; mở sẵn `SD12f` để dễ tìm bước chọn đồ ăn. Các sơ đồ lớp/ERD cũ trong VPP vẫn là schema trước phần đồ ăn; schema mới được mô tả trong migration và SQL `008`.
 
-Bản giao giữ nguyên thông tin phiên bản của VPP nguồn. Visual Paradigm 17.3 trên máy cũ hơn phiên bản nguồn; ảnh kiểm tra được xuất bằng bộ render này trên bản sao riêng. Bản đánh giá của Visual Paradigm thêm watermark vào ảnh xuất. Không thay đổi file giao qua bộ render cũ.
+Bản giao đã được điều chỉnh tương thích Visual Paradigm 17.3 và kiểm tra đọc/xuất hình bằng công cụ chuẩn, không cần bỏ qua kiểm tra phiên bản. Bản đánh giá của Visual Paradigm thêm watermark vào ảnh xuất.
 
 ## Kiểm tra
 
