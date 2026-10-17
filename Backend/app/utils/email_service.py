@@ -40,6 +40,10 @@ def send_payment_success_email(to_email: str, booking_detail: Dict) -> bool:
         "Cam on ban da su dung dich vu!",
     ]
 
+    food_lines = [f"{item['quantity']} x {item['name']}: {item['line_total']} VND"
+                  for item in booking_detail.get("foodItems", [])]
+    if food_lines:
+        body_lines[-1:-1] = ["Bong, nuoc va combo:", *food_lines]
     msg.set_content("\n".join(body_lines))
 
     try:

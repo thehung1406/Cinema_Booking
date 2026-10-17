@@ -1,6 +1,7 @@
 from typing import List, Optional
 from pydantic import BaseModel, Field
 from datetime import datetime
+from app.schemas.food import FoodSelection, BookingFoodRead
 
 
 class SeatBookingRequest(BaseModel):
@@ -15,7 +16,8 @@ class BookingCreateRequest(BaseModel):
     showtimeId: int = Field(..., alias="showtimeId", description="ID suất chiếu")
     totalAmount: float = Field(..., alias="totalAmount", description="Tổng tiền")
     paymentMethod: str = Field(..., alias="paymentMethod", description="Phương thức thanh toán")
-    seats: List[SeatBookingRequest] = Field(..., description="Danh sách ghế đặt")
+    seats: List[SeatBookingRequest] = Field(..., min_length=1, description="Danh sách ghế đặt")
+    foodItems: List[FoodSelection] = Field(default_factory=list, max_length=50)
 
     class Config:
         populate_by_name = True
@@ -32,6 +34,7 @@ class BookingResponse(BaseModel):
     paymentStatus: str = Field(..., alias="paymentStatus")
     bookingStatus: str = Field(..., alias="bookingStatus")
     seats: List[dict]
+    foodItems: List[BookingFoodRead] = Field(default_factory=list)
 
     class Config:
         populate_by_name = True
@@ -65,6 +68,7 @@ class BookingDetailResponse(BaseModel):
     
     # Danh sách ghế đã đặt
     seats: List[dict]
+    foodItems: List[BookingFoodRead] = Field(default_factory=list)
 
     class Config:
         populate_by_name = True

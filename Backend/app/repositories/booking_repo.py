@@ -13,6 +13,7 @@ from app.models.seat import Seat
 from app.models.seat_type import SeatType
 from app.models.user import User
 from app.utils.enum import BookingStatus, PaymentStatus
+from app.services.food_service import FoodService
 
 
 class BookingRepository:
@@ -157,7 +158,8 @@ class BookingRepository:
             "fullName": user.full_name,
             "email": user.email,
             "phone": user.phone,
-            "seats": seats_info
+            "seats": seats_info,
+            "foodItems": FoodService.for_bookings(db, [booking.id]).get(booking.id, [])
         }
     
     @staticmethod
@@ -214,6 +216,7 @@ class BookingRepository:
                 "price": detail.price
             })
         
+        foods_by_booking = FoodService.for_bookings(db, booking_ids)
         # Build kết quả
         result = []
         for booking, user, showtime, film, room, theater in rows:
@@ -236,7 +239,8 @@ class BookingRepository:
                 "fullName": user.full_name,
                 "email": user.email,
                 "phone": user.phone,
-                "seats": seats_by_booking.get(booking.id, [])
+                "seats": seats_by_booking.get(booking.id, []),
+                "foodItems": foods_by_booking.get(booking.id, [])
             })
         
         return result

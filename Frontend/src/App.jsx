@@ -9,6 +9,7 @@ import Movie from "./components/Movie";
 import CinemaList from "./components/CinemaList";
 import UserInfor from "./components/UserInfor";
 import SeatSelection from "./components/SeatSelection";
+import FoodSelection from "./components/FoodSelection";
 import MovieDetail from "./components/MovieDetail";
 import TicketBooking from "./components/TicketBooking";
 import VNPayReturn from "./components/VNPayReturn";
@@ -37,6 +38,7 @@ function App() {
           <Route path="payment/:bookingId" element={<PaymentPage />} />
           <Route path="payment-result" element={<VNPayReturn />} />
           <Route path="seat-selection/:showtimeId" element={<SeatSelection />} />
+          <Route path="food-selection/:showtimeId" element={<FoodSelection />} />
           <Route path="user-info" element={<UserInfor />} />
           <Route path="userInfo" element={<UserInfor />} />
           <Route path="review-moderation" element={<ReviewModeration />} />

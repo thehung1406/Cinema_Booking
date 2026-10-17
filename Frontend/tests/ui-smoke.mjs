@@ -230,9 +230,11 @@ await context.route("**/*", async (route) => {
       totalAmount: 120000,
       paymentMethod: "Online",
       seats: [{ seat_id: 3, price: 120000 }],
+      foodItems: [],
     });
     body = { bookingId: 77 };
-  } else if (path === "/bookings") body = [booking];
+  } else if (path === "/food-items") body = [];
+  else if (path === "/bookings") body = [booking];
   else if (path === "/bookings/77") {
     body = booking;
     if (bookingFail) {
@@ -424,14 +426,16 @@ try {
   await page.getByRole("button", { name: /^Ghế A3,/ }).click();
   assert.equal(
     await page
-      .getByRole("button", { name: "Tiếp tục thanh toán", exact: true })
+      .getByRole("button", { name: "Tiếp tục chọn bỏng, nước", exact: true })
       .isDisabled(),
     true,
   );
   await page.getByRole("button", { name: /^Ghế A3,/ }).click();
   await page
-    .getByRole("button", { name: "Tiếp tục thanh toán", exact: true })
+    .getByRole("button", { name: "Tiếp tục chọn bỏng, nước", exact: true })
     .click();
+  await page.getByRole("heading", { name: "Bỏng, nước & combo", exact: true }).waitFor();
+  await page.getByRole("button", { name: "Bỏ qua, chỉ mua vé", exact: true }).click();
   await page
     .getByRole("heading", { name: "Hoàn tất đơn vé", exact: true })
     .waitFor();
@@ -541,7 +545,7 @@ try {
   );
   assert.equal(
     await page
-      .getByRole("button", { name: "Tiếp tục thanh toán", exact: true })
+      .getByRole("button", { name: "Tiếp tục chọn bỏng, nước", exact: true })
       .isDisabled(),
     true,
   );

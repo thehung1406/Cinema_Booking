@@ -94,12 +94,12 @@ export default function PaymentPage() {
   const state = paymentState(booking);
   return (
     <div className="shell page-section">
-      <BookingSteps current={2} />
+      <BookingSteps current={3} />
       <div className="text-center mb-8">
         <p className="eyebrow">Kiểm tra trước khi thanh toán</p>
         <h1 className="page-title">Hoàn tất đơn vé</h1>
         <p className="text-gray-500">
-          Kiểm tra phim, suất chiếu và ghế đã chọn.
+          Kiểm tra phim, suất chiếu, ghế và bỏng, nước đã chọn.
         </p>
       </div>
       <div className="grid gap-6 lg:grid-cols-[1fr_380px] items-start">

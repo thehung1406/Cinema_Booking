@@ -16,6 +16,7 @@ from app.router.showtime import router as showtime_router
 from app.router.seat import router as seat_router
 from app.router.seat_type import router as seat_type_router
 from app.router.booking import router as booking_router
+from app.router.food import router as food_router
 from app.router.payment import router as payment_router
 from app.router.reviews import router as reviews_router
 from app.router.ai import router as ai_router
@@ -76,6 +77,7 @@ app.include_router(showtime_router)
 app.include_router(seat_router)
 app.include_router(seat_type_router)
 app.include_router(booking_router)
+app.include_router(food_router)
 app.include_router(payment_router)
 app.include_router(ai_router)
 app.include_router(ticket_router)

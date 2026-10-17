@@ -57,6 +57,24 @@ export default function BookingSummary({ booking }) {
           <p className="text-sm text-gray-500">Chưa có thông tin ghế.</p>
         )}
       </div>
+      {booking.foodItems?.length > 0 && <div className="border-t border-gray-200 mt-5 pt-5">
+        <h3 className="font-semibold mb-3">Bỏng, nước & combo</h3>
+        <div className="space-y-3 text-sm">
+          {booking.foodItems.map(item => <div key={item.food_item_id}>
+            <div className="flex justify-between gap-3">
+              <span>{item.quantity} × {item.name}</span>
+              <strong>{formatCurrency(item.line_total)}</strong>
+            </div>
+            {item.components?.length > 0 && <p className="text-xs text-gray-500 mt-1">
+              Mỗi combo: {item.components.map(p => `${p.quantity} × ${p.name}`).join(" + ")}
+            </p>}
+          </div>)}
+        </div>
+      </div>}
+      <div className="border-t border-gray-200 mt-5 pt-5 space-y-2 text-sm">
+        <div className="flex justify-between gap-3"><span>Tiền vé</span><span>{formatCurrency(booking.seats?.reduce((sum, seat) => sum + Number(seat.price), 0))}</span></div>
+        <div className="flex justify-between gap-3"><span>Bỏng, nước & combo</span><span>{formatCurrency(booking.foodItems?.reduce((sum, item) => sum + Number(item.line_total), 0) || 0)}</span></div>
+      </div>
       <div className="flex justify-between gap-3 border-t border-gray-200 mt-5 pt-5">
         <span className="font-semibold">Tổng tiền</span>
         <strong className="text-xl text-red-700">

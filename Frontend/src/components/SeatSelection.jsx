@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowRight, RefreshCw } from "lucide-react";
 import api from "../config/api";
-import { clearSession, getCurrentUser } from "../services/authStorage";
+import { getCurrentUser } from "../services/authStorage";
 import { formatCurrency, formatDate, formatTime } from "../utils/formatters";
 import { BookingSteps, Button, PageState, Poster } from "./ui/Primitives";
 
@@ -27,7 +27,6 @@ export default function SeatSelection() {
   const [notification, setNotification] = useState("");
   const [syncError, setSyncError] = useState(false);
   const [busySeat, setBusySeat] = useState(null);
-  const [bookingBusy, setBookingBusy] = useState(false);
   const [attempt, setAttempt] = useState(0);
   const operation = useRef(false);
   const applySeats = useCallback((seats) => {
@@ -95,6 +94,7 @@ export default function SeatSelection() {
     const isSelected = selectedSeats.includes(seat.seat_id);
     if (
       operation.current ||
+      seat.status === "UNAVAILABLE" ||
       (seat.status !== "AVAILABLE" && !isSelected) ||
       !requireUser()
     )
@@ -166,7 +166,7 @@ export default function SeatSelection() {
     (sum, seat) => sum + (seat.price == null ? NaN : Number(seat.price)),
     0,
   );
-  const handleBooking = async () => {
+  const handleBooking = () => {
     if (
       operation.current ||
       !selectedSeats.length ||
@@ -176,44 +176,9 @@ export default function SeatSelection() {
       return;
     const user = requireUser();
     if (!user) return;
-    operation.current = true;
-    setBookingBusy(true);
-    setNotification("");
-    try {
-      const response = await api.post("/bookings", {
-        userId: user.id,
-        showtimeId: parseInt(showtimeId),
-        totalAmount: total,
-        paymentMethod: "Online",
-        seats: chosen.map((s) => ({ seat_id: s.seat_id, price: s.price })),
-      });
-      navigate(`/payment/${response.data.bookingId}`);
-    } catch (err) {
-      if (err.response?.status === 401) {
-        clearSession();
-        navigate("/loginpage", {
-          state: {
-            redirectTo: `/seat-selection/${showtimeId}`,
-            message: "Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.",
-          },
-        });
-      } else {
-        setNotification(
-          typeof err.response?.data?.detail === "string"
-            ? err.response.data.detail
-            : "Không thể tạo đơn vé. Vui lòng thử lại.",
-        );
-        try {
-          const r = await api.get(`/seats/showtime/${showtimeId}`);
-          applySeats(r.data);
-        } catch {
-          setSyncError(true);
-        }
-      }
-    } finally {
-      operation.current = false;
-      setBookingBusy(false);
-    }
+    navigate(`/food-selection/${showtimeId}`, {
+      state: { selectedSeatIds: chosen.map((s) => s.seat_id) },
+    });
   };
   if (loading) return <PageState loading title="Đang tải sơ đồ ghế…" />;
   if (error)
@@ -283,7 +248,7 @@ export default function SeatSelection() {
               <Button
                 variant="ghost"
                 onClick={refreshSeats}
-                disabled={busySeat !== null || bookingBusy}
+                disabled={busySeat !== null}
               >
                 <RefreshCw size={16} />
                 Cập nhật
@@ -334,7 +299,7 @@ export default function SeatSelection() {
                         )
                         .map((seat) => {
                           const selected = selectedSeats.includes(seat.seat_id);
-                          const booked = seat.status === "BOOKED";
+                          const booked = ["BOOKED", "UNAVAILABLE"].includes(seat.status);
                           const held = seat.status === "HOLD" && !selected;
                           const type = seat.seat_type?.toLowerCase();
                           const state = booked
@@ -369,8 +334,7 @@ export default function SeatSelection() {
                                 booked ||
                                 held ||
                                 (!selected && seat.status !== "AVAILABLE") ||
-                                busySeat !== null ||
-                                bookingBusy
+                                busySeat !== null
                               }
                               onClick={() => handleSeatClick(seat)}
                             >
@@ -449,10 +413,9 @@ export default function SeatSelection() {
               syncError ||
               !Number.isFinite(total)
             }
-            busy={bookingBusy}
             onClick={handleBooking}
           >
-            {bookingBusy ? "Đang tạo đơn vé…" : "Tiếp tục thanh toán"}
+            Tiếp tục chọn bỏng, nước
             <ArrowRight size={17} />
           </Button>
           <Button

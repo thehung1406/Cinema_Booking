@@ -117,7 +117,7 @@ export function Poster({ src, title, className = "", ...props }) {
 export function BookingSteps({ current = 0 }) {
   return (
     <ol className="booking-steps" aria-label="Tiến trình đặt vé">
-      {["Lịch chiếu", "Chọn ghế", "Thanh toán", "Nhận vé"].map(
+      {["Lịch chiếu", "Chọn ghế", "Bỏng, nước", "Thanh toán", "Nhận vé"].map(
         (label, index) => (
           <li
             key={label}
