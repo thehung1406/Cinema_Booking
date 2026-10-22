@@ -131,6 +131,9 @@ export default function HomePage() {
               Duyệt đánh giá phim →
             </Link>
           )}
+          {["ADMIN", "MANAGER", "STAFF"].includes(user?.role) && (
+            <Link to="/admin" className="block text-sm text-gray-300 pb-3">Quản trị rạp chiếu →</Link>
+          )}
         </div>
       </header>
       <main id="main-content" tabIndex={-1}>

@@ -42,10 +42,11 @@ def get_current_user(
             detail="Invalid token type"
         )
 
-    user = AuthRepository.get_user(
-        session,
-        int(payload.get("sub"))
-    )
+    try:
+        user_id = int(payload.get("sub"))
+    except (TypeError, ValueError):
+        raise HTTPException(status_code=401, detail="Invalid token subject")
+    user = AuthRepository.get_user(session, user_id)
 
     if not user:
         raise HTTPException(
@@ -53,6 +54,8 @@ def get_current_user(
             detail="User not found"
         )
 
+    if not user.is_active:
+        raise HTTPException(403, "Tài khoản đã bị khóa")
     return user
 
 def get_optional_current_user(
@@ -86,7 +89,8 @@ def get_optional_current_user(
     except (ValueError, TypeError):
         return None
 
-    return AuthRepository.get_user(session, user_id)
+    user = AuthRepository.get_user(session, user_id)
+    return user if user and user.is_active else None
 
 def require_permission(code: str):
     def dependency(user: User = Depends(get_current_user), session: Session = Depends(get_session)):

@@ -55,6 +55,7 @@ services:
       - "8000:8000"
     volumes:
       - ./app:/app/app
+      - ./main.py:/app/main.py
       - ./migrations:/app/migrations
       - ./alembic.ini:/app/alembic.ini
       - ./alembic:/app/alembic
@@ -70,7 +71,7 @@ services:
       - REDIS_HOST=redis
       - REDIS_URL=redis://redis:6379/0
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/', timeout=3)"]
       interval: 10s
       timeout: 5s
       retries: 3

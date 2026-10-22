@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "test": "node --test tests/*.test.mjs",
     "test:ui": "node tests/ui-smoke.mjs",
-    "test:food": "node tests/food-flow.mjs"
+    "test:food": "node tests/food-flow.mjs",
+    "test:admin": "node tests/admin-flow.mjs"
   },
   "dependencies": {
     "@tailwindcss/aspect-ratio": "^0.4.2",

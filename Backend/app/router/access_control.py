@@ -33,10 +33,12 @@ def role_permissions(role_id: int, db: Session = Depends(get_session), admin=Dep
 
 @router.put("/users/{user_id}/role")
 def assign_role(user_id: int, body: RoleAssignment, db: Session = Depends(get_session),
-                admin=Depends(require_permission("users.manage"))):
+                admin=Depends(require_permission("roles.manage"))):
     user, role = db.get(User, user_id), db.get(Role, body.role_id)
     if not user or not role:
         raise HTTPException(404, "Người dùng hoặc vai trò không tồn tại")
+    if user.id == admin.id and user.role_id != role.id:
+        raise HTTPException(409, "Không thể tự thay đổi vai trò đang sử dụng")
     user.role_id = role.id
     db.add(user)
     db.commit()
@@ -48,6 +50,8 @@ def assign_permissions(role_id: int, body: PermissionAssignment, db: Session = D
                        admin=Depends(require_permission("roles.manage"))):
     if not db.get(Role, role_id):
         raise HTTPException(404, "Vai trò không tồn tại")
+    if role_id == admin.role_id:
+        raise HTTPException(409, "Không thể sửa quyền của vai trò đang sử dụng")
     ids = set(body.permission_ids)
     known = set(db.exec(select(Permission.id).where(Permission.id.in_(ids))).all()) if ids else set()
     if known != ids:

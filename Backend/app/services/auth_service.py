@@ -46,7 +46,7 @@ class AuthService:
     @staticmethod
     def login(session: Session, username: str, password: str):
         user = AuthRepository.get_user_by_username(session, username)
-        if not user or not verify_password(password, user.password):
+        if not user or not user.is_active or not verify_password(password, user.password):
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid username or password"

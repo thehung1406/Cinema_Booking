@@ -1,4 +1,4 @@
-import { Route, Routes } from "react-router-dom";
+import { Route, Routes, useLocation } from "react-router-dom";
 import NotFound from "./components/NotFound";
 import LoginPage from "./components/LoginPage";
 import HomePage from "./components/HomePage";
@@ -16,13 +16,30 @@ import VNPayReturn from "./components/VNPayReturn";
 import PaymentPage from "./components/PaymentPage";
 import AIAssistant from "./components/AIAssistant";
 import ReviewModeration from "./components/ReviewModeration";
+import AdminLayout from "./components/admin/AdminLayout";
+import { FilmsPage, RoomsPage, SeatsPage, ShowtimesPage, PricesPage } from "./components/admin/AdminCatalogPages";
+import { EmployeesPage, RolesPage } from "./components/admin/AdminPeoplePages";
+import { DocumentsPage, ReportsPage } from "./components/admin/AdminKnowledgeReports";
 
 
 
 function App() {
+  const location = useLocation();
   return (
     <div>
       <Routes>
+        <Route path="/admin" element={<AdminLayout />}>
+          <Route path="films" element={<FilmsPage />} />
+          <Route path="rooms" element={<RoomsPage />} />
+          <Route path="rooms/:roomId/seats" element={<SeatsPage />} />
+          <Route path="showtimes" element={<ShowtimesPage />} />
+          <Route path="prices" element={<PricesPage />} />
+          <Route path="employees" element={<EmployeesPage />} />
+          <Route path="roles" element={<RolesPage />} />
+          <Route path="documents" element={<DocumentsPage />} />
+          <Route path="reports" element={<ReportsPage />} />
+          <Route path="*" element={<NotFound />} />
+        </Route>
         <Route path="/" element={<HomePage />}>
           <Route index element={<MainHomePage />} />
           <Route path="cinema" element={<CinemaList />} />
@@ -48,7 +65,7 @@ function App() {
         <Route path="loginpage" element={<LoginPage />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
-      <AIAssistant />
+      {!location.pathname.startsWith("/admin") && <AIAssistant />}
     </div>
   );
 }

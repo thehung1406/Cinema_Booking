@@ -212,3 +212,6 @@ npm run lint
 | `MOD-08` | **Xử lý Nền & Gửi Email Vé (Celery & Background Tasks)** | ✅ **Đã hoàn thành** |
 | `MOD-09` | **Giao diện Cổng Thông Tin & Luồng Đặt Vé (UI/UX SPA React)** | ✅ **Đã hoàn thành** |
 | `MOD-10` | **Hạ Tầng, Database & DevOps (Docker Compose, Alembic OCC)** | ✅ **Đã hoàn thành** |
+| `MOD-11` | **Admin / Quản lý theo UC01–UC07** | ✅ **Đã triển khai giao diện và API** |
+
+Phần admin/quản lý truy cập tại `/admin`, gồm phim, phòng và ghế, lịch chiếu, giá vé, nhân viên/phân quyền, tài liệu chatbot và báo cáo. Cần chạy migration `009` trước khi sử dụng backend mới. Xem [hướng dẫn admin/quản lý](docs/Admin_Management.md) để biết cách chạy, quyền theo vai trò và đối chiếu thiết kế VPP.

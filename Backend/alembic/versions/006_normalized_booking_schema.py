@@ -67,9 +67,11 @@ def upgrade():
     op.add_column("films", sa.Column("duration_minutes", sa.Integer()))
     op.execute(r"""
         UPDATE films SET duration_minutes = CASE
-            WHEN duration ~* '^\s*[0-9]+\s*(phút|min|minutes)?\s*$'
+            -- Some legacy seed imports stored the Vietnamese unit as literal 'ph??t'.
+            -- Recognize that exact damaged unit; continue rejecting arbitrary suffixes.
+            WHEN duration ~* '^\s*[0-9]+\s*(phút|ph[?]{2}t|min|minutes)?\s*$'
                 THEN substring(duration FROM '[0-9]+')::integer
-            WHEN duration ~* '^\s*[0-9]+\s*(h|giờ)\s*([0-9]+\s*(phút|min|minutes)?)?\s*$'
+            WHEN duration ~* '^\s*[0-9]+\s*(h|giờ)\s*([0-9]+\s*(phút|ph[?]{2}t|min|minutes)?)?\s*$'
                 THEN (regexp_match(duration, '([0-9]+)\s*(h|giờ)', 'i'))[1]::integer * 60
                      + COALESCE((regexp_match(duration, '(h|giờ)\s*([0-9]+)', 'i'))[2]::integer, 0)
             WHEN duration ~ '^\s*[0-9]+:[0-5][0-9]\s*$'

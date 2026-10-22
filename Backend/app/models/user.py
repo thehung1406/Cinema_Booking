@@ -1,7 +1,7 @@
 from sqlmodel import SQLModel, Field, Relationship
 from typing import Optional, List
 from datetime import datetime, timezone
-from sqlalchemy import Column, DateTime
+from sqlalchemy import Boolean, Column, DateTime, true
 
 
 class User(SQLModel, table=True):
@@ -18,6 +18,7 @@ class User(SQLModel, table=True):
     avatar: Optional[str] = Field(default=None, max_length=255)
 
     role_id: int = Field(foreign_key="roles.id", ondelete="RESTRICT", index=True)
+    is_active: bool = Field(default=True, sa_column=Column(Boolean, nullable=False, server_default=true()))
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc), sa_column=Column(DateTime(timezone=True), nullable=False))
 
     # Relationships

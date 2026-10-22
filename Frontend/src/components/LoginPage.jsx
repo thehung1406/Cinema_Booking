@@ -2,7 +2,7 @@ import { Button, FormField } from "./ui/Primitives";
 import React, { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import api from "../config/api";
-import { setSession } from "../services/authStorage";
+import { getCurrentUser, setSession } from "../services/authStorage";
 import logger from "../utils/logger";
 
 const LoginPage = () => {
@@ -168,7 +168,8 @@ const LoginPage = () => {
     }
 
     // Resume the booking route supplied by the login guard.
-    navigate(location.state?.redirectTo || "/", { replace: true });
+    const landing = ["ADMIN", "MANAGER"].includes(getCurrentUser()?.role) ? "/admin" : "/";
+    navigate(location.state?.redirectTo || landing, { replace: true });
   };
   return (
     <div className="auth-page">
