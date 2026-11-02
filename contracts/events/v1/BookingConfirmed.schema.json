@@ -1,0 +1,80 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "booking_id": {
+      "exclusiveMinimum": 0,
+      "title": "Booking Id",
+      "type": "integer"
+    },
+    "payment_id": {
+      "exclusiveMinimum": 0,
+      "title": "Payment Id",
+      "type": "integer"
+    },
+    "showtime_id": {
+      "exclusiveMinimum": 0,
+      "title": "Showtime Id",
+      "type": "integer"
+    },
+    "film_id": {
+      "exclusiveMinimum": 0,
+      "title": "Film Id",
+      "type": "integer"
+    },
+    "theater_id": {
+      "exclusiveMinimum": 0,
+      "title": "Theater Id",
+      "type": "integer"
+    },
+    "show_date": {
+      "title": "Show Date",
+      "type": "string"
+    },
+    "total_amount": {
+      "anyOf": [
+        {
+          "exclusiveMinimum": 0.0,
+          "type": "number"
+        },
+        {
+          "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+          "type": "string"
+        }
+      ],
+      "title": "Total Amount"
+    },
+    "currency": {
+      "pattern": "^VND$",
+      "title": "Currency",
+      "type": "string"
+    },
+    "seat_count": {
+      "exclusiveMinimum": 0,
+      "title": "Seat Count",
+      "type": "integer"
+    },
+    "film_title": {
+      "title": "Film Title",
+      "type": "string"
+    },
+    "theater_name": {
+      "title": "Theater Name",
+      "type": "string"
+    }
+  },
+  "required": [
+    "booking_id",
+    "payment_id",
+    "showtime_id",
+    "film_id",
+    "theater_id",
+    "show_date",
+    "total_amount",
+    "currency",
+    "seat_count",
+    "film_title",
+    "theater_name"
+  ],
+  "title": "ConfirmedData",
+  "type": "object"
+}

@@ -1,0 +1,63 @@
+[
+  {
+    "table": "permissions",
+    "columns": [
+      "id",
+      "code",
+      "name"
+    ],
+    "foreign_keys": []
+  },
+  {
+    "table": "roles",
+    "columns": [
+      "id",
+      "code",
+      "name"
+    ],
+    "foreign_keys": []
+  },
+  {
+    "table": "role_permissions",
+    "columns": [
+      "role_id",
+      "permission_id"
+    ],
+    "foreign_keys": [
+      "permission_id -> permissions.id",
+      "role_id -> roles.id"
+    ]
+  },
+  {
+    "table": "users",
+    "columns": [
+      "id",
+      "username",
+      "password",
+      "email",
+      "phone",
+      "full_name",
+      "avatar",
+      "role_id",
+      "is_active",
+      "created_at"
+    ],
+    "foreign_keys": [
+      "role_id -> roles.id"
+    ]
+  },
+  {
+    "table": "login_sessions",
+    "columns": [
+      "id",
+      "user_id",
+      "refresh_digest",
+      "created_at",
+      "expires_at",
+      "revoked_at"
+    ],
+    "foreign_keys": [
+      "user_id -> users.id"
+    ]
+  }
+]

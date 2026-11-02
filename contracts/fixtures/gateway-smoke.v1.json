@@ -1,0 +1,36 @@
+{
+  "description": "Synthetic migration contract examples; no real customer/payment data. Executable tests are in gateway/tests and tests/integration.",
+  "cases": [
+    {
+      "name": "booking-with-combo",
+      "request": {
+        "method": "POST",
+        "path": "/api/bookings",
+        "body": {
+          "userId": 7,
+          "showtimeId": 1,
+          "totalAmount": 185000,
+          "paymentMethod": "VNPAY",
+          "seats": [{"seat_id": 1, "price": 75000}],
+          "foodItems": [{"food_item_id": 6, "quantity": 1}]
+        }
+      },
+      "expected": {"status": 201, "paymentStatus": "PENDING", "bookingStatus": "PENDING"}
+    },
+    {
+      "name": "missing-access-token",
+      "request": {"method": "GET", "path": "/api/auth/me"},
+      "expected": {"status": 401}
+    },
+    {
+      "name": "empty-booking",
+      "request": {"method": "POST", "path": "/api/bookings", "body": {}},
+      "expected": {"status": 422, "note": "With an authenticated test user; without authentication expect 401."}
+    },
+    {
+      "name": "signed-query-byte-preservation",
+      "request": {"method": "GET", "path": "/api/payment/vnpay-ipn", "raw_query": "vnp_OrderInfo=Ve+phim%2Bcombo&x=1&x=2&vnp_SecureHash=a%2fb%2Fc"},
+      "expected": {"upstream_raw_query": "vnp_OrderInfo=Ve+phim%2Bcombo&x=1&x=2&vnp_SecureHash=a%2fb%2Fc", "note": "Byte-preservation example, not a valid payment signature."}
+    }
+  ]
+}

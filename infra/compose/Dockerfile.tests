@@ -1,0 +1,9 @@
+FROM python:3.11-slim
+WORKDIR /workspace
+COPY packages/python-platform /opt/python-platform
+COPY services /opt/services
+RUN pip install --no-cache-dir pytest==9.0.3 redis==7.1.0 \
+    /opt/python-platform /opt/services/notification-service /opt/services/ai-service \
+    /opt/services/review-service /opt/services/identity-service /opt/services/catalog-service \
+    /opt/services/cinema-service /opt/services/booking-service /opt/services/payment-service \
+    /opt/services/reporting-service

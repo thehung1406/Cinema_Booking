@@ -1,0 +1,266 @@
+{
+  "$defs": {
+    "SalesRoom": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "exclusiveMinimum": 0,
+          "title": "Id",
+          "type": "integer"
+        },
+        "theater_id": {
+          "exclusiveMinimum": 0,
+          "title": "Theater Id",
+          "type": "integer"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "capacity": {
+          "exclusiveMinimum": 0,
+          "maximum": 2000,
+          "title": "Capacity",
+          "type": "integer"
+        },
+        "room_type": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Room Type"
+        },
+        "status": {
+          "enum": [
+            "ACTIVE",
+            "MAINTENANCE"
+          ],
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "theater_id",
+        "name",
+        "capacity",
+        "status"
+      ],
+      "title": "SalesRoom",
+      "type": "object"
+    },
+    "SalesSeat": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "exclusiveMinimum": 0,
+          "title": "Id",
+          "type": "integer"
+        },
+        "seat_name": {
+          "maxLength": 10,
+          "minLength": 1,
+          "title": "Seat Name",
+          "type": "string"
+        },
+        "seat_type_id": {
+          "exclusiveMinimum": 0,
+          "title": "Seat Type Id",
+          "type": "integer"
+        },
+        "seat_type": {
+          "maxLength": 30,
+          "minLength": 1,
+          "title": "Seat Type",
+          "type": "string"
+        },
+        "price": {
+          "anyOf": [
+            {
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,10}|(?=[\\d.]{1,13}0*$)\\d{0,10}\\.\\d{0,2}0*$)",
+              "type": "string"
+            }
+          ],
+          "title": "Price"
+        },
+        "status": {
+          "enum": [
+            "ACTIVE",
+            "INACTIVE"
+          ],
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "seat_name",
+        "seat_type_id",
+        "seat_type",
+        "price",
+        "status"
+      ],
+      "title": "SalesSeat",
+      "type": "object"
+    },
+    "SalesSnapshot": {
+      "additionalProperties": false,
+      "properties": {
+        "showtime_id": {
+          "exclusiveMinimum": 0,
+          "title": "Showtime Id",
+          "type": "integer"
+        },
+        "sales_version": {
+          "exclusiveMinimum": 0,
+          "title": "Sales Version",
+          "type": "integer"
+        },
+        "catalog_binding_id": {
+          "format": "uuid",
+          "title": "Catalog Binding Id",
+          "type": "string"
+        },
+        "film_id": {
+          "exclusiveMinimum": 0,
+          "title": "Film Id",
+          "type": "integer"
+        },
+        "format_id": {
+          "exclusiveMinimum": 0,
+          "title": "Format Id",
+          "type": "integer"
+        },
+        "film": {
+          "additionalProperties": true,
+          "title": "Film",
+          "type": "object"
+        },
+        "room": {
+          "$ref": "#/$defs/SalesRoom"
+        },
+        "theater": {
+          "$ref": "#/$defs/SalesTheater"
+        },
+        "show_date": {
+          "format": "date",
+          "title": "Show Date",
+          "type": "string"
+        },
+        "start_time": {
+          "format": "time",
+          "title": "Start Time",
+          "type": "string"
+        },
+        "end_time": {
+          "format": "time",
+          "title": "End Time",
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "ACTIVE",
+            "CANCELLED",
+            "COMPLETED"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "seat_count": {
+          "maximum": 2000,
+          "minimum": 0,
+          "title": "Seat Count",
+          "type": "integer"
+        },
+        "seats": {
+          "items": {
+            "$ref": "#/$defs/SalesSeat"
+          },
+          "maxItems": 2000,
+          "title": "Seats",
+          "type": "array"
+        }
+      },
+      "required": [
+        "showtime_id",
+        "sales_version",
+        "catalog_binding_id",
+        "film_id",
+        "format_id",
+        "film",
+        "room",
+        "theater",
+        "show_date",
+        "start_time",
+        "end_time",
+        "status",
+        "seat_count",
+        "seats"
+      ],
+      "title": "SalesSnapshot",
+      "type": "object"
+    },
+    "SalesTheater": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "exclusiveMinimum": 0,
+          "title": "Id",
+          "type": "integer"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "address": {
+          "title": "Address",
+          "type": "string"
+        },
+        "city": {
+          "title": "City",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "address",
+        "city"
+      ],
+      "title": "SalesTheater",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "epoch": {
+      "exclusiveMinimum": 0,
+      "title": "Epoch",
+      "type": "integer"
+    },
+    "snapshot": {
+      "$ref": "#/$defs/SalesSnapshot"
+    },
+    "digest": {
+      "pattern": "^[a-f0-9]{64}$",
+      "title": "Digest",
+      "type": "string"
+    }
+  },
+  "required": [
+    "epoch",
+    "snapshot",
+    "digest"
+  ],
+  "title": "ImportSales",
+  "type": "object"
+}

@@ -1,0 +1,24 @@
+[
+  {
+    "table": "booking_payment_receipts",
+    "columns": [
+      "payment_id",
+      "booking_id",
+      "booking_version",
+      "amount",
+      "outcome",
+      "reason",
+      "result",
+      "created_at"
+    ],
+    "foreign_keys": []
+  },
+  {
+    "table": "payment_ownership",
+    "columns": [
+      "id",
+      "owner"
+    ],
+    "foreign_keys": []
+  }
+]

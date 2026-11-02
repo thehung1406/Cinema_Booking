@@ -1,0 +1,189 @@
+[
+  {
+    "table": "reservations",
+    "columns": [
+      "id",
+      "user_id",
+      "showtime_id",
+      "sales_version",
+      "seat_ids",
+      "status",
+      "expires_at",
+      "created_at"
+    ],
+    "foreign_keys": []
+  },
+  {
+    "table": "bookings",
+    "columns": [
+      "id",
+      "user_id",
+      "customer_full_name",
+      "customer_email",
+      "customer_phone",
+      "catalog_film_snapshot",
+      "sales_version",
+      "food_quote_id",
+      "food_quote_version",
+      "food_quote_expires_at",
+      "showtime_id",
+      "booking_date",
+      "total_amount",
+      "payment_method",
+      "payment_status",
+      "booking_status",
+      "created_at",
+      "expires_at",
+      "reservation_id",
+      "booking_version",
+      "currency"
+    ],
+    "foreign_keys": [
+      "reservation_id -> reservations.id"
+    ]
+  },
+  {
+    "table": "seat_status",
+    "columns": [
+      "id",
+      "seat_id",
+      "showtime_id",
+      "status",
+      "version",
+      "hold_by_user_id",
+      "hold_expired_at",
+      "created_at",
+      "updated_at",
+      "sales_version",
+      "reservation_id"
+    ],
+    "foreign_keys": [
+      "reservation_id -> reservations.id"
+    ]
+  },
+  {
+    "table": "booking_details",
+    "columns": [
+      "id",
+      "booking_id",
+      "seat_id",
+      "price"
+    ],
+    "foreign_keys": [
+      "booking_id -> bookings.id"
+    ]
+  },
+  {
+    "table": "booking_food_items",
+    "columns": [
+      "id",
+      "booking_id",
+      "food_item_id",
+      "name",
+      "category",
+      "quantity",
+      "unit_price",
+      "components"
+    ],
+    "foreign_keys": [
+      "booking_id -> bookings.id"
+    ]
+  },
+  {
+    "table": "booking_idempotency",
+    "columns": [
+      "user_id",
+      "key",
+      "request_hash",
+      "booking_id",
+      "response"
+    ],
+    "foreign_keys": [
+      "booking_id -> bookings.id"
+    ]
+  },
+  {
+    "table": "checkout_snapshots",
+    "columns": [
+      "booking_id",
+      "booking_version",
+      "reservation_id",
+      "amount",
+      "currency",
+      "deadline",
+      "digest",
+      "snapshot"
+    ],
+    "foreign_keys": [
+      "booking_id -> bookings.id",
+      "reservation_id -> reservations.id"
+    ]
+  },
+  {
+    "table": "payments",
+    "columns": [
+      "id",
+      "booking_id",
+      "provider",
+      "payment_method",
+      "merchant_ref",
+      "transaction_ref",
+      "amount",
+      "currency",
+      "status",
+      "paid_at",
+      "created_at",
+      "updated_at",
+      "checkout_version"
+    ],
+    "foreign_keys": [
+      "booking_id -> bookings.id"
+    ]
+  },
+  {
+    "table": "tickets",
+    "columns": [
+      "id",
+      "booking_detail_id",
+      "ticket_code",
+      "status",
+      "issued_at",
+      "used_at"
+    ],
+    "foreign_keys": [
+      "booking_detail_id -> booking_details.id"
+    ]
+  },
+  {
+    "table": "booking_sales_configurations",
+    "columns": [
+      "showtime_id",
+      "sales_version",
+      "digest",
+      "film_id",
+      "room_id",
+      "theater_id",
+      "show_date",
+      "start_time",
+      "end_time",
+      "status",
+      "snapshot",
+      "imported_at"
+    ],
+    "foreign_keys": []
+  },
+  {
+    "table": "booking_sales_gates",
+    "columns": [
+      "showtime_id",
+      "sales_version",
+      "epoch",
+      "action",
+      "is_open"
+    ],
+    "foreign_keys": [
+      "sales_version -> booking_sales_configurations.sales_version",
+      "showtime_id -> booking_sales_configurations.showtime_id"
+    ]
+  }
+]

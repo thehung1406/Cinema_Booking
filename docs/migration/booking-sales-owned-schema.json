@@ -1,0 +1,34 @@
+[
+  {
+    "table": "booking_sales_configurations",
+    "columns": [
+      "showtime_id",
+      "sales_version",
+      "digest",
+      "film_id",
+      "room_id",
+      "theater_id",
+      "show_date",
+      "start_time",
+      "end_time",
+      "status",
+      "snapshot",
+      "imported_at"
+    ],
+    "foreign_keys": []
+  },
+  {
+    "table": "booking_sales_gates",
+    "columns": [
+      "showtime_id",
+      "sales_version",
+      "epoch",
+      "action",
+      "is_open"
+    ],
+    "foreign_keys": [
+      "sales_version -> booking_sales_configurations.sales_version",
+      "showtime_id -> booking_sales_configurations.showtime_id"
+    ]
+  }
+]

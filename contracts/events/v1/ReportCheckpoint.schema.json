@@ -1,0 +1,39 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "source": {
+      "pattern": "^(booking|payment|catalog|cinema|review)$",
+      "title": "Source",
+      "type": "string"
+    },
+    "generation": {
+      "format": "uuid",
+      "title": "Generation",
+      "type": "string"
+    },
+    "sha256": {
+      "pattern": "^[a-f0-9]{64}$",
+      "title": "Sha256",
+      "type": "string"
+    },
+    "count": {
+      "minimum": 0,
+      "title": "Count",
+      "type": "integer"
+    },
+    "as_of": {
+      "format": "date-time",
+      "title": "As Of",
+      "type": "string"
+    }
+  },
+  "required": [
+    "source",
+    "generation",
+    "sha256",
+    "count",
+    "as_of"
+  ],
+  "title": "Checkpoint",
+  "type": "object"
+}

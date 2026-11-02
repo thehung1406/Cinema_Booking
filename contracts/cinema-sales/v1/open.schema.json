@@ -1,0 +1,27 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "epoch": {
+      "exclusiveMinimum": 0,
+      "title": "Epoch",
+      "type": "integer"
+    },
+    "sales_version": {
+      "exclusiveMinimum": 0,
+      "title": "Sales Version",
+      "type": "integer"
+    },
+    "digest": {
+      "pattern": "^[a-f0-9]{64}$",
+      "title": "Digest",
+      "type": "string"
+    }
+  },
+  "required": [
+    "epoch",
+    "sales_version",
+    "digest"
+  ],
+  "title": "OpenSales",
+  "type": "object"
+}

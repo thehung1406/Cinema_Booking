@@ -1,0 +1,281 @@
+{
+  "$defs": {
+    "FoodSnapshot": {
+      "additionalProperties": false,
+      "properties": {
+        "quantity": {
+          "maximum": 20,
+          "minimum": 1,
+          "title": "Quantity",
+          "type": "integer"
+        },
+        "name": {
+          "maxLength": 150,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "line_total": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0.0,
+              "type": "number"
+            },
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            }
+          ],
+          "title": "Line Total"
+        },
+        "food_item_id": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Food Item Id"
+        },
+        "category": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Category"
+        },
+        "unit_price": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Unit Price"
+        },
+        "components": {
+          "items": {
+            "additionalProperties": true,
+            "type": "object"
+          },
+          "title": "Components",
+          "type": "array"
+        }
+      },
+      "required": [
+        "quantity",
+        "name",
+        "line_total"
+      ],
+      "title": "FoodSnapshot",
+      "type": "object"
+    },
+    "SeatSnapshot": {
+      "additionalProperties": false,
+      "properties": {
+        "seat_name": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Seat Name",
+          "type": "string"
+        },
+        "seat_id": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Seat Id"
+        },
+        "seat_type": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Seat Type"
+        },
+        "price": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Price"
+        }
+      },
+      "required": [
+        "seat_name"
+      ],
+      "title": "SeatSnapshot",
+      "type": "object"
+    },
+    "Snapshot": {
+      "additionalProperties": false,
+      "properties": {
+        "bookingId": {
+          "exclusiveMinimum": 0,
+          "title": "Bookingid",
+          "type": "integer"
+        },
+        "fullName": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Fullname"
+        },
+        "filmTitle": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Filmtitle"
+        },
+        "theaterName": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Theatername"
+        },
+        "roomName": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Roomname"
+        },
+        "showDate": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Showdate"
+        },
+        "startTime": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Starttime"
+        },
+        "totalAmount": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0.0,
+              "type": "number"
+            },
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            }
+          ],
+          "title": "Totalamount"
+        },
+        "seats": {
+          "items": {
+            "$ref": "#/$defs/SeatSnapshot"
+          },
+          "maxItems": 200,
+          "minItems": 1,
+          "title": "Seats",
+          "type": "array"
+        },
+        "foodItems": {
+          "items": {
+            "$ref": "#/$defs/FoodSnapshot"
+          },
+          "maxItems": 50,
+          "title": "Fooditems",
+          "type": "array"
+        }
+      },
+      "required": [
+        "bookingId",
+        "totalAmount",
+        "seats"
+      ],
+      "title": "Snapshot",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "to_email": {
+      "format": "email",
+      "title": "To Email",
+      "type": "string"
+    },
+    "booking_detail": {
+      "$ref": "#/$defs/Snapshot"
+    }
+  },
+  "required": [
+    "to_email",
+    "booking_detail"
+  ],
+  "title": "EmailData",
+  "type": "object"
+}

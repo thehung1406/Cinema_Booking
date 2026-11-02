@@ -1,0 +1,85 @@
+{
+  "properties": {
+    "booking_id": {
+      "exclusiveMinimum": 0,
+      "title": "Booking Id",
+      "type": "integer"
+    },
+    "booking_version": {
+      "exclusiveMinimum": 0,
+      "title": "Booking Version",
+      "type": "integer"
+    },
+    "reservation_id": {
+      "format": "uuid",
+      "title": "Reservation Id",
+      "type": "string"
+    },
+    "amount": {
+      "anyOf": [
+        {
+          "exclusiveMinimum": 0.0,
+          "type": "number"
+        },
+        {
+          "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,10}|(?=[\\d.]{1,13}0*$)\\d{0,10}\\.\\d{0,2}0*$)",
+          "type": "string"
+        }
+      ],
+      "title": "Amount"
+    },
+    "currency": {
+      "const": "VND",
+      "title": "Currency",
+      "type": "string"
+    },
+    "deadline": {
+      "format": "date-time",
+      "title": "Deadline",
+      "type": "string"
+    },
+    "digest": {
+      "pattern": "^[a-f0-9]{64}$",
+      "title": "Digest",
+      "type": "string"
+    },
+    "user_id": {
+      "exclusiveMinimum": 0,
+      "title": "User Id",
+      "type": "integer"
+    },
+    "payment_method": {
+      "title": "Payment Method",
+      "type": "string"
+    },
+    "booking_date": {
+      "format": "date-time",
+      "title": "Booking Date",
+      "type": "string"
+    },
+    "booking_status": {
+      "title": "Booking Status",
+      "type": "string"
+    },
+    "payment_status": {
+      "title": "Payment Status",
+      "type": "string"
+    }
+  },
+  "required": [
+    "booking_id",
+    "booking_version",
+    "reservation_id",
+    "amount",
+    "currency",
+    "deadline",
+    "digest",
+    "user_id",
+    "payment_method",
+    "booking_date",
+    "booking_status",
+    "payment_status"
+  ],
+  "title": "CheckoutFact",
+  "type": "object"
+}

@@ -1,0 +1,118 @@
+[
+  {
+    "table": "theaters",
+    "columns": [
+      "id",
+      "name",
+      "address",
+      "city",
+      "image",
+      "rating",
+      "technologies",
+      "special",
+      "deleted_at"
+    ],
+    "foreign_keys": []
+  },
+  {
+    "table": "cinema_rooms",
+    "columns": [
+      "id",
+      "theater_id",
+      "name",
+      "capacity",
+      "room_type",
+      "status",
+      "deleted_at",
+      "operation_id"
+    ],
+    "foreign_keys": [
+      "theater_id -> theaters.id"
+    ]
+  },
+  {
+    "table": "cinema_operations",
+    "columns": [
+      "id",
+      "room_id",
+      "kind",
+      "target_id",
+      "payload",
+      "progress",
+      "phase",
+      "status",
+      "message",
+      "result",
+      "actor_id",
+      "created_at",
+      "updated_at"
+    ],
+    "foreign_keys": [
+      "room_id -> cinema_rooms.id"
+    ]
+  },
+  {
+    "table": "seat_types",
+    "columns": [
+      "id",
+      "room_id",
+      "name",
+      "base_price"
+    ],
+    "foreign_keys": [
+      "room_id -> cinema_rooms.id"
+    ]
+  },
+  {
+    "table": "showtimes",
+    "columns": [
+      "id",
+      "film_id",
+      "room_id",
+      "format_id",
+      "show_date",
+      "start_time",
+      "end_time",
+      "status",
+      "catalog_binding_id",
+      "catalog_film_snapshot",
+      "sales_version",
+      "control_epoch",
+      "sales_state",
+      "deleted_at"
+    ],
+    "foreign_keys": [
+      "room_id -> cinema_rooms.id"
+    ]
+  },
+  {
+    "table": "sales_publications",
+    "columns": [
+      "showtime_id",
+      "sales_version",
+      "digest",
+      "snapshot",
+      "acknowledged",
+      "created_at"
+    ],
+    "foreign_keys": [
+      "showtime_id -> showtimes.id"
+    ]
+  },
+  {
+    "table": "seats",
+    "columns": [
+      "id",
+      "room_id",
+      "seat_type_id",
+      "seat_name",
+      "status",
+      "deleted_at"
+    ],
+    "foreign_keys": [
+      "room_id -> cinema_rooms.id",
+      "room_id -> seat_types.room_id",
+      "seat_type_id -> seat_types.id"
+    ]
+  }
+]
