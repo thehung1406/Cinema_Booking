@@ -99,6 +99,7 @@ export default function UserInfo() {
           : new Date(b.bookingDate) - new Date(a.bookingDate),
   );
   const statusCopy = {
+    review: ["Đã thu tiền — cần kiểm tra xác nhận vé", "text-amber-800 bg-amber-50"],
     success: ["Đã thanh toán", "text-green-800 bg-green-50"],
     pending: ["Chờ thanh toán", "text-amber-800 bg-amber-50"],
     failed: ["Đã hủy / Thanh toán thất bại", "text-red-800 bg-red-50"],
@@ -261,12 +262,12 @@ export default function UserInfo() {
                         >
                           Tiếp tục thanh toán
                         </Link>
-                      ) : state === "success" ? (
+                      ) : ["success", "review"].includes(state) ? (
                         <Link
                           className="btn btn-ghost"
                           to={`/payment-result?bookingId=${booking.id}`}
                         >
-                          Xem vé điện tử →
+                          Xem kết quả & vé điện tử →
                         </Link>
                       ) : null}
                     </div>

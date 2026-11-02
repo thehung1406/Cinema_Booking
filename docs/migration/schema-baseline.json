@@ -1,0 +1,1323 @@
+[
+  {
+    "table": "ai_chunks",
+    "columns": [
+      {
+        "name": "id",
+        "type": "INTEGER",
+        "nullable": false,
+        "primary_key": true
+      },
+      {
+        "name": "document_id",
+        "type": "INTEGER",
+        "nullable": false,
+        "primary_key": false
+      },
+      {
+        "name": "content",
+        "type": "VARCHAR(3000)",
+        "nullable": false,
+        "primary_key": false
+      },
+      {
+        "name": "embedding",
+        "type": "JSON",
+        "nullable": false,
+        "primary_key": false
+      },
+      {
+        "name": "embedding_version",
+        "type": "VARCHAR(100)",
+        "nullable": false,
+        "primary_key": false
+      }
+    ],
+    "foreign_keys": [
+      "document_id -> ai_documents.id"
+    ]
+  },
+  {
+    "table": "ai_conversations",
+    "columns": [
+      {
+        "name": "id",
+        "type": "CHAR(32)",
+        "nullable": false,
+        "primary_key": true
+      },
+      {
+        "name": "user_id",
+        "type": "INTEGER",
+        "nullable": false,
+        "primary_key": false
+      },
+      {
+        "name": "title",
+        "type": "VARCHAR(200)",
+        "nullable": false,
+        "primary_key": false
+      },
+      {
+        "name": "context",
+        "type": "JSON",
+        "nullable": false,
+        "primary_key": false
+      },
+      {
+        "name": "created_at",
+        "type": "DATETIME",
+        "nullable": false,
+        "primary_key": false
+      },
+      {
+        "name": "updated_at",
+        "type": "DATETIME",
+        "nullable": false,
+        "primary_key": false
+      }
+    ],
+    "foreign_keys": []
+  },
+  {
+    "table": "ai_documents",
+    "columns": [
+      {
+        "name": "id",
+        "type": "INTEGER",
+        "nullable": false,
+        "primary_key": true
+      },
+      {
+        "name": "source_id",
+        "type": "VARCHAR(100)",
+        "nullable": false,
+        "primary_key": false
+      },
+      {
+        "name": "title",
+        "type": "VARCHAR(200)",
+        "nullable": false,
+        "primary_key": false
+      },
+      {
+        "name": "version",
+        "type": "VARCHAR(50)",
+        "nullable": false,
+        "primary_key": false
+      },
+      {
+        "name": "source_url",
+        "type": "VARCHAR(500)",
+        "nullable": false,
+        "primary_key": false
+      },
+      {
+        "name": "approved",
+        "type": "BOOLEAN",
+        "nullable": false,
+        "primary_key": false
+      },
+      {
+        "name": "effective_at",
+        "type": "DATETIME",
+        "nullable": false,
+        "primary_key": false
+      },
+      {
+        "name": "updated_at",
+        "type": "DATETIME",
+        "nullable": false,
+        "primary_key": false
+      }
+    ],
+    "foreign_keys": []
+  },
+  {
+    "table": "ai_messages",
+    "columns": [
+      {
+        "name": "id",
+        "type": "BIGINT",
+        "nullable": false,
+        "primary_key": true
+      },
+      {
+        "name": "conversation_id",
+        "type": "CHAR(32)",
+        "nullable": false,
+        "primary_key": false
+      },
+      {
+        "name": "role",
+        "type": "VARCHAR(20)",
+        "nullable": false,
+        "primary_key": false
+      },
+      {
+        "name": "content",
+        "type": "TEXT",
+        "nullable": false,
+        "primary_key": false
+      },
+      {
+        "name": "metadata",
+        "type": "JSON",
+        "nullable": false,
+        "primary_key": false
+      },
+      {
+        "name": "created_at",
+        "type": "DATETIME",
+        "nullable": false,
+        "primary_key": false
+      }
+    ],
+    "foreign_keys": [
+      "conversation_id -> ai_conversations.id"
+    ]
+  },
+  {
+    "table": "booking_details",
+    "columns": [
+      {
+        "name": "id",
+        "type": "INTEGER",
+        "nullable": false,
+        "primary_key": true
+      },
+      {
+        "name": "booking_id",
+        "type": "INTEGER",
+        "nullable": false,
+        "primary_key": false
+      },
+      {
+        "name": "seat_id",
+        "type": "INTEGER",
+        "nullable": false,
+        "primary_key": false
+      },
+      {
+        "name": "price",
+        "type": "NUMERIC(12, 2)",
+        "nullable": false,
+        "primary_key": false
+      }
+    ],
+    "foreign_keys": [
+      "booking_id -> bookings.id"
+    ]
+  },
+  {
+    "table": "booking_food_items",
+    "columns": [
+      {
+        "name": "id",
+        "type": "INTEGER",
+        "nullable": false,
+        "primary_key": true
+      },
+      {
+        "name": "booking_id",
+        "type": "INTEGER",
+        "nullable": false,
+        "primary_key": false
+      },
+      {
+        "name": "food_item_id",
+        "type": "INTEGER",
+        "nullable": false,
+        "primary_key": false
+      },
+      {
+        "name": "name",
+        "type": "VARCHAR(150)",
+        "nullable": false,
+        "primary_key": false
+      },
+      {
+        "name": "category",
+        "type": "VARCHAR(20)",
+        "nullable": false,
+        "primary_key": false
+      },
+      {
+        "name": "quantity",
+        "type": "INTEGER",
+        "nullable": false,
+        "primary_key": false
+      },
+      {
+        "name": "unit_price",
+        "type": "NUMERIC(12, 2)",
+        "nullable": false,
+        "primary_key": false
+      },
+      {
+        "name": "components",
+        "type": "JSON",
+        "nullable": false,
+        "primary_key": false
+      }
+    ],
+    "foreign_keys": [
+      "booking_id -> bookings.id"
+    ]
+  },
+  {
+    "table": "bookings",
+    "columns": [
+      {
+        "name": "id",
+        "type": "INTEGER",
+        "nullable": false,
+        "primary_key": true
+      },
+      {
+        "name": "user_id",
+        "type": "INTEGER",
+        "nullable": false,
+        "primary_key": false
+      },
+      {
+        "name": "customer_full_name",
+        "type": "VARCHAR(100)",
+        "nullable": true,
+        "primary_key": false
+      },
+      {
+        "name": "customer_email",
+        "type": "VARCHAR(100)",
+        "nullable": true,
+        "primary_key": false
+      },
+      {
+        "name": "customer_phone",
+        "type": "VARCHAR(15)",
+        "nullable": true,
+        "primary_key": false
+      },
+      {
+        "name": "catalog_film_snapshot",
+        "type": "JSON",
+        "nullable": false,
+        "primary_key": false
+      },
+      {
+        "name": "sales_version",
+        "type": "INTEGER",
+        "nullable": true,
+        "primary_key": false
+      },
+      {
+        "name": "food_quote_id",
+        "type": "VARCHAR(36)",
+        "nullable": true,
+        "primary_key": false
+      },
+      {
+        "name": "food_quote_version",
+        "type": "INTEGER",
+        "nullable": true,
+        "primary_key": false
+      },
+      {
+        "name": "food_quote_expires_at",
+        "type": "DATETIME",
+        "nullable": true,
+        "primary_key": false
+      },
+      {
+        "name": "showtime_id",
+        "type": "INTEGER",
+        "nullable": false,
+        "primary_key": false
+      },
+      {
+        "name": "booking_date",
+        "type": "DATETIME",
+        "nullable": false,
+        "primary_key": false
+      },
+      {
+        "name": "total_amount",
+        "type": "NUMERIC(12, 2)",
+        "nullable": false,
+        "primary_key": false
+      },
+      {
+        "name": "payment_method",
+        "type": "VARCHAR(50)",
+        "nullable": true,
+        "primary_key": false
+      },
+      {
+        "name": "payment_status",
+        "type": "VARCHAR(20)",
+        "nullable": false,
+        "primary_key": false
+      },
+      {
+        "name": "booking_status",
+        "type": "VARCHAR(20)",
+        "nullable": false,
+        "primary_key": false
+      },
+      {
+        "name": "created_at",
+        "type": "DATETIME",
+        "nullable": false,
+        "primary_key": false
+      },
+      {
+        "name": "expires_at",
+        "type": "DATETIME",
+        "nullable": true,
+        "primary_key": false
+      }
+    ],
+    "foreign_keys": []
+  },
+  {
+    "table": "cinema_rooms",
+    "columns": [
+      {
+        "name": "id",
+        "type": "INTEGER",
+        "nullable": false,
+        "primary_key": true
+      },
+      {
+        "name": "theater_id",
+        "type": "INTEGER",
+        "nullable": false,
+        "primary_key": false
+      },
+      {
+        "name": "name",
+        "type": "VARCHAR(50)",
+        "nullable": false,
+        "primary_key": false
+      },
+      {
+        "name": "capacity",
+        "type": "INTEGER",
+        "nullable": false,
+        "primary_key": false
+      },
+      {
+        "name": "room_type",
+        "type": "VARCHAR(50)",
+        "nullable": true,
+        "primary_key": false
+      },
+      {
+        "name": "status",
+        "type": "VARCHAR(20)",
+        "nullable": false,
+        "primary_key": false
+      },
+      {
+        "name": "deleted_at",
+        "type": "DATETIME",
+        "nullable": true,
+        "primary_key": false
+      }
+    ],
+    "foreign_keys": [
+      "theater_id -> theaters.id"
+    ]
+  },
+  {
+    "table": "combo_items",
+    "columns": [
+      {
+        "name": "id",
+        "type": "INTEGER",
+        "nullable": false,
+        "primary_key": true
+      },
+      {
+        "name": "combo_id",
+        "type": "INTEGER",
+        "nullable": false,
+        "primary_key": false
+      },
+      {
+        "name": "food_item_id",
+        "type": "INTEGER",
+        "nullable": false,
+        "primary_key": false
+      },
+      {
+        "name": "quantity",
+        "type": "INTEGER",
+        "nullable": false,
+        "primary_key": false
+      }
+    ],
+    "foreign_keys": [
+      "combo_id -> food_items.id",
+      "food_item_id -> food_items.id"
+    ]
+  },
+  {
+    "table": "film_formats",
+    "columns": [
+      {
+        "name": "film_id",
+        "type": "INTEGER",
+        "nullable": false,
+        "primary_key": true
+      },
+      {
+        "name": "format_id",
+        "type": "INTEGER",
+        "nullable": false,
+        "primary_key": true
+      }
+    ],
+    "foreign_keys": [
+      "film_id -> films.id",
+      "format_id -> formats.id"
+    ]
+  },
+  {
+    "table": "film_genres",
+    "columns": [
+      {
+        "name": "film_id",
+        "type": "INTEGER",
+        "nullable": false,
+        "primary_key": true
+      },
+      {
+        "name": "genre_id",
+        "type": "INTEGER",
+        "nullable": false,
+        "primary_key": true
+      }
+    ],
+    "foreign_keys": [
+      "film_id -> films.id",
+      "genre_id -> genres.id"
+    ]
+  },
+  {
+    "table": "films",
+    "columns": [
+      {
+        "name": "id",
+        "type": "INTEGER",
+        "nullable": false,
+        "primary_key": true
+      },
+      {
+        "name": "catalog_version",
+        "type": "INTEGER",
+        "nullable": false,
+        "primary_key": false
+      },
+      {
+        "name": "title",
+        "type": "VARCHAR(100)",
+        "nullable": false,
+        "primary_key": false
+      },
+      {
+        "name": "image",
+        "type": "VARCHAR(255)",
+        "nullable": true,
+        "primary_key": false
+      },
+      {
+        "name": "rating",
+        "type": "VARCHAR(10)",
+        "nullable": true,
+        "primary_key": false
+      },
+      {
+        "name": "duration_minutes",
+        "type": "INTEGER",
+        "nullable": true,
+        "primary_key": false
+      },
+      {
+        "name": "language",
+        "type": "VARCHAR(50)",
+        "nullable": true,
+        "primary_key": false
+      },
+      {
+        "name": "subtitle",
+        "type": "VARCHAR(50)",
+        "nullable": true,
+        "primary_key": false
+      },
+      {
+        "name": "deleted_at",
+        "type": "DATETIME",
+        "nullable": true,
+        "primary_key": false
+      },
+      {
+        "name": "release_date",
+        "type": "DATE",
+        "nullable": true,
+        "primary_key": false
+      },
+      {
+        "name": "end_date",
+        "type": "DATE",
+        "nullable": true,
+        "primary_key": false
+      },
+      {
+        "name": "description",
+        "type": "TEXT",
+        "nullable": true,
+        "primary_key": false
+      },
+      {
+        "name": "trailer",
+        "type": "VARCHAR(255)",
+        "nullable": true,
+        "primary_key": false
+      }
+    ],
+    "foreign_keys": []
+  },
+  {
+    "table": "food_items",
+    "columns": [
+      {
+        "name": "id",
+        "type": "INTEGER",
+        "nullable": false,
+        "primary_key": true
+      },
+      {
+        "name": "name",
+        "type": "VARCHAR(150)",
+        "nullable": false,
+        "primary_key": false
+      },
+      {
+        "name": "description",
+        "type": "VARCHAR(500)",
+        "nullable": false,
+        "primary_key": false
+      },
+      {
+        "name": "category",
+        "type": "VARCHAR(20)",
+        "nullable": false,
+        "primary_key": false
+      },
+      {
+        "name": "price",
+        "type": "NUMERIC(12, 2)",
+        "nullable": false,
+        "primary_key": false
+      },
+      {
+        "name": "is_active",
+        "type": "BOOLEAN",
+        "nullable": false,
+        "primary_key": false
+      },
+      {
+        "name": "catalog_version",
+        "type": "INTEGER",
+        "nullable": false,
+        "primary_key": false
+      }
+    ],
+    "foreign_keys": []
+  },
+  {
+    "table": "formats",
+    "columns": [
+      {
+        "name": "id",
+        "type": "INTEGER",
+        "nullable": false,
+        "primary_key": true
+      },
+      {
+        "name": "code",
+        "type": "VARCHAR(20)",
+        "nullable": false,
+        "primary_key": false
+      },
+      {
+        "name": "name",
+        "type": "VARCHAR(50)",
+        "nullable": false,
+        "primary_key": false
+      }
+    ],
+    "foreign_keys": []
+  },
+  {
+    "table": "genres",
+    "columns": [
+      {
+        "name": "id",
+        "type": "INTEGER",
+        "nullable": false,
+        "primary_key": true
+      },
+      {
+        "name": "name",
+        "type": "VARCHAR(100)",
+        "nullable": false,
+        "primary_key": false
+      }
+    ],
+    "foreign_keys": []
+  },
+  {
+    "table": "payments",
+    "columns": [
+      {
+        "name": "id",
+        "type": "INTEGER",
+        "nullable": false,
+        "primary_key": true
+      },
+      {
+        "name": "booking_id",
+        "type": "INTEGER",
+        "nullable": false,
+        "primary_key": false
+      },
+      {
+        "name": "provider",
+        "type": "VARCHAR(30)",
+        "nullable": false,
+        "primary_key": false
+      },
+      {
+        "name": "payment_method",
+        "type": "VARCHAR(50)",
+        "nullable": false,
+        "primary_key": false
+      },
+      {
+        "name": "merchant_ref",
+        "type": "VARCHAR(100)",
+        "nullable": false,
+        "primary_key": false
+      },
+      {
+        "name": "transaction_ref",
+        "type": "VARCHAR(100)",
+        "nullable": true,
+        "primary_key": false
+      },
+      {
+        "name": "amount",
+        "type": "NUMERIC(12, 2)",
+        "nullable": false,
+        "primary_key": false
+      },
+      {
+        "name": "currency",
+        "type": "VARCHAR(3)",
+        "nullable": false,
+        "primary_key": false
+      },
+      {
+        "name": "status",
+        "type": "VARCHAR(20)",
+        "nullable": false,
+        "primary_key": false
+      },
+      {
+        "name": "paid_at",
+        "type": "DATETIME",
+        "nullable": true,
+        "primary_key": false
+      },
+      {
+        "name": "created_at",
+        "type": "DATETIME",
+        "nullable": false,
+        "primary_key": false
+      },
+      {
+        "name": "updated_at",
+        "type": "DATETIME",
+        "nullable": false,
+        "primary_key": false
+      }
+    ],
+    "foreign_keys": [
+      "booking_id -> bookings.id"
+    ]
+  },
+  {
+    "table": "permissions",
+    "columns": [
+      {
+        "name": "id",
+        "type": "INTEGER",
+        "nullable": false,
+        "primary_key": true
+      },
+      {
+        "name": "code",
+        "type": "VARCHAR(100)",
+        "nullable": false,
+        "primary_key": false
+      },
+      {
+        "name": "name",
+        "type": "VARCHAR(100)",
+        "nullable": false,
+        "primary_key": false
+      }
+    ],
+    "foreign_keys": []
+  },
+  {
+    "table": "review_sentiments",
+    "columns": [
+      {
+        "name": "review_id",
+        "type": "INTEGER",
+        "nullable": false,
+        "primary_key": true
+      },
+      {
+        "name": "content_version",
+        "type": "INTEGER",
+        "nullable": false,
+        "primary_key": false
+      },
+      {
+        "name": "status",
+        "type": "VARCHAR(20)",
+        "nullable": false,
+        "primary_key": false
+      },
+      {
+        "name": "label",
+        "type": "VARCHAR(20)",
+        "nullable": true,
+        "primary_key": false
+      },
+      {
+        "name": "scores",
+        "type": "JSON",
+        "nullable": false,
+        "primary_key": false
+      },
+      {
+        "name": "model_version",
+        "type": "VARCHAR(200)",
+        "nullable": true,
+        "primary_key": false
+      },
+      {
+        "name": "attempts",
+        "type": "INTEGER",
+        "nullable": false,
+        "primary_key": false
+      },
+      {
+        "name": "updated_at",
+        "type": "DATETIME",
+        "nullable": false,
+        "primary_key": false
+      }
+    ],
+    "foreign_keys": [
+      "review_id -> reviews.id"
+    ]
+  },
+  {
+    "table": "reviews",
+    "columns": [
+      {
+        "name": "id",
+        "type": "INTEGER",
+        "nullable": false,
+        "primary_key": true
+      },
+      {
+        "name": "user_id",
+        "type": "INTEGER",
+        "nullable": false,
+        "primary_key": false
+      },
+      {
+        "name": "film_id",
+        "type": "INTEGER",
+        "nullable": false,
+        "primary_key": false
+      },
+      {
+        "name": "content",
+        "type": "VARCHAR(3000)",
+        "nullable": false,
+        "primary_key": false
+      },
+      {
+        "name": "content_version",
+        "type": "INTEGER",
+        "nullable": false,
+        "primary_key": false
+      },
+      {
+        "name": "moderation_status",
+        "type": "VARCHAR(20)",
+        "nullable": false,
+        "primary_key": false
+      },
+      {
+        "name": "is_deleted",
+        "type": "BOOLEAN",
+        "nullable": false,
+        "primary_key": false
+      },
+      {
+        "name": "created_at",
+        "type": "DATETIME",
+        "nullable": false,
+        "primary_key": false
+      },
+      {
+        "name": "updated_at",
+        "type": "DATETIME",
+        "nullable": false,
+        "primary_key": false
+      }
+    ],
+    "foreign_keys": []
+  },
+  {
+    "table": "role_permissions",
+    "columns": [
+      {
+        "name": "role_id",
+        "type": "INTEGER",
+        "nullable": false,
+        "primary_key": true
+      },
+      {
+        "name": "permission_id",
+        "type": "INTEGER",
+        "nullable": false,
+        "primary_key": true
+      }
+    ],
+    "foreign_keys": [
+      "permission_id -> permissions.id",
+      "role_id -> roles.id"
+    ]
+  },
+  {
+    "table": "roles",
+    "columns": [
+      {
+        "name": "id",
+        "type": "INTEGER",
+        "nullable": false,
+        "primary_key": true
+      },
+      {
+        "name": "code",
+        "type": "VARCHAR(20)",
+        "nullable": false,
+        "primary_key": false
+      },
+      {
+        "name": "name",
+        "type": "VARCHAR(100)",
+        "nullable": false,
+        "primary_key": false
+      }
+    ],
+    "foreign_keys": []
+  },
+  {
+    "table": "seat_status",
+    "columns": [
+      {
+        "name": "id",
+        "type": "INTEGER",
+        "nullable": false,
+        "primary_key": true
+      },
+      {
+        "name": "seat_id",
+        "type": "INTEGER",
+        "nullable": false,
+        "primary_key": false
+      },
+      {
+        "name": "showtime_id",
+        "type": "INTEGER",
+        "nullable": false,
+        "primary_key": false
+      },
+      {
+        "name": "status",
+        "type": "VARCHAR(20)",
+        "nullable": false,
+        "primary_key": false
+      },
+      {
+        "name": "version",
+        "type": "INTEGER",
+        "nullable": false,
+        "primary_key": false
+      },
+      {
+        "name": "hold_by_user_id",
+        "type": "INTEGER",
+        "nullable": true,
+        "primary_key": false
+      },
+      {
+        "name": "hold_expired_at",
+        "type": "DATETIME",
+        "nullable": true,
+        "primary_key": false
+      },
+      {
+        "name": "created_at",
+        "type": "DATETIME",
+        "nullable": false,
+        "primary_key": false
+      },
+      {
+        "name": "updated_at",
+        "type": "DATETIME",
+        "nullable": false,
+        "primary_key": false
+      },
+      {
+        "name": "sales_version",
+        "type": "INTEGER",
+        "nullable": true,
+        "primary_key": false
+      }
+    ],
+    "foreign_keys": []
+  },
+  {
+    "table": "seat_types",
+    "columns": [
+      {
+        "name": "id",
+        "type": "INTEGER",
+        "nullable": false,
+        "primary_key": true
+      },
+      {
+        "name": "room_id",
+        "type": "INTEGER",
+        "nullable": false,
+        "primary_key": false
+      },
+      {
+        "name": "name",
+        "type": "VARCHAR(30)",
+        "nullable": false,
+        "primary_key": false
+      },
+      {
+        "name": "base_price",
+        "type": "NUMERIC(12, 2)",
+        "nullable": false,
+        "primary_key": false
+      }
+    ],
+    "foreign_keys": [
+      "room_id -> cinema_rooms.id"
+    ]
+  },
+  {
+    "table": "seats",
+    "columns": [
+      {
+        "name": "id",
+        "type": "INTEGER",
+        "nullable": false,
+        "primary_key": true
+      },
+      {
+        "name": "room_id",
+        "type": "INTEGER",
+        "nullable": false,
+        "primary_key": false
+      },
+      {
+        "name": "seat_type_id",
+        "type": "INTEGER",
+        "nullable": false,
+        "primary_key": false
+      },
+      {
+        "name": "seat_name",
+        "type": "VARCHAR(10)",
+        "nullable": false,
+        "primary_key": false
+      },
+      {
+        "name": "status",
+        "type": "VARCHAR(20)",
+        "nullable": false,
+        "primary_key": false
+      }
+    ],
+    "foreign_keys": [
+      "room_id -> cinema_rooms.id",
+      "seat_type_id -> seat_types.id"
+    ]
+  },
+  {
+    "table": "showtimes",
+    "columns": [
+      {
+        "name": "id",
+        "type": "INTEGER",
+        "nullable": false,
+        "primary_key": true
+      },
+      {
+        "name": "film_id",
+        "type": "INTEGER",
+        "nullable": false,
+        "primary_key": false
+      },
+      {
+        "name": "room_id",
+        "type": "INTEGER",
+        "nullable": false,
+        "primary_key": false
+      },
+      {
+        "name": "show_date",
+        "type": "DATE",
+        "nullable": false,
+        "primary_key": false
+      },
+      {
+        "name": "start_time",
+        "type": "TIME",
+        "nullable": false,
+        "primary_key": false
+      },
+      {
+        "name": "end_time",
+        "type": "TIME",
+        "nullable": false,
+        "primary_key": false
+      },
+      {
+        "name": "format_id",
+        "type": "INTEGER",
+        "nullable": false,
+        "primary_key": false
+      },
+      {
+        "name": "status",
+        "type": "VARCHAR(20)",
+        "nullable": false,
+        "primary_key": false
+      },
+      {
+        "name": "catalog_binding_id",
+        "type": "VARCHAR(36)",
+        "nullable": true,
+        "primary_key": false
+      },
+      {
+        "name": "catalog_film_snapshot",
+        "type": "JSON",
+        "nullable": false,
+        "primary_key": false
+      }
+    ],
+    "foreign_keys": [
+      "room_id -> cinema_rooms.id"
+    ]
+  },
+  {
+    "table": "theaters",
+    "columns": [
+      {
+        "name": "id",
+        "type": "INTEGER",
+        "nullable": false,
+        "primary_key": true
+      },
+      {
+        "name": "name",
+        "type": "VARCHAR(100)",
+        "nullable": false,
+        "primary_key": false
+      },
+      {
+        "name": "address",
+        "type": "VARCHAR(255)",
+        "nullable": false,
+        "primary_key": false
+      },
+      {
+        "name": "city",
+        "type": "VARCHAR(50)",
+        "nullable": false,
+        "primary_key": false
+      },
+      {
+        "name": "image",
+        "type": "VARCHAR(255)",
+        "nullable": true,
+        "primary_key": false
+      },
+      {
+        "name": "rating",
+        "type": "NUMERIC(3, 1)",
+        "nullable": true,
+        "primary_key": false
+      },
+      {
+        "name": "technologies",
+        "type": "JSONB",
+        "nullable": true,
+        "primary_key": false
+      },
+      {
+        "name": "special",
+        "type": "VARCHAR(50)",
+        "nullable": true,
+        "primary_key": false
+      },
+      {
+        "name": "deleted_at",
+        "type": "DATETIME",
+        "nullable": true,
+        "primary_key": false
+      }
+    ],
+    "foreign_keys": []
+  },
+  {
+    "table": "tickets",
+    "columns": [
+      {
+        "name": "id",
+        "type": "INTEGER",
+        "nullable": false,
+        "primary_key": true
+      },
+      {
+        "name": "booking_detail_id",
+        "type": "INTEGER",
+        "nullable": false,
+        "primary_key": false
+      },
+      {
+        "name": "ticket_code",
+        "type": "VARCHAR(100)",
+        "nullable": false,
+        "primary_key": false
+      },
+      {
+        "name": "status",
+        "type": "VARCHAR(20)",
+        "nullable": false,
+        "primary_key": false
+      },
+      {
+        "name": "issued_at",
+        "type": "DATETIME",
+        "nullable": false,
+        "primary_key": false
+      },
+      {
+        "name": "used_at",
+        "type": "DATETIME",
+        "nullable": true,
+        "primary_key": false
+      }
+    ],
+    "foreign_keys": [
+      "booking_detail_id -> booking_details.id"
+    ]
+  },
+  {
+    "table": "users",
+    "columns": [
+      {
+        "name": "id",
+        "type": "INTEGER",
+        "nullable": false,
+        "primary_key": true
+      },
+      {
+        "name": "username",
+        "type": "VARCHAR(50)",
+        "nullable": false,
+        "primary_key": false
+      },
+      {
+        "name": "password",
+        "type": "VARCHAR(100)",
+        "nullable": false,
+        "primary_key": false
+      },
+      {
+        "name": "email",
+        "type": "VARCHAR(100)",
+        "nullable": false,
+        "primary_key": false
+      },
+      {
+        "name": "phone",
+        "type": "VARCHAR(15)",
+        "nullable": true,
+        "primary_key": false
+      },
+      {
+        "name": "full_name",
+        "type": "VARCHAR(100)",
+        "nullable": true,
+        "primary_key": false
+      },
+      {
+        "name": "avatar",
+        "type": "VARCHAR(255)",
+        "nullable": true,
+        "primary_key": false
+      },
+      {
+        "name": "role_id",
+        "type": "INTEGER",
+        "nullable": false,
+        "primary_key": false
+      },
+      {
+        "name": "is_active",
+        "type": "BOOLEAN",
+        "nullable": false,
+        "primary_key": false
+      },
+      {
+        "name": "created_at",
+        "type": "DATETIME",
+        "nullable": false,
+        "primary_key": false
+      }
+    ],
+    "foreign_keys": [
+      "role_id -> roles.id"
+    ]
+  }
+]

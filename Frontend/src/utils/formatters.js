@@ -45,7 +45,7 @@ export function localDateInput(date = new Date()) {
   }).format(date);
 }
 export function paymentState(booking) {
-  if (booking?.paymentStatus === "PAID") return "success";
+  if (booking?.paymentStatus === "PAID") return booking.bookingStatus === "CONFIRMED" ? "success" : "review";
   if (
     ["FAILED", "CANCELLED"].includes(booking?.paymentStatus) ||
     ["CANCELLED", "EXPIRED"].includes(booking?.bookingStatus)

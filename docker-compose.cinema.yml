@@ -1,0 +1,77 @@
+# Eighth overlay. Frozen Cinema copy and Booking publication bootstrap.
+services:
+  fastapi:
+    environment:
+      CINEMA_STORAGE_OWNER: ${CINEMA_STORAGE_OWNER:-monolith}
+      CINEMA_SERVICE_ORIGIN: http://cinema-service:8086
+  gateway:
+    environment:
+      GATEWAY_UPSTREAMS: '{"ai":"http://ai-service:8082","review":"http://review-service:8083","identity":"http://identity-service:8084","catalog":"http://catalog-service:8085","cinema":"http://cinema-service:8086"}'
+      GATEWAY_ENABLED_DOMAINS: ${SERVICE_GATEWAY_DOMAINS:-[]}
+      GATEWAY_REQUIRED_DOMAINS: ${SERVICE_GATEWAY_REQUIRED_DOMAINS:-[]}
+  cinema-db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: cinema_owner
+      POSTGRES_PASSWORD: ${CINEMA_DB_PASSWORD:?Run prepare_messaging.py}
+      POSTGRES_DB: cinema_cinema
+    volumes: [cinemadata:/var/lib/postgresql/data]
+    networks: [backend]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cinema_owner -d cinema_cinema"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+  cinema-migrate:
+    build: &cinema-build
+      context: ..
+      dockerfile: services/cinema-service/Dockerfile
+    environment: &cinema-env
+      CINEMA_DATABASE_URL: postgresql+psycopg2://cinema_owner:${CINEMA_DB_PASSWORD}@cinema-db:5432/cinema_cinema
+      CINEMA_IDENTITY_ORIGIN: http://identity-service:8084
+      CINEMA_READ_ORIGIN: http://fastapi:8000
+      CINEMA_SERVICE_KEY: ${INTERNAL_SERVICE_KEY}
+      CINEMA_WRITES_ENABLED: ${CINEMA_WRITES_ENABLED:-false}
+      CINEMA_BOOKING_ORIGIN: http://fastapi:8000
+      CINEMA_CATALOG_ORIGIN: http://catalog-service:8085
+    command: ["alembic", "upgrade", "head"]
+    depends_on:
+      cinema-db:
+        condition: service_healthy
+    networks: [backend]
+  cinema-service:
+    build: *cinema-build
+    environment: *cinema-env
+    ports: ["127.0.0.1:8086:8086"]
+    depends_on:
+      cinema-migrate:
+        condition: service_completed_successfully
+    networks: [backend]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8086/health/ready', timeout=5)"]
+      interval: 10s
+      timeout: 8s
+      retries: 5
+  cinema-worker:
+    build: *cinema-build
+    environment: *cinema-env
+    command: ["python", "-m", "cinema_service.worker"]
+    depends_on:
+      cinema-service:
+        condition: service_healthy
+    networks: [backend]
+  cinema-backfill:
+    build: *cinema-build
+    profiles: [migration]
+    env_file: .env
+    environment: *cinema-env
+    command: ["python", "-m", "cinema_service.migrate", "--apply", "--bootstrap", "--manifest", "/migration-manifests/latest.json"]
+    volumes: ["../tmp/cinema-migration:/migration-manifests"]
+    depends_on:
+      cinema-service:
+        condition: service_healthy
+      fastapi:
+        condition: service_healthy
+    networks: [backend]
+volumes:
+  cinemadata:

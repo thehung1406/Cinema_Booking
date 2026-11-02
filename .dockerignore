@@ -1,0 +1,13 @@
+.git
+.venv
+**/node_modules
+**/__pycache__
+**/.pytest_cache
+**/.env
+**/.env.*
+**/dist
+**/artifacts
+artifacts
+tmp
+*.vpp*
+infra/broker/.runtime

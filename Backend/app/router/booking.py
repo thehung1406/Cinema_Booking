@@ -12,7 +12,12 @@ from app.schemas.booking import (
 from app.services.booking_service import BookingService
 from app.utils.dependencies import get_current_user, require_staff
 
-router = APIRouter(prefix="/bookings", tags=["Bookings"])
+from app.utils.booking_ownership import require_legacy_booking_owner
+
+def legacy_booking(db: Session = Depends(get_session)):
+    require_legacy_booking_owner(db)
+
+router = APIRouter(prefix="/bookings", tags=["Bookings"], dependencies=[Depends(legacy_booking)])
 
 
 @router.post("", response_model=BookingResponse, status_code=status.HTTP_201_CREATED)

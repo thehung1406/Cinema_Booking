@@ -251,7 +251,7 @@ await context.route("**/*", async (route) => {
       status === 400
         ? { detail: "Chữ ký kiểm thử không hợp lệ" }
         : {
-            status: returnState,
+            status: returnState, booking_id: 77, provider_status: "PAID", fulfillment_status: returnState === "success" ? "ISSUED" : "FAILED",
             booking:
               returnState === "success"
                 ? { ...booking, paymentStatus: "PAID" }
@@ -484,6 +484,7 @@ try {
     "Query code alone cannot confirm payment",
   );
   returnState = "success";
+  booking = { ...booking, paymentStatus: "PAID", bookingStatus: "CONFIRMED" };
   await page.getByRole("button", { name: "Kiểm tra lại trạng thái" }).click();
   await page
     .getByRole("heading", { name: "Thanh toán thành công", exact: true })

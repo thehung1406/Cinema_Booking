@@ -6,8 +6,9 @@ from app.schemas.ai import ChatRequest, ConversationRead, ConversationDetail
 from app.services.chat_service import chat
 from app.services.chat_history_service import list_conversations, read_conversation, delete_conversation
 from app.utils.dependencies import get_current_user
+from app.utils.ai_ownership import require_legacy_ai_route
 
-router = APIRouter(prefix="/ai", tags=["AI assistant"])
+router = APIRouter(prefix="/ai", tags=["AI assistant"], dependencies=[Depends(require_legacy_ai_route)])
 
 
 @router.post("/chat")

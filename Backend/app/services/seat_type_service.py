@@ -38,6 +38,8 @@ class SeatTypeService:
         db: Session, room_id: int, name: str, base_price: float
     ) -> dict:
         """Tạo loại ghế mới cho phòng"""
+        from app.utils.cinema_ownership import require_legacy_cinema_owner
+        require_legacy_cinema_owner(db)
         room = CinemaRoomRepository.get_by_id(db=db, room_id=room_id)
         if not room:
             raise HTTPException(
@@ -71,6 +73,8 @@ class SeatTypeService:
         db: Session, seat_type_id: int, new_price: float
     ) -> dict:
         """Cập nhật giá loại ghế — tất cả ghế cùng loại tự có giá mới"""
+        from app.utils.cinema_ownership import require_legacy_cinema_owner
+        require_legacy_cinema_owner(db)
         seat_type = SeatTypeRepository.get_by_id(db=db, seat_type_id=seat_type_id)
         if not seat_type:
             raise HTTPException(
@@ -98,6 +102,8 @@ class SeatTypeService:
     @staticmethod
     def delete_seat_type(db: Session, seat_type_id: int) -> dict:
         """Xóa loại ghế (chỉ khi không còn ghế tham chiếu)"""
+        from app.utils.cinema_ownership import require_legacy_cinema_owner
+        require_legacy_cinema_owner(db)
         seat_type = SeatTypeRepository.get_by_id(db=db, seat_type_id=seat_type_id)
         if not seat_type:
             raise HTTPException(

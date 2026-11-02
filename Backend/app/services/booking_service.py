@@ -34,6 +34,14 @@ class BookingService:
                     detail="Không thể đặt vé cho người dùng khác"
                 )
             
+            from app.utils.cinema_ownership import get_owner as cinema_owner
+            cinema = cinema_owner(db)
+            published = None
+            if cinema == "maintenance": raise HTTPException(503, "Cinema đang chuyển dữ liệu")
+            if cinema == "service":
+                from app.services.sales_service import configuration, seat_rows
+                published = configuration(db, booking_request.showtimeId, lock=True)
+                publication_seats = {seat.id: (seat, kind) for seat, kind in seat_rows(published)}
             # 2. Kiểm tra showtime
             showtime = ShowtimeRepository.get_showtime_by_id(
                 db=db, 
@@ -59,7 +67,7 @@ class BookingService:
             
             for seat_id in seat_ids:
                 # Kiểm tra ghế tồn tại
-                seat = SeatRepository.get_seat_by_id(db=db, seat_id=seat_id)
+                seat = publication_seats.get(seat_id, (None,None))[0] if published else SeatRepository.get_seat_by_id(db=db, seat_id=seat_id)
                 if not seat:
                     raise HTTPException(
                         status_code=status.HTTP_404_NOT_FOUND,
@@ -100,11 +108,13 @@ class BookingService:
                     )
                 hold_deadlines.append(seat_status.hold_expired_at)
             
+                if published and seat_status.sales_version != published.sales_version:
+                    raise HTTPException(409, "Hold không thuộc phiên bản giá đang xử lý")
             # 4. Tạo booking — validate giá từ DB, không tin client
             seats_data = []
             computed_total = Decimal("0")
             for seat_id in seat_ids:
-                seat_with_type = SeatRepository.get_seat_with_type(db=db, seat_id=seat_id)
+                seat_with_type = publication_seats.get(seat_id) if published else SeatRepository.get_seat_with_type(db=db, seat_id=seat_id)
                 if not seat_with_type:
                     raise HTTPException(
                         status_code=status.HTTP_404_NOT_FOUND,
@@ -139,6 +149,9 @@ class BookingService:
                 "expires_at": min(hold_deadlines)
             }
             
+            if published:
+                booking_data["sales_version"] = published.sales_version
+                booking_data["catalog_film_snapshot"] = dict(published.snapshot["film"])
             booking = BookingRepository.create_booking(db=db, booking_data=booking_data)
             logger.info(f"Created booking {booking.id} for user {current_user_id}")
             

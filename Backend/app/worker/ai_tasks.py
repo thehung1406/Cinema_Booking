@@ -10,6 +10,9 @@ from app.worker.celery_config import celery_app
 def analyze_review(review_id, content_version):
     if settings.SENTIMENT_BACKEND == "disabled":
         return "pending"
+    from app.utils.review_ownership import get_owner
+    if get_owner() != "monolith":
+        return "migrated"
     with Session(engine) as db:
         return process_review(db, review_id, content_version)
 
@@ -18,7 +21,11 @@ def analyze_review(review_id, content_version):
 def retry_pending_reviews():
     if settings.SENTIMENT_BACKEND == "disabled":
         return 0
+    from app.utils.review_ownership import require_legacy_review_owner, get_owner
+    if get_owner() != "monolith":
+        return 0
     with Session(engine) as db:
+        require_legacy_review_owner(db)
         rows = db.exec(select(Review.id, Review.content_version).join(ReviewSentiment).where(
             Review.is_deleted == False, Review.moderation_status == "approved",
             Review.content_version == ReviewSentiment.content_version,

@@ -15,8 +15,8 @@ class SeatStatus(SQLModel, table=True):
 
     id: Optional[int] = Field(default=None, primary_key=True)
 
-    seat_id: int = Field(foreign_key="seats.id", ondelete="RESTRICT", index=True)
-    showtime_id: int = Field(foreign_key="showtimes.id", ondelete="RESTRICT", index=True)
+    seat_id: int = Field(index=True)
+    showtime_id: int = Field(index=True)
 
     status: str = Field(default="AVAILABLE", sa_column=Column(String(20), nullable=False, server_default="AVAILABLE"))
     # AVAILABLE | HOLD | BOOKED
@@ -24,7 +24,7 @@ class SeatStatus(SQLModel, table=True):
     version: int = Field(default=0, sa_column=Column(Integer, nullable=False, server_default="0"))
 
     hold_by_user_id: Optional[int] = Field(
-        default=None, foreign_key="users.id", ondelete="SET NULL"
+        default=None
     )
     hold_expired_at: Optional[datetime] = Field(
         default=None,
@@ -40,8 +40,5 @@ class SeatStatus(SQLModel, table=True):
         sa_column=Column(DateTime(timezone=True), nullable=False)
     )
 
-    # Relationships
-    seat: "Seat" = Relationship(back_populates="seat_statuses")
-    showtime: "Showtime" = Relationship(back_populates="seat_statuses")
-    hold_user: Optional["User"] = Relationship(back_populates="seat_statuses")
+    sales_version: Optional[int] = None
 

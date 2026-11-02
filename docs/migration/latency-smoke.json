@@ -1,0 +1,61 @@
+{
+  "scope": "Read-only localhost smoke; sequential warm connections, not a load/SLA test.",
+  "http_checks": [
+    {
+      "path": "/",
+      "status": 200,
+      "body_matches_backend": true
+    },
+    {
+      "path": "/films/",
+      "status": 200,
+      "body_matches_backend": true
+    },
+    {
+      "path": "/food-items",
+      "status": 200,
+      "body_matches_backend": true
+    },
+    {
+      "path": "/auth/me",
+      "status": 401,
+      "body_matches_backend": true
+    },
+    {
+      "path": "/admin/session",
+      "status": 401,
+      "body_matches_backend": true
+    },
+    {
+      "path": "/ai/conversations",
+      "status": 401,
+      "owner": "ai",
+      "auth_required": true
+    },
+    {
+      "path": "/admin/documents",
+      "status": 401,
+      "owner": "ai",
+      "auth_required": true
+    },
+    {
+      "path": "/films/positive-trending",
+      "status": 200,
+      "owner": "review"
+    }
+  ],
+  "vite_proxy_to_gateway": true,
+  "internal_slash_redirect": true,
+  "latency": {
+    "backend": {
+      "requests": 20,
+      "median_ms": 4.72,
+      "p95_ms": 5.27
+    },
+    "gateway": {
+      "requests": 20,
+      "median_ms": 8.01,
+      "p95_ms": 9.92
+    }
+  }
+}

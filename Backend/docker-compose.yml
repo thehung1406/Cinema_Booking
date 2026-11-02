@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   postgres:
     image: postgres:15-alpine
@@ -13,7 +11,7 @@ services:
     networks:
       - backend
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      test: ["CMD-SHELL", "pg_isready -U \"$$POSTGRES_USER\""]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -46,8 +44,8 @@ services:
 
   fastapi:
     build:
-      context: .
-      dockerfile: Dockerfile
+      context: ..
+      dockerfile: Backend/Dockerfile
     container_name: fastapi_app
     restart: "no"
     env_file: .env
@@ -79,8 +77,8 @@ services:
 
   celery_worker:
     build:
-      context: .
-      dockerfile: Dockerfile
+      context: ..
+      dockerfile: Backend/Dockerfile
     container_name: celery_worker
     restart: "no"
     command: celery -A app.worker.celery_config worker --loglevel=info
@@ -101,8 +99,8 @@ services:
 
   celery_beat:
     build:
-      context: .
-      dockerfile: Dockerfile
+      context: ..
+      dockerfile: Backend/Dockerfile
     container_name: celery_beat
     restart: "no"
     command: celery -A app.worker.celery_config beat --loglevel=info
@@ -123,8 +121,8 @@ services:
 
   flower:
     build:
-      context: .
-      dockerfile: Dockerfile
+      context: ..
+      dockerfile: Backend/Dockerfile
     container_name: flower
     restart: "no"
     command: celery -A app.worker.celery_config flower --port=5555

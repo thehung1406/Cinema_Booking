@@ -18,6 +18,14 @@ def get_current_user(
     token: str = Depends(oauth2_scheme),
     session: Session = Depends(get_session)
 ):
+    from app.utils.identity_ownership import get_owner
+    owner = get_owner(session)
+    if owner == "maintenance":
+        raise HTTPException(503, "Identity đang chuyển dữ liệu")
+    if owner == "service":
+        from app.services.identity_remote import context
+        return context(token)
+
     if redis_client.get(f"blacklist:{token}"):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -65,6 +73,19 @@ def get_optional_current_user(
     if not token:
         return None
 
+    from app.utils.identity_ownership import get_owner
+    owner = get_owner(session)
+    if owner == "maintenance":
+        raise HTTPException(503, "Identity đang chuyển dữ liệu")
+    if owner == "service":
+        from app.services.identity_remote import context
+        try:
+            return context(token)
+        except HTTPException as exc:
+            if exc.status_code in {401, 403}:
+                return None
+            raise
+
     if redis_client.get(f"blacklist:{token}"):
         return None
 
@@ -94,6 +115,10 @@ def get_optional_current_user(
 
 def require_permission(code: str):
     def dependency(user: User = Depends(get_current_user), session: Session = Depends(get_session)):
+        if hasattr(user, "permissions"):
+            if code not in user.permissions:
+                raise HTTPException(403, "Bạn không có quyền thực hiện chức năng này")
+            return user
         permitted = session.exec(select(Permission.id).join(RolePermission)
             .where(RolePermission.role_id == user.role_id, Permission.code == code)).first()
         if permitted is None:

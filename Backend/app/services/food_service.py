@@ -10,6 +10,12 @@ from app.schemas.food import FoodItemRead, FoodSelection
 class FoodService:
     @staticmethod
     def get_catalog(db: Session) -> list[FoodItemRead]:
+        from app.utils.catalog_ownership import get_owner
+        owner = get_owner(db)
+        if owner != "monolith":
+            if owner != "service": raise HTTPException(503, "Catalog đang chuyển dữ liệu")
+            from app.services.catalog_remote import call
+            return [FoodItemRead.model_validate(i) for i in call("GET", "/food-items")]
         items = db.exec(select(FoodItem).order_by(FoodItem.id)).all()
         by_id = {item.id: item for item in items}
         components = {}
@@ -37,6 +43,13 @@ class FoodService:
 
     @staticmethod
     def quote(db: Session, selections: list[FoodSelection]) -> tuple[list[dict], Decimal]:
+        from app.utils.catalog_ownership import get_owner
+        owner = get_owner(db)
+        if owner != "monolith":
+            if owner != "service": raise HTTPException(503, "Catalog đang chuyển dữ liệu")
+            if not selections: return [], Decimal("0")
+            from app.services.catalog_remote import quote
+            return quote(selections)
         if not selections:
             return [], Decimal("0")
         ids = [s.food_item_id for s in selections]
@@ -57,6 +70,16 @@ class FoodService:
 
     @staticmethod
     def save(db: Session, booking_id: int, lines: list[dict]) -> None:
+        from app.services.catalog_remote import QuotedLines
+        if isinstance(lines, QuotedLines):
+            from datetime import datetime, timezone
+            from app.models import Booking
+            if lines.quote.expires_at <= datetime.now(timezone.utc):
+                raise HTTPException(409, "Quote đã hết hạn; chọn lại món")
+            booking = db.get(Booking, booking_id)
+            booking.food_quote_id, booking.food_quote_version = str(lines.quote.id), lines.quote.version
+            booking.food_quote_expires_at = lines.quote.expires_at
+            db.add(booking)
         for line in lines:
             db.add(BookingFoodItem(booking_id=booking_id, **line))
         if lines:

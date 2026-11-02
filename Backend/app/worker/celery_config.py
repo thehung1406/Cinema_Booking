@@ -33,3 +33,6 @@ celery_app.conf.beat_schedule = {
         'schedule': 60.0,  # Chạy mỗi 60 giây (1 phút)
     },
 }
+
+if settings.BOOKING_STORAGE_OWNER!="monolith":
+    celery_app.conf.beat_schedule.pop('cleanup-expired-bookings-every-minute',None)

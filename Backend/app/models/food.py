@@ -17,6 +17,7 @@ class FoodItem(SQLModel, table=True):
     category: str = Field(max_length=20)
     price: Decimal = Field(sa_column=Column(Numeric(12, 2), nullable=False))
     is_active: bool = Field(default=True)
+    catalog_version: int = Field(default=1)
 
 
 class ComboItem(SQLModel, table=True):
@@ -41,7 +42,7 @@ class BookingFoodItem(SQLModel, table=True):
     )
     id: Optional[int] = Field(default=None, primary_key=True)
     booking_id: int = Field(foreign_key="bookings.id", ondelete="RESTRICT", index=True)
-    food_item_id: int = Field(foreign_key="food_items.id", ondelete="RESTRICT", index=True)
+    food_item_id: int = Field(index=True)
     name: str = Field(max_length=150)
     category: str = Field(max_length=20)
     quantity: int

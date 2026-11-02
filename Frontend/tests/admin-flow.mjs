@@ -28,6 +28,10 @@ const rolePermissions = new Map([[1, permissions], [2, permissions.slice(0, 4)],
 let role = "ADMIN";
 let rejectSchedule = true;
 const writes = [];
+let cinemaOperation = null;
+let pendingPrice = null;
+let operationDone = false;
+
 
 await page.route("**/*", async (route) => {
   const request = route.request();
@@ -41,6 +45,14 @@ await page.route("**/*", async (route) => {
   if (path === "/admin/session") {
     if (role === "USER") return respond({ detail: "Không đủ quyền" }, 403);
     return respond({ user: { ...user, role }, permissions: role === "MANAGER" ? permissions.slice(0, 4) : permissions });
+  }
+  if (path === "/admin/cinema-operations") return respond({ items: cinemaOperation ? [cinemaOperation] : [] });
+  if (path === "/admin/cinema-operations/async-price") {
+    if (operationDone) {
+      Object.assign(prices[0], pendingPrice);
+      cinemaOperation = { ...cinemaOperation, status: "DONE", phase: "DONE", message: "Đã hoàn tất và xác nhận cấu hình bán vé" };
+    }
+    return respond(cinemaOperation);
   }
   if (path === "/admin/catalog") return respond({ films, rooms, genres: [{ id: 1, name: "Hành động" }], formats: [{ id: 1, name: "2D", code: "2D" }], theaters: [{ id: 1, name: "CGV Kiểm thử" }] });
   if (path === "/access-control/roles") return respond(roles);
@@ -83,6 +95,11 @@ await page.route("**/*", async (route) => {
       return respond({ items: filtered, total: filtered.length });
     }
     if (match[1] === "showtimes" && rejectSchedule) { rejectSchedule = false; return respond({ detail: "Lịch chiếu bị trùng trong phòng. Vui lòng chọn lại thời gian." }, 409); }
+    if (match[1] === "prices" && method === "PUT") {
+      pendingPrice = body;
+      cinemaOperation = { operation_id: "async-price", room_id: 1, status: "WAITING", phase: "DRAINING", message: "Đang chờ hold hoặc đơn đang xử lý kết thúc" };
+      return respond(cinemaOperation, 202);
+    }
     if (method === "DELETE") { items.splice(items.findIndex((item) => item.id === Number(match[2])), 1); return respond({ message: "Đã xóa" }); }
     const item = { ...body, id: Number(match[2]) || items.length + 1 };
     if (match[1] === "employees") { item.is_active = true; item.role = roles.find((r) => r.id === body.role_id)?.code; }
@@ -130,6 +147,12 @@ try {
   await page.getByRole("button", { name: "Sửa", exact: true }).click();
   await page.getByLabel("Giá vé (VNĐ) *", { exact: true }).fill("99000");
   await page.getByRole("button", { name: "Lưu thay đổi" }).click();
+  await page.getByRole("dialog").getByRole("status").filter({ hasText: "Đang chờ hold" }).waitFor();
+  assert.equal(prices[0].base_price, "75000", "202 acceptance must not display a completed price change");
+  assert.equal(await page.getByRole("dialog").getByRole("button", { name: "Lưu thay đổi" }).isDisabled(), true);
+  operationDone = true;
+  await page.getByRole("dialog").getByText("Đã hoàn tất thay đổi.", { exact: true }).waitFor();
+  await page.getByRole("dialog").getByRole("button", { name: "Đóng", exact: true }).last().click();
   await page.getByRole("cell", { name: /99.000/ }).waitFor();
 
   await page.getByRole("link", { name: "Nhân viên", exact: true }).click();

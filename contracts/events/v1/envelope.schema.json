@@ -1,0 +1,71 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "event_id": {
+      "format": "uuid",
+      "title": "Event Id",
+      "type": "string"
+    },
+    "event_type": {
+      "pattern": "^[A-Za-z][A-Za-z0-9]+\\.v[1-9][0-9]*$",
+      "title": "Event Type",
+      "type": "string"
+    },
+    "occurred_at": {
+      "format": "date-time",
+      "title": "Occurred At",
+      "type": "string"
+    },
+    "producer": {
+      "maxLength": 100,
+      "minLength": 1,
+      "title": "Producer",
+      "type": "string"
+    },
+    "aggregate_id": {
+      "maxLength": 150,
+      "minLength": 1,
+      "title": "Aggregate Id",
+      "type": "string"
+    },
+    "aggregate_version": {
+      "exclusiveMinimum": 0,
+      "title": "Aggregate Version",
+      "type": "integer"
+    },
+    "correlation_id": {
+      "maxLength": 150,
+      "minLength": 1,
+      "title": "Correlation Id",
+      "type": "string"
+    },
+    "causation_id": {
+      "anyOf": [
+        {
+          "maxLength": 150,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Causation Id"
+    },
+    "data": {
+      "additionalProperties": true,
+      "title": "Data",
+      "type": "object"
+    }
+  },
+  "required": [
+    "event_type",
+    "producer",
+    "aggregate_id",
+    "aggregate_version",
+    "correlation_id",
+    "data"
+  ],
+  "title": "EventEnvelope",
+  "type": "object"
+}

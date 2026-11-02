@@ -5,7 +5,12 @@ from app.core.database import get_session
 from app.models import User, Role, Permission, RolePermission
 from app.utils.dependencies import require_permission
 
-router = APIRouter(prefix="/access-control", tags=["Access Control"])
+from app.utils.identity_ownership import require_legacy_identity_owner
+
+def legacy_identity(db: Session = Depends(get_session)):
+    require_legacy_identity_owner(db)
+
+router = APIRouter(prefix="/access-control", tags=["Access Control"], dependencies=[Depends(legacy_identity)])
 
 
 class RoleAssignment(SQLModel):

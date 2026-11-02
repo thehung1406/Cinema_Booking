@@ -3,11 +3,13 @@ FROM python:3.11-slim
 WORKDIR /app
 
 # Cài dependency
-COPY requirements.txt .
+COPY Backend/requirements.txt .
 RUN pip install -r requirements.txt
 
 # Copy source code
-COPY . .
+COPY packages/python-platform /tmp/python-platform
+RUN pip install --no-cache-dir /tmp/python-platform
+COPY Backend/ .
 
 # Expose port
 EXPOSE 8000

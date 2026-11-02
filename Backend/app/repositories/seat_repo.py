@@ -80,6 +80,11 @@ class SeatRepository:
         Giữ ghế trong DB với Optimistic Lock.
         Chỉ thành công nếu ghế đang AVAILABLE, cùng user, hoặc HOLD đã quá hạn.
         """
+        from app.utils.cinema_ownership import get_owner as cinema_owner
+        sales_version = None
+        if cinema_owner(db) == "service":
+            from app.services.sales_service import configuration
+            sales_version = configuration(db, showtime_id, lock=True, require_open=True).sales_version
         now = datetime.now(timezone.utc)
         expired_at = now + timedelta(minutes=hold_minutes)
         seat_status = SeatRepository.get_seat_status(db, showtime_id, seat_id)
@@ -90,6 +95,7 @@ class SeatRepository:
                 showtime_id=showtime_id,
                 seat_id=seat_id,
                 status=SeatStatusEnum.HOLD,
+                sales_version=sales_version,
                 hold_by_user_id=user_id,
                 hold_expired_at=expired_at,
                 version=1,
@@ -131,6 +137,7 @@ class SeatRepository:
             )
             .values(
                 status=SeatStatusEnum.HOLD,
+                sales_version=sales_version,
                 hold_by_user_id=user_id,
                 hold_expired_at=expired_at,
                 version=current_version + 1,
@@ -149,13 +156,13 @@ class SeatRepository:
         return seat_status
 
     @staticmethod
-    def release_seat_optimistic(db: Session, showtime_id: int, seat_id: int, user_id: int) -> bool:
+    def release_seat_optimistic(db: Session, showtime_id: int, seat_id: int, user_id: int, sales_version: int | None = None) -> bool:
         """Hủy giữ ghế của user trong DB"""
         seat_status = SeatRepository.get_seat_status(db, showtime_id, seat_id)
         if not seat_status:
             return False
 
-        if seat_status.status == SeatStatusEnum.HOLD and seat_status.hold_by_user_id == user_id:
+        if seat_status.status == SeatStatusEnum.HOLD and seat_status.hold_by_user_id == user_id and (sales_version is None or seat_status.sales_version == sales_version):
             now = datetime.now(timezone.utc)
             current_version = seat_status.version
             result = db.exec(
@@ -181,7 +188,8 @@ class SeatRepository:
         db: Session,
         showtime_id: int,
         seat_id: int,
-        user_id: int
+        user_id: int,
+        sales_version: int | None = None
     ) -> SeatStatus:
         """Chuyển ghế HOLD của đúng user sang BOOKED bằng optimistic locking."""
         now = datetime.now(timezone.utc)
@@ -193,6 +201,8 @@ class SeatRepository:
                 detail="Ghế chưa được giữ hoặc đã hết hạn giữ"
             )
 
+        if sales_version is not None and seat_status.sales_version != sales_version:
+            raise HTTPException(409, "Hold thuộc phiên bản bán vé khác")
         if seat_status.status != SeatStatusEnum.HOLD:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,

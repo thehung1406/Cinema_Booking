@@ -35,7 +35,18 @@ def employees(db, query, offset, limit):
 
 
 def report(db, filters):
+    from app.utils.booking_ownership import get_owner as booking_owner
+    if booking_owner(db)=="service":
+        from app.services.booking_report import report as remote_report
+        return remote_report(db,filters)
+    if booking_owner(db)=="maintenance":
+        from fastapi import HTTPException
+        raise HTTPException(503,"Booking đang chuyển dữ liệu")
     """Sales/occupancy by show date in Vietnam; sentiments by last edit in that window."""
+    from app.utils.cinema_ownership import get_owner as cinema_owner
+    if cinema_owner(db)=="service":
+        from app.services.sales_report import report as publication_report
+        return publication_report(db,filters)
     from app.models.ai import utcnow
     show_conditions = [Showtime.show_date >= filters.start_date,
         Showtime.show_date <= filters.end_date, Showtime.status != "CANCELLED"]
@@ -65,9 +76,26 @@ def report(db, filters):
     occupied = db.exec(select(func.count(SeatStatus.id)).join(Showtime, Showtime.id == SeatStatus.showtime_id)
         .join(CinemaRoom, CinemaRoom.id == Showtime.room_id).join(Seat, Seat.id == SeatStatus.seat_id)
         .where(*show_conditions, Seat.status == "ACTIVE", SeatStatus.status == "BOOKED", valid_ticket)).one()
-    sales = db.exec(select(Film.id, Film.title, func.sum(Booking.total_amount), func.count(Booking.id))
-        .join(Showtime, Showtime.film_id == Film.id).join(Booking, Booking.showtime_id == Showtime.id)
-        .where(Booking.id.in_(eligible)).group_by(Film.id, Film.title).order_by(Film.title)).all()
+    from app.utils.catalog_ownership import get_owner as catalog_owner
+    if catalog_owner(db) == "service":
+        amounts = db.exec(select(Showtime.film_id,
+            func.sum(Booking.total_amount), func.count(Booking.id)).join(Booking, Booking.showtime_id == Showtime.id)
+            .where(Booking.id.in_(eligible)).group_by(Showtime.film_id).order_by(Showtime.film_id)).all()
+        from app.services.catalog_remote import film_batch
+        facts = film_batch([row[0] for row in amounts], include_retired=True)
+        if set(facts) != {row[0] for row in amounts}:
+            from fastapi import HTTPException
+            raise HTTPException(503, "Thiếu dữ liệu phim trong báo cáo")
+        # Keep the previous report's current Catalog label semantics while
+        # grouping money once per film; historical order labels stay snapshots.
+        sales = [(film_id, facts[film_id].title, revenue, count) for film_id, revenue, count in amounts]
+    elif catalog_owner(db) == "maintenance":
+        from fastapi import HTTPException
+        raise HTTPException(503, "Catalog đang chuyển dữ liệu")
+    else:
+        sales = db.exec(select(Film.id, Film.title, func.sum(Booking.total_amount), func.count(Booking.id))
+            .join(Showtime, Showtime.film_id == Film.id).join(Booking, Booking.showtime_id == Showtime.id)
+            .where(Booking.id.in_(eligible)).group_by(Film.id, Film.title).order_by(Film.title)).all()
     ticket_rows = db.exec(select(Showtime.film_id, func.count(Ticket.id))
         .join(Booking, Booking.showtime_id == Showtime.id)
         .join(BookingDetail, BookingDetail.booking_id == Booking.id)
@@ -79,27 +107,42 @@ def report(db, filters):
     tz = ZoneInfo("Asia/Ho_Chi_Minh")
     begin = datetime.combine(filters.start_date, time.min, tzinfo=tz)
     end = datetime.combine(filters.end_date + timedelta(days=1), time.min, tzinfo=tz)
-    review_conditions = [Review.is_deleted == False, Review.moderation_status == "approved",
-        Review.updated_at >= begin, Review.updated_at < end, Review.updated_at <= utcnow()]
-    if filters.film_id:
-        review_conditions.append(Review.film_id == filters.film_id)
-    if filters.theater_id:
-        # Reviews belong to films, not theaters: constrain to films screened at that theater.
-        review_conditions.append(Review.film_id.in_(select(Showtime.film_id)
-            .join(CinemaRoom, CinemaRoom.id == Showtime.room_id).where(*show_conditions)))
-    review_total = db.exec(select(func.count(Review.id)).where(*review_conditions)).one()
-    sentiments = dict(positive=0, neutral=0, negative=0)
-    rows = db.exec(select(ReviewSentiment.label, func.count(Review.id))
-        .join(Review, Review.id == ReviewSentiment.review_id).where(*review_conditions,
-            ReviewSentiment.content_version == Review.content_version,
-            ReviewSentiment.status == "succeeded", ReviewSentiment.label.in_(list(sentiments)))
-        .group_by(ReviewSentiment.label)).all()
-    sentiments.update(dict(rows))
-    analyzed = sum(sentiments.values())
+    from app.utils.review_ownership import get_owner
+    review_owner = get_owner(db)
+    if review_owner == "service":
+        from app.services.review_remote import report as review_report
+        film_ids = [filters.film_id] if filters.film_id else None
+        if filters.theater_id:
+            film_ids = list(db.exec(select(Showtime.film_id).join(CinemaRoom, CinemaRoom.id == Showtime.room_id)
+                .where(*show_conditions).distinct()).all())
+        db.rollback()
+        sentiment_result = review_report(filters.start_date, filters.end_date, film_ids)
+    elif review_owner == "maintenance":
+        from fastapi import HTTPException
+        raise HTTPException(503, "Review đang chuyển dữ liệu")
+    else:
+        review_conditions = [Review.is_deleted == False, Review.moderation_status == "approved",
+            Review.updated_at >= begin, Review.updated_at < end, Review.updated_at <= utcnow()]
+        if filters.film_id:
+            review_conditions.append(Review.film_id == filters.film_id)
+        if filters.theater_id:
+            # Reviews belong to films, not theaters: constrain to films screened at that theater.
+            review_conditions.append(Review.film_id.in_(select(Showtime.film_id)
+                .join(CinemaRoom, CinemaRoom.id == Showtime.room_id).where(*show_conditions)))
+        review_total = db.exec(select(func.count(Review.id)).where(*review_conditions)).one()
+        sentiments = dict(positive=0, neutral=0, negative=0)
+        rows = db.exec(select(ReviewSentiment.label, func.count(Review.id))
+            .join(Review, Review.id == ReviewSentiment.review_id).where(*review_conditions,
+                ReviewSentiment.content_version == Review.content_version,
+                ReviewSentiment.status == "succeeded", ReviewSentiment.label.in_(list(sentiments)))
+            .group_by(ReviewSentiment.label)).all()
+        sentiments.update(dict(rows))
+        analyzed = sum(sentiments.values())
+        sentiment_result = {**sentiments, "total": review_total, "pending": review_total-analyzed,
+            "coverage": round(100 * analyzed / review_total, 2) if review_total else 0}
     return dict(revenue=revenue, booking_count=booking_count, ticket_count=ticket_count,
         seat_slots=seat_slots, occupied_seats=occupied,
         occupancy=round(100 * occupied / seat_slots, 2) if seat_slots else 0,
-        sentiments={**sentiments, "total": review_total, "pending": review_total-analyzed,
-            "coverage": round(100 * analyzed / review_total, 2) if review_total else 0},
+        sentiments=sentiment_result,
         by_film=[dict(film_id=i, title=t, revenue=r, bookings=n, tickets=tickets_by_film.get(i, 0))
             for i, t, r, n in sales], as_of=utcnow(), filters=filters.model_dump())

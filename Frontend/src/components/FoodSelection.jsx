@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, ArrowRight, CupSoda, Minus, Plus, Popcorn } from "lucide-react";
 import api from "../config/api";
+import { attemptScope, readAttempt, saveAttempt } from "../services/checkoutAttempt";
 import { clearSession, getCurrentUser } from "../services/authStorage";
 import { formatCurrency, formatTime } from "../utils/formatters";
 import { BookingSteps, Button, PageState } from "./ui/Primitives";
@@ -28,6 +29,18 @@ export default function FoodSelection() {
   const [busy, setBusy] = useState(false);
   const [attempt, setAttempt] = useState(0);
   const [now, setNow] = useState(Date.now());
+  const [pendingCheckout, setPendingCheckout] = useState(null);
+  const checkoutScope = (user) => attemptScope(user.id, showtimeId, seats[0]?.reservation_id || location.state?.reservationId, seatIds.current || []);
+  useEffect(() => {
+    const user = getCurrentUser();
+    if (!user?.id || !seats.length) return;
+    const scope = attemptScope(user.id, showtimeId, seats[0]?.reservation_id || location.state?.reservationId, seatIds.current || []);
+    const pending = readAttempt(sessionStorage, scope);
+    if (pending) {
+      setPendingCheckout(pending);
+      setQuantities(Object.fromEntries((pending.payload.foodItems || []).map((item) => [item.food_item_id, item.quantity])));
+    }
+  }, [seats, showtimeId, location.state?.reservationId]);
 
   useEffect(() => {
     const user = getCurrentUser();
@@ -87,7 +100,7 @@ export default function FoodSelection() {
     [id]: Math.min(20, Math.max(0, (previous[id] || 0) + delta)) }));
 
   async function checkout(skipFood = false) {
-    if (submitting.current || !validSeats || seatError || (!skipFood && (menuError || menuLoading))) return;
+    if (submitting.current || (!pendingCheckout && (!validSeats || seatError || (!skipFood && (menuError || menuLoading))))) return;
     const user = getCurrentUser();
     if (!user?.id || !user.access_token) {
       navigate("/loginpage", { state: { redirectTo: `/seat-selection/${showtimeId}` } });
@@ -96,15 +109,23 @@ export default function FoodSelection() {
     submitting.current = true;
     setBusy(true);
     setError("");
+    const scope = checkoutScope(user);
+    let submitted;
     try {
-      const r = await api.post("/bookings", {
+      submitted = pendingCheckout || saveAttempt(sessionStorage, scope, {
         userId: user.id, showtimeId: Number(showtimeId), paymentMethod: "Online",
         totalAmount: ticketTotal + (skipFood ? 0 : foodTotal),
         seats: seats.map(s => ({ seat_id: s.seat_id, price: Number(s.price) })),
         foodItems: skipFood ? [] : selected.map(item => ({ food_item_id: item.id, quantity: quantities[item.id] })),
-      });
+        reservationId: seats[0]?.reservation_id || location.state?.reservationId || null,
+      }, crypto.randomUUID());
+      const r = await api.post("/bookings", submitted.payload, { headers: { "Idempotency-Key": submitted.key } });
+      sessionStorage.removeItem(scope); setPendingCheckout(null);
       navigate(`/payment/${r.data.bookingId}`, { replace: true });
     } catch (e) {
+      if ([400, 422].includes(e.response?.status)) {
+        sessionStorage.removeItem(scope); setPendingCheckout(null);
+      } else if (submitted) setPendingCheckout(submitted);
       if (e.response?.status === 401) {
         clearSession();
         navigate("/loginpage", { state: { redirectTo: `/seat-selection/${showtimeId}` } });
@@ -121,6 +142,8 @@ export default function FoodSelection() {
     <p className="eyebrow">Thêm hương vị cho buổi xem phim</p>
     <h1 className="page-title">Bỏng, nước & combo</h1>
     <p className="text-gray-600 mb-6">Chọn món lẻ hoặc combo yêu thích. Bạn có thể bỏ qua bước này.</p>
+    {pendingCheckout && <div className="surface mb-5"><p role="status">Yêu cầu tạo đơn trước chưa có kết quả. Thử lại để kiểm tra đúng đơn đó.</p>
+      <Button disabled={busy} onClick={() => checkout()}>Thử lại tạo đơn</Button></div>}
     {error && <p role="alert" className="bg-red-50 text-red-800 p-4 rounded-xl mb-5">{error}</p>}
     <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_330px] items-start">
       <section className="min-w-0">
@@ -143,10 +166,10 @@ export default function FoodSelection() {
               <div className="flex justify-between items-center gap-2 mt-auto">
                 <strong className="text-red-700">{formatCurrency(item.price)}</strong>
                 <div className="flex items-center gap-2">
-                  <Button variant="secondary" aria-label={`Giảm ${item.name}`} disabled={busy || !quantities[item.id]}
+                  <Button variant="secondary" aria-label={`Giảm ${item.name}`} disabled={busy || !!pendingCheckout || !quantities[item.id]}
                     onClick={() => change(item.id, -1)}><Minus size={16} /></Button>
                   <output className="w-5 text-center" aria-label={`Số lượng ${item.name}`} aria-live="polite">{quantities[item.id] || 0}</output>
-                  <Button variant="secondary" aria-label={`Thêm ${item.name}`} disabled={busy || quantities[item.id] >= 20 || !validSeats}
+                  <Button variant="secondary" aria-label={`Thêm ${item.name}`} disabled={busy || !!pendingCheckout || quantities[item.id] >= 20 || !validSeats}
                     onClick={() => change(item.id, 1)}><Plus size={16} /></Button>
                 </div>
               </div>
@@ -173,10 +196,10 @@ export default function FoodSelection() {
           <div className="flex justify-between"><dt>Bỏng, nước & combo</dt><dd>{formatCurrency(foodTotal)}</dd></div>
           <div className="flex justify-between font-bold text-lg"><dt>Tổng cộng</dt><dd className="text-red-700">{formatCurrency(ticketTotal + foodTotal)}</dd></div>
         </dl>
-        <Button className="w-full mt-5" busy={busy} disabled={!validSeats || !!seatError || !!menuError || menuLoading} onClick={() => checkout()}>
+        <Button className="w-full mt-5" busy={busy} disabled={!!pendingCheckout || !validSeats || !!seatError || !!menuError || menuLoading} onClick={() => checkout()}>
           Tiếp tục thanh toán <ArrowRight size={17} />
         </Button>
-        <Button className="w-full mt-2" variant="secondary" disabled={busy || !validSeats || !!seatError} onClick={() => checkout(true)}>Bỏ qua, chỉ mua vé</Button>
+        <Button className="w-full mt-2" variant="secondary" disabled={busy || !!pendingCheckout || !validSeats || !!seatError} onClick={() => checkout(true)}>Bỏ qua, chỉ mua vé</Button>
         <Button className="w-full mt-2" variant="ghost" disabled={busy} onClick={() => navigate(`/seat-selection/${showtimeId}`)}><ArrowLeft size={16} /> Quay lại chọn ghế</Button>
       </aside>
     </div>

@@ -36,7 +36,15 @@ class SeatService:
             )
         
         # Lấy tất cả ghế trong phòng kèm SeatType (1 query JOIN)
-        seat_rows = SeatRepository.get_seats_with_type_by_room(db=db, room_id=showtime.room_id)
+        from app.utils.cinema_ownership import get_owner as cinema_owner
+        published = cinema_owner(db) == "service"
+        if published:
+            from app.services.sales_service import seat_rows as published_seats, gate
+            seat_rows = published_seats(showtime)
+            sales_open = gate(db, showtime_id).is_open
+        else:
+            seat_rows = SeatRepository.get_seats_with_type_by_room(db=db, room_id=showtime.room_id)
+            sales_open = True
         
         if not seat_rows:
             raise HTTPException(
@@ -62,7 +70,7 @@ class SeatService:
         
         result = []
         for seat, seat_type in seat_rows:
-            if seat.status != "ACTIVE":
+            if seat.status != "ACTIVE" or (published and not sales_open and seat.id not in booked_map and seat.id not in valid_db_hold_map):
                 result.append({"seat_id": seat.id, "seat_name": seat.seat_name,
                     "seat_type": seat_type.name, "price": float(seat_type.base_price),
                     "status": SeatStatusEnum.UNAVAILABLE, "hold_expired_at": None,
@@ -142,6 +150,17 @@ class SeatService:
         - Lớp 1: Lock ghế trong Redis với TTL tự động expire
         - Lớp 2: Ghi HOLD vào DB với Optimistic Locking
         """
+        from app.utils.cinema_ownership import get_owner as cinema_owner
+        owner = cinema_owner(db)
+        published_seats = None
+        if owner == "maintenance": raise HTTPException(503, "Cinema đang chuyển dữ liệu")
+        if owner == "service":
+            from app.services.sales_service import configuration, seat_rows
+            config = configuration(db, showtime_id, lock=True, require_open=True)
+            from zoneinfo import ZoneInfo
+            if config.status != "ACTIVE" or datetime.combine(config.show_date, config.start_time) <= datetime.now(ZoneInfo("Asia/Ho_Chi_Minh")).replace(tzinfo=None):
+                raise HTTPException(409, "Suất không còn nhận giữ ghế")
+            published_seats = {seat.id: seat for seat, kind in seat_rows(config)}
         # Kiểm tra showtime
         showtime = ShowtimeRepository.get_showtime_by_id(db=db, showtime_id=showtime_id)
         if not showtime:
@@ -159,7 +178,7 @@ class SeatService:
         # ── Pre-check Phase: validate TẤT CẢ ghế TRƯỚC khi lock ──
         seats_map = {}  # seat_id -> Seat object
         for seat_id in seat_ids:
-            seat = SeatRepository.get_seat_by_id(db=db, seat_id=seat_id)
+            seat = published_seats.get(seat_id) if published_seats is not None else SeatRepository.get_seat_by_id(db=db, seat_id=seat_id)
             if not seat:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,

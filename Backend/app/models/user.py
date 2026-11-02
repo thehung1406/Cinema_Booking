@@ -22,8 +22,6 @@ class User(SQLModel, table=True):
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc), sa_column=Column(DateTime(timezone=True), nullable=False))
 
     # Relationships
-    bookings: List["Booking"] = Relationship(back_populates="user")
-    seat_statuses: List["SeatStatus"] = Relationship(back_populates="hold_user")
     role_item: "Role" = Relationship(sa_relationship_kwargs={"lazy": "joined"})
 
     @property

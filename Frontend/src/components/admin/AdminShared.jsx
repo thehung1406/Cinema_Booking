@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, useState } from "react";
+import api from "../../config/api";
 import { errorText } from "./adminData";
 
 export function PageHeading({ title, description, onCreate, createLabel = "Thêm mới" }) {
@@ -35,15 +36,33 @@ export function Editor({ title, initial, onSave, onClose, children, submitLabel 
   const [value, setValue] = useState(initial);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [operation, setOperation] = useState(null);
+  useEffect(() => {
+    if (!operation?.operation_id || ["DONE", "FAILED"].includes(operation.status)) return;
+    const controller = new AbortController();
+    const timer = setInterval(async () => {
+      try {
+        const { data } = await api.get(`/admin/cinema-operations/${operation.operation_id}`, { signal: controller.signal });
+        setOperation(data); setError("");
+        if (["DONE", "FAILED"].includes(data.status)) window.dispatchEvent(new Event("cinema-operation-updated"));
+      } catch (err) { if (err.code !== "ERR_CANCELED") setError(errorText(err)); }
+    }, 1500);
+    return () => { clearInterval(timer); controller.abort(); };
+  }, [operation?.operation_id, operation?.status]);
+  const pending = operation && !["DONE", "FAILED"].includes(operation.status);
   const set = (key) => (event) => setValue((old) => ({ ...old, [key]: event.target.value }));
   return <Dialog title={title} onClose={() => { if (!busy) onClose(); }}>
     <form onSubmit={async (event) => {
       event.preventDefault(); setBusy(true); setError("");
-      try { await onSave(value); onClose(); } catch (err) { setError(errorText(err)); } finally { setBusy(false); }
-    }}><fieldset disabled={busy} className="admin-form-fields">{children(value, set, setValue)}</fieldset>
+      try { await onSave(value); onClose(); } catch (err) { if (err.cinemaOperation) setOperation(err.cinemaOperation); else setError(errorText(err)); } finally { setBusy(false); }
+    }}><fieldset disabled={busy || !!operation} className="admin-form-fields">{children(value, set, setValue)}</fieldset>
+      {operation && <p role="status" className={operation.status === "FAILED" ? "admin-error" : "admin-notice"}>
+        {operation.status === "DONE" ? "Đã hoàn tất thay đổi." : operation.message}
+        {pending && " Bạn có thể đóng hộp thoại; tác vụ vẫn tiếp tục và hiển thị trên trang quản trị."}
+      </p>}
       {error && <p className="admin-error" role="alert">{error}</p>}
-      <footer><button type="button" disabled={busy} onClick={onClose}>Hủy</button>
-        <button className="admin-primary" disabled={busy}>{busy ? "Đang lưu…" : submitLabel}</button></footer>
+      <footer><button type="button" disabled={busy} onClick={onClose}>{operation ? "Đóng" : "Hủy"}</button>
+        <button className="admin-primary" disabled={busy || !!operation}>{busy ? "Đang lưu…" : submitLabel}</button></footer>
     </form>
   </Dialog>;
 }

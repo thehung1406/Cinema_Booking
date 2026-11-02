@@ -1,5 +1,5 @@
 import json
-from typing import List
+from typing import List, Literal
 
 from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -30,6 +30,21 @@ class Settings(BaseSettings):
     SMTP_PASSWORD: str | None = None
     SMTP_FROM: str | None = None
     SMTP_TLS: bool = True
+    INTERNAL_SERVICE_KEY: str = ""
+    NOTIFICATION_TRANSPORT: Literal["legacy", "events"] = "legacy"
+    AMQP_PUBLIC_URL: str = ""
+    AMQP_NOTIFICATION_URL: str = ""
+    AI_STORAGE_OWNER: Literal["monolith", "maintenance", "service"] = "monolith"
+    REVIEW_STORAGE_OWNER: Literal["monolith", "maintenance", "service"] = "monolith"
+    IDENTITY_STORAGE_OWNER: Literal["monolith", "maintenance", "service"] = "monolith"
+    CATALOG_STORAGE_OWNER: Literal["monolith", "maintenance", "service"] = "monolith"
+    BOOKING_STORAGE_OWNER: Literal["monolith", "maintenance", "service"] = "monolith"
+    BOOKING_SERVICE_ORIGIN: str = "http://booking-service:8087"
+    CINEMA_STORAGE_OWNER: Literal["monolith", "maintenance", "service"] = "monolith"
+    CINEMA_SERVICE_ORIGIN: str = "http://cinema-service:8086"
+    CATALOG_SERVICE_ORIGIN: str = "http://catalog-service:8085"
+    IDENTITY_SERVICE_ORIGIN: str = "http://identity-service:8084"
+    REVIEW_SERVICE_ORIGIN: str = "http://review-service:8083"
     # Disabled inference remains retryable until a reviewed artifact is installed.
     SENTIMENT_BACKEND: str = "disabled"  # disabled | sklearn | transformers
     SENTIMENT_MODEL_PATH: str = "artifacts/sentiment"

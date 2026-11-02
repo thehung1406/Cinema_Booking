@@ -14,6 +14,7 @@ class Film(SQLModel, table=True):
 
     id: Optional[int] = Field(default=None, primary_key=True)
 
+    catalog_version: int = Field(default=1)
     title: str = Field(max_length=100)
     image: Optional[str] = Field(default=None, max_length=255)
     rating: Optional[str] = Field(default=None, max_length=10)
@@ -30,7 +31,6 @@ class Film(SQLModel, table=True):
     trailer: Optional[str] = Field(default=None, max_length=255)
 
     # Relationships
-    showtimes: List["Showtime"] = Relationship(back_populates="film")
     genre_items: List["Genre"] = Relationship(link_model=FilmGenre, sa_relationship_kwargs={"lazy": "selectin", "order_by": "Genre.id"})
     format_items: List["Format"] = Relationship(link_model=FilmFormat, sa_relationship_kwargs={"lazy": "selectin", "order_by": "Format.id"})
 

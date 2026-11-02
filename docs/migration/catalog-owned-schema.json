@@ -1,0 +1,127 @@
+[
+  {
+    "table": "films",
+    "columns": [
+      "id",
+      "title",
+      "image",
+      "rating",
+      "duration_minutes",
+      "language",
+      "subtitle",
+      "release_date",
+      "end_date",
+      "description",
+      "trailer",
+      "deleted_at",
+      "catalog_version"
+    ],
+    "foreign_keys": []
+  },
+  {
+    "table": "food_items",
+    "columns": [
+      "id",
+      "name",
+      "description",
+      "category",
+      "price",
+      "is_active",
+      "catalog_version"
+    ],
+    "foreign_keys": []
+  },
+  {
+    "table": "food_quotes",
+    "columns": [
+      "id",
+      "version",
+      "lines",
+      "total",
+      "expires_at",
+      "created_at"
+    ],
+    "foreign_keys": []
+  },
+  {
+    "table": "formats",
+    "columns": [
+      "id",
+      "code",
+      "name"
+    ],
+    "foreign_keys": []
+  },
+  {
+    "table": "genres",
+    "columns": [
+      "id",
+      "name"
+    ],
+    "foreign_keys": []
+  },
+  {
+    "table": "schedule_binding_closures",
+    "columns": [
+      "id",
+      "reference"
+    ],
+    "foreign_keys": []
+  },
+  {
+    "table": "combo_items",
+    "columns": [
+      "id",
+      "combo_id",
+      "food_item_id",
+      "quantity"
+    ],
+    "foreign_keys": [
+      "combo_id -> food_items.id",
+      "food_item_id -> food_items.id"
+    ]
+  },
+  {
+    "table": "film_formats",
+    "columns": [
+      "film_id",
+      "format_id"
+    ],
+    "foreign_keys": [
+      "film_id -> films.id",
+      "format_id -> formats.id"
+    ]
+  },
+  {
+    "table": "film_genres",
+    "columns": [
+      "film_id",
+      "genre_id"
+    ],
+    "foreign_keys": [
+      "film_id -> films.id",
+      "genre_id -> genres.id"
+    ]
+  },
+  {
+    "table": "schedule_bindings",
+    "columns": [
+      "id",
+      "film_id",
+      "format_id",
+      "show_date",
+      "start_time",
+      "end_time",
+      "status",
+      "reference_state",
+      "reference",
+      "film_version",
+      "film_snapshot",
+      "created_at"
+    ],
+    "foreign_keys": [
+      "film_id -> films.id",
+      "format_id -> formats.id"
+    ]
+  }
+]

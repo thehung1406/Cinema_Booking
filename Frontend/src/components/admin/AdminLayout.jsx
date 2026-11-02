@@ -4,6 +4,7 @@ import { Film, Armchair, CalendarDays, Tags, Users, BookOpen, ChartColumn, Shiel
 import api from "../../config/api";
 import { AUTH_SESSION_CHANGED_EVENT, clearSession, getAccessToken } from "../../services/authStorage";
 import "./admin.css";
+import CinemaOperations from "./CinemaOperations";
 
 const sections = [
   ["films", "Phim", "films.manage", <Film size={19} aria-hidden="true" />],
@@ -14,6 +15,7 @@ const sections = [
   ["roles", "Phân quyền", "roles.manage", <Shield size={19} aria-hidden="true" />],
   ["documents", "Tài liệu chatbot", "knowledge.manage", <BookOpen size={19} aria-hidden="true" />],
   ["reports", "Báo cáo thống kê", "reports.view", <ChartColumn size={19} aria-hidden="true" />],
+  ["payment-reconciliation", "Đối soát thanh toán", "reports.view", <ChartColumn size={19} aria-hidden="true" />],
 ];
 
 export default function AdminLayout() {
@@ -80,6 +82,7 @@ export default function AdminLayout() {
         </div>
       </header>
       <main id="admin-content" className="admin-content">
+        {session && <CinemaOperations permissions={session.permissions} />}
         {error ? <div className="admin-panel"><h1>Không thể truy cập</h1><p role="alert">{error}</p>
           <button onClick={() => setAttempt((n) => n + 1)}>Thử lại</button> <Link to="/">Về trang chủ</Link></div>
           : !session ? <p role="status">Đang kiểm tra quyền truy cập…</p>

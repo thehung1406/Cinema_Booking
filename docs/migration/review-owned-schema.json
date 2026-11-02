@@ -1,0 +1,37 @@
+[
+  {
+    "table": "reviews",
+    "columns": [
+      "id",
+      "user_id",
+      "film_id",
+      "content",
+      "content_version",
+      "moderation_status",
+      "is_deleted",
+      "created_at",
+      "updated_at",
+      "event_version"
+    ],
+    "foreign_keys": []
+  },
+  {
+    "table": "review_sentiments",
+    "columns": [
+      "review_id",
+      "content_version",
+      "status",
+      "label",
+      "scores",
+      "model_version",
+      "attempts",
+      "updated_at",
+      "analysis_generation",
+      "lease_token",
+      "lease_until"
+    ],
+    "foreign_keys": [
+      "review_id -> reviews.id"
+    ]
+  }
+]

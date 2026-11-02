@@ -23,6 +23,10 @@ export function useAdminData(path, params = {}) {
     return () => controller.abort();
   }, [path, query, key]);
   const reload = useCallback(() => setRevision((n) => n + 1), []);
+  useEffect(() => {
+    window.addEventListener("cinema-operation-updated", reload);
+    return () => window.removeEventListener("cinema-operation-updated", reload);
+  }, [reload]);
   const current = path && result?.key === key ? result : null;
   return { data: current?.data || null, error: current?.error || "", loading: Boolean(path && !current), reload };
 }

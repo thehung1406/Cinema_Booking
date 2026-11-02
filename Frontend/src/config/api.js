@@ -31,7 +31,15 @@ api.interceptors.request.use(
 
 // Interceptor để xử lý response errors
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    if (response.status === 202 && response.data?.operation_id && /^\/?admin\//.test(response.config.url)) {
+      window.dispatchEvent(new CustomEvent("cinema-operation-submitted", { detail: response.data }));
+      const pending = new Error(response.data.message);
+      pending.cinemaOperation = response.data;
+      return Promise.reject(pending);
+    }
+    return response;
+  },
   (error) => {
     if (error.response?.status === 401) {
       // Token hết hạn hoặc không hợp lệ

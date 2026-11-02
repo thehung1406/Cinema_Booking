@@ -1,0 +1,86 @@
+[
+  {
+    "table": "payment_checkouts",
+    "columns": [
+      "booking_id",
+      "booking_version",
+      "reservation_id",
+      "user_id",
+      "amount",
+      "currency",
+      "deadline",
+      "digest",
+      "payment_method",
+      "booking_date",
+      "primary_payment_id"
+    ],
+    "foreign_keys": []
+  },
+  {
+    "table": "payments",
+    "columns": [
+      "id",
+      "booking_id",
+      "provider",
+      "payment_method",
+      "merchant_ref",
+      "transaction_ref",
+      "amount",
+      "currency",
+      "status",
+      "paid_at",
+      "created_at",
+      "updated_at",
+      "checkout_version"
+    ],
+    "foreign_keys": [
+      "booking_id -> payment_checkouts.booking_id",
+      "checkout_version -> payment_checkouts.booking_version"
+    ]
+  },
+  {
+    "table": "payment_fulfillments",
+    "columns": [
+      "payment_id",
+      "outcome",
+      "reason",
+      "updated_at"
+    ],
+    "foreign_keys": [
+      "payment_id -> payments.id"
+    ]
+  },
+  {
+    "table": "payment_reconciliation",
+    "columns": [
+      "id",
+      "payment_id",
+      "reason",
+      "reference",
+      "status",
+      "detail",
+      "created_at",
+      "updated_at"
+    ],
+    "foreign_keys": [
+      "payment_id -> payments.id"
+    ]
+  },
+  {
+    "table": "provider_results",
+    "columns": [
+      "id",
+      "payment_id",
+      "amount",
+      "transaction_ref",
+      "response_code",
+      "transaction_status",
+      "success",
+      "origin",
+      "received_at"
+    ],
+    "foreign_keys": [
+      "payment_id -> payments.id"
+    ]
+  }
+]

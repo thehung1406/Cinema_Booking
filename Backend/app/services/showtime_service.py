@@ -3,7 +3,6 @@ from datetime import date
 from fastapi import HTTPException, status
 from app.repositories.showtime_repo import ShowtimeRepository
 from app.models.showtime import Showtime
-from app.models.film import Film
 from app.models.cinema_room import CinemaRoom
 from app.models.theater import Theater
 
@@ -24,10 +23,13 @@ class ShowtimeService:
     
     @staticmethod
     def get_showtime_by_id(db: Session, showtime_id: int):
+        from app.utils.cinema_ownership import get_owner as cinema_owner
+        if cinema_owner(db)=="service":
+            from app.services.cinema_remote import call
+            return call("GET",f"/showtimes/{showtime_id}")
         # Single JOIN query thay vì 4 query riêng biệt
         stmt = (
-            select(Showtime, Film, CinemaRoom, Theater)
-            .join(Film, Film.id == Showtime.film_id)
+            select(Showtime, CinemaRoom, Theater)
             .join(CinemaRoom, CinemaRoom.id == Showtime.room_id)
             .join(Theater, Theater.id == CinemaRoom.theater_id)
             .where(Showtime.id == showtime_id)
@@ -40,7 +42,9 @@ class ShowtimeService:
                 detail="Không tìm thấy suất chiếu"
             )
 
-        showtime, film, room, theater = result
+        showtime, room, theater = result
+        from app.services.catalog_remote import show_film
+        film = show_film(db, showtime)
 
         # Trả về đầy đủ thông tin
         return {

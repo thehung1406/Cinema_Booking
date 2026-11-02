@@ -1,0 +1,55 @@
+[
+  {
+    "table": "ai_chunks",
+    "columns": [
+      "id",
+      "document_id",
+      "content",
+      "embedding",
+      "embedding_version"
+    ],
+    "foreign_keys": [
+      "document_id -> ai_documents.id"
+    ]
+  },
+  {
+    "table": "ai_conversations",
+    "columns": [
+      "id",
+      "user_id",
+      "title",
+      "context",
+      "created_at",
+      "updated_at"
+    ],
+    "foreign_keys": []
+  },
+  {
+    "table": "ai_documents",
+    "columns": [
+      "id",
+      "source_id",
+      "title",
+      "version",
+      "source_url",
+      "approved",
+      "effective_at",
+      "updated_at"
+    ],
+    "foreign_keys": []
+  },
+  {
+    "table": "ai_messages",
+    "columns": [
+      "id",
+      "conversation_id",
+      "role",
+      "content",
+      "metadata",
+      "created_at"
+    ],
+    "foreign_keys": [
+      "conversation_id -> ai_conversations.id"
+    ]
+  }
+]

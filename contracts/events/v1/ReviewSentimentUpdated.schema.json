@@ -1,0 +1,69 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "review_id": {
+      "title": "Review Id",
+      "type": "integer"
+    },
+    "film_id": {
+      "title": "Film Id",
+      "type": "integer"
+    },
+    "content_version": {
+      "title": "Content Version",
+      "type": "integer"
+    },
+    "moderation_status": {
+      "title": "Moderation Status",
+      "type": "string"
+    },
+    "is_deleted": {
+      "title": "Is Deleted",
+      "type": "boolean"
+    },
+    "updated_at": {
+      "format": "date-time",
+      "title": "Updated At",
+      "type": "string"
+    },
+    "analysis_status": {
+      "title": "Analysis Status",
+      "type": "string"
+    },
+    "label": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Label"
+    },
+    "model_version": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Model Version"
+    }
+  },
+  "required": [
+    "review_id",
+    "film_id",
+    "content_version",
+    "moderation_status",
+    "is_deleted",
+    "updated_at",
+    "analysis_status",
+    "label",
+    "model_version"
+  ],
+  "title": "ReviewFact",
+  "type": "object"
+}

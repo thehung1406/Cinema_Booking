@@ -104,6 +104,7 @@ redisdata/
 ~$*.docx
 *.tmp
 /tmp/
+/infra/broker/.runtime/
 
 # =====================
 # AI / Agent Skills

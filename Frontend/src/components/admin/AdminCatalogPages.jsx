@@ -3,7 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import api from "../../config/api";
 import { formatCurrency, formatDate, localDateInput } from "../../utils/formatters";
 import { ConfirmAction, DataTable, Editor, Field, MultiChoice, PageHeading, Pagination } from "./AdminShared";
-import { useAdminData } from "./adminData";
+import { errorText, useAdminData } from "./adminData";
 
 const lookup = (items, id) => items?.find((item) => item.id === Number(id));
 const numbers = (value, keys) => ({ ...value, ...Object.fromEntries(keys.map((key) => [key, Number(value[key])])) });
@@ -95,8 +95,21 @@ export function RoomsPage() {
     </>} />;
 }
 
+function SalesAction({ row }) {
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+  return <><button disabled={busy} onClick={async () => {
+    setBusy(true); setError("");
+    try { await api.post(`/admin/showtimes/${row.id}/sales/${row.sales_state === "OPEN" ? "close" : "open"}`); }
+    catch (err) { if (!err.cinemaOperation) setError(errorText(err)); }
+    finally { setBusy(false); }
+  }}>{row.sales_state === "OPEN" ? "Đóng nhận hold" : "Mở nhận hold"}</button>
+    {error && <small role="alert" className="admin-error">{error}</small>}</>;
+}
+
 export function ShowtimesPage() {
   return <EntityPage resource="showtimes" title="Quản lý lịch chiếu" createLabel="Thêm suất chiếu" searchable={false}
+    actions={(row) => <SalesAction row={row} />}
     description="Lập lịch theo phim, phòng và định dạng. Giờ chiếu theo múi giờ Việt Nam, kết thúc trong cùng ngày."
     columns={(catalog) => [
       { key: "film_id", label: "Phim", render: (row) => lookup(catalog.films, row.film_id)?.title || `Phim #${row.film_id}` },
@@ -107,7 +120,8 @@ export function ShowtimesPage() {
       { key: "show_date", label: "Ngày chiếu", render: (row) => formatDate(row.show_date) },
       { key: "start_time", label: "Giờ chiếu", render: (row) => `${row.start_time.slice(0, 5)} – ${row.end_time.slice(0, 5)}` },
       { key: "format_id", label: "Định dạng", render: (row) => lookup(catalog.formats, row.format_id)?.name },
-      { key: "status", label: "Trạng thái", render: (row) => <span className="admin-badge">{{ ACTIVE: "Đang mở", COMPLETED: "Hoàn tất", CANCELLED: "Đã hủy" }[row.status] || row.status}</span> },
+      { key: "sales_state", label: "Nhận giữ ghế", render: (row) => <>{row.sales_state === "OPEN" ? "Đang mở" : "Đang đóng"}<small>Phiên bản {row.sales_version || "—"}</small></> },
+      { key: "status", label: "Trạng thái", render: (row) => <span className="admin-badge">{{ ACTIVE: "Hoạt động", COMPLETED: "Hoàn tất", CANCELLED: "Đã hủy" }[row.status] || row.status}</span> },
     ]}
     filters={(extra, set, catalog) => <>
       <Field label="Phim" value={extra.film_id || ""} onChange={(event) => set("film_id", event.target.value)}><option value="">Tất cả phim</option>{options(catalog.films, "title")}</Field>
@@ -170,12 +184,13 @@ export function SeatsPage() {
         { key: "price", label: "Giá vé", render: (row) => formatCurrency(lookup(data?.seat_types, row.seat_type_id)?.base_price) }]}
         rows={seats} loading={list.loading} error={list.error} reload={list.reload} actions={(row) => <><button onClick={() => setEditor(row)}>Sửa</button><button className="admin-danger" onClick={() => setDeleting(row)}>Xóa</button></>} />
     </section>
-    {editor && <Editor title={editor.id ? `Sửa ghế ${editor.seat_name}` : "Thêm ghế"} initial={{ seat_name: editor.seat_name || "", seat_type_id: editor.seat_type_id || "" }} onClose={() => setEditor(null)}
+    {editor && <Editor title={editor.id ? `Sửa ghế ${editor.seat_name}` : "Thêm ghế"} initial={{ seat_name: editor.seat_name || "", seat_type_id: editor.seat_type_id || "", status: editor.status || "ACTIVE" }} onClose={() => setEditor(null)}
       onSave={async (value) => {
         await api[editor.id ? "put" : "post"](`/admin/rooms/${roomId}/seats${editor.id ? `/${editor.id}` : ""}`, numbers(value, ["seat_type_id"]));
         list.reload(); setNotice("Đã lưu ghế.");
       }}>{(value, set) => <>
         <Field label="Vị trí ghế *" placeholder="Ví dụ: A1" required maxLength={10} pattern="[A-Za-z]+[1-9][0-9]*" value={value.seat_name} onChange={set("seat_name")} />
+        <Field label="Trạng thái ghế" value={value.status} onChange={set("status")}><option value="ACTIVE">Hoạt động</option><option value="INACTIVE">Tạm ngừng bán</option></Field>
         <Field label="Loại ghế *" required value={value.seat_type_id} onChange={set("seat_type_id")}><option value="">Chọn loại ghế</option>{options(data.seat_types)}</Field>
       </>}</Editor>}
     {deleting && <ConfirmAction title={`Xóa ghế ${deleting.seat_name}`} description="Ghế đã có đơn vé hoặc đang được giữ sẽ không thể xóa." onClose={() => setDeleting(null)} onConfirm={async () => {

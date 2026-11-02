@@ -232,7 +232,7 @@ def test_confirm_vnpay_payment_with_lock_success():
         )
         
         assert result["status"] == "success"
-        mock_book.assert_called_once_with(db=mock_db, showtime_id=1, seat_id=101, user_id=5)
+        mock_book.assert_called_once_with(db=mock_db, showtime_id=1, seat_id=101, user_id=5, sales_version=mock_booking.sales_version)
         mock_update.assert_called_once_with(db=mock_db, booking_id=10, payment_status=PaymentStatus.PAID.value)
         mock_unlock.assert_called_once_with(1, 101, 5)
         mock_db.commit.assert_called_once()

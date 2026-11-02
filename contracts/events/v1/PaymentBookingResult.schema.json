@@ -1,0 +1,54 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "payment_id": {
+      "exclusiveMinimum": 0,
+      "title": "Payment Id",
+      "type": "integer"
+    },
+    "booking_id": {
+      "exclusiveMinimum": 0,
+      "title": "Booking Id",
+      "type": "integer"
+    },
+    "booking_version": {
+      "exclusiveMinimum": 0,
+      "title": "Booking Version",
+      "type": "integer"
+    },
+    "reservation_id": {
+      "format": "uuid",
+      "title": "Reservation Id",
+      "type": "string"
+    },
+    "checkout_digest": {
+      "pattern": "^[a-f0-9]{64}$",
+      "title": "Checkout Digest",
+      "type": "string"
+    },
+    "outcome": {
+      "enum": [
+        "CONFIRMED",
+        "REJECTED"
+      ],
+      "title": "Outcome",
+      "type": "string"
+    },
+    "reason": {
+      "maxLength": 100,
+      "title": "Reason",
+      "type": "string"
+    }
+  },
+  "required": [
+    "payment_id",
+    "booking_id",
+    "booking_version",
+    "reservation_id",
+    "checkout_digest",
+    "outcome",
+    "reason"
+  ],
+  "title": "BookingResult",
+  "type": "object"
+}

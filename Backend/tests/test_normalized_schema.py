@@ -65,7 +65,8 @@ def catalog(pg):
                     show_date=date.today()+timedelta(days=5), start_time=time(18), end_time=time(20))
     pg.add_all([seat, show])
     pg.flush()
-    booking = Booking(user_id=user.id, showtime_id=show.id, total_amount=Decimal("75000"),
+    booking = Booking(user_id=user.id, customer_full_name=user.full_name, customer_email=user.email,
+                      customer_phone=user.phone, showtime_id=show.id, total_amount=Decimal("75000"),
                       payment_method="VNPAY", expires_at=datetime.now(timezone.utc)+timedelta(minutes=10))
     pg.add(booking)
     pg.flush()
@@ -139,12 +140,14 @@ def test_format_must_be_supported_by_film(pg, catalog):
     unsupported = Format(code=uuid4().hex[:10], name="Unsupported")
     pg.add(unsupported)
     pg.flush()
-    with pytest.raises(IntegrityError):
-        with pg.begin_nested():
-            pg.add(Showtime(film_id=catalog["film"].id, room_id=catalog["room"].id,
-                format_id=unsupported.id, show_date=date.today()+timedelta(days=6),
-                start_time=time(18), end_time=time(20)))
-            pg.flush()
+    # After M6 the external FK is replaced by the Catalog validation contract.
+    from app.services.admin_service import showtime_write
+    from app.schemas.admin import ShowtimeWrite
+    with pytest.raises(HTTPException) as error:
+        showtime_write(pg, ShowtimeWrite(film_id=catalog["film"].id, room_id=catalog["room"].id,
+            format_id=unsupported.id, show_date=date.today()+timedelta(days=6),
+            start_time=time(18), end_time=time(20)))
+    assert error.value.status_code == 400
 
 
 def test_availability_and_hold_respect_inactive_seats(pg, catalog, monkeypatch):
@@ -324,10 +327,10 @@ def test_payment_attempt_history_and_provider_reference_unique(pg, catalog):
 
 
 def test_catalog_deletion_preserves_booking_history(pg, catalog):
-    with pytest.raises(IntegrityError):
-        with pg.begin_nested():
-            pg.exec(text("DELETE FROM films WHERE id=:id"), params={"id": catalog["film"].id})
-            pg.flush()
+    from app.services.admin_service import film_delete
+    with pytest.raises(HTTPException) as error:
+        film_delete(pg, catalog["film"].id)
+    assert error.value.status_code == 409
     assert pg.get(Booking, catalog["booking"].id) is not None
 
 

@@ -46,6 +46,8 @@ def safe_source_url(url):
 
 def upsert_document(db, data):
     """Replace chunks atomically when a document is updated or revoked."""
+    from app.utils.ai_ownership import require_legacy_ai_owner
+    require_legacy_ai_owner(db)
     source_url = safe_source_url(data["source_url"])
     doc = db.exec(select(KnowledgeDocument).where(KnowledgeDocument.source_id == data["source_id"]).with_for_update()).first()
     if doc is None:

@@ -1,0 +1,68 @@
+# Seventh overlay. Frozen catalog copy includes schedule references before cutover.
+services:
+  fastapi:
+    environment:
+      CATALOG_STORAGE_OWNER: ${CATALOG_STORAGE_OWNER:-monolith}
+      CATALOG_SERVICE_ORIGIN: http://catalog-service:8085
+  gateway:
+    environment:
+      GATEWAY_UPSTREAMS: '{"ai":"http://ai-service:8082","review":"http://review-service:8083","identity":"http://identity-service:8084","catalog":"http://catalog-service:8085"}'
+      GATEWAY_ENABLED_DOMAINS: ${SERVICE_GATEWAY_DOMAINS:-[]}
+      GATEWAY_REQUIRED_DOMAINS: ${SERVICE_GATEWAY_REQUIRED_DOMAINS:-[]}
+  catalog-db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: catalog_owner
+      POSTGRES_PASSWORD: ${CATALOG_DB_PASSWORD:?Run prepare_messaging.py}
+      POSTGRES_DB: cinema_catalog
+    volumes: [catalogdata:/var/lib/postgresql/data]
+    networks: [backend]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U catalog_owner -d cinema_catalog"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+  catalog-migrate:
+    build: &catalog-build
+      context: ..
+      dockerfile: services/catalog-service/Dockerfile
+    environment: &catalog-env
+      CATALOG_DATABASE_URL: postgresql+psycopg2://catalog_owner:${CATALOG_DB_PASSWORD}@catalog-db:5432/cinema_catalog
+      CATALOG_IDENTITY_ORIGIN: http://identity-service:8084
+      CATALOG_READ_ORIGIN: http://fastapi:8000
+      CATALOG_SERVICE_KEY: ${INTERNAL_SERVICE_KEY}
+      CATALOG_WRITES_ENABLED: ${CATALOG_WRITES_ENABLED:-false}
+      CATALOG_QUOTE_SECONDS: ${CATALOG_QUOTE_SECONDS:-120}
+    command: ["alembic", "upgrade", "head"]
+    depends_on:
+      catalog-db:
+        condition: service_healthy
+    networks: [backend]
+  catalog-service:
+    build: *catalog-build
+    environment: *catalog-env
+    ports: ["127.0.0.1:8085:8085"]
+    depends_on:
+      catalog-migrate:
+        condition: service_completed_successfully
+    networks: [backend]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8085/health/ready', timeout=5)"]
+      interval: 10s
+      timeout: 8s
+      retries: 5
+  catalog-backfill:
+    build: *catalog-build
+    profiles: [migration]
+    env_file: .env
+    environment: *catalog-env
+    command: ["python", "-m", "catalog_service.migrate", "--apply", "--manifest", "/migration-manifests/latest.json"]
+    volumes: ["../tmp/catalog-migration:/migration-manifests"]
+    depends_on:
+      catalog-service:
+        condition: service_healthy
+      fastapi:
+        condition: service_healthy
+    networks: [backend]
+volumes:
+  catalogdata:

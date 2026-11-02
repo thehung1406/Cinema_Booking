@@ -14,7 +14,7 @@ import {
 } from "../src/utils/filmUtils.js";
 
 test("payment presentation distinguishes confirmed failure from pending or unknown", () => {
-  assert.equal(paymentState({ paymentStatus: "PAID" }), "success");
+  assert.equal(paymentState({ paymentStatus: "PAID", bookingStatus: "CONFIRMED" }), "success");
   for (const paymentStatus of ["FAILED", "CANCELLED"])
     assert.equal(paymentState({ paymentStatus }), "failed");
   assert.equal(paymentState({ bookingStatus: "CANCELLED" }), "failed");

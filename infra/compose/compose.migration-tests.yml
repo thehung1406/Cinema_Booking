@@ -1,0 +1,265 @@
+# Isolated resources only; never references Backend/.env or the application volume.
+# docker compose -p cinema-migration-tests -f infra/compose/compose.migration-tests.yml run --build --rm backend-test
+services:
+  review-inference-smoke:
+    profiles: [verification]
+    build:
+      context: ../..
+      dockerfile: services/review-service/Dockerfile
+      target: worker
+    volumes: ["../..:/workspace:ro"]
+    environment:
+      REVIEW_DATABASE_URL: postgresql+psycopg2://review_test:review-test-only@review-db-test:5432/cinema_review_test
+    command: ["python", "/workspace/scripts/migration/smoke_review_inference.py"]
+    depends_on:
+      review-db-test:
+        condition: service_healthy
+  payment-db-test:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: payment_owner_test
+      POSTGRES_PASSWORD: payment-test-only
+      POSTGRES_DB: cinema_payment_test
+    tmpfs: [/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U payment_owner_test -d cinema_payment_test"]
+      interval: 2s
+      timeout: 3s
+      retries: 20
+  booking-db-test:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: booking_owner_test
+      POSTGRES_PASSWORD: booking-test-only
+      POSTGRES_DB: cinema_booking_test
+    tmpfs: [/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U booking_owner_test -d cinema_booking_test"]
+      interval: 2s
+      timeout: 3s
+      retries: 20
+  cinema-db-test:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: cinema_owner_test
+      POSTGRES_PASSWORD: cinema-test-only
+      POSTGRES_DB: cinema_cinema_test
+    tmpfs: [/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cinema_owner_test -d cinema_cinema_test"]
+      interval: 2s
+      timeout: 3s
+      retries: 20
+  catalog-db-test:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: catalog_test
+      POSTGRES_PASSWORD: catalog-test-only
+      POSTGRES_DB: cinema_catalog_test
+    tmpfs: [/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U catalog_test -d cinema_catalog_test"]
+      interval: 2s
+      timeout: 3s
+      retries: 20
+  identity-db-test:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: identity_test
+      POSTGRES_PASSWORD: identity-test-only
+      POSTGRES_DB: cinema_identity_test
+    tmpfs: [/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U identity_test -d cinema_identity_test"]
+      interval: 2s
+      timeout: 3s
+      retries: 20
+  review-db-test:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: review_test
+      POSTGRES_PASSWORD: review-test-only
+      POSTGRES_DB: cinema_review_test
+    tmpfs: [/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U review_test -d cinema_review_test"]
+      interval: 2s
+      timeout: 3s
+      retries: 20
+  ai-db-test:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: ai_test
+      POSTGRES_PASSWORD: ai-test-only
+      POSTGRES_DB: cinema_ai_test
+    tmpfs: [/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ai_test -d cinema_ai_test"]
+      interval: 2s
+      timeout: 3s
+      retries: 20
+  ai-redis-test:
+    image: redis:7-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 2s
+      timeout: 3s
+      retries: 20
+  rabbitmq-test:
+    image: rabbitmq:4.1-management
+    volumes:
+      - ../broker/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
+      - ../broker/.runtime/test-definitions.json:/etc/rabbitmq/definitions.json:ro
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "check_port_connectivity"]
+      interval: 3s
+      timeout: 5s
+      retries: 40
+      start_period: 15s
+  notification-db-test:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: notification_test
+      POSTGRES_PASSWORD: notification-test-only
+      POSTGRES_DB: cinema_notification_test
+    tmpfs: [/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U notification_test -d cinema_notification_test"]
+      interval: 2s
+      timeout: 3s
+      retries: 20
+  mailpit-test:
+    image: axllent/mailpit:v1.24
+  postgres-test:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: cinema_test
+      POSTGRES_PASSWORD: test-only-password
+      POSTGRES_DB: cinema_migration_test
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cinema_test -d cinema_migration_test"]
+      interval: 2s
+      timeout: 3s
+      retries: 20
+  redis-test:
+    image: redis:7-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 2s
+      timeout: 3s
+      retries: 20
+  backend-test:
+    build:
+      context: ../..
+      dockerfile: Backend/Dockerfile
+    working_dir: /workspace
+    volumes:
+      - ../..:/workspace
+      - ../../Backend/.env.example:/workspace/Backend/.env:ro
+    environment:
+      PYTHONPATH: /workspace/Backend:/workspace
+      PROJECT_NAME: Cinema migration tests
+      SECRET_KEY: isolated-test-key-never-use-in-production
+      ALGORITHM: HS256
+      ACCESS_TOKEN_EXPIRE_MINUTES: "15"
+      REFRESH_TOKEN_EXPIRE_DAYS: "7"
+      DATABASE_URL: postgresql+psycopg2://cinema_test:test-only-password@postgres-test:5432/cinema_migration_test
+      TEST_POSTGRES_URL: postgresql+psycopg2://cinema_test:test-only-password@postgres-test:5432/cinema_migration_test
+      POSTGRES_USER: cinema_test
+      POSTGRES_PASSWORD: test-only-password
+      POSTGRES_DB: cinema_migration_test
+      FRONTEND_URL: http://localhost:5173
+      CORS_ORIGINS: '["http://localhost:5173"]'
+      REDIS_HOST: redis-test
+      REDIS_PORT: "6379"
+      REDIS_DB: "15"
+      REDIS_URL: redis://redis-test:6379/15
+      TMN_CODE: isolated-test-merchant
+      HASH_SECRET: isolated-test-payment-key
+      VNPAY_URL: https://example.test/payment
+      SMTP_HOST: ""
+      SMTP_USER: ""
+      SMTP_PASSWORD: ""
+      SMTP_FROM: ""
+      INTERNAL_SERVICE_KEY: isolated-internal-service-key-32-characters-test-only
+      AMQP_PUBLIC_URL: amqp://booking-publisher:isolated-publisher-test-only@rabbitmq-test:5672/%2Fcinema-public
+      AMQP_NOTIFICATION_URL: amqp://booking-publisher:isolated-publisher-test-only@rabbitmq-test:5672/%2Fcinema-private
+      TEST_AMQP_OPERATOR_PUBLIC: amqp://cinema-operator:isolated-operator-test-only@rabbitmq-test:5672/%2Fcinema-public
+      TEST_AMQP_OPERATOR_PRIVATE: amqp://cinema-operator:isolated-operator-test-only@rabbitmq-test:5672/%2Fcinema-private
+      NOTIFICATION_DATABASE_URL: postgresql+psycopg2://notification_test:notification-test-only@notification-db-test:5432/cinema_notification_test
+      NOTIFICATION_AMQP_URL: amqp://notification-consumer:isolated-consumer-test-only@rabbitmq-test:5672/%2Fcinema-private
+      NOTIFICATION_SERVICE_KEY: isolated-internal-service-key-32-characters-test-only
+      NOTIFICATION_SMTP_HOST: mailpit-test
+      NOTIFICATION_SMTP_PORT: "1025"
+      TEST_MAILPIT_URL: http://mailpit-test:8025
+      AI_DATABASE_URL: postgresql+psycopg2://ai_test:ai-test-only@ai-db-test:5432/cinema_ai_test
+      AI_REDIS_URL: redis://ai-redis-test:6379/0
+      AI_SERVICE_KEY: isolated-internal-service-key-32-characters-test-only
+      AI_MODEL_URL: ""
+      REVIEW_DATABASE_URL: postgresql+psycopg2://review_test:review-test-only@review-db-test:5432/cinema_review_test
+      REVIEW_SERVICE_KEY: isolated-internal-service-key-32-characters-test-only
+      REVIEW_AMQP_PUBLIC_URL: amqp://review-publisher:isolated-review-publisher-test-only@rabbitmq-test:5672/%2Fcinema-public
+      PAYMENT_DATABASE_URL: postgresql+psycopg2://payment_owner_test:payment-test-only@payment-db-test:5432/cinema_payment_test
+      PAYMENT_SERVICE_KEY: isolated-internal-service-key-32-characters-test-only
+      PAYMENT_TMN_CODE: isolated-test-merchant
+      PAYMENT_HASH_SECRET: isolated-test-payment-key
+      PAYMENT_AMQP_PUBLIC_URL: amqp://payment-saga:isolated-payment-test-only@rabbitmq-test:5672/%2Fcinema-public
+      PAYMENT_AMQP_CONSUMER_URL: amqp://payment-saga:isolated-payment-test-only@rabbitmq-test:5672/%2Fcinema-public
+      BOOKING_AMQP_PAYMENT_CONSUMER_URL: amqp://booking-saga-consumer:isolated-booking-consumer-test-only@rabbitmq-test:5672/%2Fcinema-public
+      BOOKING_DATABASE_URL: postgresql+psycopg2://booking_owner_test:booking-test-only@booking-db-test:5432/cinema_booking_test
+      BOOKING_SERVICE_KEY: isolated-internal-service-key-32-characters-test-only
+      BOOKING_TMN_CODE: isolated-test-merchant
+      BOOKING_HASH_SECRET: isolated-test-payment-key
+      CINEMA_DATABASE_URL: postgresql+psycopg2://cinema_owner_test:cinema-test-only@cinema-db-test:5432/cinema_cinema_test
+      CINEMA_SERVICE_KEY: isolated-internal-service-key-32-characters-test-only
+      CATALOG_DATABASE_URL: postgresql+psycopg2://catalog_test:catalog-test-only@catalog-db-test:5432/cinema_catalog_test
+      CATALOG_SERVICE_KEY: isolated-internal-service-key-32-characters-test-only
+      IDENTITY_DATABASE_URL: postgresql+psycopg2://identity_test:identity-test-only@identity-db-test:5432/cinema_identity_test
+      IDENTITY_SERVICE_KEY: isolated-internal-service-key-32-characters-test-only
+      IDENTITY_CURRENT_KID: test-key
+      IDENTITY_SIGNING_KEYS: '{"test-key":"isolated-signing-key-32-characters-test-only"}'
+      SENTIMENT_BACKEND: disabled
+    depends_on:
+      postgres-test:
+        condition: service_healthy
+      redis-test:
+        condition: service_healthy
+      rabbitmq-test:
+        condition: service_healthy
+      notification-db-test:
+        condition: service_healthy
+      mailpit-test:
+        condition: service_started
+      payment-db-test:
+        condition: service_healthy
+      booking-db-test:
+        condition: service_healthy
+      cinema-db-test:
+        condition: service_healthy
+      catalog-db-test:
+        condition: service_healthy
+      identity-db-test:
+        condition: service_healthy
+      review-db-test:
+        condition: service_healthy
+      ai-db-test:
+        condition: service_healthy
+      ai-redis-test:
+        condition: service_healthy
+    entrypoint: ["sh", "-c"]
+    command:
+      - >-
+        pip install --quiet pytest==9.0.3 -e packages/python-platform -e services/notification-service -e services/ai-service -e services/review-service -e services/identity-service -e services/catalog-service -e services/cinema-service -e services/booking-service -e services/payment-service &&
+        cd /workspace/Backend && alembic upgrade head &&
+        cd /workspace/services/notification-service && alembic upgrade head &&
+        cd /workspace/services/ai-service && alembic upgrade head &&
+        cd /workspace/services/review-service && alembic upgrade head &&
+        cd /workspace/services/identity-service && alembic upgrade head &&
+        cd /workspace/services/catalog-service && alembic upgrade head &&
+        cd /workspace/services/cinema-service && alembic upgrade head &&
+        cd /workspace/services/booking-service && alembic upgrade head &&
+        cd /workspace/services/payment-service && alembic upgrade head &&
+        cd /workspace && python scripts/migration/export_baseline.py &&
+        python scripts/migration/run_checks.py

@@ -2,6 +2,9 @@ from logging.config import fileConfig
 from sqlalchemy import engine_from_config, pool
 from alembic import context
 from sqlmodel import SQLModel
+from cinema_platform.events import MessagingBase
+from app.models.migration_ownership import OwnershipBase
+from app.models.sales import SalesBase
 from app.core.config import settings
 from app.models import (
     User, Film, Theater, CinemaRoom, Seat,
@@ -18,7 +21,7 @@ if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
 # Metadata cho Alembic
-target_metadata = SQLModel.metadata
+target_metadata = [SQLModel.metadata, MessagingBase.metadata, OwnershipBase.metadata, SalesBase.metadata]
 
 def run_migrations_offline() -> None:
     """Run migrations in 'offline' mode."""

@@ -25,7 +25,12 @@ from decimal import Decimal
 from app.utils.dependencies import get_current_user
 
 logger = logging.getLogger(__name__)
-router = APIRouter(prefix="/payment", tags=["Payment"])
+from app.utils.booking_ownership import require_legacy_booking_owner
+
+def legacy_booking(db: Session = Depends(get_session)):
+    require_legacy_booking_owner(db)
+
+router = APIRouter(prefix="/payment", tags=["Payment"], dependencies=[Depends(legacy_booking)])
 
 
 def verify_vnpay_signature(params: dict) -> bool:

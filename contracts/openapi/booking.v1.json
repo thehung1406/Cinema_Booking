@@ -1,0 +1,1724 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Booking and legacy Payment",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/health/live": {
+      "get": {
+        "summary": "Live",
+        "operationId": "live_health_live_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health/ready": {
+      "get": {
+        "summary": "Ready",
+        "operationId": "ready_health_ready_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/bookings": {
+      "post": {
+        "tags": [
+          "Bookings"
+        ],
+        "summary": "Create",
+        "operationId": "create_bookings_post",
+        "parameters": [
+          {
+            "name": "idempotency-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BookingCreateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Bookings"
+        ],
+        "summary": "History",
+        "operationId": "history_bookings_get",
+        "parameters": [
+          {
+            "name": "skip",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Skip"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/BookingDetailResponse"
+                  },
+                  "title": "Response History Bookings Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/bookings/{booking_id}": {
+      "get": {
+        "tags": [
+          "Bookings"
+        ],
+        "summary": "Detail",
+        "operationId": "detail_bookings__booking_id__get",
+        "parameters": [
+          {
+            "name": "booking_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Booking Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BookingDetailResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/bookings/{booking_id}/payment-status": {
+      "patch": {
+        "tags": [
+          "Bookings"
+        ],
+        "summary": "Cancel",
+        "operationId": "cancel_bookings__booking_id__payment_status_patch",
+        "parameters": [
+          {
+            "name": "booking_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Booking Id"
+            }
+          },
+          {
+            "name": "payment_status",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^(FAILED|CANCELLED)$",
+              "title": "Payment Status"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BookingDetailResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/seats/showtime/{showtime_id}": {
+      "get": {
+        "tags": [
+          "Seats"
+        ],
+        "summary": "Availability",
+        "operationId": "availability_seats_showtime__showtime_id__get",
+        "parameters": [
+          {
+            "name": "showtime_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Showtime Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SeatStatusResponse"
+                  },
+                  "title": "Response Availability Seats Showtime  Showtime Id  Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/seats/showtime/{showtime_id}/available-count": {
+      "get": {
+        "tags": [
+          "Seats"
+        ],
+        "summary": "Count",
+        "operationId": "count_seats_showtime__showtime_id__available_count_get",
+        "parameters": [
+          {
+            "name": "showtime_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Showtime Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/seats/hold": {
+      "post": {
+        "tags": [
+          "Seats"
+        ],
+        "summary": "Hold",
+        "operationId": "hold_seats_hold_post",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HoldSeatRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/HoldSeatResponse"
+                  },
+                  "title": "Response Hold Seats Hold Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/seats/release": {
+      "post": {
+        "tags": [
+          "Seats"
+        ],
+        "summary": "Release",
+        "operationId": "release_seats_release_post",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReleaseSeatRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/seats/showtime/{showtime_id}/cancel-hold": {
+      "delete": {
+        "tags": [
+          "Seats"
+        ],
+        "summary": "Cancel",
+        "operationId": "cancel_seats_showtime__showtime_id__cancel_hold_delete",
+        "parameters": [
+          {
+            "name": "showtime_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Showtime Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/payment/vnpay-url": {
+      "post": {
+        "tags": [
+          "Payment"
+        ],
+        "summary": "Create Vnpay Url",
+        "description": "Tạo URL thanh toán VNPay Sandbox với mã checksum HMAC-SHA512.\nAmount, order info và return URL được lấy/derive server-side từ booking.",
+        "operationId": "create_vnpay_url_payment_vnpay_url_post",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VNPayURLRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VNPayURLResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/payment/vnpay-return": {
+      "get": {
+        "tags": [
+          "Payment"
+        ],
+        "summary": "Vnpay Return Get",
+        "description": "Xác nhận giao dịch VNPay qua Return URL (GET trực tiếp)",
+        "operationId": "vnpay_return_get_payment_vnpay_return_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaymentConfirmResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Payment"
+        ],
+        "summary": "Vnpay Return Post",
+        "description": "Xác nhận giao dịch VNPay qua Return URL (POST từ Frontend)",
+        "operationId": "vnpay_return_post_payment_vnpay_return_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VNPayReturnRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaymentConfirmResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/payment/vnpay-ipn": {
+      "get": {
+        "tags": [
+          "Payment"
+        ],
+        "summary": "Vnpay Ipn Get",
+        "description": "Webhook tiếp nhận Instant Payment Notification (IPN) từ VNPay Server (GET)",
+        "operationId": "vnpay_ipn_get_payment_vnpay_ipn_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VNPayIPNResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Payment"
+        ],
+        "summary": "Vnpay Ipn Post",
+        "description": "Webhook tiếp nhận Instant Payment Notification (IPN) từ VNPay Server (POST)",
+        "operationId": "vnpay_ipn_post_payment_vnpay_ipn_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VNPayIPNResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/payment/status/{booking_id}": {
+      "get": {
+        "tags": [
+          "Payment"
+        ],
+        "summary": "Get Payment Status",
+        "description": "Tra cứu trạng thái thanh toán của booking",
+        "operationId": "get_payment_status_payment_status__booking_id__get",
+        "parameters": [
+          {
+            "name": "booking_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Booking Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tickets/booking/{booking_id}": {
+      "get": {
+        "tags": [
+          "Tickets"
+        ],
+        "summary": "Booking Tickets",
+        "operationId": "booking_tickets_tickets_booking__booking_id__get",
+        "parameters": [
+          {
+            "name": "booking_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Booking Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TicketRead"
+                  },
+                  "title": "Response Booking Tickets Tickets Booking  Booking Id  Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tickets/{ticket_code}/check-in": {
+      "post": {
+        "tags": [
+          "Tickets"
+        ],
+        "summary": "Check In",
+        "operationId": "check_in_tickets__ticket_code__check_in_post",
+        "parameters": [
+          {
+            "name": "ticket_code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Ticket Code"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TicketRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "BookingCreateRequest": {
+        "properties": {
+          "userId": {
+            "type": "integer",
+            "title": "Userid",
+            "description": "ID người dùng"
+          },
+          "showtimeId": {
+            "type": "integer",
+            "title": "Showtimeid",
+            "description": "ID suất chiếu"
+          },
+          "totalAmount": {
+            "anyOf": [
+              {
+                "type": "number",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,10}|(?=[\\d.]{1,13}0*$)\\d{0,10}\\.\\d{0,2}0*$)"
+              }
+            ],
+            "title": "Totalamount",
+            "description": "Tổng tiền"
+          },
+          "paymentMethod": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 1,
+            "title": "Paymentmethod"
+          },
+          "seats": {
+            "items": {
+              "$ref": "#/components/schemas/SeatBookingRequest"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Seats",
+            "description": "Danh sách ghế đặt"
+          },
+          "reservationId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 36
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reservationid"
+          },
+          "foodItems": {
+            "items": {
+              "$ref": "#/components/schemas/FoodSelection"
+            },
+            "type": "array",
+            "maxItems": 50,
+            "title": "Fooditems"
+          }
+        },
+        "type": "object",
+        "required": [
+          "userId",
+          "showtimeId",
+          "totalAmount",
+          "paymentMethod",
+          "seats"
+        ],
+        "title": "BookingCreateRequest",
+        "description": "Request tạo booking mới"
+      },
+      "BookingDetailResponse": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "bookingId": {
+            "type": "integer",
+            "title": "Bookingid"
+          },
+          "userId": {
+            "type": "integer",
+            "title": "Userid"
+          },
+          "showtimeId": {
+            "type": "integer",
+            "title": "Showtimeid"
+          },
+          "bookingDate": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Bookingdate"
+          },
+          "totalAmount": {
+            "type": "number",
+            "title": "Totalamount"
+          },
+          "paymentMethod": {
+            "type": "string",
+            "title": "Paymentmethod"
+          },
+          "paymentStatus": {
+            "type": "string",
+            "title": "Paymentstatus"
+          },
+          "bookingStatus": {
+            "type": "string",
+            "title": "Bookingstatus"
+          },
+          "filmTitle": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Filmtitle"
+          },
+          "filmImage": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Filmimage"
+          },
+          "theaterName": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Theatername"
+          },
+          "roomName": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Roomname"
+          },
+          "showDate": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Showdate"
+          },
+          "startTime": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Starttime"
+          },
+          "fullName": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fullname"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone"
+          },
+          "seats": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Seats"
+          },
+          "foodItems": {
+            "items": {
+              "$ref": "#/components/schemas/BookingFoodRead"
+            },
+            "type": "array",
+            "title": "Fooditems"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "bookingId",
+          "userId",
+          "showtimeId",
+          "bookingDate",
+          "totalAmount",
+          "paymentMethod",
+          "paymentStatus",
+          "bookingStatus",
+          "seats"
+        ],
+        "title": "BookingDetailResponse",
+        "description": "Chi tiết booking"
+      },
+      "BookingFoodRead": {
+        "properties": {
+          "food_item_id": {
+            "type": "integer",
+            "title": "Food Item Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "category": {
+            "type": "string",
+            "title": "Category"
+          },
+          "quantity": {
+            "type": "integer",
+            "title": "Quantity"
+          },
+          "unit_price": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Unit Price"
+          },
+          "line_total": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Line Total"
+          },
+          "components": {
+            "items": {
+              "$ref": "#/components/schemas/FoodComponent"
+            },
+            "type": "array",
+            "title": "Components"
+          }
+        },
+        "type": "object",
+        "required": [
+          "food_item_id",
+          "name",
+          "category",
+          "quantity",
+          "unit_price",
+          "line_total"
+        ],
+        "title": "BookingFoodRead"
+      },
+      "FoodComponent": {
+        "properties": {
+          "food_item_id": {
+            "type": "integer",
+            "title": "Food Item Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "quantity": {
+            "type": "integer",
+            "title": "Quantity"
+          }
+        },
+        "type": "object",
+        "required": [
+          "food_item_id",
+          "name",
+          "quantity"
+        ],
+        "title": "FoodComponent"
+      },
+      "FoodSelection": {
+        "properties": {
+          "food_item_id": {
+            "type": "integer",
+            "exclusiveMinimum": 0.0,
+            "title": "Food Item Id"
+          },
+          "quantity": {
+            "type": "integer",
+            "maximum": 20.0,
+            "minimum": 1.0,
+            "title": "Quantity"
+          }
+        },
+        "type": "object",
+        "required": [
+          "food_item_id",
+          "quantity"
+        ],
+        "title": "FoodSelection"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "HoldSeatRequest": {
+        "properties": {
+          "reservation_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 36
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reservation Id"
+          },
+          "showtime_id": {
+            "type": "integer",
+            "exclusiveMinimum": 0.0,
+            "title": "Showtime Id",
+            "description": "ID suất chiếu"
+          },
+          "seat_ids": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Seat Ids",
+            "description": "Danh sách ID ghế cần giữ"
+          }
+        },
+        "type": "object",
+        "required": [
+          "showtime_id",
+          "seat_ids"
+        ],
+        "title": "HoldSeatRequest",
+        "description": "Request để giữ ghế"
+      },
+      "HoldSeatResponse": {
+        "properties": {
+          "seat_id": {
+            "type": "integer",
+            "title": "Seat Id"
+          },
+          "seat_name": {
+            "type": "string",
+            "title": "Seat Name"
+          },
+          "status": {
+            "$ref": "#/components/schemas/SeatStatusEnum"
+          },
+          "hold_expired_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Hold Expired At"
+          },
+          "reservation_id": {
+            "type": "string",
+            "title": "Reservation Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "seat_id",
+          "seat_name",
+          "status",
+          "hold_expired_at",
+          "reservation_id"
+        ],
+        "title": "HoldSeatResponse",
+        "description": "Response sau khi giữ ghế"
+      },
+      "PaymentConfirmResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "booking": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Booking"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "message"
+        ],
+        "title": "PaymentConfirmResponse",
+        "description": "Response sau khi xác nhận thanh toán"
+      },
+      "ReleaseSeatRequest": {
+        "properties": {
+          "reservation_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 36
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reservation Id"
+          },
+          "showtime_id": {
+            "type": "integer",
+            "exclusiveMinimum": 0.0,
+            "title": "Showtime Id",
+            "description": "ID suất chiếu"
+          },
+          "seat_ids": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Seat Ids",
+            "description": "Danh sách ID ghế cần hủy giữ"
+          }
+        },
+        "type": "object",
+        "required": [
+          "showtime_id",
+          "seat_ids"
+        ],
+        "title": "ReleaseSeatRequest",
+        "description": "Request để hủy giữ ghế"
+      },
+      "SeatBookingRequest": {
+        "properties": {
+          "seat_id": {
+            "type": "integer",
+            "exclusiveMinimum": 0.0,
+            "title": "Seat Id"
+          },
+          "price": {
+            "type": "number",
+            "title": "Price"
+          }
+        },
+        "type": "object",
+        "required": [
+          "seat_id",
+          "price"
+        ],
+        "title": "SeatBookingRequest",
+        "description": "Thông tin ghế trong booking request"
+      },
+      "SeatStatusEnum": {
+        "type": "string",
+        "enum": [
+          "UNAVAILABLE",
+          "AVAILABLE",
+          "HOLD",
+          "BOOKED"
+        ],
+        "title": "SeatStatusEnum"
+      },
+      "SeatStatusResponse": {
+        "properties": {
+          "seat_id": {
+            "type": "integer",
+            "title": "Seat Id"
+          },
+          "seat_name": {
+            "type": "string",
+            "title": "Seat Name"
+          },
+          "seat_type": {
+            "type": "string",
+            "title": "Seat Type"
+          },
+          "price": {
+            "type": "number",
+            "title": "Price"
+          },
+          "status": {
+            "$ref": "#/components/schemas/SeatStatusEnum"
+          },
+          "hold_expired_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hold Expired At"
+          },
+          "is_held_by_me": {
+            "type": "boolean",
+            "title": "Is Held By Me",
+            "default": false
+          },
+          "reservation_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reservation Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "seat_id",
+          "seat_name",
+          "seat_type",
+          "price",
+          "status"
+        ],
+        "title": "SeatStatusResponse",
+        "description": "Response trạng thái ghế"
+      },
+      "TicketRead": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "booking_detail_id": {
+            "type": "integer",
+            "title": "Booking Detail Id"
+          },
+          "ticket_code": {
+            "type": "string",
+            "title": "Ticket Code"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "issued_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Issued At"
+          },
+          "used_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Used At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "booking_detail_id",
+          "ticket_code",
+          "status",
+          "issued_at",
+          "used_at"
+        ],
+        "title": "TicketRead"
+      },
+      "VNPayIPNResponse": {
+        "properties": {
+          "RspCode": {
+            "type": "string",
+            "title": "Rspcode"
+          },
+          "Message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "RspCode",
+          "Message"
+        ],
+        "title": "VNPayIPNResponse",
+        "description": "Response cho VNPay IPN Server-to-Server Webhook"
+      },
+      "VNPayReturnRequest": {
+        "properties": {
+          "bookingId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bookingid"
+          },
+          "vnp_TxnRef": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vnp Txnref"
+          },
+          "vnp_ResponseCode": {
+            "type": "string",
+            "title": "Vnp Responsecode"
+          },
+          "vnp_Amount": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vnp Amount"
+          },
+          "vnp_BankCode": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vnp Bankcode"
+          },
+          "vnp_BankTranNo": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vnp Banktranno"
+          },
+          "vnp_CardType": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vnp Cardtype"
+          },
+          "vnp_OrderInfo": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vnp Orderinfo"
+          },
+          "vnp_PayDate": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vnp Paydate"
+          },
+          "vnp_TransactionNo": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vnp Transactionno"
+          },
+          "vnp_TransactionStatus": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vnp Transactionstatus"
+          },
+          "vnp_SecureHash": {
+            "type": "string",
+            "title": "Vnp Securehash"
+          },
+          "vnp_SecureHashType": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vnp Securehashtype"
+          },
+          "vnp_TmnCode": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vnp Tmncode"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "vnp_ResponseCode",
+          "vnp_SecureHash"
+        ],
+        "title": "VNPayReturnRequest",
+        "description": "Request từ VNPay callback / Return URL"
+      },
+      "VNPayURLRequest": {
+        "properties": {
+          "bookingId": {
+            "type": "integer",
+            "title": "Bookingid",
+            "description": "ID của đơn đặt vé"
+          }
+        },
+        "type": "object",
+        "required": [
+          "bookingId"
+        ],
+        "title": "VNPayURLRequest",
+        "description": "Request tạo URL thanh toán VNPay"
+      },
+      "VNPayURLResponse": {
+        "properties": {
+          "paymentUrl": {
+            "type": "string",
+            "title": "Paymenturl"
+          }
+        },
+        "type": "object",
+        "required": [
+          "paymentUrl"
+        ],
+        "title": "VNPayURLResponse",
+        "description": "Response chứa payment URL"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  }
+}

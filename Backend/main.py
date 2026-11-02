@@ -23,6 +23,9 @@ from app.router.ai import router as ai_router
 from app.router.ticket import router as ticket_router
 from app.router.access_control import router as access_control_router
 from app.router.admin import router as admin_router
+from app.router.internal_auth import router as internal_auth_router
+from app.router.internal_ai_read import router as internal_ai_read_router
+from app.router.internal_review_read import router as internal_review_read_router
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -84,5 +87,17 @@ app.include_router(ai_router)
 app.include_router(ticket_router)
 app.include_router(access_control_router)
 app.include_router(admin_router)
+app.include_router(internal_auth_router)
+app.include_router(internal_ai_read_router)
+app.include_router(internal_review_read_router)
+
+from app.router.internal_catalog_read import router as internal_catalog_read_router
+app.include_router(internal_catalog_read_router)
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
+
+from app.router.internal_sales import router as internal_sales_router
+app.include_router(internal_sales_router)
+
+from app.router.internal_booking_read import router as internal_booking_read_router
+app.include_router(internal_booking_read_router)

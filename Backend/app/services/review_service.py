@@ -8,12 +8,13 @@ from sqlalchemy.exc import IntegrityError
 from sqlmodel import select
 
 from app.core.config import settings
-from app.models import Review, ReviewSentiment, Film, User, Booking, Showtime, CinemaRoom, Theater
+from app.models import Review, ReviewSentiment, Film, Booking, Showtime, CinemaRoom, Theater
 from app.models.ai import utcnow
 
 
 def require_film(db, film_id):
-    film = db.get(Film, film_id)
+    from app.services.catalog_remote import get_film
+    film = get_film(db, film_id)
     if film is None or film.deleted_at is not None:
         raise HTTPException(404, "Phim không tồn tại")
     return film
@@ -27,6 +28,8 @@ def locked_review(db, review_id):
 
 
 def invalidate(db, review):
+    from app.utils.review_ownership import require_legacy_review_owner
+    require_legacy_review_owner(db)
     result = db.get(ReviewSentiment, review.id)
     if result is None:
         result = ReviewSentiment(review_id=review.id, content_version=review.content_version)
@@ -50,6 +53,8 @@ def enqueue(review_id, content_version):
 
 
 def create_review(db, film_id, user_id, content):
+    from app.utils.review_ownership import require_legacy_review_owner
+    require_legacy_review_owner(db)
     require_film(db, film_id)
     review = db.exec(select(Review).where(Review.user_id == user_id, Review.film_id == film_id).with_for_update()).first()
     if review and not review.is_deleted:
@@ -77,6 +82,8 @@ def create_review(db, film_id, user_id, content):
 
 
 def edit_review(db, review_id, user_id, body):
+    from app.utils.review_ownership import require_legacy_review_owner
+    require_legacy_review_owner(db)
     review = locked_review(db, review_id)
     if review.user_id != user_id:
         raise HTTPException(403, "Bạn chỉ được sửa đánh giá của mình")
@@ -96,6 +103,8 @@ def edit_review(db, review_id, user_id, body):
 
 
 def delete_review(db, review_id, user_id):
+    from app.utils.review_ownership import require_legacy_review_owner
+    require_legacy_review_owner(db)
     review = locked_review(db, review_id)
     if review.user_id != user_id:
         raise HTTPException(403, "Bạn chỉ được xóa đánh giá của mình")
@@ -109,6 +118,8 @@ def delete_review(db, review_id, user_id):
 
 
 def moderate_review(db, review_id, body):
+    from app.utils.review_ownership import require_legacy_review_owner
+    require_legacy_review_owner(db)
     review = locked_review(db, review_id)
     if review.content_version != body.content_version:
         raise HTTPException(409, "Nội dung đã thay đổi; cần duyệt lại phiên bản mới")
@@ -124,10 +135,15 @@ def moderate_review(db, review_id, body):
 
 def present_review(db, review, viewer_id=None):
     result = db.get(ReviewSentiment, review.id)
-    user = db.get(User, review.user_id)
-    verified = db.exec(select(Booking.id).join(Showtime, Showtime.id == Booking.showtime_id).where(
-        Booking.user_id == review.user_id, Showtime.film_id == review.film_id,
-        Booking.payment_status == "PAID").limit(1)).first() is not None
+    from app.services.identity_remote import contact
+    user = contact(db, review.user_id)
+    from app.utils.cinema_ownership import get_owner as cinema_owner
+    if cinema_owner(db)=="service":
+        from app.models.sales import SalesConfiguration as Config
+        from sqlalchemy import and_
+        purchase=select(Booking.id).join(Config,and_(Config.showtime_id==Booking.showtime_id,Config.sales_version==Booking.sales_version)).where(Config.film_id==review.film_id)
+    else: purchase=select(Booking.id).join(Showtime,Showtime.id==Booking.showtime_id).where(Showtime.film_id==review.film_id)
+    verified=db.exec(purchase.where(Booking.user_id==review.user_id,Booking.payment_status=="PAID").limit(1)).first() is not None
     current = result and result.content_version == review.content_version
     return dict(id=review.id, content=review.content, content_version=review.content_version,
                 moderation_status=review.moderation_status, updated_at=review.updated_at,
@@ -170,16 +186,25 @@ def summaries(db, film_ids, window_days=None, now=None):
 
 
 def future_showtimes(db, film_id=None, theater_id=None, show_date=None, evening=False):
+    from app.utils.cinema_ownership import get_owner as cinema_owner
+    if cinema_owner(db)=="service":
+        from app.services.sales_service import future_query
+        return future_query(film_id,theater_id,show_date,evening)
     from datetime import datetime, time
     from zoneinfo import ZoneInfo
     from sqlalchemy import or_, and_
     from app.models.showtime import ShowtimeStatus
     now = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh"))
-    stmt = select(Showtime).join(CinemaRoom, Showtime.room_id == CinemaRoom.id).join(Film).join(Theater).where(
-        Film.deleted_at.is_(None), Theater.deleted_at.is_(None),
+    stmt = select(Showtime).join(CinemaRoom, Showtime.room_id == CinemaRoom.id).join(Theater).where(
+        Theater.deleted_at.is_(None),
         CinemaRoom.deleted_at.is_(None), CinemaRoom.status == "ACTIVE",
         Showtime.status == ShowtimeStatus.ACTIVE,
         or_(Showtime.show_date > now.date(), and_(Showtime.show_date == now.date(), Showtime.start_time > now.time().replace(tzinfo=None))))
+    from app.utils.catalog_ownership import get_owner
+    owner = get_owner(db)
+    if owner == "monolith":
+        stmt = stmt.join(Film, Film.id == Showtime.film_id).where(Film.deleted_at.is_(None))
+    elif owner == "maintenance": raise HTTPException(503, "Catalog đang chuyển dữ liệu")
     if film_id is not None:
         stmt = stmt.where(Showtime.film_id == film_id)
     if theater_id is not None:
@@ -192,8 +217,21 @@ def future_showtimes(db, film_id=None, theater_id=None, show_date=None, evening=
 
 
 def positive_films(db, theater_id=None, show_date=None, window_days=None, limit=12, evening=False):
+    from app.utils.review_ownership import get_owner
+    owner = get_owner(db)
+    if owner != "monolith":
+        if owner != "service":
+            raise HTTPException(503, "Review đang chuyển dữ liệu")
+        from app.services.review_remote import positive_films as remote
+        db.rollback()  # No legacy connection held while Review calls the read facade.
+        return remote(theater_id, show_date, window_days, limit, evening)
     candidates = future_showtimes(db, theater_id=theater_id, show_date=show_date, evening=evening).subquery()
-    films = db.exec(select(Film).where(Film.id.in_(select(candidates.c.film_id).distinct()))).all()
+    from app.utils.catalog_ownership import get_owner as catalog_owner
+    if catalog_owner(db) == "service":
+        from app.services.catalog_remote import film_batch
+        films = list(film_batch(db.exec(select(candidates.c.film_id).distinct()).all()).values())
+    else:
+        films = db.exec(select(Film).where(Film.id.in_(select(candidates.c.film_id).distinct()))).all()
     stats = summaries(db, [f.id for f in films], window_days)
     ranked = [dict(film_id=f.id, title=f.title, image=f.image, summary=stats[f.id],
                    booking_url=f"/ticket-booking?filmId={f.id}") for f in films if stats[f.id]["eligible"]]

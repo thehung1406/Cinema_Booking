@@ -28,6 +28,8 @@ def cleanup_expired_bookings():
     """
     with Session(engine) as session:
         try:
+            from app.utils.booking_ownership import get_owner
+            if get_owner(session)!="monolith": return {"migrated":True,"expired_bookings":0,"released_holds":0}
             now = datetime.now(timezone.utc)
             ten_minutes_ago = now - timedelta(minutes=10)
             
@@ -122,6 +124,27 @@ def cleanup_expired_bookings():
 @celery_app.task
 def send_payment_success_email_task(to_email: str, booking_detail: dict):
     """Task gửi email xác nhận thanh toán."""
+    from app.core.config import settings
+    if settings.NOTIFICATION_TRANSPORT == "events":
+        # Drain legacy jobs through the new owner; never send SMTP from this process.
+        from uuid import NAMESPACE_URL, uuid5
+        from app.repositories.booking_repo import BookingRepository
+        from app.services.integration_events import booking_confirmed
+        from cinema_platform.events import OutboxRecord
+        booking_id = booking_detail.get("bookingId") or booking_detail.get("id")
+        with Session(engine) as db:
+            from app.utils.booking_ownership import get_owner
+            if get_owner(db)=="service":
+                from app.services.booking_remote import call
+                return call("POST","/internal/v1/booking-read/legacy-email",json={"booking_id":booking_id})
+            booking = BookingRepository.get_booking_by_id(db, booking_id, for_update=True)
+            if not booking or booking.payment_status != "PAID" or booking.booking_status != "CONFIRMED":
+                raise ValueError("Legacy email requires a confirmed paid booking")
+            event_id = str(uuid5(NAMESPACE_URL, f"cinema:booking:{booking.id}:BookingConfirmationEmailRequested.v1"))
+            if db.get(OutboxRecord, event_id) is None:
+                booking_confirmed(db, booking, None, include_public=False)
+            db.commit()
+        return {"sent": False, "migrated": True}
     try:
         ok = send_payment_success_email(to_email=to_email, booking_detail=booking_detail)
         return {"sent": ok}

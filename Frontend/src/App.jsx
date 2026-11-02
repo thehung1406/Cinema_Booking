@@ -17,6 +17,7 @@ import PaymentPage from "./components/PaymentPage";
 import AIAssistant from "./components/AIAssistant";
 import ReviewModeration from "./components/ReviewModeration";
 import AdminLayout from "./components/admin/AdminLayout";
+import PaymentReconciliation from "./components/admin/PaymentReconciliation";
 import { FilmsPage, RoomsPage, SeatsPage, ShowtimesPage, PricesPage } from "./components/admin/AdminCatalogPages";
 import { EmployeesPage, RolesPage } from "./components/admin/AdminPeoplePages";
 import { DocumentsPage, ReportsPage } from "./components/admin/AdminKnowledgeReports";
@@ -38,6 +39,7 @@ function App() {
           <Route path="roles" element={<RolesPage />} />
           <Route path="documents" element={<DocumentsPage />} />
           <Route path="reports" element={<ReportsPage />} />
+          <Route path="payment-reconciliation" element={<PaymentReconciliation />} />
           <Route path="*" element={<NotFound />} />
         </Route>
         <Route path="/" element={<HomePage />}>

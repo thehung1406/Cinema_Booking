@@ -45,6 +45,8 @@ def validate_scores(scores):
 
 
 def process_review(db, review_id, version, predictor=None):
+    from app.utils.review_ownership import require_legacy_review_owner
+    require_legacy_review_owner(db)
     review = db.get(Review, review_id)
     result = db.get(ReviewSentiment, review_id)
     if not review or review.is_deleted or review.moderation_status != "approved" or review.content_version != version:
@@ -61,6 +63,7 @@ def process_review(db, review_id, version, predictor=None):
         status = "succeeded" if scores[label] >= settings.SENTIMENT_REVIEW_THRESHOLD else "needs_review"
     except Exception:
         scores, label, model_version, status = {}, None, None, "failed"
+    require_legacy_review_owner(db)  # Inference released the first ownership lock.
     review = db.exec(select(Review).where(Review.id == review_id).with_for_update().execution_options(populate_existing=True)).first()
     if not review or review.is_deleted or review.content_version != version or review.moderation_status != "approved":
         db.rollback()

@@ -3,7 +3,7 @@ from sqlmodel import Session, select
 from fastapi import HTTPException, status
 import logging
 from decimal import Decimal
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from app.repositories.payment_repo import PaymentRepository
 from app.services.ticket_service import TicketService
 
@@ -22,6 +22,8 @@ logger = logging.getLogger(__name__)
 class PaymentService:
     @staticmethod
     def _queue_payment_success_email(booking_detail: Optional[dict]) -> None:
+        if settings.NOTIFICATION_TRANSPORT == "events":
+            return  # Transactional outbox is the only producer after cutover.
         if not booking_detail or not booking_detail.get("email"):
             return
 
@@ -78,7 +80,7 @@ class PaymentService:
 
     @staticmethod
     def _expire_if_due(db, booking):
-        deadline = booking.expires_at
+        deadline = booking.expires_at or (booking.booking_date + timedelta(minutes=10) if isinstance(booking.booking_date, datetime) else None)
         if not isinstance(deadline, datetime) or booking.booking_status != BookingStatus.PENDING:
             return
         if deadline.tzinfo is None:
@@ -179,7 +181,8 @@ class PaymentService:
                             db=db,
                             showtime_id=booking.showtime_id,
                             seat_id=seat_id,
-                            user_id=booking.user_id
+                            user_id=booking.user_id,
+                            sales_version=booking.sales_version
                         )
                     logger.info(f"Updated {len(seat_ids)} seats to BOOKED for booking {booking_id}")
 
@@ -192,6 +195,9 @@ class PaymentService:
                     booking.payment_status = PaymentStatus.PAID.value
                     booking.booking_status = BookingStatus.CONFIRMED.value
                     TicketService.issue_for_booking(db, booking)
+                    if settings.NOTIFICATION_TRANSPORT == "events":
+                        from app.services.integration_events import booking_confirmed
+                        booking_confirmed(db, booking, payment.id)
                     
                     # Commit DB trước khi xóa Redis lock
                     db.commit()
@@ -235,7 +241,7 @@ class PaymentService:
                     seat_ids = [detail.seat_id for detail in booking_details]
                     for seat_id in seat_ids:
                         try:
-                            SeatRepository.release_seat_optimistic(db, booking.showtime_id, seat_id, booking.user_id)
+                            SeatRepository.release_seat_optimistic(db, booking.showtime_id, seat_id, booking.user_id, sales_version=booking.sales_version)
                         except Exception as e:
                             logger.warning(f"Failed to release hold for seat {seat_id}: {e}")
 
@@ -348,7 +354,8 @@ class PaymentService:
                             db=db,
                             showtime_id=booking.showtime_id,
                             seat_id=seat_id,
-                            user_id=booking.user_id
+                            user_id=booking.user_id,
+                            sales_version=booking.sales_version
                         )
                     
                     BookingRepository.update_payment_status(
@@ -359,6 +366,9 @@ class PaymentService:
                     booking.payment_status = PaymentStatus.PAID.value
                     booking.booking_status = BookingStatus.CONFIRMED.value
                     TicketService.issue_for_booking(db, booking)
+                    if settings.NOTIFICATION_TRANSPORT == "events":
+                        from app.services.integration_events import booking_confirmed
+                        booking_confirmed(db, booking, payment.id)
                     
                     # Commit DB trước khi xóa Redis lock
                     db.commit()
@@ -389,7 +399,7 @@ class PaymentService:
                     seat_ids = [detail.seat_id for detail in booking_details]
                     for seat_id in seat_ids:
                         try:
-                            SeatRepository.release_seat_optimistic(db, booking.showtime_id, seat_id, booking.user_id)
+                            SeatRepository.release_seat_optimistic(db, booking.showtime_id, seat_id, booking.user_id, sales_version=booking.sales_version)
                         except Exception as e:
                             logger.warning(f"Failed to release seat {seat_id}: {e}")
                             

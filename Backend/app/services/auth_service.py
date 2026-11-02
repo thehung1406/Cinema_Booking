@@ -21,6 +21,8 @@ class AuthService:
 
     @staticmethod
     def register(session: Session,data) -> User:
+        from app.utils.identity_ownership import require_legacy_identity_owner
+        require_legacy_identity_owner(session)
         if AuthRepository.get_user_by_username(session, data.username):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -45,6 +47,8 @@ class AuthService:
 
     @staticmethod
     def login(session: Session, username: str, password: str):
+        from app.utils.identity_ownership import require_legacy_identity_owner
+        require_legacy_identity_owner(session)
         user = AuthRepository.get_user_by_username(session, username)
         if not user or not user.is_active or not verify_password(password, user.password):
             raise HTTPException(
@@ -66,6 +70,8 @@ class AuthService:
 
     @staticmethod
     def refresh_token(refresh_token: str) -> str:
+        from app.utils.identity_ownership import require_legacy_identity_owner
+        require_legacy_identity_owner()
         try:
             payload = jwt.decode(
                 refresh_token,
@@ -101,6 +107,8 @@ class AuthService:
 
     @staticmethod
     def logout(access_token: str, user_id: Optional[int] = None):
+        from app.utils.identity_ownership import require_legacy_identity_owner
+        require_legacy_identity_owner()
         try:
             payload = jwt.decode(
                 access_token,

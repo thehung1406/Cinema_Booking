@@ -1,0 +1,97 @@
+# Fifth overlay; apply after AI. New installations retain legacy Review until verified cutover.
+services:
+  fastapi:
+    environment:
+      REVIEW_STORAGE_OWNER: ${REVIEW_STORAGE_OWNER:-monolith}
+      REVIEW_SERVICE_ORIGIN: http://review-service:8083
+  gateway:
+    environment:
+      GATEWAY_UPSTREAMS: '{"ai":"http://ai-service:8082","review":"http://review-service:8083"}'
+      GATEWAY_ENABLED_DOMAINS: ${SERVICE_GATEWAY_DOMAINS:-[]}
+  review-db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: review_owner
+      POSTGRES_PASSWORD: ${REVIEW_DB_PASSWORD:?Run prepare_messaging.py}
+      POSTGRES_DB: cinema_review
+    volumes: [reviewdata:/var/lib/postgresql/data]
+    networks: [backend]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U review_owner -d cinema_review"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+  review-migrate:
+    build: &review-build
+      context: ..
+      dockerfile: services/review-service/Dockerfile
+      target: api
+    environment: &review-env
+      REVIEW_DATABASE_URL: postgresql+psycopg2://review_owner:${REVIEW_DB_PASSWORD}@review-db:5432/cinema_review
+      REVIEW_IDENTITY_ORIGIN: http://fastapi:8000
+      REVIEW_READ_ORIGIN: http://fastapi:8000
+      REVIEW_SERVICE_KEY: ${INTERNAL_SERVICE_KEY}
+      REVIEW_WRITES_ENABLED: ${REVIEW_WRITES_ENABLED:-false}
+      REVIEW_AUTO_APPROVE: ${REVIEW_AUTO_APPROVE:-false}
+      REVIEW_SENTIMENT_BACKEND: ${REVIEW_SENTIMENT_BACKEND:-disabled}
+      REVIEW_SENTIMENT_MODEL_PATH: /models/sentiment
+      REVIEW_SENTIMENT_REVIEW_THRESHOLD: ${REVIEW_SENTIMENT_REVIEW_THRESHOLD:-0.65}
+      REVIEW_SENTIMENT_WINDOW_DAYS: ${REVIEW_SENTIMENT_WINDOW_DAYS:-30}
+      REVIEW_SENTIMENT_MIN_REVIEWS: ${REVIEW_SENTIMENT_MIN_REVIEWS:-10}
+    command: ["alembic", "upgrade", "head"]
+    depends_on:
+      review-db:
+        condition: service_healthy
+    networks: [backend]
+  review-service:
+    build: *review-build
+    environment: *review-env
+    ports: ["127.0.0.1:8083:8083"]
+    depends_on:
+      review-migrate:
+        condition: service_completed_successfully
+    networks: [backend]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8083/health/ready', timeout=5)"]
+      interval: 10s
+      timeout: 8s
+      retries: 5
+  review-worker:
+    build:
+      <<: *review-build
+      target: worker
+    environment: *review-env
+    volumes: ["../Backend/artifacts:/models:ro"]
+    cpus: 1.0
+    mem_limit: 1g
+    depends_on:
+      review-migrate:
+        condition: service_completed_successfully
+    networks: [backend]
+  review-relay:
+    build: *review-build
+    environment:
+      <<: *review-env
+      REVIEW_AMQP_PUBLIC_URL: amqp://review-publisher:${BROKER_REVIEW_PASSWORD}@rabbitmq:5672/%2Fcinema-public
+    command: ["python", "-m", "review_service.relay"]
+    depends_on:
+      review-migrate:
+        condition: service_completed_successfully
+      rabbitmq:
+        condition: service_healthy
+    networks: [backend]
+  review-backfill:
+    build: *review-build
+    profiles: [migration]
+    env_file: .env
+    environment: *review-env
+    command: ["python", "-m", "review_service.migrate", "--apply", "--manifest", "/migration-manifests/latest.json"]
+    volumes: ["../tmp/review-migration:/migration-manifests"]
+    depends_on:
+      review-service:
+        condition: service_healthy
+      fastapi:
+        condition: service_healthy
+    networks: [backend]
+volumes:
+  reviewdata:

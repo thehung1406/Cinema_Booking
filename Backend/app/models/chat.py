@@ -16,7 +16,7 @@ class AIConversation(SQLModel, table=True):
     __table_args__ = (Index("ix_ai_conversations_user_updated", "user_id", "updated_at"),)
 
     id: UUID = Field(default_factory=uuid4, primary_key=True)
-    user_id: int = Field(foreign_key="users.id", ondelete="CASCADE")
+    user_id: int = Field()
     title: str = Field(max_length=200)
     context: dict = Field(default_factory=dict, sa_column=Column(JSON_TYPE, nullable=False))
     created_at: datetime = Field(default_factory=utcnow, sa_column=Column(DateTime(timezone=True), nullable=False))

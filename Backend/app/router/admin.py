@@ -28,6 +28,8 @@ Reports = Annotated[object, Depends(require_permission("reports.view"))]
 
 
 def user_permissions(db, user):
+    if hasattr(user, "permissions"):
+        return user.permissions
     return db.exec(select(Permission.code).join(RolePermission)
         .where(RolePermission.role_id == user.role_id).order_by(Permission.code)).all()
 
@@ -40,12 +42,23 @@ def management_user(db: DB, user=Depends(get_current_user)):
 
 @router.get("/session")
 def session(db: DB, user=Depends(management_user)):
+    from app.utils.identity_ownership import require_legacy_identity_owner
+    require_legacy_identity_owner(db)
     return {"user": dict(id=user.id, username=user.username, full_name=user.full_name,
         role=user.role), "permissions": user_permissions(db, user)}
 
 
 @router.get("/catalog")
 def catalog(db: DB, user=Depends(management_user)):
+    from app.utils.catalog_ownership import get_owner
+    owner = get_owner(db)
+    from app.utils.cinema_ownership import require_legacy_cinema_owner
+    require_legacy_cinema_owner(db)
+    if owner == "service":
+        # Gateway composes Catalog references with these Cinema-owned references.
+        return dict(theaters=db.exec(select(Theater).where(Theater.deleted_at.is_(None)).order_by(Theater.name)).all(),
+            rooms=db.exec(select(CinemaRoom).where(CinemaRoom.deleted_at.is_(None)).order_by(CinemaRoom.name)).all())
+    if owner == "maintenance": raise HTTPException(503, "Catalog đang chuyển dữ liệu")
     return dict(genres=db.exec(select(Genre).order_by(Genre.name)).all(),
         formats=db.exec(select(Format).order_by(Format.name)).all(),
         theaters=db.exec(select(Theater).where(Theater.deleted_at.is_(None)).order_by(Theater.name)).all(),
@@ -85,6 +98,8 @@ def delete_film(film_id: int, db: DB, user: Films):
 def rooms(db: DB, user: Rooms, q: str = Query("", max_length=100),
           theater_id: int | None = Query(None, gt=0), offset: int = Query(0, ge=0),
           limit: int = Query(50, ge=1, le=200)):
+    from app.utils.cinema_ownership import require_legacy_cinema_owner
+    require_legacy_cinema_owner(db)
     stmt = select(CinemaRoom).where(CinemaRoom.deleted_at.is_(None))
     if q:
         stmt = stmt.where(CinemaRoom.name.icontains(q, autoescape=True))
@@ -110,6 +125,8 @@ def delete_room(room_id: int, db: DB, user: Rooms):
 
 @router.get("/rooms/{room_id}/seats")
 def seats(room_id: int, db: DB, user: Rooms):
+    from app.utils.cinema_ownership import require_legacy_cinema_owner
+    require_legacy_cinema_owner(db)
     room = service.get(db, CinemaRoom, room_id)
     return {"room": room, "seats": db.exec(select(Seat).where(Seat.room_id == room_id).order_by(Seat.seat_name)).all(),
         "seat_types": db.exec(select(SeatType).where(SeatType.room_id == room_id).order_by(SeatType.id)).all()}
@@ -135,6 +152,8 @@ def showtimes(db: DB, user: Shows, film_id: int | None = Query(None, gt=0),
               room_id: int | None = Query(None, gt=0), show_date: str | None = None,
               offset: int = Query(0, ge=0), limit: int = Query(50, ge=1, le=200)):
     from datetime import date
+    from app.utils.cinema_ownership import require_legacy_cinema_owner
+    require_legacy_cinema_owner(db)
     stmt = select(Showtime)
     if film_id:
         stmt = stmt.where(Showtime.film_id == film_id)
@@ -152,7 +171,7 @@ def showtimes(db: DB, user: Shows, film_id: int | None = Query(None, gt=0),
 
 
 def showtime_data(show):
-    return {**show.model_dump(exclude={"status"}), "status": show.status}
+    return {**show.model_dump(exclude={"status", "catalog_binding_id", "catalog_film_snapshot"}), "status": show.status}
 
 
 @router.post("/showtimes", status_code=201)
@@ -174,6 +193,8 @@ def delete_showtime(showtime_id: int, db: DB, user: Shows):
 def prices(db: DB, user: Prices, room_id: int | None = Query(None, gt=0),
            q: str = Query("", max_length=30), offset: int = Query(0, ge=0),
            limit: int = Query(50, ge=1, le=200)):
+    from app.utils.cinema_ownership import require_legacy_cinema_owner
+    require_legacy_cinema_owner(db)
     stmt = select(SeatType).join(CinemaRoom).where(CinemaRoom.deleted_at.is_(None))
     if room_id:
         stmt = stmt.where(SeatType.room_id == room_id)
@@ -194,6 +215,8 @@ def update_price(price_id: int, body: PriceWrite, db: DB, user: Prices):
 
 @router.delete("/prices/{price_id}")
 def delete_price(price_id: int, db: DB, user: Prices):
+    from app.utils.cinema_ownership import require_legacy_cinema_owner
+    require_legacy_cinema_owner(db)
     price = service.get(db, SeatType, price_id, lock=True)
     if db.exec(select(Seat.id).where(Seat.seat_type_id == price_id).limit(1)).first():
         raise HTTPException(409, "Loại ghế đang có ghế sử dụng")
@@ -203,6 +226,8 @@ def delete_price(price_id: int, db: DB, user: Prices):
 @router.get("/employees")
 def employees(db: DB, user: Employees, q: str = Query("", max_length=100),
               offset: int = Query(0, ge=0), limit: int = Query(50, ge=1, le=200)):
+    from app.utils.identity_ownership import require_legacy_identity_owner
+    require_legacy_identity_owner(db)
     return repo.employees(db, q, offset, limit)
 
 
@@ -230,6 +255,8 @@ def account_status(user_id: int, body: AccountStatus, db: DB, user: Employees):
 @router.get("/documents")
 def documents(db: DB, user: Knowledge, q: str = Query("", max_length=100),
               offset: int = Query(0, ge=0), limit: int = Query(50, ge=1, le=200)):
+    from app.utils.ai_ownership import require_legacy_ai_owner
+    require_legacy_ai_owner()
     from sqlalchemy import or_
     stmt = select(KnowledgeDocument)
     if q:
@@ -240,6 +267,8 @@ def documents(db: DB, user: Knowledge, q: str = Query("", max_length=100),
 
 @router.get("/documents/{document_id}")
 def document_detail(document_id: int, db: DB, user: Knowledge):
+    from app.utils.ai_ownership import require_legacy_ai_owner
+    require_legacy_ai_owner()
     return service.document_detail(db, document_id)
 
 

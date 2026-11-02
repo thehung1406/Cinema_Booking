@@ -30,7 +30,12 @@ def isolated_postgres():
     engine = create_engine(url, connect_args={"options": f"-csearch_path={schema}"})
     try:
         SQLModel.metadata.create_all(engine)
+        from app.models.migration_ownership import OwnershipBase, DomainOwnership
+        OwnershipBase.metadata.create_all(engine)
         with Session(engine) as db:
+            db.add(DomainOwnership(domain="catalog", owner="monolith"))
+            db.add(DomainOwnership(domain="cinema", owner="monolith"))
+            db.add(DomainOwnership(domain="booking", owner="monolith"))
             fmt = Format(id=1, code="2D", name="2D")
             db.add(fmt)
             db.add(Theater(id=1, name="Test", city="Test", address="Test"))

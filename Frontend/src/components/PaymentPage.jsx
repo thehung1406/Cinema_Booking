@@ -3,14 +3,16 @@ import { useParams, useNavigate } from "react-router-dom";
 import { CreditCard, ExternalLink, RefreshCw } from "lucide-react";
 import api from "../config/api";
 import { clearSession, getAccessToken } from "../services/authStorage";
-import { formatCurrency, paymentState } from "../utils/formatters";
+import { formatCurrency } from "../utils/formatters";
 import { BookingSteps, Button, PageState } from "./ui/Primitives";
+import { mayPay } from "../services/paymentStage";
 import BookingSummary from "./ui/BookingSummary";
 
 export default function PaymentPage() {
   const { bookingId } = useParams();
   const cleanId = bookingId?.split(":")[0];
   const navigate = useNavigate();
+  const [payment, setPayment] = useState(null);
   const [booking, setBooking] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -30,11 +32,10 @@ export default function PaymentPage() {
       navigate("/loginpage");
       return;
     }
-    api
-      .get(`/bookings/${cleanId}`, { signal: controller.signal })
-      .then((r) => {
-        setBooking(r.data);
-        if (r.data.paymentStatus === "PAID")
+    Promise.all([api.get(`/bookings/${cleanId}`, { signal: controller.signal }), api.get(`/payment/status/${cleanId}`, { signal: controller.signal })])
+      .then(([r, status]) => {
+        setBooking(r.data); setPayment(status.data);
+        if (status.data.provider_status === "PAID")
           navigate(
             `/payment-result?bookingId=${r.data.id || r.data.bookingId}`,
             { replace: true },
@@ -58,7 +59,7 @@ export default function PaymentPage() {
     return () => controller.abort();
   }, [cleanId, navigate, attempt]);
   async function pay() {
-    if (!booking || busy || paymentState(booking) !== "pending") return;
+    if (!booking || busy || !mayPay(payment, booking)) return;
     setBusy(true);
     setPaymentError("");
     try {
@@ -91,7 +92,7 @@ export default function PaymentPage() {
       </PageState>
     );
   if (!booking) return <PageState title="Chưa có thông tin đơn vé" />;
-  const state = paymentState(booking);
+  const state = mayPay(payment, booking) ? "pending" : "failed";
   return (
     <div className="shell page-section">
       <BookingSteps current={3} />
@@ -118,7 +119,7 @@ export default function PaymentPage() {
             role="status"
           >
             {state === "failed"
-              ? "Đơn vé đã bị hủy hoặc thanh toán thất bại theo phản hồi từ hệ thống."
+              ? "Đơn không còn chờ thanh toán hoặc chưa xác minh được trạng thái. Kiểm tra kết quả trước khi thực hiện giao dịch khác."
               : "Đơn vé đang chờ thanh toán. Trạng thái sẽ được hệ thống xác nhận sau giao dịch."}
           </p>
           {paymentError && (

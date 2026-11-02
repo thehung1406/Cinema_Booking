@@ -1,0 +1,22 @@
+# Overlay: docker compose -f Backend/docker-compose.yml -f docker-compose.microservices.yml up -d --build
+# Relative paths resolve against Backend/, the first Compose file.
+services:
+  gateway:
+    build:
+      context: ..
+      dockerfile: gateway/Dockerfile
+    environment:
+      GATEWAY_MONOLITH_URL: http://fastapi:8000
+    ports:
+      - "127.0.0.1:8080:8080"
+    depends_on:
+      fastapi:
+        condition: service_healthy
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/health/ready', timeout=5)"]
+      interval: 10s
+      timeout: 8s
+      retries: 3
+      start_period: 10s

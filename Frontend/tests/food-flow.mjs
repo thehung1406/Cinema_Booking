@@ -17,6 +17,8 @@ let menuFailure = false;
 let expired = false;
 let failCreate = false;
 let booking;
+let loseResponse = false;
+const attemptHeaders = [];
 const menu = [
   { id: 1, category: "POPCORN", name: "Bỏng ngọt lớn", description: "Bỏng ngọt cỡ lớn", price: "55000", components: [] },
   { id: 3, category: "DRINK", name: "Nước ngọt lớn", description: "Ly nước cỡ lớn", price: "35000", components: [] },
@@ -37,7 +39,7 @@ await context.route("**/*", async route => {
     hold_expired_at: new Date(Date.now() + (expired ? -10000 : 600000)).toISOString(),
   }];
   else if (path === "/bookings" && req.method() === "POST") {
-    const payload = req.postDataJSON(); calls.push(payload);
+    const payload = req.postDataJSON(); calls.push(payload); attemptHeaders.push(req.headers()["idempotency-key"]);
     if (failCreate) { status = 400; body = { detail: "Tổng tiền không khớp, vui lòng kiểm tra lại" }; }
     else {
       const foods = payload.foodItems.map(selection => {
@@ -51,8 +53,10 @@ await context.route("**/*", async route => {
         showDate: "2026-10-15", startTime: "18:30", seats: [{ seat_id: 3, seat_name: "A3", price: 120000 }],
         totalAmount: payload.totalAmount, foodItems: foods, paymentStatus: "PENDING", bookingStatus: "PENDING" };
       body = { bookingId: 77 };
+      if (loseResponse) { loseResponse = false; return route.abort("failed"); }
     }
   } else if (path === "/bookings/77") body = booking;
+  else if (path === "/payment/status/77") body = { booking_id: 77, provider_status: "PENDING", fulfillment_status: "AWAITING_PAYMENT", can_retry: true };
   await route.fulfill({ status, contentType: "application/json", body: JSON.stringify(body) });
 });
 const base = process.env.UI_BASE_URL || "http://127.0.0.1:5173";
@@ -100,6 +104,20 @@ try {
   await page.getByRole("heading", { name: "Combo hai người", exact: true }).waitFor();
   assert.equal(await page.getByLabel("Số lượng Combo hai người").innerText(), "1");
   calls.pop(); failCreate = false;
+
+  loseResponse = true;
+  await openFood();
+  await page.getByRole("button", { name: "Thêm Combo hai người", exact: true }).click();
+  await page.getByRole("button", { name: "Tiếp tục thanh toán", exact: true }).click();
+  await page.getByRole("button", { name: "Thử lại tạo đơn", exact: true }).waitFor();
+  const lostPayload = calls.pop();
+  const lostKey = attemptHeaders.at(-1);
+  assert.ok(lostKey);
+  await page.reload();
+  await page.getByRole("button", { name: "Thử lại tạo đơn", exact: true }).click();
+  await page.getByRole("heading", { name: "Hoàn tất đơn vé", exact: true }).waitFor();
+  assert.deepEqual(calls.pop(), lostPayload);
+  assert.equal(attemptHeaders.at(-1), lostKey);
 
   menuFailure = true;
   await page.goto(`${base}/food-selection/11`);

@@ -17,8 +17,8 @@ class Review(SQLModel, table=True):
         Index("ix_reviews_film_window", "film_id", "updated_at"),
     )
     id: Optional[int] = Field(default=None, primary_key=True)
-    user_id: int = Field(foreign_key="users.id")
-    film_id: int = Field(foreign_key="films.id")
+    user_id: int = Field()
+    film_id: int = Field()
     content: str = Field(max_length=3000)
     content_version: int = Field(default=1)
     moderation_status: str = Field(default="pending", max_length=20)

@@ -9,7 +9,9 @@ from app.schemas.ai import ReviewWrite, ReviewEdit, ReviewRead, ModerationWrite
 from app.services import review_service as service
 from app.utils.dependencies import get_current_user, require_staff
 
-router = APIRouter(tags=["Reviews"])
+from app.utils.review_ownership import require_legacy_review_route
+
+router = APIRouter(tags=["Reviews"], dependencies=[Depends(require_legacy_review_route)])
 
 
 @router.get("/films/positive-trending")
@@ -71,6 +73,8 @@ def moderate(review_id: int, body: ModerationWrite, db: Session = Depends(get_se
 
 @router.post("/reviews/{review_id}/retry", response_model=ReviewRead)
 def retry(review_id: int, db: Session = Depends(get_session), staff=Depends(require_staff)):
+    from app.utils.review_ownership import require_legacy_review_owner
+    require_legacy_review_owner(db)
     review = service.locked_review(db, review_id)
     if review.moderation_status != "approved":
         raise HTTPException(409, "Cần duyệt đánh giá trước khi phân tích lại")

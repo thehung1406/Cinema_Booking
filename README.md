@@ -2,6 +2,8 @@
 
 Hệ thống Đặt vé Xem phim Trực tuyến Fullstack xây dựng theo kiến trúc **Monorepo** kết hợp **FastAPI** (Backend) + **React Vite** (Frontend) + **PostgreSQL 15** + **Redis 7** + **Celery Worker** + **Cổng thanh toán VNPay**.
 
+Đang chuyển sang microservices theo từng bước. Đã có **API Gateway tại cổng 8080** cùng **Notification, AI, Review, Identity, Catalog, Cinema, Booking và Payment Service có DB riêng**. Payment ghi nhận tiền qua outbox/RabbitMQ; Booking xác nhận ghế và cấp vé trong transaction riêng, sau đó Notification gửi email. Reporting còn ở backend nguồn. Xem [kết quả M9](docs/migration/payment-phase.md), [runbook Payment](docs/runbooks/payment.md) và [kế hoạch](MICROSERVICES_MIGRATION_PLAN.md).
+
 ---
 
 ## 🛠️ Công Nghệ Sử Dụng (Tech Stack)
@@ -99,6 +101,20 @@ Cinema_Booking/
 │   ├── package.json
 │   ├── vite.config.js
 │   └── README.md
+├── gateway/                                # HTTP routing /api và readiness
+├── services/
+│   ├── ai-service/                         # Chat/RAG/history/knowledge + DB/Redis riêng
+│   ├── review-service/                     # Review/moderation/ML worker + DB riêng
+│   ├── catalog-service/                     # Phim/menu/quote và tham chiếu lịch, DB riêng
+│   ├── identity-service/                    # User/RBAC và session PostgreSQL riêng
+│   ├── cinema-service/                      # Lịch/rạp và điều phối publication
+│   ├── booking-service/                     # Hold/checkout/ghế/vé và receipt riêng
+│   ├── payment-service/                     # VNPay/ledger/saga/đối soát riêng
+│   └── notification-service/               # Inbox/delivery/SMTP + DB riêng
+├── packages/python-platform/               # Auth/event/outbox kỹ thuật
+├── contracts/                              # OpenAPI/event/private API contracts
+├── infra/                                  # Broker và môi trường test riêng
+├── scripts/migration/                      # Backup/restore/regression/smoke
 ├── .gitignore                              # Root gitignore
 └── README.md
 ```
@@ -123,11 +139,13 @@ cd Backend
 # 2. Khởi tạo file biến môi trường
 cp .env.example .env
 
-# 3. Khởi chạy 7 container (FastAPI, PostgreSQL, Redis, Celery Worker, Celery Beat, Flower, PgAdmin)
-docker compose up -d --build
+# 3. Sinh credential local, khởi chạy backend + gateway + Notification + AI + Review
+# Sao lưu/kiểm chứng restore DB có dữ liệu trước khi khởi động vì image chạy Alembic.
+python ../scripts/dev/prepare_messaging.py
+docker compose --env-file ../.env.microservices -f docker-compose.yml -f ../docker-compose.microservices.yml -f ../docker-compose.notifications.yml -f ../docker-compose.ai-service.yml -f ../docker-compose.reviews.yml -f ../docker-compose.identity.yml -f ../docker-compose.catalog.yml -f ../docker-compose.cinema.yml -f ../docker-compose.booking.yml up -d --build
 
-# 4. Chạy Database Migrations mới nhất
-docker compose exec fastapi alembic upgrade head
+# 4. Lần đầu tách AI/Review: làm lần lượt docs/runbooks/ai.md và review.md.
+# Giữ .env.microservices của máy đã cutover; mặc định mới tạo chưa bật writer AI/Review.
 ```
 
 ---
@@ -189,6 +207,13 @@ npm run lint
 |:---|:---|:---|
 | **Frontend Web** | `http://localhost:5173` | - |
 | **FastAPI Backend** | `http://localhost:8000` | - |
+| **API Gateway** | `http://localhost:8080/api/` | - |
+| **Notification health** | `http://localhost:8081/health/ready` | - |
+| **Booking health** | `http://localhost:8087/health/ready` | - |
+| **Cinema health** | `http://localhost:8086/health/ready` | - |
+| **Review health** | `http://localhost:8083/health/ready` | - |
+| **AI health** | `http://localhost:8082/health/ready` | - |
+| **Mailpit local** | `http://localhost:8025` | Giữ thư thử nghiệm local |
 | **Swagger API Docs** | `http://localhost:8000/docs` | - |
 | **ReDoc API Docs** | `http://localhost:8000/redoc` | - |
 | **PgAdmin 4** | `http://localhost:5050` | `admin@gmail.com` / `admin123` |
@@ -214,4 +239,4 @@ npm run lint
 | `MOD-10` | **Hạ Tầng, Database & DevOps (Docker Compose, Alembic OCC)** | ✅ **Đã hoàn thành** |
 | `MOD-11` | **Admin / Quản lý theo UC01–UC07** | ✅ **Đã triển khai giao diện và API** |
 
-Phần admin/quản lý truy cập tại `/admin`, gồm phim, phòng và ghế, lịch chiếu, giá vé, nhân viên/phân quyền, tài liệu chatbot và báo cáo. Cần chạy migration `009` trước khi sử dụng backend mới. Xem [hướng dẫn admin/quản lý](docs/Admin_Management.md) để biết cách chạy, quyền theo vai trò và đối chiếu thiết kế VPP.
+Phần admin/quản lý truy cập tại `/admin`, gồm phim, phòng và ghế, lịch chiếu, giá vé, nhân viên/phân quyền, tài liệu chatbot và báo cáo. Backend hiện tại cần migration `016`; Booking `booking_001` cùng payment legacy, Cinema `cinema_001`, Catalog `catalog_002`, Identity/AI/Review/Notification có migration riêng. Xem [hướng dẫn admin/quản lý](docs/Admin_Management.md) để biết cách chạy, quyền theo vai trò và đối chiếu thiết kế VPP.

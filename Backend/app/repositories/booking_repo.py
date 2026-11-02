@@ -6,12 +6,10 @@ from app.models.booking import Booking
 from app.models.booking_detail import BookingDetail
 from app.models.seat_status import SeatStatus
 from app.models.showtime import Showtime
-from app.models.film import Film
 from app.models.cinema_room import CinemaRoom
 from app.models.theater import Theater
 from app.models.seat import Seat
 from app.models.seat_type import SeatType
-from app.models.user import User
 from app.utils.enum import BookingStatus, PaymentStatus
 from app.services.food_service import FoodService
 
@@ -22,6 +20,23 @@ class BookingRepository:
     @staticmethod
     def create_booking(db: Session, booking_data: dict) -> Booking:
         """Tạo booking mới"""
+        from app.services.identity_remote import contact
+        if "customer_email" not in booking_data:
+            customer = contact(db, booking_data["user_id"])
+            booking_data = {**booking_data, "customer_full_name": customer.full_name,
+                            "customer_email": customer.email, "customer_phone": customer.phone}
+        from app.services.catalog_remote import get_owner
+        from app.utils.cinema_ownership import get_owner as cinema_owner
+        if cinema_owner(db) == "service":
+            from app.services.sales_service import configuration
+            show = configuration(db, booking_data["showtime_id"], booking_data.get("sales_version"), lock=True)
+            booking_data = {**booking_data, "sales_version": show.sales_version, "catalog_film_snapshot": dict(show.snapshot["film"])}
+        elif get_owner(db) == "service":
+            show = db.get(Showtime, booking_data["showtime_id"])
+            if not show.catalog_film_snapshot:
+                from fastapi import HTTPException
+                raise HTTPException(503, "Missing published film snapshot")
+            booking_data = {**booking_data, "catalog_film_snapshot": dict(show.catalog_film_snapshot)}
         booking = Booking(**booking_data)
         db.add(booking)
         db.flush()  # Để lấy booking.id ngay
@@ -101,14 +116,17 @@ class BookingRepository:
         """Lấy booking với đầy đủ thông tin chi tiết.
         Dùng JOIN để query 1 lần thay vì N+1 queries.
         """
-        # Query 1: Lấy booking + user + showtime + film + room + theater bằng 1 JOIN
+        from app.utils.cinema_ownership import get_owner as cinema_owner
+        if cinema_owner(db) == "service":
+            from app.services.sales_history import booking_detail
+            booking = db.get(Booking, booking_id)
+            return booking_detail(db, booking) if booking else None
+        # Legacy read path before Cinema ownership transfer
         statement = (
             select(
-                Booking, User, Showtime, Film, CinemaRoom, Theater
+                Booking, Showtime, CinemaRoom, Theater
             )
-            .join(User, User.id == Booking.user_id)
             .join(Showtime, Showtime.id == Booking.showtime_id)
-            .join(Film, Film.id == Showtime.film_id)
             .join(CinemaRoom, CinemaRoom.id == Showtime.room_id)
             .join(Theater, Theater.id == CinemaRoom.theater_id)
             .where(Booking.id == booking_id)
@@ -118,7 +136,9 @@ class BookingRepository:
         if not row:
             return None
         
-        booking, user, showtime, film, room, theater = row
+        booking, showtime, room, theater = row
+        from app.services.catalog_remote import show_film
+        film = show_film(db, showtime, booking)
         
         # Query 2: Lấy tất cả booking_details + seat + seat_type bằng 1 JOIN
         seats_statement = (
@@ -155,9 +175,9 @@ class BookingRepository:
             "roomName": room.name,
             "showDate": str(showtime.show_date),
             "startTime": str(showtime.start_time),
-            "fullName": user.full_name,
-            "email": user.email,
-            "phone": user.phone,
+            "fullName": booking.customer_full_name,
+            "email": booking.customer_email,
+            "phone": booking.customer_phone,
             "seats": seats_info,
             "foodItems": FoodService.for_bookings(db, [booking.id]).get(booking.id, [])
         }
@@ -173,14 +193,17 @@ class BookingRepository:
         """Lấy tất cả bookings của user với đầy đủ chi tiết.
         Dùng JOIN batch thay vì gọi get_booking_with_details trong loop.
         """
-        # Query 1: Lấy tất cả bookings + related data bằng 1 JOIN
+        from app.utils.cinema_ownership import get_owner as cinema_owner
+        if cinema_owner(db) == "service":
+            from app.services.sales_history import booking_list
+            rows = db.exec(select(Booking).where(Booking.user_id == user_id).order_by(Booking.booking_date.desc()).offset(skip).limit(limit)).all()
+            return booking_list(db, rows)
+        # Legacy read path before Cinema ownership transfer
         statement = (
             select(
-                Booking, User, Showtime, Film, CinemaRoom, Theater
+                Booking, Showtime, CinemaRoom, Theater
             )
-            .join(User, User.id == Booking.user_id)
             .join(Showtime, Showtime.id == Booking.showtime_id)
-            .join(Film, Film.id == Showtime.film_id)
             .join(CinemaRoom, CinemaRoom.id == Showtime.room_id)
             .join(Theater, Theater.id == CinemaRoom.theater_id)
             .where(Booking.user_id == user_id)
@@ -219,7 +242,9 @@ class BookingRepository:
         foods_by_booking = FoodService.for_bookings(db, booking_ids)
         # Build kết quả
         result = []
-        for booking, user, showtime, film, room, theater in rows:
+        from app.services.catalog_remote import show_film
+        for booking, showtime, room, theater in rows:
+            film = show_film(db, showtime, booking)
             result.append({
                 "id": booking.id,
                 "bookingId": booking.id,
@@ -236,9 +261,9 @@ class BookingRepository:
                 "roomName": room.name,
                 "showDate": str(showtime.show_date),
                 "startTime": str(showtime.start_time),
-                "fullName": user.full_name,
-                "email": user.email,
-                "phone": user.phone,
+                "fullName": booking.customer_full_name,
+                "email": booking.customer_email,
+                "phone": booking.customer_phone,
                 "seats": seats_by_booking.get(booking.id, []),
                 "foodItems": foods_by_booking.get(booking.id, [])
             })

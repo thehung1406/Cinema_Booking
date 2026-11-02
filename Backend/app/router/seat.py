@@ -12,7 +12,12 @@ from app.schemas.seat import (
 from app.utils.dependencies import get_current_user, get_optional_current_user
 from app.models.user import User
 
-router = APIRouter(prefix="/seats", tags=["Seats"])
+from app.utils.booking_ownership import require_legacy_booking_owner
+
+def legacy_booking(db: Session = Depends(get_session)):
+    require_legacy_booking_owner(db)
+
+router = APIRouter(prefix="/seats", tags=["Seats"], dependencies=[Depends(legacy_booking)])
 
 
 @router.get("/showtime/{showtime_id}", response_model=List[SeatStatusResponse])

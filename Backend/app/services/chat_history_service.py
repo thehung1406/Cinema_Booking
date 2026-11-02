@@ -40,6 +40,8 @@ def read_conversation(db, user_id, conversation_id, limit, before_id=None):
 
 
 def delete_conversation(db, user_id, conversation_id, redis=None):
+    from app.utils.ai_ownership import require_legacy_ai_owner
+    require_legacy_ai_owner(db)
     conversation = owned_conversation(db, user_id, conversation_id)
     # Explicit deletion also works for SQLite tests without FK enforcement.
     db.execute(delete(AIMessage).where(AIMessage.conversation_id == conversation.id))

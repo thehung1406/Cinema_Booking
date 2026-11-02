@@ -17,5 +17,3 @@ class Seat(SQLModel, table=True):
     # Relationships
     room: "CinemaRoom" = Relationship(back_populates="seats")
     seat_type_rel: "SeatType" = Relationship(back_populates="seats")
-    booking_details: List["BookingDetail"] = Relationship(back_populates="seat")
-    seat_statuses: List["SeatStatus"] = Relationship(back_populates="seat")

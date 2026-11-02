@@ -1,0 +1,10 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+[project]
+name = "cinema-booking-service"
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = ["cinema-platform==0.1.0", "fastapi==0.128.0", "starlette==0.50.0", "sqlmodel==0.0.39", "pydantic-settings==2.12.0", "alembic==1.17.2", "psycopg2-binary==2.9.9", "uvicorn==0.24.0", "tzdata==2025.2"]
+[tool.setuptools.packages.find]
+where = ["src"]

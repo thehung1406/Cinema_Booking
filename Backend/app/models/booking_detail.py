@@ -14,11 +14,10 @@ class BookingDetail(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
 
     booking_id: int = Field(foreign_key="bookings.id", ondelete="RESTRICT", index=True)
-    seat_id: int = Field(foreign_key="seats.id", ondelete="RESTRICT", index=True)
+    seat_id: int = Field(index=True)
 
     price: Decimal = Field(sa_column=Column(Numeric(12, 2), nullable=False))
 
     # Relationships
     booking: "Booking" = Relationship(back_populates="booked_seats")
-    seat: "Seat" = Relationship(back_populates="booking_details")
 

@@ -1,0 +1,79 @@
+# Sixth overlay. Keep application writers disabled until frozen, copied and verified.
+services:
+  fastapi:
+    environment:
+      IDENTITY_STORAGE_OWNER: ${IDENTITY_STORAGE_OWNER:-monolith}
+      IDENTITY_SERVICE_ORIGIN: http://identity-service:8084
+  gateway:
+    environment:
+      GATEWAY_UPSTREAMS: '{"ai":"http://ai-service:8082","review":"http://review-service:8083","identity":"http://identity-service:8084"}'
+      GATEWAY_ENABLED_DOMAINS: ${SERVICE_GATEWAY_DOMAINS:-[]}
+      GATEWAY_REQUIRED_DOMAINS: ${SERVICE_GATEWAY_REQUIRED_DOMAINS:-[]}
+  ai-service:
+    environment:
+      AI_IDENTITY_ORIGIN: ${IDENTITY_AUTH_ORIGIN:-http://fastapi:8000}
+  review-service:
+    environment:
+      REVIEW_IDENTITY_ORIGIN: ${IDENTITY_AUTH_ORIGIN:-http://fastapi:8000}
+  notification-api:
+    environment:
+      NOTIFICATION_IDENTITY_ORIGIN: ${IDENTITY_AUTH_ORIGIN:-http://fastapi:8000}
+  identity-db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: identity_owner
+      POSTGRES_PASSWORD: ${IDENTITY_DB_PASSWORD:?Run prepare_messaging.py}
+      POSTGRES_DB: cinema_identity
+    volumes: [identitydata:/var/lib/postgresql/data]
+    networks: [backend]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U identity_owner -d cinema_identity"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+  identity-migrate:
+    build: &identity-build
+      context: ..
+      dockerfile: services/identity-service/Dockerfile
+    environment: &identity-env
+      IDENTITY_DATABASE_URL: postgresql+psycopg2://identity_owner:${IDENTITY_DB_PASSWORD}@identity-db:5432/cinema_identity
+      IDENTITY_SERVICE_KEY: ${INTERNAL_SERVICE_KEY}
+      IDENTITY_WRITES_ENABLED: ${IDENTITY_WRITES_ENABLED:-false}
+      IDENTITY_CURRENT_KID: ${IDENTITY_CURRENT_KID}
+      IDENTITY_SIGNING_KEYS: ${IDENTITY_SIGNING_KEYS}
+      IDENTITY_READ_ORIGIN: http://fastapi:8000
+      IDENTITY_ACCESS_MINUTES: ${IDENTITY_ACCESS_MINUTES:-15}
+      IDENTITY_REFRESH_DAYS: ${IDENTITY_REFRESH_DAYS:-7}
+    command: ["alembic", "upgrade", "head"]
+    depends_on:
+      identity-db:
+        condition: service_healthy
+    networks: [backend]
+  identity-service:
+    build: *identity-build
+    environment: *identity-env
+    ports: ["127.0.0.1:8084:8084"]
+    depends_on:
+      identity-migrate:
+        condition: service_completed_successfully
+    networks: [backend]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8084/health/ready', timeout=5)"]
+      interval: 10s
+      timeout: 8s
+      retries: 5
+  identity-backfill:
+    build: *identity-build
+    profiles: [migration]
+    env_file: .env
+    environment: *identity-env
+    command: ["python", "-m", "identity_service.migrate", "--apply", "--manifest", "/migration-manifests/latest.json"]
+    volumes: ["../tmp/identity-migration:/migration-manifests"]
+    depends_on:
+      identity-service:
+        condition: service_healthy
+      fastapi:
+        condition: service_healthy
+    networks: [backend]
+volumes:
+  identitydata:

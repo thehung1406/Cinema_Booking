@@ -114,6 +114,8 @@ def select_evidence(question, evidence):
 
 
 def chat(db, user_id, request, redis=None):
+    from app.utils.ai_ownership import require_legacy_ai_owner
+    require_legacy_ai_owner(db)
     redis = redis if redis is not None else redis_client
     try:
         count = redis.eval(RATE_SCRIPT, 1, f"ai:rate:{user_id}")
@@ -181,6 +183,7 @@ def chat(db, user_id, request, redis=None):
                 as_of=utcnow(), tool=intent if intent.startswith(("get_", "search_")) else None)
     now = result["as_of"]
     try:
+        require_legacy_ai_owner(db)  # Reacquire after releasing the transaction for model I/O.
         if request.conversation_id:
             # Do not overwrite a concurrent turn or recreate a deleted conversation.
             changed = db.execute(update(AIConversation).where(

@@ -136,6 +136,7 @@ export default function SeatSelection() {
                   status: "HOLD",
                   is_held_by_me: true,
                   hold_expired_at: hold?.hold_expired_at || s.hold_expired_at,
+                  reservation_id: hold?.reservation_id || s.reservation_id,
                 }
               : s,
           ),
@@ -177,7 +178,7 @@ export default function SeatSelection() {
     const user = requireUser();
     if (!user) return;
     navigate(`/food-selection/${showtimeId}`, {
-      state: { selectedSeatIds: chosen.map((s) => s.seat_id) },
+      state: { selectedSeatIds: chosen.map((s) => s.seat_id), reservationId: chosen[0]?.reservation_id },
     });
   };
   if (loading) return <PageState loading title="Đang tải sơ đồ ghế…" />;

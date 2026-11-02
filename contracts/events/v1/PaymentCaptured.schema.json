@@ -1,0 +1,72 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "payment_id": {
+      "exclusiveMinimum": 0,
+      "title": "Payment Id",
+      "type": "integer"
+    },
+    "booking_id": {
+      "exclusiveMinimum": 0,
+      "title": "Booking Id",
+      "type": "integer"
+    },
+    "booking_version": {
+      "exclusiveMinimum": 0,
+      "title": "Booking Version",
+      "type": "integer"
+    },
+    "reservation_id": {
+      "format": "uuid",
+      "title": "Reservation Id",
+      "type": "string"
+    },
+    "checkout_digest": {
+      "pattern": "^[a-f0-9]{64}$",
+      "title": "Checkout Digest",
+      "type": "string"
+    },
+    "amount": {
+      "anyOf": [
+        {
+          "exclusiveMinimum": 0.0,
+          "type": "number"
+        },
+        {
+          "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,12}|(?=[\\d.]{1,15}0*$)\\d{0,12}\\.\\d{0,2}0*$)",
+          "type": "string"
+        }
+      ],
+      "title": "Amount"
+    },
+    "currency": {
+      "const": "VND",
+      "title": "Currency",
+      "type": "string"
+    },
+    "transaction_ref": {
+      "maxLength": 100,
+      "minLength": 1,
+      "title": "Transaction Ref",
+      "type": "string"
+    },
+    "collected_at": {
+      "format": "date-time",
+      "title": "Collected At",
+      "type": "string"
+    }
+  },
+  "required": [
+    "payment_id",
+    "booking_id",
+    "booking_version",
+    "reservation_id",
+    "checkout_digest",
+    "amount",
+    "currency",
+    "transaction_ref",
+    "collected_at"
+  ],
+  "title": "Captured",
+  "type": "object"
+}

@@ -1,0 +1,537 @@
+{
+  "Backend/app/core/database.py": [
+    "app.core.config",
+    "app.models"
+  ],
+  "Backend/app/core/redis.py": [
+    "app.core.config"
+  ],
+  "Backend/app/models/chat.py": [
+    "app.models.ai"
+  ],
+  "Backend/app/repositories/admin_repo.py": [
+    "app.models",
+    "app.models.ai",
+    "app.services.booking_report",
+    "app.services.catalog_remote",
+    "app.services.review_remote",
+    "app.services.sales_report",
+    "app.utils.booking_ownership",
+    "app.utils.catalog_ownership",
+    "app.utils.cinema_ownership",
+    "app.utils.review_ownership"
+  ],
+  "Backend/app/repositories/auth_repo.py": [
+    "app.models.user"
+  ],
+  "Backend/app/repositories/booking_repo.py": [
+    "app.models.booking",
+    "app.models.booking_detail",
+    "app.models.cinema_room",
+    "app.models.seat",
+    "app.models.seat_status",
+    "app.models.seat_type",
+    "app.models.showtime",
+    "app.models.theater",
+    "app.services.catalog_remote",
+    "app.services.food_service",
+    "app.services.identity_remote",
+    "app.services.sales_history",
+    "app.services.sales_service",
+    "app.utils.cinema_ownership",
+    "app.utils.enum"
+  ],
+  "Backend/app/repositories/cinema_room_repo.py": [
+    "app.models.cinema_room",
+    "app.services.cinema_remote",
+    "app.utils.cinema_ownership"
+  ],
+  "Backend/app/repositories/film_repo.py": [
+    "app.models.film",
+    "app.services.catalog_remote",
+    "app.utils.catalog_ownership"
+  ],
+  "Backend/app/repositories/payment_repo.py": [
+    "app.models"
+  ],
+  "Backend/app/repositories/seat_repo.py": [
+    "app.models.seat",
+    "app.models.seat_status",
+    "app.models.seat_type",
+    "app.models.showtime",
+    "app.services.sales_service",
+    "app.utils.cinema_ownership",
+    "app.utils.enum"
+  ],
+  "Backend/app/repositories/seat_type_repo.py": [
+    "app.models.seat_type",
+    "app.services.cinema_remote",
+    "app.utils.cinema_ownership"
+  ],
+  "Backend/app/repositories/showtime_repo.py": [
+    "app.models",
+    "app.models.cinema_room",
+    "app.models.showtime",
+    "app.services.cinema_remote",
+    "app.services.sales_service",
+    "app.utils.catalog_ownership",
+    "app.utils.cinema_ownership"
+  ],
+  "Backend/app/repositories/theater_repo.py": [
+    "app.models",
+    "app.services.cinema_remote",
+    "app.utils.cinema_ownership"
+  ],
+  "Backend/app/router/access_control.py": [
+    "app.core.database",
+    "app.models",
+    "app.utils.dependencies",
+    "app.utils.identity_ownership"
+  ],
+  "Backend/app/router/admin.py": [
+    "app.core.database",
+    "app.models",
+    "app.repositories",
+    "app.schemas.admin",
+    "app.services",
+    "app.utils.ai_ownership",
+    "app.utils.catalog_ownership",
+    "app.utils.cinema_ownership",
+    "app.utils.dependencies",
+    "app.utils.identity_ownership"
+  ],
+  "Backend/app/router/ai.py": [
+    "app.core.database",
+    "app.schemas.ai",
+    "app.services.chat_history_service",
+    "app.services.chat_service",
+    "app.utils.ai_ownership",
+    "app.utils.dependencies"
+  ],
+  "Backend/app/router/auth.py": [
+    "app.core.database",
+    "app.models",
+    "app.schemas.auth",
+    "app.services.auth_service",
+    "app.utils.dependencies"
+  ],
+  "Backend/app/router/booking.py": [
+    "app.core.database",
+    "app.models.user",
+    "app.schemas.booking",
+    "app.services.booking_service",
+    "app.utils.booking_ownership",
+    "app.utils.dependencies"
+  ],
+  "Backend/app/router/cinema_room.py": [
+    "app.core.database",
+    "app.schemas.cinema_room",
+    "app.services.cinema_room_service"
+  ],
+  "Backend/app/router/film.py": [
+    "app.core.database",
+    "app.schemas.film",
+    "app.services.film_service"
+  ],
+  "Backend/app/router/food.py": [
+    "app.core.database",
+    "app.schemas.food",
+    "app.services.food_service"
+  ],
+  "Backend/app/router/internal_ai_read.py": [
+    "app.core.config",
+    "app.core.database",
+    "app.models",
+    "app.router.internal_auth",
+    "app.schemas.ai",
+    "app.services.ai_tools",
+    "app.services.catalog_remote",
+    "app.services.cinema_remote",
+    "app.utils.ai_ownership",
+    "app.utils.catalog_ownership",
+    "app.utils.cinema_ownership"
+  ],
+  "Backend/app/router/internal_auth.py": [
+    "app.core.config",
+    "app.core.database",
+    "app.models",
+    "app.utils.dependencies",
+    "app.utils.identity_ownership"
+  ],
+  "Backend/app/router/internal_booking_read.py": [
+    "app.router.internal_auth",
+    "app.utils.booking_ownership"
+  ],
+  "Backend/app/router/internal_catalog_read.py": [
+    "app.router.internal_auth",
+    "app.utils.catalog_ownership"
+  ],
+  "Backend/app/router/internal_review_read.py": [
+    "app.core.database",
+    "app.models",
+    "app.models.sales",
+    "app.router.internal_auth",
+    "app.services.booking_remote",
+    "app.services.catalog_remote",
+    "app.services.identity_remote",
+    "app.services.review_service",
+    "app.utils.booking_ownership",
+    "app.utils.catalog_ownership",
+    "app.utils.cinema_ownership",
+    "app.utils.identity_ownership",
+    "app.utils.review_ownership"
+  ],
+  "Backend/app/router/internal_sales.py": [
+    "app.core.database",
+    "app.router.internal_auth",
+    "app.schemas.sales",
+    "app.services",
+    "app.utils.booking_ownership",
+    "app.utils.cinema_ownership"
+  ],
+  "Backend/app/router/payment.py": [
+    "app.core.config",
+    "app.core.database",
+    "app.models.payment",
+    "app.models.user",
+    "app.repositories.booking_repo",
+    "app.repositories.payment_repo",
+    "app.schemas.payment",
+    "app.services.payment_service",
+    "app.utils.booking_ownership",
+    "app.utils.dependencies"
+  ],
+  "Backend/app/router/reviews.py": [
+    "app.core.config",
+    "app.core.database",
+    "app.models",
+    "app.schemas.ai",
+    "app.services",
+    "app.utils.dependencies",
+    "app.utils.review_ownership"
+  ],
+  "Backend/app/router/seat.py": [
+    "app.core.database",
+    "app.models.user",
+    "app.schemas.seat",
+    "app.services.seat_service",
+    "app.utils.booking_ownership",
+    "app.utils.dependencies"
+  ],
+  "Backend/app/router/seat_type.py": [
+    "app.core.database",
+    "app.models.user",
+    "app.schemas.seat_type",
+    "app.services.seat_type_service",
+    "app.utils.dependencies"
+  ],
+  "Backend/app/router/showtime.py": [
+    "app.core.database",
+    "app.schemas.showtime",
+    "app.services.showtime_service"
+  ],
+  "Backend/app/router/theater.py": [
+    "app.core.database",
+    "app.schemas.theater",
+    "app.services.theater_service"
+  ],
+  "Backend/app/router/ticket.py": [
+    "app.core.database",
+    "app.models",
+    "app.services.ticket_service",
+    "app.utils.booking_ownership",
+    "app.utils.dependencies"
+  ],
+  "Backend/app/schemas/admin.py": [
+    "app.services.rag_service"
+  ],
+  "Backend/app/schemas/booking.py": [
+    "app.schemas.food"
+  ],
+  "Backend/app/schemas/seat.py": [
+    "app.utils.enum"
+  ],
+  "Backend/app/services/admin_service.py": [
+    "app.models",
+    "app.models.ai",
+    "app.services.catalog_remote",
+    "app.services.rag_service",
+    "app.utils.ai_ownership",
+    "app.utils.catalog_ownership",
+    "app.utils.cinema_ownership",
+    "app.utils.identity_ownership",
+    "app.utils.security"
+  ],
+  "Backend/app/services/ai_tools.py": [
+    "app.models",
+    "app.models.sales",
+    "app.schemas.ai",
+    "app.services.booking_remote",
+    "app.services.catalog_remote",
+    "app.services.cinema_remote",
+    "app.services.review_service",
+    "app.services.sales_service",
+    "app.services.seat_service",
+    "app.utils.booking_ownership",
+    "app.utils.catalog_ownership",
+    "app.utils.cinema_ownership"
+  ],
+  "Backend/app/services/auth_service.py": [
+    "app.core.config",
+    "app.core.redis",
+    "app.models.access_control",
+    "app.models.user",
+    "app.repositories.auth_repo",
+    "app.utils.enum",
+    "app.utils.identity_ownership",
+    "app.utils.security"
+  ],
+  "Backend/app/services/booking_remote.py": [
+    "app.core.config"
+  ],
+  "Backend/app/services/booking_report.py": [
+    "app.services.booking_remote",
+    "app.services.catalog_remote",
+    "app.services.review_remote"
+  ],
+  "Backend/app/services/booking_service.py": [
+    "app.models.booking",
+    "app.repositories.booking_repo",
+    "app.repositories.seat_repo",
+    "app.repositories.showtime_repo",
+    "app.schemas.booking",
+    "app.services.food_service",
+    "app.services.sales_service",
+    "app.utils.cinema_ownership",
+    "app.utils.enum",
+    "app.utils.redis_lock"
+  ],
+  "Backend/app/services/catalog_remote.py": [
+    "app.core.config",
+    "app.models",
+    "app.utils.catalog_ownership"
+  ],
+  "Backend/app/services/chat_history_service.py": [
+    "app.core.redis",
+    "app.models",
+    "app.utils.ai_ownership"
+  ],
+  "Backend/app/services/chat_service.py": [
+    "app.core.config",
+    "app.core.redis",
+    "app.models",
+    "app.models.ai",
+    "app.schemas.ai",
+    "app.services.ai_tools",
+    "app.services.chat_history_service",
+    "app.services.rag_service",
+    "app.utils.ai_ownership"
+  ],
+  "Backend/app/services/cinema_remote.py": [
+    "app.core.config"
+  ],
+  "Backend/app/services/cinema_room_service.py": [
+    "app.repositories.cinema_room_repo"
+  ],
+  "Backend/app/services/film_service.py": [
+    "app.repositories.film_repo"
+  ],
+  "Backend/app/services/food_service.py": [
+    "app.models",
+    "app.models.food",
+    "app.schemas.food",
+    "app.services.catalog_remote",
+    "app.utils.catalog_ownership"
+  ],
+  "Backend/app/services/identity_remote.py": [
+    "app.core.config",
+    "app.models",
+    "app.utils.identity_ownership"
+  ],
+  "Backend/app/services/integration_events.py": [
+    "app.models",
+    "app.repositories.booking_repo",
+    "app.services.sales_service",
+    "app.utils.cinema_ownership"
+  ],
+  "Backend/app/services/payment_service.py": [
+    "app.core.config",
+    "app.core.redis",
+    "app.models.booking_detail",
+    "app.repositories.booking_repo",
+    "app.repositories.payment_repo",
+    "app.repositories.seat_repo",
+    "app.router.payment",
+    "app.services.integration_events",
+    "app.services.ticket_service",
+    "app.utils.enum",
+    "app.utils.redis_lock",
+    "app.worker.tasks"
+  ],
+  "Backend/app/services/rag_service.py": [
+    "app.models",
+    "app.models.ai",
+    "app.utils.ai_ownership"
+  ],
+  "Backend/app/services/review_remote.py": [
+    "app.core.config"
+  ],
+  "Backend/app/services/review_service.py": [
+    "app.core.config",
+    "app.models",
+    "app.models.ai",
+    "app.models.sales",
+    "app.models.showtime",
+    "app.services.catalog_remote",
+    "app.services.identity_remote",
+    "app.services.review_remote",
+    "app.services.sales_service",
+    "app.utils.catalog_ownership",
+    "app.utils.cinema_ownership",
+    "app.utils.review_ownership",
+    "app.worker.ai_tasks"
+  ],
+  "Backend/app/services/sales_history.py": [
+    "app.models",
+    "app.models.sales",
+    "app.services.food_service"
+  ],
+  "Backend/app/services/sales_report.py": [
+    "app.models",
+    "app.models.ai",
+    "app.models.sales",
+    "app.services.catalog_remote",
+    "app.services.review_remote",
+    "app.services.sales_service",
+    "app.utils.catalog_ownership",
+    "app.utils.review_ownership"
+  ],
+  "Backend/app/services/sales_service.py": [
+    "app.models",
+    "app.models.sales",
+    "app.schemas.sales"
+  ],
+  "Backend/app/services/seat_service.py": [
+    "app.models.seat_status",
+    "app.repositories.seat_repo",
+    "app.repositories.showtime_repo",
+    "app.services.sales_service",
+    "app.utils.cinema_ownership",
+    "app.utils.enum",
+    "app.utils.redis_lock"
+  ],
+  "Backend/app/services/seat_type_service.py": [
+    "app.repositories.cinema_room_repo",
+    "app.repositories.seat_type_repo",
+    "app.utils.cinema_ownership"
+  ],
+  "Backend/app/services/sentiment_service.py": [
+    "app.ai_text",
+    "app.core.config",
+    "app.models",
+    "app.models.ai",
+    "app.utils.review_ownership"
+  ],
+  "Backend/app/services/showtime_service.py": [
+    "app.models.cinema_room",
+    "app.models.showtime",
+    "app.models.theater",
+    "app.repositories.showtime_repo",
+    "app.services.catalog_remote",
+    "app.services.cinema_remote",
+    "app.utils.cinema_ownership"
+  ],
+  "Backend/app/services/theater_service.py": [
+    "app.repositories.theater_repo"
+  ],
+  "Backend/app/services/ticket_service.py": [
+    "app.models"
+  ],
+  "Backend/app/utils/ai_ownership.py": [
+    "app.core.config",
+    "app.utils.domain_ownership"
+  ],
+  "Backend/app/utils/booking_ownership.py": [
+    "app.core.config",
+    "app.utils.domain_ownership"
+  ],
+  "Backend/app/utils/catalog_ownership.py": [
+    "app.core.config",
+    "app.utils.domain_ownership"
+  ],
+  "Backend/app/utils/cinema_ownership.py": [
+    "app.core.config",
+    "app.utils.domain_ownership"
+  ],
+  "Backend/app/utils/dependencies.py": [
+    "app.core.config",
+    "app.core.database",
+    "app.core.redis",
+    "app.models",
+    "app.models.access_control",
+    "app.repositories.auth_repo",
+    "app.services.identity_remote",
+    "app.utils.identity_ownership"
+  ],
+  "Backend/app/utils/domain_ownership.py": [
+    "app.core.config",
+    "app.core.database",
+    "app.models.migration_ownership"
+  ],
+  "Backend/app/utils/email_service.py": [
+    "app.core.config"
+  ],
+  "Backend/app/utils/identity_ownership.py": [
+    "app.core.config",
+    "app.utils.domain_ownership"
+  ],
+  "Backend/app/utils/redis_lock.py": [
+    "app.core.redis"
+  ],
+  "Backend/app/utils/review_ownership.py": [
+    "app.core.config",
+    "app.utils.domain_ownership"
+  ],
+  "Backend/app/utils/security.py": [
+    "app.core.config"
+  ],
+  "Backend/app/worker/__init__.py": [
+    "app.worker.celery_config"
+  ],
+  "Backend/app/worker/ai_ownership.py": [
+    "app.core.database",
+    "app.models.migration_ownership"
+  ],
+  "Backend/app/worker/ai_tasks.py": [
+    "app.core.config",
+    "app.core.database",
+    "app.models",
+    "app.services.sentiment_service",
+    "app.utils.review_ownership",
+    "app.worker.celery_config"
+  ],
+  "Backend/app/worker/celery_config.py": [
+    "app.core.config"
+  ],
+  "Backend/app/worker/outbox_relay.py": [
+    "app.core.config",
+    "app.core.database",
+    "app.utils.booking_ownership"
+  ],
+  "Backend/app/worker/tasks.py": [
+    "app.core.config",
+    "app.core.database",
+    "app.core.redis",
+    "app.models.booking",
+    "app.models.booking_detail",
+    "app.models.seat_status",
+    "app.repositories.booking_repo",
+    "app.services.booking_remote",
+    "app.services.integration_events",
+    "app.utils.booking_ownership",
+    "app.utils.email_service",
+    "app.utils.enum",
+    "app.utils.redis_lock",
+    "app.worker.celery_config"
+  ]
+}

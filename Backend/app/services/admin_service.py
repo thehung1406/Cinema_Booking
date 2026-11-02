@@ -47,6 +47,8 @@ def remove(db, item):
 
 
 def film_write(db, body, film_id=None):
+    from app.utils.catalog_ownership import require_legacy_catalog_owner
+    require_legacy_catalog_owner(db)
     film = get(db, Film, film_id, lock=True) if film_id else Film()
     genres = db.exec(select(Genre).where(Genre.id.in_(set(body.genre_ids)))).all()
     formats = db.exec(select(Format).where(Format.id.in_(set(body.format_ids)))).all()
@@ -63,19 +65,26 @@ def film_write(db, body, film_id=None):
     for key, value in body.model_dump(exclude={"genre_ids", "format_ids"}).items():
         setattr(film, key, value)
     film.genre_items, film.format_items = list(genres), list(formats)
+    if film_id:
+        film.catalog_version += 1
     return save(db, film)
 
 
 def film_delete(db, film_id):
+    from app.utils.catalog_ownership import require_legacy_catalog_owner
+    require_legacy_catalog_owner(db)
     film = get(db, Film, film_id, lock=True)
     if db.exec(select(Showtime.id).where(Showtime.film_id == film_id).limit(1)).first():
         raise HTTPException(409, "Phim đã có lịch chiếu, không thể xóa")
     film.deleted_at = utcnow()
+    film.catalog_version += 1
     save(db, film)
     return {"message": "Đã xóa phim"}
 
 
 def room_write(db, body, room_id=None):
+    from app.utils.cinema_ownership import require_legacy_cinema_owner
+    require_legacy_cinema_owner(db)
     room = get(db, CinemaRoom, room_id, lock=True) if room_id else CinemaRoom()
     get(db, Theater, body.theater_id)
     duplicate = db.exec(select(CinemaRoom.id).where(CinemaRoom.theater_id == body.theater_id,
@@ -102,6 +111,8 @@ def room_write(db, body, room_id=None):
 
 
 def room_delete(db, room_id):
+    from app.utils.cinema_ownership import require_legacy_cinema_owner
+    require_legacy_cinema_owner(db)
     room = get(db, CinemaRoom, room_id, lock=True)
     if db.exec(select(Showtime.id).where(Showtime.room_id == room_id).limit(1)).first():
         raise HTTPException(409, "Phòng đã có lịch chiếu, không thể xóa")
@@ -119,6 +130,8 @@ def seat_unused(db, seat_id):
 
 
 def seat_write(db, room_id, body, seat_id=None):
+    from app.utils.cinema_ownership import require_legacy_cinema_owner
+    require_legacy_cinema_owner(db)
     room = get(db, CinemaRoom, room_id, lock=True)
     if room.status != "ACTIVE":
         raise HTTPException(409, "Phòng không hoạt động")
@@ -142,6 +155,8 @@ def seat_write(db, room_id, body, seat_id=None):
 
 
 def seat_delete(db, room_id, seat_id):
+    from app.utils.cinema_ownership import require_legacy_cinema_owner
+    require_legacy_cinema_owner(db)
     get(db, CinemaRoom, room_id, lock=True)
     seat = get(db, Seat, seat_id, lock=True)
     if seat.room_id != room_id:
@@ -160,8 +175,37 @@ def show_unused(db, showtime_id):
 
 
 def showtime_write(db, body, showtime_id=None):
+    from app.utils.cinema_ownership import require_legacy_cinema_owner
+    require_legacy_cinema_owner(db)
     # Film lock serializes metadata changes; the room lock serializes all schedule writers.
-    film = get(db, Film, body.film_id, lock=True)
+    from app.utils.catalog_ownership import get_owner
+    owner = get_owner(db, lock=True)
+    if owner == "maintenance":
+        raise HTTPException(503, "Catalog đang chuyển dữ liệu")
+    grant = None
+    if owner == "service":
+        # Reject ordinary validation failures before creating a durable grant.
+        # Recheck under room locks below; the grant remains conservative if a
+        # later race or ambiguous commit prevents the source schedule write.
+        candidate_room = get(db, CinemaRoom, body.room_id)
+        get(db, Theater, candidate_room.theater_id)
+        if candidate_room.status != "ACTIVE":
+            raise HTTPException(409, "Phòng không hoạt động")
+        if datetime.combine(body.show_date, body.start_time) <= datetime.now(ZoneInfo("Asia/Ho_Chi_Minh")).replace(tzinfo=None):
+            raise HTTPException(400, "Suất chiếu phải ở tương lai")
+        if showtime_id:
+            get(db, Showtime, showtime_id)
+            show_unused(db, showtime_id)
+        if db.exec(select(Showtime.id).where(Showtime.room_id == body.room_id,
+            Showtime.show_date == body.show_date, Showtime.status != "CANCELLED",
+            Showtime.start_time < body.end_time, Showtime.end_time > body.start_time,
+            Showtime.id != (showtime_id or 0))).first():
+            raise HTTPException(409, "Lịch chiếu bị trùng trong phòng. Vui lòng chọn lại thời gian.")
+        from app.services.catalog_remote import binding, FilmFact
+        grant = binding(body)
+        film = FilmFact.model_validate(grant["film_snapshot"])
+    else:
+        film = get(db, Film, body.film_id, lock=True)
     previous = get(db, Showtime, showtime_id) if showtime_id else None
     for room_id in sorted({body.room_id, previous.room_id if previous else body.room_id}):
         get(db, CinemaRoom, room_id, lock=True)
@@ -172,7 +216,7 @@ def showtime_write(db, body, showtime_id=None):
         show_unused(db, showtime_id)
     if room.status != "ACTIVE":
         raise HTTPException(409, "Phòng không hoạt động")
-    if not db.get(FilmFormat, (body.film_id, body.format_id)):
+    if (owner == "service" and body.format_id not in film.format_ids) or (owner == "monolith" and not db.get(FilmFormat, (body.film_id, body.format_id))):
         raise HTTPException(400, "Phim không hỗ trợ định dạng đã chọn")
     if film.release_date and body.show_date < film.release_date or film.end_date and body.show_date > film.end_date:
         raise HTTPException(400, "Ngày chiếu ngoài thời gian phát hành phim")
@@ -190,10 +234,23 @@ def showtime_write(db, body, showtime_id=None):
         raise HTTPException(409, "Lịch chiếu bị trùng trong phòng. Vui lòng chọn lại thời gian.")
     for key, value in body.model_dump().items():
         setattr(show, key, value)
+    if grant:
+        show.catalog_binding_id = grant["id"]
+        show.catalog_film_snapshot = grant["film_snapshot"]
+    else:
+        fmt = db.get(Format, body.format_id)
+        from fastapi.encoders import jsonable_encoder
+        from uuid import uuid4
+        show.catalog_binding_id = str(uuid4())
+        show.catalog_film_snapshot = jsonable_encoder({**film.model_dump(), "duration": film.duration,
+            "genre": film.genre, "formats": film.formats, "format_name": fmt.name,
+            "genre_ids": [g.id for g in film.genre_items], "format_ids": [f.id for f in film.format_items]})
     return save(db, show)
 
 
 def showtime_delete(db, showtime_id):
+    from app.utils.cinema_ownership import require_legacy_cinema_owner
+    require_legacy_cinema_owner(db)
     show = get(db, Showtime, showtime_id)
     get(db, CinemaRoom, show.room_id, lock=True)
     show = get(db, Showtime, showtime_id, lock=True)
@@ -203,6 +260,8 @@ def showtime_delete(db, showtime_id):
 
 
 def price_write(db, body, price_id=None):
+    from app.utils.cinema_ownership import require_legacy_cinema_owner
+    require_legacy_cinema_owner(db)
     get(db, CinemaRoom, body.room_id, lock=True)
     price = get(db, SeatType, price_id, lock=True) if price_id else SeatType()
     if price_id and price.room_id != body.room_id:
@@ -214,6 +273,8 @@ def price_write(db, body, price_id=None):
 
 
 def employee_create(db, body):
+    from app.utils.identity_ownership import require_legacy_identity_owner
+    require_legacy_identity_owner(db)
     role = get(db, Role, body.role_id)
     if role.code not in ("ADMIN", "MANAGER", "STAFF"):
         raise HTTPException(400, "Chọn vai trò nhân viên, quản lý hoặc quản trị viên")
@@ -222,6 +283,8 @@ def employee_create(db, body):
 
 
 def employee_write(db, user_id, body):
+    from app.utils.identity_ownership import require_legacy_identity_owner
+    require_legacy_identity_owner(db)
     user = get(db, User, user_id, lock=True)
     for key, value in body.model_dump().items():
         setattr(user, key, value)
@@ -229,6 +292,8 @@ def employee_write(db, user_id, body):
 
 
 def account_status(db, user_id, body, admin):
+    from app.utils.identity_ownership import require_legacy_identity_owner
+    require_legacy_identity_owner(db)
     user = get(db, User, user_id, lock=True)
     if user.id == admin.id and not body.is_active:
         raise HTTPException(409, "Không thể tự khóa tài khoản đang đăng nhập")
@@ -249,6 +314,8 @@ def utc(value):
 
 
 def document_write(db, body):
+    from app.utils.ai_ownership import require_legacy_ai_owner
+    require_legacy_ai_owner(db)
     # PostgreSQL advisory lock also serializes creation when the source does not exist yet.
     if db.bind.dialect.name == "postgresql":
         from sqlalchemy import text
@@ -272,6 +339,8 @@ def document_write(db, body):
 
 
 def document_approve(db, document_id, body):
+    from app.utils.ai_ownership import require_legacy_ai_owner
+    require_legacy_ai_owner(db)
     doc = get(db, KnowledgeDocument, document_id, lock=True)
     if doc.version != body.version or utc(doc.updated_at) != utc(body.expected_updated_at):
         raise HTTPException(409, "Phiên bản tài liệu đã thay đổi; cần xem và duyệt lại")
@@ -283,6 +352,8 @@ def document_approve(db, document_id, body):
 
 
 def document_delete(db, document_id):
+    from app.utils.ai_ownership import require_legacy_ai_owner
+    require_legacy_ai_owner(db)
     doc = get(db, KnowledgeDocument, document_id, lock=True)
     db.exec(delete(KnowledgeChunk).where(KnowledgeChunk.document_id == doc.id))
     return remove(db, doc)
