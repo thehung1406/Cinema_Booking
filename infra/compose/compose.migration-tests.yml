@@ -14,6 +14,18 @@ services:
     depends_on:
       review-db-test:
         condition: service_healthy
+  reporting-db-test:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: reporting_owner_test
+      POSTGRES_PASSWORD: reporting-test-only
+      POSTGRES_DB: cinema_reporting_test
+    tmpfs: [/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U reporting_owner_test -d cinema_reporting_test"]
+      interval: 2s
+      timeout: 3s
+      retries: 20
   payment-db-test:
     image: postgres:15-alpine
     environment:
@@ -159,7 +171,7 @@ services:
       - ../..:/workspace
       - ../../Backend/.env.example:/workspace/Backend/.env:ro
     environment:
-      PYTHONPATH: /workspace/Backend:/workspace
+      PYTHONPATH: /workspace/Backend:/workspace:/workspace/pipelines
       PROJECT_NAME: Cinema migration tests
       SECRET_KEY: isolated-test-key-never-use-in-production
       ALGORITHM: HS256
@@ -201,6 +213,10 @@ services:
       REVIEW_DATABASE_URL: postgresql+psycopg2://review_test:review-test-only@review-db-test:5432/cinema_review_test
       REVIEW_SERVICE_KEY: isolated-internal-service-key-32-characters-test-only
       REVIEW_AMQP_PUBLIC_URL: amqp://review-publisher:isolated-review-publisher-test-only@rabbitmq-test:5672/%2Fcinema-public
+      REPORTING_DATABASE_URL: postgresql+psycopg2://reporting_owner_test:reporting-test-only@reporting-db-test:5432/cinema_reporting_test
+      REPORTING_SERVICE_KEY: isolated-internal-service-key-32-characters-test-only
+      REPORTING_AMQP_URL: amqp://reporting-consumer:isolated-reporting-consumer-test-only@rabbitmq-test:5672/%2Fcinema-public
+      TEST_AMQP_REPORTING_BOOKING: amqp://reporting-publisher-booking:isolated-reporting-booking-test-only@rabbitmq-test:5672/%2Fcinema-public
       PAYMENT_DATABASE_URL: postgresql+psycopg2://payment_owner_test:payment-test-only@payment-db-test:5432/cinema_payment_test
       PAYMENT_SERVICE_KEY: isolated-internal-service-key-32-characters-test-only
       PAYMENT_TMN_CODE: isolated-test-merchant
@@ -232,6 +248,8 @@ services:
         condition: service_healthy
       mailpit-test:
         condition: service_started
+      reporting-db-test:
+        condition: service_healthy
       payment-db-test:
         condition: service_healthy
       booking-db-test:
@@ -251,7 +269,7 @@ services:
     entrypoint: ["sh", "-c"]
     command:
       - >-
-        pip install --quiet pytest==9.0.3 -e packages/python-platform -e services/notification-service -e services/ai-service -e services/review-service -e services/identity-service -e services/catalog-service -e services/cinema-service -e services/booking-service -e services/payment-service &&
+        pip install --quiet pytest==9.0.3 -e packages/python-platform -e services/notification-service -e services/ai-service -e services/review-service -e services/identity-service -e services/catalog-service -e services/cinema-service -e services/booking-service -e services/payment-service -e services/reporting-service &&
         cd /workspace/Backend && alembic upgrade head &&
         cd /workspace/services/notification-service && alembic upgrade head &&
         cd /workspace/services/ai-service && alembic upgrade head &&
@@ -261,5 +279,6 @@ services:
         cd /workspace/services/cinema-service && alembic upgrade head &&
         cd /workspace/services/booking-service && alembic upgrade head &&
         cd /workspace/services/payment-service && alembic upgrade head &&
+        cd /workspace/services/reporting-service && alembic upgrade head &&
         cd /workspace && python scripts/migration/export_baseline.py &&
         python scripts/migration/run_checks.py

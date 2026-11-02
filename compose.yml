@@ -1,0 +1,1224 @@
+# Final runtime. Archives and legacy jobs are offline; see docs/runbooks/final-runtime.md.
+name: backend
+services:
+  gateway:
+    build:
+      context: .
+      dockerfile: gateway/Dockerfile
+    depends_on: {}
+    environment:
+      GATEWAY_ENABLED_DOMAINS: '["ai", "review", "identity", "catalog", "cinema",
+        "booking", "payment", "reporting"]'
+      GATEWAY_UPSTREAMS: '{"ai": "http://ai-service:8082", "review": "http://review-service:8083",
+        "identity": "http://identity-service:8084", "catalog": "http://catalog-service:8085",
+        "cinema": "http://cinema-service:8086", "booking": "http://booking-service:8087",
+        "payment": "http://payment-service:8088", "reporting": "http://reporting-service:8089"}'
+      GATEWAY_REQUIRED_DOMAINS: '["identity","booking","payment","reporting"]'
+      GATEWAY_LEGACY_ENABLED: 'false'
+    healthcheck:
+      interval: 10s
+      retries: 3
+      start_period: 10s
+      test:
+      - CMD
+      - python
+      - -c
+      - import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/health/ready',
+        timeout=5)
+      timeout: 8s
+    networks:
+      backend: null
+    ports:
+    - host_ip: 127.0.0.1
+      mode: ingress
+      protocol: tcp
+      published: '8080'
+      target: 8080
+    image: cinema-gateway:local
+    restart: unless-stopped
+  rabbitmq:
+    healthcheck:
+      interval: 5s
+      retries: 30
+      start_period: 20s
+      test:
+      - CMD
+      - rabbitmq-diagnostics
+      - -q
+      - ping
+      timeout: 5s
+    hostname: cinema-rabbitmq
+    image: rabbitmq:4.1-management
+    networks:
+      backend: null
+    volumes:
+    - bind:
+        create_host_path: true
+      read_only: true
+      source: ./infra/broker/rabbitmq.conf
+      target: /etc/rabbitmq/rabbitmq.conf
+      type: bind
+    - bind:
+        create_host_path: true
+      read_only: true
+      source: ./infra/broker/.runtime/definitions.json
+      target: /etc/rabbitmq/definitions.json
+      type: bind
+    - source: rabbitdata
+      target: /var/lib/rabbitmq
+      type: volume
+      volume: {}
+    environment: {}
+    restart: unless-stopped
+  mailpit:
+    image: axllent/mailpit:v1.24
+    networks:
+      backend: null
+    ports:
+    - host_ip: 127.0.0.1
+      mode: ingress
+      protocol: tcp
+      published: '8025'
+      target: 8025
+    environment: {}
+    restart: unless-stopped
+  ai-redis:
+    healthcheck:
+      interval: 3s
+      retries: 20
+      test:
+      - CMD
+      - redis-cli
+      - ping
+      timeout: 3s
+    image: redis:7-alpine
+    networks:
+      backend: null
+    environment: {}
+    restart: unless-stopped
+  ai-db:
+    environment:
+      POSTGRES_DB: cinema_ai
+      POSTGRES_PASSWORD: ${AI_DB_PASSWORD:?Run prepare_messaging.py}
+      POSTGRES_USER: ai_owner
+    healthcheck:
+      interval: 3s
+      retries: 20
+      test:
+      - CMD-SHELL
+      - pg_isready -U ai_owner -d cinema_ai
+      timeout: 3s
+    image: postgres:15-alpine
+    networks:
+      backend: null
+    volumes:
+    - source: aidata
+      target: /var/lib/postgresql/data
+      type: volume
+      volume: {}
+    restart: unless-stopped
+  ai-migrate:
+    build:
+      context: .
+      dockerfile: services/ai-service/Dockerfile
+    command:
+    - alembic
+    - upgrade
+    - head
+    depends_on:
+      ai-db:
+        condition: service_healthy
+        required: true
+    environment:
+      AI_CONTEXT_TTL_SECONDS: ${AI_CONTEXT_TTL_SECONDS:-1800}
+      AI_DATABASE_URL: postgresql+psycopg2://ai_owner:${AI_DB_PASSWORD}@ai-db:5432/cinema_ai
+      AI_IDENTITY_ORIGIN: http://identity-service:8084
+      AI_MODEL_TIMEOUT_SECONDS: ${AI_MODEL_TIMEOUT_SECONDS:-15}
+      AI_MODEL_URL: ${AI_MODEL_URL:-}
+      AI_REDIS_URL: redis://ai-redis:6379/0
+      AI_REQUESTS_PER_MINUTE: ${AI_REQUESTS_PER_MINUTE:-10}
+      AI_SERVICE_KEY: ${INTERNAL_SERVICE_KEY}
+      AI_WRITES_ENABLED: ${AI_WRITES_ENABLED:-false}
+    networks:
+      backend: null
+    image: cinema-ai:local
+  ai-service:
+    build:
+      context: .
+      dockerfile: services/ai-service/Dockerfile
+    depends_on:
+      ai-migrate:
+        condition: service_completed_successfully
+        required: true
+      ai-redis:
+        condition: service_healthy
+        required: true
+    environment:
+      AI_CONTEXT_TTL_SECONDS: ${AI_CONTEXT_TTL_SECONDS:-1800}
+      AI_DATABASE_URL: postgresql+psycopg2://ai_owner:${AI_DB_PASSWORD}@ai-db:5432/cinema_ai
+      AI_IDENTITY_ORIGIN: http://identity-service:8084
+      AI_MODEL_TIMEOUT_SECONDS: ${AI_MODEL_TIMEOUT_SECONDS:-15}
+      AI_MODEL_URL: ${AI_MODEL_URL:-}
+      AI_REDIS_URL: redis://ai-redis:6379/0
+      AI_REQUESTS_PER_MINUTE: ${AI_REQUESTS_PER_MINUTE:-10}
+      AI_SERVICE_KEY: ${INTERNAL_SERVICE_KEY}
+      AI_WRITES_ENABLED: ${AI_WRITES_ENABLED:-false}
+      AI_DIRECT_READS_ENABLED: 'true'
+    healthcheck:
+      interval: 10s
+      retries: 5
+      test:
+      - CMD
+      - python
+      - -c
+      - import urllib.request; urllib.request.urlopen('http://127.0.0.1:8082/health/ready',
+        timeout=5)
+      timeout: 8s
+    networks:
+      backend: null
+    ports:
+    - host_ip: 127.0.0.1
+      mode: ingress
+      protocol: tcp
+      published: '8082'
+      target: 8082
+    image: cinema-ai:local
+    restart: unless-stopped
+  booking-db:
+    environment:
+      POSTGRES_DB: cinema_booking
+      POSTGRES_PASSWORD: ${BOOKING_DB_PASSWORD:?Run prepare_messaging.py}
+      POSTGRES_USER: booking_owner
+    healthcheck:
+      interval: 3s
+      retries: 20
+      test:
+      - CMD-SHELL
+      - pg_isready -U booking_owner -d cinema_booking
+      timeout: 3s
+    image: postgres:15-alpine
+    networks:
+      backend: null
+    volumes:
+    - source: bookingdata
+      target: /var/lib/postgresql/data
+      type: volume
+      volume: {}
+    restart: unless-stopped
+  booking-migrate:
+    build:
+      context: .
+      dockerfile: services/booking-service/Dockerfile
+    command:
+    - python
+    - -m
+    - booking_service.initialize
+    depends_on:
+      booking-db:
+        condition: service_healthy
+        required: true
+    environment:
+      BOOKING_CATALOG_ORIGIN: http://catalog-service:8085
+      BOOKING_DATABASE_URL: postgresql+psycopg2://booking_owner:${BOOKING_DB_PASSWORD}@booking-db:5432/cinema_booking
+      BOOKING_IDENTITY_ORIGIN: http://identity-service:8084
+      BOOKING_SERVICE_KEY: ${INTERNAL_SERVICE_KEY}
+      BOOKING_WRITES_ENABLED: ${BOOKING_WRITES_ENABLED:-false}
+      BOOKING_PAYMENT_STORAGE_OWNER: service
+    networks:
+      backend: null
+    image: cinema-booking:local
+  booking-payment-consumer:
+    build:
+      context: .
+      dockerfile: services/booking-service/Dockerfile
+    command:
+    - python
+    - -m
+    - booking_service.payment_consumer
+    depends_on:
+      booking-service:
+        condition: service_healthy
+        required: true
+      rabbitmq:
+        condition: service_healthy
+        required: true
+    environment:
+      BOOKING_AMQP_PAYMENT_CONSUMER_URL: amqp://booking-saga-consumer:${BROKER_BOOKING_CONSUMER_PASSWORD}@rabbitmq:5672/%2Fcinema-public
+      BOOKING_DATABASE_URL: postgresql+psycopg2://booking_owner:${BOOKING_DB_PASSWORD}@booking-db:5432/cinema_booking
+      BOOKING_PAYMENT_STORAGE_OWNER: service
+      BOOKING_WRITES_ENABLED: ${BOOKING_WRITES_ENABLED:-false}
+    networks:
+      backend: null
+    image: cinema-booking:local
+    restart: unless-stopped
+  booking-relay:
+    build:
+      context: .
+      dockerfile: services/booking-service/Dockerfile
+    command:
+    - python
+    - -m
+    - booking_service.relay
+    depends_on:
+      booking-service:
+        condition: service_healthy
+        required: true
+      rabbitmq:
+        condition: service_healthy
+        required: true
+    environment:
+      BOOKING_AMQP_NOTIFICATION_URL: amqp://booking-publisher:${BROKER_PUBLISHER_PASSWORD}@rabbitmq:5672/%2Fcinema-private
+      BOOKING_AMQP_PUBLIC_URL: amqp://booking-publisher:${BROKER_PUBLISHER_PASSWORD}@rabbitmq:5672/%2Fcinema-public
+      BOOKING_DATABASE_URL: postgresql+psycopg2://booking_owner:${BOOKING_DB_PASSWORD}@booking-db:5432/cinema_booking
+      BOOKING_WRITES_ENABLED: ${BOOKING_WRITES_ENABLED:-false}
+    networks:
+      backend: null
+    image: cinema-booking:local
+    restart: unless-stopped
+  booking-service:
+    build:
+      context: .
+      dockerfile: services/booking-service/Dockerfile
+    depends_on:
+      booking-migrate:
+        condition: service_completed_successfully
+        required: true
+    environment:
+      BOOKING_CATALOG_ORIGIN: http://catalog-service:8085
+      BOOKING_DATABASE_URL: postgresql+psycopg2://booking_owner:${BOOKING_DB_PASSWORD}@booking-db:5432/cinema_booking
+      BOOKING_IDENTITY_ORIGIN: http://identity-service:8084
+      BOOKING_SERVICE_KEY: ${INTERNAL_SERVICE_KEY}
+      BOOKING_WRITES_ENABLED: ${BOOKING_WRITES_ENABLED:-false}
+      BOOKING_PAYMENT_STORAGE_OWNER: service
+    healthcheck:
+      interval: 10s
+      retries: 5
+      test:
+      - CMD
+      - python
+      - -c
+      - import urllib.request; urllib.request.urlopen('http://127.0.0.1:8087/health/ready',
+        timeout=5)
+      timeout: 8s
+    networks:
+      backend: null
+    ports:
+    - host_ip: 127.0.0.1
+      mode: ingress
+      protocol: tcp
+      published: '8087'
+      target: 8087
+    image: cinema-booking:local
+    restart: unless-stopped
+  booking-worker:
+    build:
+      context: .
+      dockerfile: services/booking-service/Dockerfile
+    command:
+    - python
+    - -m
+    - booking_service.worker
+    depends_on:
+      booking-service:
+        condition: service_healthy
+        required: true
+    environment:
+      BOOKING_DATABASE_URL: postgresql+psycopg2://booking_owner:${BOOKING_DB_PASSWORD}@booking-db:5432/cinema_booking
+      BOOKING_WRITES_ENABLED: ${BOOKING_WRITES_ENABLED:-false}
+    networks:
+      backend: null
+    image: cinema-booking:local
+    restart: unless-stopped
+  catalog-db:
+    environment:
+      POSTGRES_DB: cinema_catalog
+      POSTGRES_PASSWORD: ${CATALOG_DB_PASSWORD:?Run prepare_messaging.py}
+      POSTGRES_USER: catalog_owner
+    healthcheck:
+      interval: 3s
+      retries: 20
+      test:
+      - CMD-SHELL
+      - pg_isready -U catalog_owner -d cinema_catalog
+      timeout: 3s
+    image: postgres:15-alpine
+    networks:
+      backend: null
+    volumes:
+    - source: catalogdata
+      target: /var/lib/postgresql/data
+      type: volume
+      volume: {}
+    restart: unless-stopped
+  catalog-migrate:
+    build:
+      context: .
+      dockerfile: services/catalog-service/Dockerfile
+    command:
+    - alembic
+    - upgrade
+    - head
+    depends_on:
+      catalog-db:
+        condition: service_healthy
+        required: true
+    environment:
+      CATALOG_DATABASE_URL: postgresql+psycopg2://catalog_owner:${CATALOG_DB_PASSWORD}@catalog-db:5432/cinema_catalog
+      CATALOG_IDENTITY_ORIGIN: http://identity-service:8084
+      CATALOG_QUOTE_SECONDS: ${CATALOG_QUOTE_SECONDS:-120}
+      CATALOG_SERVICE_KEY: ${INTERNAL_SERVICE_KEY}
+      CATALOG_WRITES_ENABLED: ${CATALOG_WRITES_ENABLED:-false}
+    networks:
+      backend: null
+    image: cinema-catalog:local
+  catalog-service:
+    build:
+      context: .
+      dockerfile: services/catalog-service/Dockerfile
+    depends_on:
+      catalog-migrate:
+        condition: service_completed_successfully
+        required: true
+    environment:
+      CATALOG_DATABASE_URL: postgresql+psycopg2://catalog_owner:${CATALOG_DB_PASSWORD}@catalog-db:5432/cinema_catalog
+      CATALOG_IDENTITY_ORIGIN: http://identity-service:8084
+      CATALOG_QUOTE_SECONDS: ${CATALOG_QUOTE_SECONDS:-120}
+      CATALOG_SERVICE_KEY: ${INTERNAL_SERVICE_KEY}
+      CATALOG_WRITES_ENABLED: ${CATALOG_WRITES_ENABLED:-false}
+    healthcheck:
+      interval: 10s
+      retries: 5
+      test:
+      - CMD
+      - python
+      - -c
+      - import urllib.request; urllib.request.urlopen('http://127.0.0.1:8085/health/ready',
+        timeout=5)
+      timeout: 8s
+    networks:
+      backend: null
+    ports:
+    - host_ip: 127.0.0.1
+      mode: ingress
+      protocol: tcp
+      published: '8085'
+      target: 8085
+    image: cinema-catalog:local
+    restart: unless-stopped
+  cinema-db:
+    environment:
+      POSTGRES_DB: cinema_cinema
+      POSTGRES_PASSWORD: ${CINEMA_DB_PASSWORD:?Run prepare_messaging.py}
+      POSTGRES_USER: cinema_owner
+    healthcheck:
+      interval: 3s
+      retries: 20
+      test:
+      - CMD-SHELL
+      - pg_isready -U cinema_owner -d cinema_cinema
+      timeout: 3s
+    image: postgres:15-alpine
+    networks:
+      backend: null
+    volumes:
+    - source: cinemadata
+      target: /var/lib/postgresql/data
+      type: volume
+      volume: {}
+    restart: unless-stopped
+  cinema-migrate:
+    build:
+      context: .
+      dockerfile: services/cinema-service/Dockerfile
+    command:
+    - alembic
+    - upgrade
+    - head
+    depends_on:
+      cinema-db:
+        condition: service_healthy
+        required: true
+    environment:
+      CINEMA_BOOKING_ORIGIN: http://booking-service:8087
+      CINEMA_CATALOG_ORIGIN: http://catalog-service:8085
+      CINEMA_DATABASE_URL: postgresql+psycopg2://cinema_owner:${CINEMA_DB_PASSWORD}@cinema-db:5432/cinema_cinema
+      CINEMA_IDENTITY_ORIGIN: http://identity-service:8084
+      CINEMA_SERVICE_KEY: ${INTERNAL_SERVICE_KEY}
+      CINEMA_WRITES_ENABLED: ${CINEMA_WRITES_ENABLED:-false}
+    networks:
+      backend: null
+    image: cinema-cinema:local
+  cinema-service:
+    build:
+      context: .
+      dockerfile: services/cinema-service/Dockerfile
+    depends_on:
+      cinema-migrate:
+        condition: service_completed_successfully
+        required: true
+    environment:
+      CINEMA_BOOKING_ORIGIN: http://booking-service:8087
+      CINEMA_CATALOG_ORIGIN: http://catalog-service:8085
+      CINEMA_DATABASE_URL: postgresql+psycopg2://cinema_owner:${CINEMA_DB_PASSWORD}@cinema-db:5432/cinema_cinema
+      CINEMA_IDENTITY_ORIGIN: http://identity-service:8084
+      CINEMA_SERVICE_KEY: ${INTERNAL_SERVICE_KEY}
+      CINEMA_WRITES_ENABLED: ${CINEMA_WRITES_ENABLED:-false}
+    healthcheck:
+      interval: 10s
+      retries: 5
+      test:
+      - CMD
+      - python
+      - -c
+      - import urllib.request; urllib.request.urlopen('http://127.0.0.1:8086/health/ready',
+        timeout=5)
+      timeout: 8s
+    networks:
+      backend: null
+    ports:
+    - host_ip: 127.0.0.1
+      mode: ingress
+      protocol: tcp
+      published: '8086'
+      target: 8086
+    image: cinema-cinema:local
+    restart: unless-stopped
+  cinema-worker:
+    build:
+      context: .
+      dockerfile: services/cinema-service/Dockerfile
+    command:
+    - python
+    - -m
+    - cinema_service.worker
+    depends_on:
+      cinema-service:
+        condition: service_healthy
+        required: true
+    environment:
+      CINEMA_BOOKING_ORIGIN: http://booking-service:8087
+      CINEMA_CATALOG_ORIGIN: http://catalog-service:8085
+      CINEMA_DATABASE_URL: postgresql+psycopg2://cinema_owner:${CINEMA_DB_PASSWORD}@cinema-db:5432/cinema_cinema
+      CINEMA_IDENTITY_ORIGIN: http://identity-service:8084
+      CINEMA_SERVICE_KEY: ${INTERNAL_SERVICE_KEY}
+      CINEMA_WRITES_ENABLED: ${CINEMA_WRITES_ENABLED:-false}
+    networks:
+      backend: null
+    image: cinema-cinema:local
+    restart: unless-stopped
+  identity-db:
+    environment:
+      POSTGRES_DB: cinema_identity
+      POSTGRES_PASSWORD: ${IDENTITY_DB_PASSWORD:?Run prepare_messaging.py}
+      POSTGRES_USER: identity_owner
+    healthcheck:
+      interval: 3s
+      retries: 20
+      test:
+      - CMD-SHELL
+      - pg_isready -U identity_owner -d cinema_identity
+      timeout: 3s
+    image: postgres:15-alpine
+    networks:
+      backend: null
+    volumes:
+    - source: identitydata
+      target: /var/lib/postgresql/data
+      type: volume
+      volume: {}
+    restart: unless-stopped
+  identity-migrate:
+    build:
+      context: .
+      dockerfile: services/identity-service/Dockerfile
+    command:
+    - alembic
+    - upgrade
+    - head
+    depends_on:
+      identity-db:
+        condition: service_healthy
+        required: true
+    environment:
+      IDENTITY_ACCESS_MINUTES: ${IDENTITY_ACCESS_MINUTES:-15}
+      IDENTITY_CURRENT_KID: ${IDENTITY_CURRENT_KID}
+      IDENTITY_DATABASE_URL: postgresql+psycopg2://identity_owner:${IDENTITY_DB_PASSWORD}@identity-db:5432/cinema_identity
+      IDENTITY_REFRESH_DAYS: ${IDENTITY_REFRESH_DAYS:-7}
+      IDENTITY_SERVICE_KEY: ${INTERNAL_SERVICE_KEY}
+      IDENTITY_SIGNING_KEYS: ${IDENTITY_SIGNING_KEYS}
+      IDENTITY_WRITES_ENABLED: ${IDENTITY_WRITES_ENABLED:-false}
+    networks:
+      backend: null
+    image: cinema-identity:local
+  identity-service:
+    build:
+      context: .
+      dockerfile: services/identity-service/Dockerfile
+    depends_on:
+      identity-migrate:
+        condition: service_completed_successfully
+        required: true
+    environment:
+      IDENTITY_ACCESS_MINUTES: ${IDENTITY_ACCESS_MINUTES:-15}
+      IDENTITY_CURRENT_KID: ${IDENTITY_CURRENT_KID}
+      IDENTITY_DATABASE_URL: postgresql+psycopg2://identity_owner:${IDENTITY_DB_PASSWORD}@identity-db:5432/cinema_identity
+      IDENTITY_REFRESH_DAYS: ${IDENTITY_REFRESH_DAYS:-7}
+      IDENTITY_SERVICE_KEY: ${INTERNAL_SERVICE_KEY}
+      IDENTITY_SIGNING_KEYS: ${IDENTITY_SIGNING_KEYS}
+      IDENTITY_WRITES_ENABLED: ${IDENTITY_WRITES_ENABLED:-false}
+    healthcheck:
+      interval: 10s
+      retries: 5
+      test:
+      - CMD
+      - python
+      - -c
+      - import urllib.request; urllib.request.urlopen('http://127.0.0.1:8084/health/ready',
+        timeout=5)
+      timeout: 8s
+    networks:
+      backend: null
+    ports:
+    - host_ip: 127.0.0.1
+      mode: ingress
+      protocol: tcp
+      published: '8084'
+      target: 8084
+    image: cinema-identity:local
+    restart: unless-stopped
+  notification-api:
+    build:
+      context: .
+      dockerfile: services/notification-service/Dockerfile
+    depends_on:
+      notification-migrate:
+        condition: service_completed_successfully
+        required: true
+    environment:
+      NOTIFICATION_DATABASE_URL: postgresql+psycopg2://notification_owner:${NOTIFICATION_DB_PASSWORD}@notification-db:5432/cinema_notification
+      NOTIFICATION_IDENTITY_ORIGIN: http://identity-service:8084
+      NOTIFICATION_SERVICE_KEY: ${INTERNAL_SERVICE_KEY}
+    healthcheck:
+      interval: 10s
+      retries: 5
+      test:
+      - CMD
+      - python
+      - -c
+      - import urllib.request; urllib.request.urlopen('http://127.0.0.1:8081/health/ready',
+        timeout=3)
+      timeout: 5s
+    networks:
+      backend: null
+    ports:
+    - host_ip: 127.0.0.1
+      mode: ingress
+      protocol: tcp
+      published: '8081'
+      target: 8081
+    image: cinema-notification:local
+    restart: unless-stopped
+  notification-consumer:
+    build:
+      context: .
+      dockerfile: services/notification-service/Dockerfile
+    command:
+    - python
+    - -m
+    - notification_service.worker
+    - consume
+    depends_on:
+      notification-migrate:
+        condition: service_completed_successfully
+        required: true
+      rabbitmq:
+        condition: service_healthy
+        required: true
+    environment:
+      NOTIFICATION_AMQP_URL: amqp://notification-consumer:${BROKER_NOTIFICATION_PASSWORD}@rabbitmq:5672/%2Fcinema-private
+      NOTIFICATION_DATABASE_URL: postgresql+psycopg2://notification_owner:${NOTIFICATION_DB_PASSWORD}@notification-db:5432/cinema_notification
+      NOTIFICATION_IDENTITY_ORIGIN: http://identity-service:8084
+      NOTIFICATION_SERVICE_KEY: ${INTERNAL_SERVICE_KEY}
+    networks:
+      backend: null
+    restart: unless-stopped
+    image: cinema-notification:local
+  notification-db:
+    environment:
+      POSTGRES_DB: cinema_notification
+      POSTGRES_PASSWORD: ${NOTIFICATION_DB_PASSWORD:?Run prepare_messaging.py}
+      POSTGRES_USER: notification_owner
+    healthcheck:
+      interval: 3s
+      retries: 20
+      test:
+      - CMD-SHELL
+      - pg_isready -U notification_owner -d cinema_notification
+      timeout: 3s
+    image: postgres:15-alpine
+    networks:
+      backend: null
+    volumes:
+    - source: notificationdata
+      target: /var/lib/postgresql/data
+      type: volume
+      volume: {}
+    restart: unless-stopped
+  notification-dispatcher:
+    build:
+      context: .
+      dockerfile: services/notification-service/Dockerfile
+    command:
+    - python
+    - -m
+    - notification_service.worker
+    - dispatch
+    depends_on:
+      mailpit:
+        condition: service_started
+        required: true
+      notification-migrate:
+        condition: service_completed_successfully
+        required: true
+    environment:
+      NOTIFICATION_DATABASE_URL: postgresql+psycopg2://notification_owner:${NOTIFICATION_DB_PASSWORD}@notification-db:5432/cinema_notification
+      NOTIFICATION_IDENTITY_ORIGIN: http://identity-service:8084
+      NOTIFICATION_SERVICE_KEY: ${INTERNAL_SERVICE_KEY}
+      NOTIFICATION_SMTP_HOST: ${NOTIFICATION_SMTP_HOST:-mailpit}
+      NOTIFICATION_SMTP_PORT: ${NOTIFICATION_SMTP_PORT:-1025}
+      NOTIFICATION_SMTP_TLS: ${NOTIFICATION_SMTP_TLS:-false}
+      NOTIFICATION_SMTP_USER: ${NOTIFICATION_SMTP_USER:-}
+      NOTIFICATION_SMTP_PASSWORD: ${NOTIFICATION_SMTP_PASSWORD:-}
+    networks:
+      backend: null
+    restart: unless-stopped
+    image: cinema-notification:local
+  notification-migrate:
+    build:
+      context: .
+      dockerfile: services/notification-service/Dockerfile
+    command:
+    - alembic
+    - upgrade
+    - head
+    depends_on:
+      notification-db:
+        condition: service_healthy
+        required: true
+    environment:
+      NOTIFICATION_DATABASE_URL: postgresql+psycopg2://notification_owner:${NOTIFICATION_DB_PASSWORD}@notification-db:5432/cinema_notification
+      NOTIFICATION_IDENTITY_ORIGIN: http://identity-service:8084
+      NOTIFICATION_SERVICE_KEY: ${INTERNAL_SERVICE_KEY}
+    networks:
+      backend: null
+    image: cinema-notification:local
+  payment-db:
+    environment:
+      POSTGRES_DB: cinema_payment
+      POSTGRES_PASSWORD: ${PAYMENT_DB_PASSWORD:?Run prepare_messaging.py}
+      POSTGRES_USER: payment_owner
+    healthcheck:
+      interval: 3s
+      retries: 20
+      test:
+      - CMD-SHELL
+      - pg_isready -U payment_owner -d cinema_payment
+      timeout: 3s
+    image: postgres:15-alpine
+    networks:
+      backend: null
+    volumes:
+    - source: paymentdata
+      target: /var/lib/postgresql/data
+      type: volume
+      volume: {}
+    restart: unless-stopped
+  payment-migrate:
+    build:
+      context: .
+      dockerfile: services/payment-service/Dockerfile
+    command:
+    - alembic
+    - upgrade
+    - head
+    depends_on:
+      payment-db:
+        condition: service_healthy
+        required: true
+    environment:
+      PAYMENT_BOOKING_ORIGIN: http://booking-service:8087
+      PAYMENT_DATABASE_URL: postgresql+psycopg2://payment_owner:${PAYMENT_DB_PASSWORD}@payment-db:5432/cinema_payment
+      PAYMENT_IDENTITY_ORIGIN: http://identity-service:8084
+      PAYMENT_SERVICE_KEY: ${INTERNAL_SERVICE_KEY}
+      PAYMENT_WRITES_ENABLED: ${PAYMENT_WRITES_ENABLED:-false}
+    networks:
+      backend: null
+    image: cinema-payment:local
+  payment-relay:
+    build:
+      context: .
+      dockerfile: services/payment-service/Dockerfile
+    command:
+    - python
+    - -m
+    - payment_service.relay
+    depends_on:
+      payment-service:
+        condition: service_healthy
+        required: true
+      rabbitmq:
+        condition: service_healthy
+        required: true
+    environment:
+      PAYMENT_AMQP_PUBLIC_URL: amqp://payment-saga:${BROKER_PAYMENT_PASSWORD}@rabbitmq:5672/%2Fcinema-public
+      PAYMENT_DATABASE_URL: postgresql+psycopg2://payment_owner:${PAYMENT_DB_PASSWORD}@payment-db:5432/cinema_payment
+      PAYMENT_WRITES_ENABLED: ${PAYMENT_WRITES_ENABLED:-false}
+    networks:
+      backend: null
+    image: cinema-payment:local
+    restart: unless-stopped
+  payment-service:
+    build:
+      context: .
+      dockerfile: services/payment-service/Dockerfile
+    depends_on:
+      payment-migrate:
+        condition: service_completed_successfully
+        required: true
+    environment:
+      PAYMENT_BOOKING_ORIGIN: http://booking-service:8087
+      PAYMENT_DATABASE_URL: postgresql+psycopg2://payment_owner:${PAYMENT_DB_PASSWORD}@payment-db:5432/cinema_payment
+      PAYMENT_FRONTEND_URL: ${PAYMENT_FRONTEND_URL:-http://localhost:5173}
+      PAYMENT_HASH_SECRET: ${PAYMENT_HASH_SECRET:-}
+      PAYMENT_IDENTITY_ORIGIN: http://identity-service:8084
+      PAYMENT_SERVICE_KEY: ${INTERNAL_SERVICE_KEY}
+      PAYMENT_TMN_CODE: ${PAYMENT_TMN_CODE:-}
+      PAYMENT_VNPAY_URL: ${PAYMENT_VNPAY_URL:-https://sandbox.vnpayment.vn/paymentv2/vpcpay.html}
+      PAYMENT_WRITES_ENABLED: ${PAYMENT_WRITES_ENABLED:-false}
+    healthcheck:
+      interval: 10s
+      retries: 5
+      test:
+      - CMD
+      - python
+      - -c
+      - import urllib.request; urllib.request.urlopen('http://127.0.0.1:8088/health/ready',
+        timeout=5)
+      timeout: 8s
+    networks:
+      backend: null
+    ports:
+    - host_ip: 127.0.0.1
+      mode: ingress
+      protocol: tcp
+      published: '8088'
+      target: 8088
+    image: cinema-payment:local
+    restart: unless-stopped
+  payment-worker:
+    build:
+      context: .
+      dockerfile: services/payment-service/Dockerfile
+    command:
+    - python
+    - -m
+    - payment_service.worker
+    depends_on:
+      payment-service:
+        condition: service_healthy
+        required: true
+      rabbitmq:
+        condition: service_healthy
+        required: true
+    environment:
+      PAYMENT_AMQP_CONSUMER_URL: amqp://payment-saga:${BROKER_PAYMENT_PASSWORD}@rabbitmq:5672/%2Fcinema-public
+      PAYMENT_BOOKING_ORIGIN: http://booking-service:8087
+      PAYMENT_DATABASE_URL: postgresql+psycopg2://payment_owner:${PAYMENT_DB_PASSWORD}@payment-db:5432/cinema_payment
+      PAYMENT_IDENTITY_ORIGIN: http://identity-service:8084
+      PAYMENT_SERVICE_KEY: ${INTERNAL_SERVICE_KEY}
+      PAYMENT_WRITES_ENABLED: ${PAYMENT_WRITES_ENABLED:-false}
+    networks:
+      backend: null
+    image: cinema-payment:local
+    restart: unless-stopped
+  review-db:
+    environment:
+      POSTGRES_DB: cinema_review
+      POSTGRES_PASSWORD: ${REVIEW_DB_PASSWORD:?Run prepare_messaging.py}
+      POSTGRES_USER: review_owner
+    healthcheck:
+      interval: 3s
+      retries: 20
+      test:
+      - CMD-SHELL
+      - pg_isready -U review_owner -d cinema_review
+      timeout: 3s
+    image: postgres:15-alpine
+    networks:
+      backend: null
+    volumes:
+    - source: reviewdata
+      target: /var/lib/postgresql/data
+      type: volume
+      volume: {}
+    restart: unless-stopped
+  review-migrate:
+    build:
+      context: .
+      dockerfile: services/review-service/Dockerfile
+      target: api
+    command:
+    - alembic
+    - upgrade
+    - head
+    depends_on:
+      review-db:
+        condition: service_healthy
+        required: true
+    environment:
+      REVIEW_AUTO_APPROVE: ${REVIEW_AUTO_APPROVE:-false}
+      REVIEW_DATABASE_URL: postgresql+psycopg2://review_owner:${REVIEW_DB_PASSWORD}@review-db:5432/cinema_review
+      REVIEW_IDENTITY_ORIGIN: http://identity-service:8084
+      REVIEW_SENTIMENT_BACKEND: ${REVIEW_SENTIMENT_BACKEND:-disabled}
+      REVIEW_SENTIMENT_MIN_REVIEWS: ${REVIEW_SENTIMENT_MIN_REVIEWS:-10}
+      REVIEW_SENTIMENT_MODEL_PATH: /models/sentiment
+      REVIEW_SENTIMENT_REVIEW_THRESHOLD: ${REVIEW_SENTIMENT_REVIEW_THRESHOLD:-0.65}
+      REVIEW_SENTIMENT_WINDOW_DAYS: ${REVIEW_SENTIMENT_WINDOW_DAYS:-30}
+      REVIEW_SERVICE_KEY: ${INTERNAL_SERVICE_KEY}
+      REVIEW_WRITES_ENABLED: ${REVIEW_WRITES_ENABLED:-false}
+    networks:
+      backend: null
+    image: cinema-review:local
+  review-relay:
+    build:
+      context: .
+      dockerfile: services/review-service/Dockerfile
+      target: api
+    command:
+    - python
+    - -m
+    - review_service.relay
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+        required: true
+      review-migrate:
+        condition: service_completed_successfully
+        required: true
+    environment:
+      REVIEW_AMQP_PUBLIC_URL: amqp://review-publisher:${BROKER_REVIEW_PASSWORD}@rabbitmq:5672/%2Fcinema-public
+      REVIEW_DATABASE_URL: postgresql+psycopg2://review_owner:${REVIEW_DB_PASSWORD}@review-db:5432/cinema_review
+      REVIEW_WRITES_ENABLED: ${REVIEW_WRITES_ENABLED:-false}
+    networks:
+      backend: null
+    image: cinema-review:local
+    restart: unless-stopped
+  review-service:
+    build:
+      context: .
+      dockerfile: services/review-service/Dockerfile
+      target: api
+    depends_on:
+      review-migrate:
+        condition: service_completed_successfully
+        required: true
+    environment:
+      REVIEW_AUTO_APPROVE: ${REVIEW_AUTO_APPROVE:-false}
+      REVIEW_DATABASE_URL: postgresql+psycopg2://review_owner:${REVIEW_DB_PASSWORD}@review-db:5432/cinema_review
+      REVIEW_IDENTITY_ORIGIN: http://identity-service:8084
+      REVIEW_SENTIMENT_BACKEND: ${REVIEW_SENTIMENT_BACKEND:-disabled}
+      REVIEW_SENTIMENT_MIN_REVIEWS: ${REVIEW_SENTIMENT_MIN_REVIEWS:-10}
+      REVIEW_SENTIMENT_MODEL_PATH: /models/sentiment
+      REVIEW_SENTIMENT_REVIEW_THRESHOLD: ${REVIEW_SENTIMENT_REVIEW_THRESHOLD:-0.65}
+      REVIEW_SENTIMENT_WINDOW_DAYS: ${REVIEW_SENTIMENT_WINDOW_DAYS:-30}
+      REVIEW_SERVICE_KEY: ${INTERNAL_SERVICE_KEY}
+      REVIEW_WRITES_ENABLED: ${REVIEW_WRITES_ENABLED:-false}
+      REVIEW_DIRECT_READS_ENABLED: 'true'
+    healthcheck:
+      interval: 10s
+      retries: 5
+      test:
+      - CMD
+      - python
+      - -c
+      - import urllib.request; urllib.request.urlopen('http://127.0.0.1:8083/health/ready',
+        timeout=5)
+      timeout: 8s
+    networks:
+      backend: null
+    ports:
+    - host_ip: 127.0.0.1
+      mode: ingress
+      protocol: tcp
+      published: '8083'
+      target: 8083
+    image: cinema-review:local
+    restart: unless-stopped
+  review-worker:
+    build:
+      context: .
+      dockerfile: services/review-service/Dockerfile
+      target: worker
+    cpus: 1
+    depends_on:
+      review-migrate:
+        condition: service_completed_successfully
+        required: true
+    environment:
+      REVIEW_DATABASE_URL: postgresql+psycopg2://review_owner:${REVIEW_DB_PASSWORD}@review-db:5432/cinema_review
+      REVIEW_SENTIMENT_BACKEND: ${REVIEW_SENTIMENT_BACKEND:-disabled}
+      REVIEW_SENTIMENT_MODEL_PATH: /models/sentiment
+      REVIEW_SENTIMENT_REVIEW_THRESHOLD: ${REVIEW_SENTIMENT_REVIEW_THRESHOLD:-0.65}
+      REVIEW_WRITES_ENABLED: ${REVIEW_WRITES_ENABLED:-false}
+    mem_limit: 1g
+    networks:
+      backend: null
+    volumes:
+    - bind:
+        create_host_path: true
+      read_only: true
+      source: ./model-store
+      target: /models
+      type: bind
+    image: cinema-review-worker:local
+    restart: unless-stopped
+  reporting-db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: reporting_owner
+      POSTGRES_PASSWORD: ${REPORTING_DB_PASSWORD:?Run prepare_messaging.py}
+      POSTGRES_DB: cinema_reporting
+    volumes:
+    - reportingdata:/var/lib/postgresql/data
+    networks:
+    - backend
+    healthcheck:
+      test:
+      - CMD-SHELL
+      - pg_isready -U reporting_owner -d cinema_reporting
+      interval: 3s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+  reporting-migrate:
+    build: &id001
+      context: .
+      dockerfile: services/reporting-service/Dockerfile
+    image: cinema-reporting:local
+    environment: &id002
+      REPORTING_DATABASE_URL: postgresql+psycopg2://reporting_owner:${REPORTING_DB_PASSWORD}@reporting-db:5432/cinema_reporting
+      REPORTING_IDENTITY_ORIGIN: http://identity-service:8084
+      REPORTING_SERVICE_KEY: ${INTERNAL_SERVICE_KEY}
+      REPORTING_WRITES_ENABLED: ${REPORTING_WRITES_ENABLED:-false}
+    command:
+    - alembic
+    - upgrade
+    - head
+    depends_on:
+      reporting-db:
+        condition: service_healthy
+    networks:
+    - backend
+  reporting-service:
+    build: *id001
+    image: cinema-reporting:local
+    environment: *id002
+    ports:
+    - 127.0.0.1:8089:8089
+    depends_on:
+      reporting-migrate:
+        condition: service_completed_successfully
+    networks:
+    - backend
+    healthcheck:
+      test:
+      - CMD
+      - python
+      - -c
+      - import urllib.request; urllib.request.urlopen('http://127.0.0.1:8089/health/ready',timeout=5)
+      interval: 10s
+      timeout: 8s
+      retries: 5
+    restart: unless-stopped
+  reporting-worker:
+    build: *id001
+    image: cinema-reporting:local
+    environment:
+      REPORTING_DATABASE_URL: postgresql+psycopg2://reporting_owner:${REPORTING_DB_PASSWORD}@reporting-db:5432/cinema_reporting
+      REPORTING_IDENTITY_ORIGIN: http://identity-service:8084
+      REPORTING_SERVICE_KEY: ${INTERNAL_SERVICE_KEY}
+      REPORTING_WRITES_ENABLED: ${REPORTING_WRITES_ENABLED:-false}
+      REPORTING_AMQP_URL: amqp://reporting-consumer:${BROKER_REPORTING_PASSWORD}@rabbitmq:5672/%2Fcinema-public
+    command:
+    - python
+    - -m
+    - reporting_service.worker
+    depends_on:
+      reporting-service:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+    - backend
+    restart: unless-stopped
+  reporting-bootstrap:
+    build: *id001
+    image: cinema-reporting:local
+    profiles:
+    - migration
+    environment: *id002
+    command:
+    - python
+    - -m
+    - reporting_service.bootstrap
+    networks:
+    - backend
+  booking-report-source:
+    build:
+      context: .
+      dockerfile: services/booking-service/Dockerfile
+    image: cinema-booking:local
+    environment:
+      REPORT_SOURCE_DATABASE_URL: postgresql+psycopg2://booking_owner:${BOOKING_DB_PASSWORD}@booking-db:5432/cinema_booking
+      REPORT_SOURCE_AMQP_URL: amqp://reporting-publisher-booking:${BROKER_REPORTING_BOOKING_PASSWORD}@rabbitmq:5672/%2Fcinema-public
+    command:
+    - python
+    - -m
+    - cinema_platform.reporting
+    - --source
+    - booking
+    depends_on:
+      booking-service:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+    - backend
+    restart: unless-stopped
+  payment-report-source:
+    build:
+      context: .
+      dockerfile: services/payment-service/Dockerfile
+    image: cinema-payment:local
+    environment:
+      REPORT_SOURCE_DATABASE_URL: postgresql+psycopg2://payment_owner:${PAYMENT_DB_PASSWORD}@payment-db:5432/cinema_payment
+      REPORT_SOURCE_AMQP_URL: amqp://reporting-publisher-payment:${BROKER_REPORTING_PAYMENT_PASSWORD}@rabbitmq:5672/%2Fcinema-public
+    command:
+    - python
+    - -m
+    - cinema_platform.reporting
+    - --source
+    - payment
+    depends_on:
+      payment-service:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+    - backend
+    restart: unless-stopped
+  catalog-report-source:
+    build:
+      context: .
+      dockerfile: services/catalog-service/Dockerfile
+    image: cinema-catalog:local
+    environment:
+      REPORT_SOURCE_DATABASE_URL: postgresql+psycopg2://catalog_owner:${CATALOG_DB_PASSWORD}@catalog-db:5432/cinema_catalog
+      REPORT_SOURCE_AMQP_URL: amqp://reporting-publisher-catalog:${BROKER_REPORTING_CATALOG_PASSWORD}@rabbitmq:5672/%2Fcinema-public
+    command:
+    - python
+    - -m
+    - cinema_platform.reporting
+    - --source
+    - catalog
+    depends_on:
+      catalog-service:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+    - backend
+    restart: unless-stopped
+  cinema-report-source:
+    build:
+      context: .
+      dockerfile: services/cinema-service/Dockerfile
+    image: cinema-cinema:local
+    environment:
+      REPORT_SOURCE_DATABASE_URL: postgresql+psycopg2://cinema_owner:${CINEMA_DB_PASSWORD}@cinema-db:5432/cinema_cinema
+      REPORT_SOURCE_AMQP_URL: amqp://reporting-publisher-cinema:${BROKER_REPORTING_CINEMA_PASSWORD}@rabbitmq:5672/%2Fcinema-public
+    command:
+    - python
+    - -m
+    - cinema_platform.reporting
+    - --source
+    - cinema
+    depends_on:
+      cinema-service:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+    - backend
+    restart: unless-stopped
+  review-report-source:
+    build:
+      context: .
+      dockerfile: services/review-service/Dockerfile
+      target: api
+    image: cinema-review:local
+    environment:
+      REPORT_SOURCE_DATABASE_URL: postgresql+psycopg2://review_owner:${REVIEW_DB_PASSWORD}@review-db:5432/cinema_review
+      REPORT_SOURCE_AMQP_URL: amqp://reporting-publisher-review:${BROKER_REPORTING_REVIEW_PASSWORD}@rabbitmq:5672/%2Fcinema-public
+    command:
+    - python
+    - -m
+    - cinema_platform.reporting
+    - --source
+    - review
+    depends_on:
+      review-service:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+    - backend
+    restart: unless-stopped
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    image: cinema-web:local
+    ports:
+    - 127.0.0.1:5173:80
+    depends_on:
+      gateway:
+        condition: service_healthy
+    networks:
+    - backend
+    restart: unless-stopped
+networks:
+  backend:
+    driver: bridge
+    name: backend_backend
+volumes:
+  aidata:
+    name: backend_aidata
+  bookingdata:
+    name: backend_bookingdata
+  catalogdata:
+    name: backend_catalogdata
+  cinemadata:
+    name: backend_cinemadata
+  identitydata:
+    name: backend_identitydata
+  notificationdata:
+    name: backend_notificationdata
+  paymentdata:
+    name: backend_paymentdata
+  rabbitdata:
+    name: backend_rabbitdata
+  reviewdata:
+    name: backend_reviewdata
+  reportingdata:
+    name: backend_reportingdata

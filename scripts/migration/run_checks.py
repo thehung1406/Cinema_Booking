@@ -1,7 +1,7 @@
-"""Run regression tests, tolerating only the six recorded pre-migration failures.
+"""Run regression tests, with no tolerated failures after the M10 contract refresh.
 
-Any new failure, collection error, missing report or interrupted run fails this command.
-The report and pytest exit status remain visible; no test is modified or marked xfail.
+Any failure, collection error, missing report or interrupted run fails this command.
+The report and pytest exit status remain visible; no test is marked xfail.
 """
 
 from pathlib import Path
@@ -10,14 +10,7 @@ import sys
 import xml.etree.ElementTree as ET
 
 ROOT = Path(__file__).resolve().parents[2]
-KNOWN_FAILURES = {
-    ("Backend.tests.test_booking_flow_contract", "test_ticket_booking_reads_query_params"),
-    ("Backend.tests.test_booking_flow_contract", "test_home_page_passes_film_id_to_booking"),
-    ("Backend.tests.test_booking_flow_contract", "test_movie_pages_pass_film_id_to_booking"),
-    ("Backend.tests.test_film_contract", "test_no_n_plus_one_in_main_home_page"),
-    ("Backend.tests.test_film_contract", "test_no_n_plus_one_in_movie_page"),
-    ("Backend.tests.test_payment_contract", "test_frontend_payment_components_contract"),
-}
+KNOWN_FAILURES = set()
 
 
 def main():
@@ -30,7 +23,7 @@ def main():
         result = subprocess.run([
             sys.executable, "-m", "pytest", "Backend/tests", "gateway/tests", "tests/integration",
             "packages/python-platform/tests", "services/notification-service/tests",
-            "services/ai-service/tests", "services/review-service/tests", "services/identity-service/tests", "services/catalog-service/tests", "services/cinema-service/tests", "services/booking-service/tests", "services/payment-service/tests",
+            "services/ai-service/tests", "services/review-service/tests", "services/identity-service/tests", "services/catalog-service/tests", "services/cinema-service/tests", "services/booking-service/tests", "services/payment-service/tests", "services/reporting-service/tests",
             f"--rootdir={ROOT}",
             "-q", "--tb=short", f"--junitxml={fresh}",
         ], cwd=ROOT)

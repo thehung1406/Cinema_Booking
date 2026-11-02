@@ -57,17 +57,18 @@ def create_app(settings: GatewaySettings | None = None, *, transport=None) -> Fa
 
     @app.get("/health/ready")
     async def ready():
+        target="gateway"
         try:
-            upstream = await app.state.upstream.get(settings.monolith_url + "/")
-            if upstream.is_success:
-                for domain in settings.required_domains:
-                    health = await app.state.upstream.get(settings.origin_for(domain) + "/health/ready")
-                    if not health.is_success:
-                        return JSONResponse({"status": "not_ready", "upstream": domain}, status_code=503)
-                return {"status": "ready", "upstream": "monolith"}
-        except httpx.RequestError:
-            pass
-        return JSONResponse({"status": "not_ready", "upstream": "monolith"}, status_code=503)
+            if settings.legacy_enabled:
+                target="monolith"
+                upstream=await app.state.upstream.get(settings.monolith_url+"/")
+                if not upstream.is_success:return JSONResponse({"status":"not_ready","upstream":target},status_code=503)
+            for domain in settings.required_domains:
+                target=domain
+                health=await app.state.upstream.get(settings.origin_for(domain)+"/health/ready")
+                if not health.is_success:return JSONResponse({"status":"not_ready","upstream":domain},status_code=503)
+            return {"status":"ready","upstream":"monolith" if settings.legacy_enabled else "services"}
+        except httpx.RequestError:return JSONResponse({"status":"not_ready","upstream":target},status_code=503)
 
     @app.api_route("/api", methods=METHODS)
     @app.api_route("/api/{path:path}", methods=METHODS)

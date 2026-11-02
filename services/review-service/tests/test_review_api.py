@@ -85,7 +85,11 @@ def test_analysis_ranking_window_and_reporting_semantics(review_store, review_se
         assert client.get("/films/positive-trending").json()[0]["film_id"] == 1
         assert client.get("/films/positive-trending?theater_id=999").json() == []
         private = {"X-Service-Key": review_settings.service_key}
-        body = {"start_date": (utcnow()-timedelta(days=1)).date().isoformat(), "end_date": utcnow().date().isoformat()}
+        # Reporting date filters use Vietnam calendar days, including after local
+        # midnight while UTC is still on the preceding day.
+        from zoneinfo import ZoneInfo
+        local_day = utcnow().astimezone(ZoneInfo("Asia/Ho_Chi_Minh")).date()
+        body = {"start_date": (local_day-timedelta(days=1)).isoformat(), "end_date": local_day.isoformat()}
         assert client.post("/internal/v1/report-sentiments", json=body).status_code == 401
         report = client.post("/internal/v1/report-sentiments", json=body, headers=private).json()
         assert report == {"positive": 1, "neutral": 0, "negative": 0, "total": 1, "pending": 0, "coverage": 100}

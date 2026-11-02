@@ -21,11 +21,12 @@ def enqueue(session: Session, event: EventEnvelope, destination: str):
     return row
 
 
-def relay_one(engine, publish, *, max_attempts=20) -> bool:
+def relay_one(engine, publish, *, max_attempts=20,event_types=None) -> bool:
     """Network call holds only an outbox row lock, never a booking/seat lock."""
     with Session(engine) as session, session.begin():
         row = session.execute(select(OutboxRecord).where(
             OutboxRecord.status == "PENDING", OutboxRecord.available_at <= utcnow(),
+            *([OutboxRecord.event_type.in_(event_types)] if event_types else []),
         ).order_by(OutboxRecord.created_at, OutboxRecord.event_id).limit(1).with_for_update(skip_locked=True)).scalar_one_or_none()
         if row is None:
             return False

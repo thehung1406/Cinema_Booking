@@ -1,7 +1,7 @@
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-FRONTEND_ROOT = REPO_ROOT / "Frontend" / "src"
+FRONTEND_ROOT = REPO_ROOT / "apps" / "web" / "src"
 
 
 def test_ticket_booking_reads_query_params():
@@ -9,7 +9,7 @@ def test_ticket_booking_reads_query_params():
     source = (FRONTEND_ROOT / "components" / "TicketBooking.jsx").read_text(encoding="utf-8")
     
     assert "useSearchParams" in source
-    assert "searchParams.get" in source
+    assert 'params.get("filmId")' in source and 'params.get("theaterId")' in source
     assert "filmId" in source
     assert "theaterId" in source
     assert "/theaters/by-film/" in source
@@ -20,7 +20,8 @@ def test_home_page_passes_film_id_to_booking():
     source = (FRONTEND_ROOT / "components" / "MainHomePage.jsx").read_text(encoding="utf-8")
     
     assert "filmId=" in source
-    assert "handleBooking(e, movie.id)" in source
+    card = (FRONTEND_ROOT / "components/ui/MovieCard.jsx").read_text(encoding="utf-8")
+    assert "filmId=${movie.id}" in card and "<MovieCard" in source
     assert '<a href="movie"' not in source
     assert 'href="movie"' not in source
     assert '<Link' in source
@@ -31,8 +32,8 @@ def test_movie_pages_pass_film_id_to_booking():
     movie_source = (FRONTEND_ROOT / "components" / "Movie.jsx").read_text(encoding="utf-8")
     detail_source = (FRONTEND_ROOT / "components" / "MovieDetail.jsx").read_text(encoding="utf-8")
     
-    assert "filmId=" in movie_source
-    assert "handleBooking(e, movie.id)" in movie_source
+    card = (FRONTEND_ROOT / "components/ui/MovieCard.jsx").read_text(encoding="utf-8")
+    assert "<MovieCard" in movie_source and "filmId=${movie.id}" in card
     
     assert "filmId=" in detail_source
     assert "targetFilmId" in detail_source or "movieId || movie?.id" in detail_source or "filmId=" in detail_source

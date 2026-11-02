@@ -8,7 +8,7 @@ from pathlib import Path
 
 BACKEND_ROOT = Path(__file__).resolve().parents[1]
 REPO_ROOT = BACKEND_ROOT.parent
-FRONTEND_ROOT = REPO_ROOT / "Frontend" / "src"
+FRONTEND_ROOT = REPO_ROOT / "apps" / "web" / "src"
 
 sys.path.insert(0, str(BACKEND_ROOT))
 
@@ -258,14 +258,17 @@ def test_frontend_payment_components_contract():
     assert "bookingId" in payment_page_src
     assert "/payment-result" in payment_page_src
     assert "Thanh toán qua VNPay" in payment_page_src
-    assert "secondsLeft" in payment_page_src
+    assert "mayPay(payment, booking)" in payment_page_src
+    assert "payment/status/" in payment_page_src
+    assert "secondsLeft" not in payment_page_src
 
     # VNPayReturn checks
     assert "/payment/vnpay-return" in vnpay_return_src
-    assert "vnp_ResponseCode" in vnpay_return_src
-    assert "vnp_TxnRef" in vnpay_return_src
+    assert "params.vnp_SecureHash" in vnpay_return_src
+    assert "paymentStage(data)" in vnpay_return_src
     assert "QRCode" in vnpay_return_src
-    assert "VNPAY_RESPONSE_MESSAGES" in vnpay_return_src
+    assert "ticket.ticket_code" in vnpay_return_src and "/tickets/booking/" in vnpay_return_src
+    assert "value={JSON.stringify" not in vnpay_return_src
     assert "Thanh toán thành công" in vnpay_return_src
     assert "location.state?.booking" not in vnpay_return_src
     assert "/bookings/" in vnpay_return_src

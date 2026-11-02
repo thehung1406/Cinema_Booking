@@ -15,6 +15,7 @@ sys.path.insert(0, str(ROOT / "Backend"))
 
 # Explicit synthetic values prevent loading local application secrets from .env.
 os.environ.update({
+    "REPORTING_DATABASE_URL":"sqlite:///./contract-reporting-not-opened.db",
     "PAYMENT_DATABASE_URL":"sqlite:///./contract-payment-not-opened.db",
     "BOOKING_DATABASE_URL":"sqlite:///./contract-booking-not-opened.db",
     "PROJECT_NAME": "Cinema Booking contract export", "SECRET_KEY": "contract-export-not-for-auth",
@@ -127,6 +128,14 @@ def main():
     for label,model in [("PaymentCaptured",Captured),("PaymentBookingResult",BookingResult)]:
         write_json(ROOT / f"contracts/events/v1/{label}.schema.json",model.model_json_schema())
     write_json(ROOT / "contracts/payment/v1/checkout.schema.json",CheckoutFact.model_json_schema())
+    from reporting_service.main import create_app as reporting_app
+    from reporting_service.config import Settings as ReportingSettings
+    from reporting_service.models import Base as ReportingBase
+    from cinema_platform.reporting import Fact,Checkpoint
+    write_json(ROOT / "contracts/openapi/reporting.v1.json",reporting_app(ReportingSettings(database_url="sqlite:///./contract-reporting-not-opened.db")).openapi())
+    write_json(ROOT / "contracts/events/v1/ReportFactChanged.schema.json",Fact.model_json_schema())
+    write_json(ROOT / "contracts/events/v1/ReportCheckpoint.schema.json",Checkpoint.model_json_schema())
+    write_json(ROOT / "docs/migration/reporting-owned-schema.json",[{"table":t.name,"columns":[c.name for c in t.columns],"foreign_keys":[]} for t in ReportingBase.metadata.sorted_tables])
     operations = sum(method.lower() in {"get", "post", "put", "patch", "delete", "head", "options"}
                      for item in app.openapi()["paths"].values() for method in item)
     print(f"Exported {operations} HTTP operations, {len(tables)} tables and {len(imports)} import entries; no database connection.")

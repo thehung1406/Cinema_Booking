@@ -24,6 +24,10 @@ def test_real_legacy_boundary_upgrade_and_payment_copy_preserve_all_original_fac
     # Recreate the exact pre-boundary state, then run the actual new migration
     # against issued historical tickets rather than manually inventing receipts.
     with ready.begin() as conn:
+        # Reconstruct booking_001 before exercising the actual later migrations.
+        conn.execute(text('DROP VIEW reporting_export; DROP TABLE report_snapshot_rows,report_snapshots,report_source_facts,report_dirty,report_source_state;'))
+        names=conn.execute(text("SELECT proname FROM pg_proc WHERE pronamespace=current_schema()::regnamespace AND proname LIKE 'report_touch%'" )).scalars().all()
+        for name in names:conn.execute(text(f'DROP FUNCTION {name}() CASCADE' if name!='report_touch' else 'DROP FUNCTION report_touch(text,text) CASCADE'))
         conn.execute(text('DROP FUNCTION legacy_payment_write_guard() CASCADE; DROP FUNCTION payment_receipt_immutable() CASCADE; DROP TABLE booking_payment_receipts; DROP TABLE payment_ownership;'))
         conn.execute(text("UPDATE alembic_version SET version_num='booking_001'"))
     command.upgrade(Config(str(Path(__file__).resolve().parents[2]/'booking-service/alembic.ini')),'head')

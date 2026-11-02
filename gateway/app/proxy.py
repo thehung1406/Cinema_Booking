@@ -57,6 +57,8 @@ async def proxy_request(request: Request, settings: GatewaySettings):
     if request.url.path[len("/api"):].lstrip("/").split("/", 1)[0] == "internal":
         return JSONResponse({"detail": "Not Found"}, status_code=404)
     domain = owner(request.url.path[len("/api"):])
+    if not settings.legacy_enabled and domain not in settings.enabled_domains:
+        return JSONResponse({"detail":"Not Found"},status_code=404)
     request.state.upstream_domain = domain if domain in settings.enabled_domains else "monolith"
     origin = settings.origin_for(domain)
     # raw_path retains escaped characters; query_string retains +, %xx, duplicates and order.

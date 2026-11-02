@@ -1,4 +1,4 @@
-name: Microservices foundation
+name: Cinema services
 
 on:
   push:
@@ -8,7 +8,8 @@ on:
       - 'services/**'
       - 'scripts/dev/**'
       - 'Backend/**'
-      - 'Frontend/**'
+      - 'apps/web/**'
+      - 'pipelines/**'
       - 'contracts/**'
       - 'scripts/migration/**'
       - 'tests/integration/**'
@@ -24,6 +25,7 @@ on:
       - 'docker-compose.cinema.yml'
       - 'docker-compose.booking.yml'
       - 'docker-compose.payment.yml'
+      - 'compose.yml'
       - '.github/workflows/microservices-foundation.yml'
   pull_request:
     paths:
@@ -32,7 +34,8 @@ on:
       - 'services/**'
       - 'scripts/dev/**'
       - 'Backend/**'
-      - 'Frontend/**'
+      - 'apps/web/**'
+      - 'pipelines/**'
       - 'contracts/**'
       - 'scripts/migration/**'
       - 'tests/integration/**'
@@ -48,6 +51,7 @@ on:
       - 'docker-compose.cinema.yml'
       - 'docker-compose.booking.yml'
       - 'docker-compose.payment.yml'
+      - 'compose.yml'
       - '.github/workflows/microservices-foundation.yml'
 
 permissions:
@@ -68,14 +72,14 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: Frontend
+        working-directory: apps/web
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
           cache: npm
-          cache-dependency-path: Frontend/package-lock.json
+          cache-dependency-path: apps/web/package-lock.json
       - run: npm ci
       - run: npm test
       - run: npm run lint
@@ -86,12 +90,12 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
-      - name: PostgreSQL, Redis, gateway and monolith contracts
+      - name: Nine owners, messaging and legacy compatibility contracts
         run: |
           python scripts/dev/prepare_messaging.py --test
           docker compose -p cinema-migration-tests -f infra/compose/compose.migration-tests.yml run --build --rm backend-test
       - name: Verify exported source contract is current
-        run: git diff --exit-code -- contracts docs/migration/schema-baseline.json docs/migration/import-baseline.json docs/migration/ai-owned-schema.json docs/migration/review-owned-schema.json docs/migration/identity-owned-schema.json docs/migration/catalog-owned-schema.json docs/migration/cinema-owned-schema.json docs/migration/booking-sales-owned-schema.json docs/migration/booking-owned-schema.json docs/migration/booking-payment-owned-schema.json docs/migration/payment-owned-schema.json
+        run: git diff --exit-code -- contracts docs/migration/schema-baseline.json docs/migration/import-baseline.json docs/migration/ai-owned-schema.json docs/migration/review-owned-schema.json docs/migration/identity-owned-schema.json docs/migration/catalog-owned-schema.json docs/migration/cinema-owned-schema.json docs/migration/booking-sales-owned-schema.json docs/migration/booking-owned-schema.json docs/migration/booking-payment-owned-schema.json docs/migration/payment-owned-schema.json docs/migration/reporting-owned-schema.json
       - name: Build and verify the isolated Review ML worker image
         run: docker compose -p cinema-migration-tests -f infra/compose/compose.migration-tests.yml --profile verification run --build --rm review-inference-smoke
       - uses: actions/upload-artifact@v4

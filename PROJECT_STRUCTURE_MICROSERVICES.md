@@ -1,7 +1,7 @@
 # Cinema Booking — Cấu trúc dự án và thiết kế chuyển sang microservices
 
 > Ngày khảo sát: 02/11/2026. Mã nguồn đối chiếu: nhánh `main`, commit `3db6e3b`.
-> Inventory dưới đây là ảnh chụp source tại commit khảo sát; cây đích là thiết kế đề xuất. Đã triển khai gateway, nền tảng messaging/auth cùng Notification, AI, Review, Identity, Catalog, Cinema, Booking và Payment Service có DB riêng. Reporting chưa tách; xem docs/migration/payment-phase.md để biết trạng thái mới nhất.
+> Inventory dưới đây là ảnh chụp source tại commit khảo sát; cây đích là thiết kế ban đầu. Hiện M1–M10 đã triển khai/cutover local đủ 9 service/DB, web tại `apps/web`, ML offline tại `pipelines/ml`, root `compose.yml`; monolith/job cũ dừng. Trạng thái thực tế: [báo cáo M10](docs/migration/reporting-phase.md), [runtime](docs/runbooks/final-runtime.md).
 > Phạm vi: frontend, backend, API, dữ liệu, AI/ML, tác vụ nền, triển khai, kiểm thử và lộ trình di chuyển. Không đọc hoặc sao chép giá trị trong `.env` hay dữ liệu sao lưu vào tài liệu.
 
 Kế hoạch thực hiện chi tiết, task và tiêu chí nghiệm thu: [MICROSERVICES_MIGRATION_PLAN.md](MICROSERVICES_MIGRATION_PLAN.md).

@@ -13,7 +13,7 @@ class Settings(BaseSettings):
     access_minutes: int = Field(default=15, ge=1, le=60)
     refresh_days: int = Field(default=7, ge=1, le=30)
     read_origin: str = "http://fastapi:8000"
-    model_config = SettingsConfigDict(env_prefix="IDENTITY_", extra="ignore")
+    model_config = SettingsConfigDict(env_prefix="IDENTITY_", extra="ignore", hide_input_in_errors=True)
 
     @model_validator(mode="after")
     def keys(self):

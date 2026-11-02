@@ -61,7 +61,7 @@ services:
       <<: *review-build
       target: worker
     environment: *review-env
-    volumes: ["../Backend/artifacts:/models:ro"]
+    volumes: ["../model-store:/models:ro"]
     cpus: 1.0
     mem_limit: 1g
     depends_on:

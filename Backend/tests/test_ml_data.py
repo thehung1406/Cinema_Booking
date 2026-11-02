@@ -25,3 +25,19 @@ def test_load_rejects_cross_split_near_duplicates(tmp_path):
     write_jsonl(tmp_path / "test.jsonl", [row(3, "Diễn xuất rất ổn")])
     with pytest.raises(ValueError, match="Near-duplicate"):
         load_splits(tmp_path)
+
+
+def test_offline_pipeline_normalization_matches_independent_inference_worker():
+    from ml.text import normalize_text as offline
+    from review_service.text import normalize_text as runtime
+    for text in ['  Phim  rất hay\n', 'Điện ảnh', 'Việt Nam', '\tA  B\r\n']:
+        assert offline(text)==runtime(text)
+
+
+def test_training_and_evaluation_have_no_legacy_application_or_database_imports():
+    import ast
+    from pathlib import Path
+    root=Path(__file__).resolve().parents[2]/'pipelines/ml'
+    for path in root.glob('*.py'):
+        for node in ast.walk(ast.parse(path.read_text(encoding='utf-8'))):
+            if isinstance(node,ast.ImportFrom):assert not (node.module or '').startswith(('app.','sqlmodel','sqlalchemy'))

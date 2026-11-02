@@ -35,7 +35,7 @@ class Publisher:
             channel.confirm_delivery()
             channel.basic_publish(
                 exchange=PUBLIC_EXCHANGE if destination == "public" else PRIVATE_EXCHANGE,
-                routing_key=event.event_type, body=event.model_dump_json().encode(), mandatory=True,
+                routing_key=(event.event_type+"."+event.producer if event.event_type in {"ReportFactChanged.v1","ReportCheckpoint.v1"} else event.event_type), body=event.model_dump_json().encode(), mandatory=True,
                 properties=pika.BasicProperties(
                     content_type="application/json", delivery_mode=2,
                     message_id=str(event.event_id), type=event.event_type,

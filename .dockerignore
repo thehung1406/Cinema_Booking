@@ -11,3 +11,5 @@ artifacts
 tmp
 *.vpp*
 infra/broker/.runtime
+
+model-store

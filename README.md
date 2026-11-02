@@ -1,242 +1,70 @@
-# 🎬 Cinema Booking System
+# Cinema Booking
 
-Hệ thống Đặt vé Xem phim Trực tuyến Fullstack xây dựng theo kiến trúc **Monorepo** kết hợp **FastAPI** (Backend) + **React Vite** (Frontend) + **PostgreSQL 15** + **Redis 7** + **Celery Worker** + **Cổng thanh toán VNPay**.
+Hệ thống đặt vé FastAPI/React đã chuyển sang **9 service có database riêng**: Identity, Catalog, Cinema, Booking, Payment, Review, AI, Notification và Reporting. Gateway cung cấp API chung; Booking giữ ghế/cấp vé, Payment xử lý VNPay và saga, Reporting đọc projection từ sự kiện. Runtime cuối không chạy monolith/Celery cũ.
 
-Đang chuyển sang microservices theo từng bước. Đã có **API Gateway tại cổng 8080** cùng **Notification, AI, Review, Identity, Catalog, Cinema, Booking và Payment Service có DB riêng**. Payment ghi nhận tiền qua outbox/RabbitMQ; Booking xác nhận ghế và cấp vé trong transaction riêng, sau đó Notification gửi email. Reporting còn ở backend nguồn. Xem [kết quả M9](docs/migration/payment-phase.md), [runbook Payment](docs/runbooks/payment.md) và [kế hoạch](MICROSERVICES_MIGRATION_PLAN.md).
+Kết quả và giới hạn kiểm chứng: [M10](docs/migration/reporting-phase.md). Quy trình chạy, bootstrap và phục hồi: [runbook runtime](docs/runbooks/final-runtime.md). Lịch sử từng mốc: [kế hoạch M1–M10](MICROSERVICES_MIGRATION_PLAN.md).
 
----
-
-## 🛠️ Công Nghệ Sử Dụng (Tech Stack)
-
-| Phân hệ | Công nghệ | Mục đích sử dụng |
-|:---|:---|:---|
-| **Backend** | Python 3.12, FastAPI, SQLModel / SQLAlchemy, Pydantic, Alembic | Xây dựng RESTful API tốc độ cao, quản lý DB & Migrations |
-| **Frontend** | React 18 / 19, Vite, React Router 7, Axios, TailwindCSS | Giao diện Single Page Application (SPA) hiện đại, responsive |
-| **Database & Cache** | PostgreSQL 15, Redis 7 | Cơ sở dữ liệu chính & Khóa phân tán giữ ghế (Redis Lock TTL 10 phút) |
-| **Background Tasks** | Celery Worker, Celery Beat, Flower UI Dashboard | Tác vụ nền dọn dẹp ghế quá hạn & gửi email vé |
-| **Payment Gateway** | VNPay Sandbox (HMAC SHA512) | Cổng thanh toán trực tuyến bảo mật cao |
-| **DevOps & Container** | Docker, Docker Compose, Git Workflow | Đóng gói và triển khai đồng bộ 7 container dịch vụ |
-
----
-
-## 📁 Cấu Trúc Dự Án (Monorepo Structure)
+## Cấu trúc
 
 ```text
-Cinema_Booking/
-├── Backend/                                # Phân hệ Backend FastAPI
-│   ├── alembic/                            # Quản lý Database Migrations
-│   │   ├── versions/
-│   │   │   ├── 001_initial_migration.py    # Schema khởi tạo (theaters, rooms, films, users...)
-│   │   │   ├── 002_optimize_indexes_types_cascade.py # Composite index & Numeric types
-│   │   │   ├── 003_add_seat_type_table.py  # Bảng seat_types & chuẩn hóa giá ghế
-│   │   │   └── 004_add_version_to_seat_status.py # Thêm version cho Optimistic Concurrency Control (OCC)
-│   │   └── env.py
-│   ├── app/
-│   │   ├── core/                           # Cấu hình cốt lõi (Config, DB Engine, Redis)
-│   │   │   ├── config.py
-│   │   │   ├── database.py
-│   │   │   └── redis.py
-│   │   ├── models/                         # Database Models (SQLModel)
-│   │   │   ├── booking.py                  # Model bookings & booking_seats
-│   │   │   ├── cinema_room.py              # Model phòng chiếu
-│   │   │   ├── film.py                     # Model phim
-│   │   │   ├── payment.py                  # Model giao dịch thanh toán
-│   │   │   ├── seat.py                     # Model ghế vật lý
-│   │   │   ├── seat_status.py              # Model trạng thái ghế (OCC versioning)
-│   │   │   ├── seat_type.py                # Model loại ghế & giá
-│   │   │   ├── showtime.py                 # Model suất chiếu
-│   │   │   ├── theater.py                  # Model cụm rạp
-│   │   │   └── user.py                     # Model người dùng & vai trò
-│   │   ├── repositories/                   # Tầng truy vấn Database (Data Access Layer)
-│   │   │   ├── auth_repo.py, booking_repo.py, cinema_room_repo.py
-│   │   │   ├── film_repo.py, payment_repo.py, seat_repo.py
-│   │   │   ├── seat_type_repo.py, showtime_repo.py, theater_repo.py
-│   │   ├── router/                         # API Endpoints (Controllers)
-│   │   │   ├── auth.py                     # /auth (login, register, me, logout, refresh)
-│   │   │   ├── booking.py                  # /bookings (tạo đơn đặt vé, lịch sử vé)
-│   │   │   ├── cinema_room.py              # /cinema_rooms (phòng chiếu theo rạp)
-│   │   │   ├── film.py                     # /films (danh sách phim, chi tiết)
-│   │   │   ├── payment.py                  # /payment (tạo URL VNPay, verify chữ ký, IPN)
-│   │   │   ├── seat.py                     # /seats (sơ đồ ghế bảo mật, hold, release, cancel-hold)
-│   │   │   ├── seat_type.py                # /seat-types (quản lý loại ghế)
-│   │   │   ├── showtime.py                 # /showtimes (lịch chiếu theo rạp & ngày)
-│   │   │   └── theater.py                  # /theater (danh sách rạp, lọc theo phim)
-│   │   ├── schemas/                        # DTO / Pydantic Request & Response Schemas
-│   │   ├── services/                       # Business Logic Layer (Auth, Booking, Seat Lock, Payment...)
-│   │   ├── utils/                          # Bảo mật, dependencies (get_optional_current_user), Redis Lock
-│   │   └── worker/                         # Celery Worker Tasks (Dọn ghế hết hạn & gửi email vé)
-│   ├── tests/                              # Unit & Contract Tests (45 tests)
-│   ├── alembic.ini
-│   ├── docker-compose.yml                  # Điều phối 7 containers (App, DB, Redis, Celery...)
-│   ├── Dockerfile
-│   ├── main.py                             # Entrypoint FastAPI
-│   ├── requirements.txt
-│   └── README.md
-├── Frontend/                               # Phân hệ Frontend React + Vite
-│   ├── public/                             # Tài nguyên tĩnh
-│   ├── src/
-│   │   ├── assets/
-│   │   ├── components/                     # React UI Components
-│   │   │   ├── About.jsx                   # Giới thiệu rạp
-│   │   │   ├── CinemaList.jsx              # Danh sách cụm rạp & bộ lọc tỉnh/thành phố
-│   │   │   ├── Contact.jsx                 # Trang thông tin liên hệ
-│   │   │   ├── HomePage.jsx                # Layout chính (Header, Outlet, Footer)
-│   │   │   ├── LoginPage.jsx               # Đăng nhập & Đăng ký tài khoản
-│   │   │   ├── MainHomePage.jsx            # Banner carousel, danh sách phim đang/sắp chiếu
-│   │   │   ├── Movie.jsx                   # Danh sách phim & lọc thể loại
-│   │   │   ├── MovieDetail.jsx             # Chi tiết phim, trailer modal & đặt vé
-│   │   │   ├── NotFound.jsx                # Trang 404
-│   │   │   ├── PaymentPage.jsx             # Xác nhận đơn đặt vé & thanh toán VNPay
-│   │   │   ├── SeatSelection.jsx           # Sơ đồ chọn ghế real-time (Redis lock 10 phút)
-│   │   │   ├── TicketBooking.jsx           # Đặt vé & lọc rạp theo phim
-│   │   │   ├── UserInfor.jsx               # Quản lý tài khoản cá nhân
-│   │   │   └── VNPayReturn.jsx             # Tiếp nhận kết quả thanh toán VNPay
-│   │   ├── config/
-│   │   │   └── api.js                      # Axios instance + Bearer token interceptor
-│   │   ├── services/                       # authStorage.js, filmService.js
-│   │   ├── utils/                          # filmUtils.js
-│   │   ├── tests/                          # authStorage.test.mjs
-│   │   ├── App.css, App.jsx, index.css, main.jsx
-│   ├── .env.example
-│   ├── package.json
-│   ├── vite.config.js
-│   └── README.md
-├── gateway/                                # HTTP routing /api và readiness
-├── services/
-│   ├── ai-service/                         # Chat/RAG/history/knowledge + DB/Redis riêng
-│   ├── review-service/                     # Review/moderation/ML worker + DB riêng
-│   ├── catalog-service/                     # Phim/menu/quote và tham chiếu lịch, DB riêng
-│   ├── identity-service/                    # User/RBAC và session PostgreSQL riêng
-│   ├── cinema-service/                      # Lịch/rạp và điều phối publication
-│   ├── booking-service/                     # Hold/checkout/ghế/vé và receipt riêng
-│   ├── payment-service/                     # VNPay/ledger/saga/đối soát riêng
-│   └── notification-service/               # Inbox/delivery/SMTP + DB riêng
-├── packages/python-platform/               # Auth/event/outbox kỹ thuật
-├── contracts/                              # OpenAPI/event/private API contracts
-├── infra/                                  # Broker và môi trường test riêng
-├── scripts/migration/                      # Backup/restore/regression/smoke
-├── .gitignore                              # Root gitignore
-└── README.md
+apps/web/                  React/Vite; Nginx phục vụ SPA và proxy /api
+gateway/                  HTTP routing, composition và readiness
+services/*-service/        9 owner: package, router, DB/Alembic, API và worker riêng
+packages/python-platform/  Auth client, envelope, outbox/inbox, reporting transport
+pipelines/ml/              Chuẩn bị dữ liệu, train/evaluate offline
+model-store/               Artifact ML được duyệt; ignored, worker mount read-only
+contracts/                 Hợp đồng public/private API và events
+scripts/                   Migration, smoke, audit credential/runtime
+infra/                     RabbitMQ và môi trường kiểm thử độc lập
+compose.yml                Runtime chính tại repository root
+Backend/                   Source/migration/test lịch sử, không nằm trong runtime chính
+docs/                      ADR, bằng chứng chuyển đổi và runbook
 ```
 
----
+`main.py` của service khởi tạo app, middleware/lifespan; `router/` định nghĩa endpoint và dependency HTTP. Business logic và model thuộc owner tương ứng. Service không truy vấn database của service khác. `Backend/` còn để đối chiếu và phục hồi dữ liệu lịch sử, không phải backend đang phục vụ người dùng.
 
-## 🚀 Hướng Dẫn Cài Đặt & Chạy Dự Án (Quick Start)
+## Chạy local
 
-### 1. Yêu cầu môi trường
-- **Docker & Docker Compose** (khuyến nghị)
-- **Node.js** >= 18.x
-- **Python** >= 3.11 (nếu chạy local không dùng Docker)
+Cần Docker Compose v2; Node 22 và Python 3.11 nếu phát triển ngoài container.
 
----
-
-### 2. Khởi chạy toàn bộ hệ thống với Docker Compose (Khuyến nghị)
-
-```bash
-# 1. Di chuyển vào thư mục Backend
-cd Backend
-
-# 2. Khởi tạo file biến môi trường
-cp .env.example .env
-
-# 3. Sinh credential local, khởi chạy backend + gateway + Notification + AI + Review
-# Sao lưu/kiểm chứng restore DB có dữ liệu trước khi khởi động vì image chạy Alembic.
-python ../scripts/dev/prepare_messaging.py
-docker compose --env-file ../.env.microservices -f docker-compose.yml -f ../docker-compose.microservices.yml -f ../docker-compose.notifications.yml -f ../docker-compose.ai-service.yml -f ../docker-compose.reviews.yml -f ../docker-compose.identity.yml -f ../docker-compose.catalog.yml -f ../docker-compose.cinema.yml -f ../docker-compose.booking.yml up -d --build
-
-# 4. Lần đầu tách AI/Review: làm lần lượt docs/runbooks/ai.md và review.md.
-# Giữ .env.microservices của máy đã cutover; mặc định mới tạo chưa bật writer AI/Review.
+```powershell
+python scripts/dev/prepare_messaging.py
+# Điền các cấu hình riêng trong .env.microservices, không commit file này.
+docker compose --env-file .env.microservices -f compose.yml build
 ```
 
----
+Lần chạy đầu cần migrate các DB, bootstrap Reporting và bật writer theo thứ tự trong [runbook](docs/runbooks/final-runtime.md#khởi-tạo-mới). Không bật Reporting consumer trước bootstrap. Với môi trường đã chuyển đổi/bootstrap:
 
-### 3. Khởi chạy Frontend (React + Vite)
-
-```bash
-# Mở một terminal mới và di chuyển vào Frontend
-cd Frontend
-
-# 1. Tạo file môi trường từ mẫu
-cp .env.example .env
-
-# 2. Cài đặt các gói phụ thuộc
-npm install
-
-# 3. Chạy môi trường phát triển (Dev server)
-npm run dev
-# Truy cập giao diện tại: http://localhost:5173
+```powershell
+docker compose --env-file .env.microservices -f compose.yml up -d
+python scripts/dev/audit_runtime.py
 ```
 
----
+| Địa chỉ local | Mục đích |
+| --- | --- |
+| http://127.0.0.1:5173 | Web |
+| http://127.0.0.1:8080/api | API qua gateway |
+| http://127.0.0.1:8080/health/ready | Readiness các service lõi |
+| http://127.0.0.1:8025 | Mailpit cho email local |
+| 127.0.0.1:8081–8089 | Notification, AI, Review, Identity, Catalog, Cinema, Booking, Payment, Reporting |
 
-## 🔐 Điểm Nhấn Kỹ Thuật Nổi Bật
+Fresh database không có tài khoản/dữ liệu phim/ghế mẫu; tạo qua quy trình quản trị của owner. Không khởi động lại `Backend/docker-compose.yml` trên dữ liệu đã chuyển quyền sở hữu. Không dùng `--remove-orphans` hay `down -v` với môi trường chuyển đổi còn giữ archive.
 
-1. **Khóa Ghế 2 Lớp Chống Trùng Lặp**:
-   - **Lớp 1 (Redis Lock)**: Đảm bảo tính tức thời bằng `SET NX EX 600` (TTL 10 phút) và các Lua script nguyên tử.
-   - **Lớp 2 (Database OCC)**: Kiểm soát đồng thời lạc quan với trường `version` trong bảng `seat_status`.
-2. **Bảo Mật Quyền Riêng Tư Trạng Thái Ghế (Issue #34)**:
-   - Endpoint `GET /seats/showtime/{id}` hỗ trợ `get_optional_current_user`, không để lộ `hold_by_user_id` công khai và trả về `is_held_by_me` an toàn.
-3. **Thanh Toán Trực Tuyến VNPay**:
-   - Tích hợp chuẩn mã hóa ký số **HMAC SHA512**, xác thực chữ ký bảo mật ở cả Return URL và IPN webhook.
+## Kiểm thử
 
----
+```powershell
+python scripts/dev/prepare_messaging.py --test
+docker compose -p cinema-migration-tests -f infra/compose/compose.migration-tests.yml run --build --rm backend-test
+docker compose -p cinema-migration-tests -f infra/compose/compose.migration-tests.yml --profile verification run --build --rm review-inference-smoke
+docker compose -p cinema-migration-tests -f infra/compose/compose.migration-tests.yml down
 
-## 🧪 Chạy Kiểm Thử (Testing)
-
-### Backend Tests (45 Tests Pytest)
-```bash
-# Chạy từ thư mục gốc Monorepo
-python -m pytest Backend/tests
-
-# Hoặc từ thư mục Backend
-cd Backend
-pytest -v
-```
-
-### Frontend Tests & Linting
-```bash
-cd Frontend
+cd apps/web
+npm ci
+npm test
 npm run lint
+npm run build
 ```
 
----
+Benchmark M10 chạy riêng, tránh phụ thuộc tốc độ máy trong CI: `python -m pytest services/reporting-service/tests/benchmark_m10.py -q -s` bên trong test runner đã cài các service và cấu hình DB/broker test. Chi tiết tải/ngưỡng và bằng chứng nằm trong báo cáo M10.
 
-## 🌐 Danh Sách Cổng Dịch Vụ (Port Mappings)
-
-| Dịch vụ | URL / Địa chỉ | Tài khoản mặc định |
-|:---|:---|:---|
-| **Frontend Web** | `http://localhost:5173` | - |
-| **FastAPI Backend** | `http://localhost:8000` | - |
-| **API Gateway** | `http://localhost:8080/api/` | - |
-| **Notification health** | `http://localhost:8081/health/ready` | - |
-| **Booking health** | `http://localhost:8087/health/ready` | - |
-| **Cinema health** | `http://localhost:8086/health/ready` | - |
-| **Review health** | `http://localhost:8083/health/ready` | - |
-| **AI health** | `http://localhost:8082/health/ready` | - |
-| **Mailpit local** | `http://localhost:8025` | Giữ thư thử nghiệm local |
-| **Swagger API Docs** | `http://localhost:8000/docs` | - |
-| **ReDoc API Docs** | `http://localhost:8000/redoc` | - |
-| **PgAdmin 4** | `http://localhost:5050` | `admin@gmail.com` / `admin123` |
-| **Flower (Celery Monitor)** | `http://localhost:5555` | - |
-| **PostgreSQL Database** | `localhost:5434` *(host)* / `5432` | `postgres` / `pass123` |
-| **Redis Cache** | `localhost:6379` | - |
-
----
-
-## 📋 Danh Sách Module & Tiến Độ
-
-| Mã Module | Tên Module | Trạng thái |
-|:---:|:---|:---:|
-| `MOD-01` | **Quản lý Xác thực & Tài khoản (Auth & User)** | ✅ **Đã hoàn thành** |
-| `MOD-02` | **Quản lý Phim & Danh mục (Movie Management - Fix N+1)** | ✅ **Đã hoàn thành** |
-| `MOD-03` | **Quản lý Cụm Rạp & Phòng Chiếu (Theaters & Rooms)** | ✅ **Đã hoàn thành** |
-| `MOD-04` | **Quản lý Suất Chiếu (Showtimes Scheduling)** | ✅ **Đã hoàn thành** |
-| `MOD-05` | **Quản lý Loại Ghế & Giữ Ghế Real-time (Seats, Redis Lock & Privacy #34)** | ✅ **Đã hoàn thành** |
-| `MOD-06` | **Quản lý Đặt Vé & Đơn Hàng (Booking Flow Context & Routing)** | ✅ **Đã hoàn thành** |
-| `MOD-07` | **Tích hợp Cổng Thanh Toán VNPay (Payment Gateway & HMAC SHA512)** | ✅ **Đã hoàn thành** |
-| `MOD-08` | **Xử lý Nền & Gửi Email Vé (Celery & Background Tasks)** | ✅ **Đã hoàn thành** |
-| `MOD-09` | **Giao diện Cổng Thông Tin & Luồng Đặt Vé (UI/UX SPA React)** | ✅ **Đã hoàn thành** |
-| `MOD-10` | **Hạ Tầng, Database & DevOps (Docker Compose, Alembic OCC)** | ✅ **Đã hoàn thành** |
-| `MOD-11` | **Admin / Quản lý theo UC01–UC07** | ✅ **Đã triển khai giao diện và API** |
-
-Phần admin/quản lý truy cập tại `/admin`, gồm phim, phòng và ghế, lịch chiếu, giá vé, nhân viên/phân quyền, tài liệu chatbot và báo cáo. Backend hiện tại cần migration `016`; Booking `booking_001` cùng payment legacy, Cinema `cinema_001`, Catalog `catalog_002`, Identity/AI/Review/Notification có migration riêng. Xem [hướng dẫn admin/quản lý](docs/Admin_Management.md) để biết cách chạy, quyền theo vai trò và đối chiếu thiết kế VPP.
+VNPay thật, SMTP production và model đã được đánh giá cần cấu hình theo môi trường triển khai. M10 không phát sinh giao dịch tiền thật hoặc tự train/promote model. Khi sentiment backend bị tắt, review không được gán nhãn giả.

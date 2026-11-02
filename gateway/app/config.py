@@ -7,6 +7,7 @@ from .routing import DOMAINS
 
 
 class GatewaySettings(BaseSettings):
+    legacy_enabled: bool = True
     monolith_url: str = "http://127.0.0.1:8000"
     connect_timeout_seconds: float = Field(default=3, gt=0, le=30)
     read_timeout_seconds: float = Field(default=30, gt=0, le=300)

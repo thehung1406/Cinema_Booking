@@ -513,7 +513,7 @@ def test_http_routes_auth_validation_and_static_route(db):
 
 def test_drafts_cannot_be_trained_without_review():
     from ml.data import read_jsonl, grouped_split
-    path = Path(__file__).resolve().parents[1] / "ml/data/drafts/sentiment_100.jsonl"
+    path = Path(__file__).resolve().parents[2] / "pipelines/ml/data/drafts/sentiment_100.jsonl"
     rows = read_jsonl(path)
     assert len(rows) == 100
     with pytest.raises(ValueError, match="requires reviewer"):

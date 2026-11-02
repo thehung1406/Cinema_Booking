@@ -1,10 +1,10 @@
 # Kế hoạch chuyển Cinema Booking sang microservices
 
 > Ngày lập: 02/11/2026. Baseline mã nguồn: `main` / `3db6e3b`.
-> Trạng thái: **M1–M9 đã triển khai/kiểm chứng local** trên nhánh `codex/microservices-foundation`. Notification, AI, Review, Identity, Catalog, Cinema, Booking và Payment có DB riêng; còn Reporting chưa tách. M0.7 về load/ngưỡng hiệu năng production vẫn mở.
+> Trạng thái: **M1–M10 đã triển khai/kiểm chứng và cutover local** trên nhánh `codex/microservices-foundation`. Đủ 9 service/DB riêng, root Compose; monolith/job cũ đã dừng. M0.7 đã đo/nghiệm thu tải local; SLA production cần đo trên hạ tầng đích.
 > Thiết kế tham chiếu: [Cấu trúc dự án và 9 service đích](PROJECT_STRUCTURE_MICROSERVICES.md).
 
-Kết quả mới nhất: [Payment M9](docs/migration/payment-phase.md), [runbook Payment](docs/runbooks/payment.md); [Booking M8](docs/migration/booking-phase.md), [runbook Booking](docs/runbooks/booking.md); [Cinema M7](docs/migration/cinema-phase.md), [runbook Cinema](docs/runbooks/cinema.md); [Catalog M6](docs/migration/catalog-phase.md), [runbook Catalog](docs/runbooks/catalog.md); [Identity M5](docs/migration/identity-phase.md), [runbook Identity](docs/runbooks/identity.md); [Review M4](docs/migration/review-phase.md), [runbook Review](docs/runbooks/review.md); [AI M3](docs/migration/ai-phase.md) và [Notification M1–M2](docs/migration/notification-phase.md) giữ kết quả đợt trước. [Baseline gateway](docs/migration/baseline.md) được giữ để đối chiếu. M1.10 đã có thiết kế bootstrap và queue lưu events, chưa triển khai Reporting Service. Phần tiếp theo là M10 Reporting và hoàn thiện vận hành.
+Kết quả mới nhất: [Reporting M10](docs/migration/reporting-phase.md), [runtime cuối](docs/runbooks/final-runtime.md), [runbook Reporting](docs/runbooks/reporting.md); [Payment M9](docs/migration/payment-phase.md), [runbook Payment](docs/runbooks/payment.md); [Booking M8](docs/migration/booking-phase.md), [runbook Booking](docs/runbooks/booking.md); [Cinema M7](docs/migration/cinema-phase.md), [runbook Cinema](docs/runbooks/cinema.md); [Catalog M6](docs/migration/catalog-phase.md), [runbook Catalog](docs/runbooks/catalog.md); [Identity M5](docs/migration/identity-phase.md), [runbook Identity](docs/runbooks/identity.md); [Review M4](docs/migration/review-phase.md), [runbook Review](docs/runbooks/review.md); [AI M3](docs/migration/ai-phase.md) và [Notification M1–M2](docs/migration/notification-phase.md) giữ kết quả đợt trước. [Baseline gateway](docs/migration/baseline.md) được giữ để đối chiếu. Reporting đã bootstrap snapshot/checksum đủ 5 nguồn và drain durable queue từ M1; xem bằng chứng M10. Các phần kế hoạch lịch sử dưới đây giữ mô tả tại từng giai đoạn.
 
 ## 1. Kết quả cần đạt
 
@@ -66,7 +66,7 @@ Một người có thể đảm nhiệm nhiều vai trò. Chưa có phân công 
 - [x] M0.4: Xuất OpenAPI và fixture request/response đã loại dữ liệu nhạy cảm; ưu tiên auth, ghế, booking, food, payment, ticket, admin và AI.
 - [x] M0.5: Sao lưu DB và diễn tập restore vào DB kiểm thử riêng; ghi procedure, checksum và thời gian phục hồi đo được.
 - [x] M0.6: Lập bảng FK/ORM/join/import/task liên miền, đặc biệt admin reports, `ai_tools`, payment → booking/seat/ticket và booking → food.
-- [ ] M0.7: Đo latency, error, khả năng xử lý tranh chấp ghế và thời gian xác nhận ở mức tải kiểm thử; chốt ngưỡng nghiệm thu hiệu năng sau khi có số đo.
+- [x] M0.7: Đo latency, error, khả năng xử lý tranh chấp ghế và thời gian xác nhận ở mức tải kiểm thử; chốt ngưỡng nghiệm thu hiệu năng sau khi có số đo.
 
 **Nghiệm thu:** có báo cáo baseline lặp lại được, DB test độc lập, bản restore hoạt động và danh sách lỗi ban đầu. Nếu có lỗi bán trùng ghế/thanh toán ở baseline thì khắc phục trước khi đổi ranh giới giao dịch.
 
@@ -202,16 +202,18 @@ Bằng chứng M9: [báo cáo Payment](docs/migration/payment-phase.md), [runboo
 
 ### M10 — Reporting, cấu trúc cuối và vận hành
 
-- [ ] M10.1: Dựng DB read model, event consumer, inbox, watermark và API/CSV báo cáo.
-- [ ] M10.2: Backfill từ snapshot có mốc; đồng bộ event từ checkpoint, tránh khoảng trống giữa snapshot và stream. Phát hiện update/delete/version cũ.
-- [ ] M10.3: Đối chiếu semantics báo cáo cũ: ngày chiếu/giờ Việt Nam, doanh thu gồm món, không nhân do nhiều attempts, vé hợp lệ và sentiment đúng phiên bản.
-- [ ] M10.4: Chuyển `/admin/reports` và hiển thị thời điểm cập nhật dữ liệu; bỏ join báo cáo xuyên DB gốc.
-- [ ] M10.5: Chuyển `Frontend/` sang `apps/web/`, tách pipeline ML khỏi runtime request, cập nhật tài liệu/lệnh CI và Compose cuối.
-- [ ] M10.6: Kiểm tra credential: mỗi service chỉ truy cập DB được sở hữu; không còn signing/payment/SMTP secrets trong frontend hoặc service không liên quan.
-- [ ] M10.7: Diễn tập restore, broker outage, DLQ replay, auth outage, AI outage và đối soát sau phục hồi.
-- [ ] M10.8: Tắt monolith/route/job cũ sau nghiệm thu; giữ dữ liệu legacy chỉ đọc theo thời hạn, rồi mới có đợt dọn riêng.
+- [x] M10.1: Dựng DB read model, event consumer, inbox, watermark và API/CSV báo cáo.
+- [x] M10.2: Backfill từ snapshot có mốc; đồng bộ event từ checkpoint, tránh khoảng trống giữa snapshot và stream. Phát hiện update/delete/version cũ.
+- [x] M10.3: Đối chiếu semantics báo cáo cũ: ngày chiếu/giờ Việt Nam, doanh thu gồm món, không nhân do nhiều attempts, vé hợp lệ và sentiment đúng phiên bản.
+- [x] M10.4: Chuyển `/admin/reports` và hiển thị thời điểm cập nhật dữ liệu; bỏ join báo cáo xuyên DB gốc.
+- [x] M10.5: Chuyển `Frontend/` sang `apps/web/`, tách pipeline ML khỏi runtime request, cập nhật tài liệu/lệnh CI và Compose cuối.
+- [x] M10.6: Kiểm tra credential: mỗi service chỉ truy cập DB được sở hữu; không còn signing/payment/SMTP secrets trong frontend hoặc service không liên quan.
+- [x] M10.7: Diễn tập restore, broker outage, DLQ replay, auth outage, AI outage và đối soát sau phục hồi.
+- [x] M10.8: Tắt monolith/route/job cũ sau nghiệm thu; giữ dữ liệu legacy chỉ đọc theo thời hạn, rồi mới có đợt dọn riêng.
 
 **Nghiệm thu:** 9 service và gateway có build/test/migration riêng; React hoạt động qua gateway; báo cáo đối chiếu đúng; dừng `Backend` legacy không làm mất chức năng; không SQL/import ORM xuyên owner.
+
+**Bằng chứng M10/M0.7:** [báo cáo Reporting](docs/migration/reporting-phase.md), [runtime](docs/runbooks/final-runtime.md), [contract](contracts/internal/reporting.v1.md). 33 facts có checksum, 36 response và 2 lịch sử đơn giữ nguyên; backup/restore 10 DB; diễn tập outage/DLQ và đo tải local đạt. Legacy giữ archive tối thiểu 30 ngày, không xóa trong mốc này. Model sentiment production chưa được cung cấp, backend local tắt; deployment/provider thật và SLA production thuộc môi trường đích.
 
 ## 5. Quy trình chuyển dữ liệu bắt buộc ở M3–M10
 

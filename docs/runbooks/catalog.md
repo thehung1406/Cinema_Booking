@@ -1,5 +1,7 @@
 # Catalog — vận hành và cutover M6
 
+> Runbook này lưu quy trình cutover tại mốc lịch sử. Runtime hiện hành dùng root `compose.yml`: xem [runbook cuối](final-runtime.md) và [M10](../migration/reporting-phase.md). Không khởi động source/overlay cũ trên dữ liệu đã bàn giao.
+
 Chạy từ repository root bằng **bảy Compose file**, giữ `.env.microservices` hiện có. Không sinh credential mới cho volume cũ hoặc đưa dump/key vào Git/log. M5 phải ổn định trước khi chuyển Catalog.
 
 ```powershell

@@ -19,7 +19,7 @@ def owner(path: str) -> str:
         ("booking", ("/seats", "/bookings", "/tickets")),
         ("payment", ("/payment", "/admin/payment-reconciliation")),
         ("ai", ("/ai", "/admin/documents")),
-        ("reporting", ("/admin/reports",)),
+        ("reporting", ("/admin/reports", "/admin/reports.csv")),
     ):
         if any(path == prefix or path.startswith(prefix + "/") for prefix in prefixes):
             return domain

@@ -1,5 +1,7 @@
 # Vận hành và chuyển dữ liệu AI
 
+> Runbook này lưu quy trình cutover tại mốc lịch sử. Runtime hiện hành dùng root `compose.yml`: xem [runbook cuối](final-runtime.md) và [M10](../migration/reporting-phase.md). Không khởi động source/overlay cũ trên dữ liệu đã bàn giao.
+
 Máy đã hoàn tất M6 dùng bộ **bảy Compose file** trong [runbook Catalog](catalog.md), giữ credential/cờ cutover hiện có. Các bước dưới đây mô tả mốc trước đó.
 
 Máy đã hoàn tất M5 phải dùng bộ **sáu Compose file** và auth origins trong [runbook Identity](identity.md), giữ credential/cờ cutover hiện có. Các bước phía dưới mô tả mốc chuyển miền trước đó.

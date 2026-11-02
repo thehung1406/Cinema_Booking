@@ -38,6 +38,8 @@ def create_app(settings=None,*,engine=None,auth_transport=None):
     from .router import booking,seat,payment,ticket,internal
     for router in (booking.router,seat.router,payment.router,ticket.router): app.include_router(router,dependencies=[Depends(writes)])
     app.include_router(internal.router)
+    from cinema_platform.reporting import source_router
+    app.include_router(source_router(engine,settings.service_key,'booking'))
     return app
 
 def application(): return create_app()

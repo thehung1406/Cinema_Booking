@@ -99,6 +99,16 @@
               "default": 12,
               "title": "Limit"
             }
+          },
+          {
+            "name": "evening",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Evening"
+            }
           }
         ],
         "responses": {

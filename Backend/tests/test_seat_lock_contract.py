@@ -79,7 +79,7 @@ def test_available_count_includes_db_holds_when_redis_is_empty():
 
 def test_seat_selection_calls_hold_endpoint_before_booking():
     """Frontend phải gọi /seats/hold trước khi tạo booking."""
-    source = (REPO_ROOT / "Frontend" / "src" / "components" / "SeatSelection.jsx").read_text(encoding="utf-8")
+    source = (REPO_ROOT / "apps" / "web" / "src" / "components" / "SeatSelection.jsx").read_text(encoding="utf-8")
 
     assert 'api.post("/seats/hold"' in source
     assert 'api.post("/seats/release"' in source

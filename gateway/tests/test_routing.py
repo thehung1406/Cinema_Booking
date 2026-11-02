@@ -84,3 +84,17 @@ def test_payment_cutover_routes_callbacks_and_reconciliation_to_independent_stor
         for path in ['/payment/vnpay-ipn','/admin/payment-reconciliation']:
             assert client.get('/api'+path).json()=={'owner':'payment','path':path}
         assert client.get('/api/bookings').json()['owner']=='booking'
+
+
+def test_final_gateway_readiness_and_unknown_routes_do_not_contact_retired_monolith():
+    requests=[]
+    async def upstream(request):
+        requests.append(request.url.host)
+        assert request.url.host!='legacy'
+        return httpx.Response(200,stream=httpx.ByteStream(b'{}'))
+    cfg=GatewaySettings(_env_file=None,legacy_enabled=False,monolith_url='http://legacy',upstreams={'identity':'http://identity','reporting':'http://reporting'},enabled_domains=['identity','reporting'],required_domains=['identity','reporting'])
+    with TestClient(create_app(cfg,transport=httpx.MockTransport(upstream))) as client:
+        assert client.get('/health/ready').status_code==200
+        assert client.get('/api/admin/reports.csv').status_code==200
+        assert client.get('/api/unknown-retired-route').status_code==404
+    assert set(requests)=={'identity','reporting'}

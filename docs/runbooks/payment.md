@@ -1,5 +1,7 @@
 # Payment cutover, reconciliation and recovery
 
+> Runbook này lưu quy trình cutover tại mốc lịch sử. Runtime hiện hành dùng root `compose.yml`: xem [runbook cuối](final-runtime.md) và [M10](../migration/reporting-phase.md). Không khởi động source/overlay cũ trên dữ liệu đã bàn giao.
+
 M9 adds `docker-compose.payment.yml` as the tenth overlay, after
 `docker-compose.booking.yml`. Use the same `--env-file .env.microservices` and
 preceding overlays from the Booking runbook; call the resulting array

@@ -116,5 +116,8 @@ skills-lock.json
 
 # Local training data, checkpoints and frozen evaluation runs
 Backend/artifacts/
-Backend/ml/data/reviewed/
-Backend/ml/runs/
+pipelines/ml/data/reviewed/
+pipelines/ml/runs/
+
+/model-store/
+/pipelines/ml/artifacts/

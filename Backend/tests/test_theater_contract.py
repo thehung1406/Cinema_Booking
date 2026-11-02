@@ -4,7 +4,7 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 BACKEND_ROOT = REPO_ROOT / "Backend"
-FRONTEND_ROOT = REPO_ROOT / "Frontend"
+FRONTEND_ROOT = REPO_ROOT / "apps" / "web"
 
 
 def _router_get_paths(path: Path) -> list[str]:

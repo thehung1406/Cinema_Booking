@@ -8,6 +8,9 @@ class Settings(BaseSettings):
     identity_origin: str = "http://fastapi:8000"
     read_origin: str = "http://fastapi:8000"
     service_key: str = ""
+    direct_reads_enabled: bool = False
+    catalog_origin: str = "http://catalog-service:8085"
+    booking_origin: str = "http://booking-service:8087"
     writes_enabled: bool = False
     auto_approve: bool = False
     sentiment_backend: str = "disabled"
@@ -18,9 +21,9 @@ class Settings(BaseSettings):
     max_attempts: int = Field(default=5, ge=1, le=20)
     retry_seconds: int = Field(default=60, ge=1, le=3600)
     amqp_public_url: str = ""
-    model_config = SettingsConfigDict(env_prefix="REVIEW_", extra="ignore")
+    model_config = SettingsConfigDict(env_prefix="REVIEW_", extra="ignore", hide_input_in_errors=True)
 
-    @field_validator("read_origin", "identity_origin")
+    @field_validator("read_origin", "identity_origin", "catalog_origin", "booking_origin")
     @classmethod
     def origin(cls, value):
         url = httpx.URL(value)

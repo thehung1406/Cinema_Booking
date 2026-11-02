@@ -2,7 +2,7 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 BACKEND_ROOT = REPO_ROOT / "Backend"
-FRONTEND_ROOT = REPO_ROOT / "Frontend" / "src"
+FRONTEND_ROOT = REPO_ROOT / "apps" / "web" / "src"
 
 
 def test_film_read_schema_has_list_and_filter_fields():
@@ -22,7 +22,9 @@ def test_no_n_plus_one_in_main_home_page():
     
     # Không còn pattern Promise.all map từng film gọi endpoint detail
     assert "films/${film.id}" not in source
-    assert "filmService" in source
+    hook = (FRONTEND_ROOT / "hooks/useFilms.js").read_text(encoding="utf-8")
+    assert "useFilms()" in source and "filmService.getFilms()" in hook
+    assert "Promise.all" not in hook
     assert "classifyMovies" in source
 
 
@@ -31,7 +33,9 @@ def test_no_n_plus_one_in_movie_page():
     source = (FRONTEND_ROOT / "components" / "Movie.jsx").read_text(encoding="utf-8")
     
     assert "films/${film.id}" not in source
-    assert "filmService" in source
+    hook = (FRONTEND_ROOT / "hooks/useFilms.js").read_text(encoding="utf-8")
+    assert "useFilms()" in source and "filmService.getFilms()" in hook
+    assert "Promise.all" not in hook
     assert "isNowShowing" in source
 
 
@@ -40,8 +44,8 @@ def test_film_service_and_utils_exist():
     service_file = FRONTEND_ROOT / "services" / "filmService.js"
     utils_file = FRONTEND_ROOT / "utils" / "filmUtils.js"
     
-    assert service_file.exists(), "Frontend/src/services/filmService.js must exist"
-    assert utils_file.exists(), "Frontend/src/utils/filmUtils.js must exist"
+    assert service_file.exists(), "apps/web/src/services/filmService.js must exist"
+    assert utils_file.exists(), "apps/web/src/utils/filmUtils.js must exist"
     
     service_src = service_file.read_text(encoding="utf-8")
     assert "getFilms" in service_src

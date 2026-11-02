@@ -4,7 +4,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
     database_url: str
-    amqp_url: str
+    amqp_url: str = ""
     identity_origin: str = "http://fastapi:8000"
     service_key: str = ""
     smtp_host: str = "mailpit"
@@ -16,7 +16,7 @@ class Settings(BaseSettings):
     smtp_timeout_seconds: int = Field(default=10, ge=1, le=30)
     lease_seconds: int = Field(default=300, ge=60, le=1800)
     max_attempts: int = Field(default=5, ge=1, le=20)
-    model_config = SettingsConfigDict(env_prefix="NOTIFICATION_", extra="ignore")
+    model_config = SettingsConfigDict(env_prefix="NOTIFICATION_", extra="ignore", hide_input_in_errors=True)
 
     @model_validator(mode="after")
     def validate_smtp(self):

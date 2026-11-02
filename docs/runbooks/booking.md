@@ -1,5 +1,7 @@
 > M9 đã thay phần payment tạm ở tài liệu M8 này bằng Payment Service riêng. Luồng hiện tại và các lệnh cutover/recovery: [runbook Payment](payment.md). Không bật lại legacy payment sau M9.
 
+> Runbook này lưu quy trình cutover tại mốc lịch sử. Runtime hiện hành dùng root `compose.yml`: xem [runbook cuối](final-runtime.md) và [M10](../migration/reporting-phase.md). Không khởi động source/overlay cũ trên dữ liệu đã bàn giao.
+
 # Booking M8 — operation and local cutover
 
 The block includes legacy VNPay payment. It is not the M9 independent Payment service.

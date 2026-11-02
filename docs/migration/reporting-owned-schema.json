@@ -1,0 +1,32 @@
+[
+  {
+    "table": "report_facts",
+    "columns": [
+      "source",
+      "kind",
+      "key",
+      "version",
+      "deleted",
+      "fact",
+      "sha256",
+      "received_at"
+    ],
+    "foreign_keys": []
+  },
+  {
+    "table": "report_sources",
+    "columns": [
+      "source",
+      "generation",
+      "bootstrapped",
+      "snapshot_id",
+      "snapshot_sha256",
+      "snapshot_at",
+      "checkpoint_version",
+      "checkpoint_at",
+      "verified_at",
+      "observed_at"
+    ],
+    "foreign_keys": []
+  }
+]

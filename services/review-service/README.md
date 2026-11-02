@@ -27,7 +27,7 @@ Health: `http://127.0.0.1:8083/health/ready`. Nguồn hiện `014`, AI `ai_001`,
 
 ## Inference và lỗi
 
-Worker có image stage `worker` với sklearn/joblib; API stage `api` không cài các thư viện ML. Compose giới hạn worker 1 CPU/1 GiB RAM, mount artifact chỉ đọc. Mặc định `disabled` giữ review pending, không tạo nhãn giả. Cài artifact operator đã duyệt tại `Backend/artifacts/sentiment/` gồm `metadata.json` có `model_version` và `model.joblib`, đặt `REVIEW_SENTIMENT_BACKEND=sklearn`, rồi recreate worker. Backend transformers cần image có thêm dependencies/Java/segmenter và cấu hình artifact tương ứng; image mặc định này chỉ đóng gói sklearn. Không dùng model tổng hợp kiểm thử làm model ứng dụng.
+Worker có image stage `worker` với sklearn/joblib; API stage `api` không cài các thư viện ML. Compose giới hạn worker 1 CPU/1 GiB RAM, mount artifact chỉ đọc. Mặc định `disabled` giữ review pending, không tạo nhãn giả. Cài artifact operator đã duyệt tại `model-store/sentiment/` gồm `metadata.json` có `model_version` và `model.joblib`, đặt `REVIEW_SENTIMENT_BACKEND=sklearn`, rồi recreate worker. Backend transformers cần image có thêm dependencies/Java/segmenter và cấu hình artifact tương ứng; image mặc định này chỉ đóng gói sklearn. Không dùng model tổng hợp kiểm thử làm model ứng dụng.
 
 Lease 5 phút phục hồi worker crash; retry tối đa 5 attempts, failed job chờ ít nhất 60 giây. Sau hết attempts, người có quyền dùng API retry để reset generation/attempts. Model lỗi/scores sai không làm mất review hoặc tăng counter thống kê. Edit/delete/moderation/retry vô hiệu lượt đang chạy, kể cả cùng content version; inference cũ không được ghi kết quả hoặc event.
 

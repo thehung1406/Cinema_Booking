@@ -1,5 +1,7 @@
 # Identity — vận hành và cutover M5
 
+> Runbook này lưu quy trình cutover tại mốc lịch sử. Runtime hiện hành dùng root `compose.yml`: xem [runbook cuối](final-runtime.md) và [M10](../migration/reporting-phase.md). Không khởi động source/overlay cũ trên dữ liệu đã bàn giao.
+
 Máy đã hoàn tất M6 dùng bộ **bảy Compose file** trong [runbook Catalog](catalog.md), giữ credential/cờ cutover hiện có. Các bước dưới đây mô tả mốc trước đó.
 
 Chạy từ repository root. Giữ `.env.microservices` đã sinh; không đổi password/key ngẫu nhiên cho volume đang tồn tại. Bộ **sáu Compose file** duy trì Notification/AI/Review và Identity. Các lệnh copy/backup có dữ liệu tài khoản; chỉ lưu manifest/dump ở `tmp/` bị ignore.

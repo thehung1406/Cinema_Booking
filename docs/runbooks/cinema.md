@@ -1,5 +1,7 @@
 # Cinema M7 — local operation and cutover
 
+> Runbook này lưu quy trình cutover tại mốc lịch sử. Runtime hiện hành dùng root `compose.yml`: xem [runbook cuối](final-runtime.md) và [M10](../migration/reporting-phase.md). Không khởi động source/overlay cũ trên dữ liệu đã bàn giao.
+
 Run from the repository root in PowerShell:
 
 ```powershell
