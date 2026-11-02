@@ -1,5 +1,5 @@
-# Isolated resources only; never references Backend/.env or the application volume.
-# docker compose -p cinema-migration-tests -f infra/compose/compose.migration-tests.yml run --build --rm backend-test
+# Isolated resources only; never loads local environment files or the application volume.
+# docker compose -p cinema-migration-tests -f infra/compose/compose.migration-tests.yml run --build --rm service-tests
 services:
   review-inference-smoke:
     profiles: [verification]
@@ -162,39 +162,17 @@ services:
       interval: 2s
       timeout: 3s
       retries: 20
-  backend-test:
+  service-tests:
     build:
       context: ../..
-      dockerfile: Backend/Dockerfile
+      dockerfile: infra/compose/Dockerfile.tests
     working_dir: /workspace
     volumes:
       - ../..:/workspace
-      - ../../Backend/.env.example:/workspace/Backend/.env:ro
     environment:
-      PYTHONPATH: /workspace/Backend:/workspace:/workspace/pipelines
-      PROJECT_NAME: Cinema migration tests
-      SECRET_KEY: isolated-test-key-never-use-in-production
-      ALGORITHM: HS256
-      ACCESS_TOKEN_EXPIRE_MINUTES: "15"
-      REFRESH_TOKEN_EXPIRE_DAYS: "7"
-      DATABASE_URL: postgresql+psycopg2://cinema_test:test-only-password@postgres-test:5432/cinema_migration_test
+      PYTHONPATH: /workspace:/workspace/pipelines
+      SOURCE_SCHEMA_DATABASE_URL: postgresql+psycopg2://cinema_test:test-only-password@postgres-test:5432/cinema_migration_test
       TEST_POSTGRES_URL: postgresql+psycopg2://cinema_test:test-only-password@postgres-test:5432/cinema_migration_test
-      POSTGRES_USER: cinema_test
-      POSTGRES_PASSWORD: test-only-password
-      POSTGRES_DB: cinema_migration_test
-      FRONTEND_URL: http://localhost:5173
-      CORS_ORIGINS: '["http://localhost:5173"]'
-      REDIS_HOST: redis-test
-      REDIS_PORT: "6379"
-      REDIS_DB: "15"
-      REDIS_URL: redis://redis-test:6379/15
-      TMN_CODE: isolated-test-merchant
-      HASH_SECRET: isolated-test-payment-key
-      VNPAY_URL: https://example.test/payment
-      SMTP_HOST: ""
-      SMTP_USER: ""
-      SMTP_PASSWORD: ""
-      SMTP_FROM: ""
       INTERNAL_SERVICE_KEY: isolated-internal-service-key-32-characters-test-only
       AMQP_PUBLIC_URL: amqp://booking-publisher:isolated-publisher-test-only@rabbitmq-test:5672/%2Fcinema-public
       AMQP_NOTIFICATION_URL: amqp://booking-publisher:isolated-publisher-test-only@rabbitmq-test:5672/%2Fcinema-private
@@ -236,7 +214,6 @@ services:
       IDENTITY_SERVICE_KEY: isolated-internal-service-key-32-characters-test-only
       IDENTITY_CURRENT_KID: test-key
       IDENTITY_SIGNING_KEYS: '{"test-key":"isolated-signing-key-32-characters-test-only"}'
-      SENTIMENT_BACKEND: disabled
     depends_on:
       postgres-test:
         condition: service_healthy
@@ -269,8 +246,7 @@ services:
     entrypoint: ["sh", "-c"]
     command:
       - >-
-        pip install --quiet pytest==9.0.3 -e packages/python-platform -e services/notification-service -e services/ai-service -e services/review-service -e services/identity-service -e services/catalog-service -e services/cinema-service -e services/booking-service -e services/payment-service -e services/reporting-service &&
-        cd /workspace/Backend && alembic upgrade head &&
+        python -m alembic -c /workspace/tests/fixtures/source-schema/alembic.ini upgrade head &&
         cd /workspace/services/notification-service && alembic upgrade head &&
         cd /workspace/services/ai-service && alembic upgrade head &&
         cd /workspace/services/review-service && alembic upgrade head &&

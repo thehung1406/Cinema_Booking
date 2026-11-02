@@ -7,24 +7,16 @@ on:
       - 'packages/**'
       - 'services/**'
       - 'scripts/dev/**'
-      - 'Backend/**'
       - 'apps/web/**'
       - 'pipelines/**'
+      - 'tests/contracts/**'
+      - 'tests/fixtures/**'
       - 'contracts/**'
       - 'scripts/migration/**'
       - 'tests/integration/**'
       - 'infra/compose/**'
       - 'infra/broker/**'
       - '.dockerignore'
-      - 'docker-compose.microservices.yml'
-      - 'docker-compose.notifications.yml'
-      - 'docker-compose.ai-service.yml'
-      - 'docker-compose.reviews.yml'
-      - 'docker-compose.identity.yml'
-      - 'docker-compose.catalog.yml'
-      - 'docker-compose.cinema.yml'
-      - 'docker-compose.booking.yml'
-      - 'docker-compose.payment.yml'
       - 'compose.yml'
       - '.github/workflows/microservices-foundation.yml'
   pull_request:
@@ -33,24 +25,16 @@ on:
       - 'packages/**'
       - 'services/**'
       - 'scripts/dev/**'
-      - 'Backend/**'
       - 'apps/web/**'
       - 'pipelines/**'
+      - 'tests/contracts/**'
+      - 'tests/fixtures/**'
       - 'contracts/**'
       - 'scripts/migration/**'
       - 'tests/integration/**'
       - 'infra/compose/**'
       - 'infra/broker/**'
       - '.dockerignore'
-      - 'docker-compose.microservices.yml'
-      - 'docker-compose.notifications.yml'
-      - 'docker-compose.ai-service.yml'
-      - 'docker-compose.reviews.yml'
-      - 'docker-compose.identity.yml'
-      - 'docker-compose.catalog.yml'
-      - 'docker-compose.cinema.yml'
-      - 'docker-compose.booking.yml'
-      - 'docker-compose.payment.yml'
       - 'compose.yml'
       - '.github/workflows/microservices-foundation.yml'
 
@@ -90,11 +74,11 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
-      - name: Nine owners, messaging and legacy compatibility contracts
+      - name: Nine owner services, messaging, migration fixtures and web contracts
         run: |
           python scripts/dev/prepare_messaging.py --test
-          docker compose -p cinema-migration-tests -f infra/compose/compose.migration-tests.yml run --build --rm backend-test
-      - name: Verify exported source contract is current
+          docker compose -p cinema-migration-tests -f infra/compose/compose.migration-tests.yml run --build --rm service-tests
+      - name: Verify current owner contracts and frozen historical baselines
         run: git diff --exit-code -- contracts docs/migration/schema-baseline.json docs/migration/import-baseline.json docs/migration/ai-owned-schema.json docs/migration/review-owned-schema.json docs/migration/identity-owned-schema.json docs/migration/catalog-owned-schema.json docs/migration/cinema-owned-schema.json docs/migration/booking-sales-owned-schema.json docs/migration/booking-owned-schema.json docs/migration/booking-payment-owned-schema.json docs/migration/payment-owned-schema.json docs/migration/reporting-owned-schema.json
       - name: Build and verify the isolated Review ML worker image
         run: docker compose -p cinema-migration-tests -f infra/compose/compose.migration-tests.yml --profile verification run --build --rm review-inference-smoke

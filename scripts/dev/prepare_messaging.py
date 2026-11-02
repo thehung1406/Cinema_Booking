@@ -102,17 +102,8 @@ def main():
         values.setdefault('BROKER_REPORTING_'+name.upper()+'_PASSWORD','isolated-reporting-'+name+'-test-only' if args.test else secrets.token_hex(32))
     values.setdefault('BROKER_REPORTING_PASSWORD','isolated-reporting-consumer-test-only' if args.test else secrets.token_hex(32))
     values.setdefault('REPORTING_DB_PASSWORD','reporting-test-only' if args.test else secrets.token_hex(32))
-    # M8 temporarily co-locates legacy VNPay with Booking; copy only its four
-    # settings, never source DB/JWT/SMTP values, and preserve explicit overrides.
-    backend_env = ROOT / "Backend/.env"
-    if not args.test and backend_env.exists():
-        legacy = {}
-        for line in backend_env.read_text(encoding="utf-8-sig").splitlines():
-            if "=" in line and not line.lstrip().startswith("#"):
-                key, value = line.split("=", 1)
-                legacy[key.strip()] = value.strip().strip('"').strip("'")
-        for key in ("TMN_CODE", "HASH_SECRET", "VNPAY_URL", "FRONTEND_URL"):
-            if key in legacy: values.setdefault("BOOKING_"+key, legacy[key])
+    # Credentials are generated/preserved in the private root env. A fresh
+    # deployment configures Payment directly; no retired application .env reads.
     for key in ('TMN_CODE','HASH_SECRET','VNPAY_URL','FRONTEND_URL'):
         if 'BOOKING_'+key in values:values.setdefault('PAYMENT_'+key,values['BOOKING_'+key])
     values.setdefault("IDENTITY_CURRENT_KID", "local-2026-11")

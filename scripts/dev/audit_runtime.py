@@ -69,8 +69,12 @@ def audit(config):
                 and name != "notification-dispatcher"
             ):
                 issues.append(name + ": SMTP credential " + key)
-        if service.get("build", {}).get("dockerfile") == "Backend/Dockerfile":
-            issues.append(name + ": legacy backend image")
+        dockerfile = service.get("build", {}).get("dockerfile", "")
+        if dockerfile and (
+            not dockerfile.startswith(("services/", "gateway/", "apps/web/"))
+            or ".." in Path(dockerfile).parts
+        ):
+            issues.append(name + ": image is outside current owner/gateway/web sources")
     gateway = services["gateway"]["environment"]
     if str(gateway.get("GATEWAY_LEGACY_ENABLED")).lower() != "false":
         issues.append("gateway: legacy fallback enabled")

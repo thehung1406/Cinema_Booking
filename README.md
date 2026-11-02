@@ -2,6 +2,8 @@
 
 Hệ thống đặt vé FastAPI/React đã chuyển sang **9 service có database riêng**: Identity, Catalog, Cinema, Booking, Payment, Review, AI, Notification và Reporting. Gateway cung cấp API chung; Booking giữ ghế/cấp vé, Payment xử lý VNPay và saga, Reporting đọc projection từ sự kiện. Runtime cuối không chạy monolith/Celery cũ.
 
+Source monolith đã được xóa; test/CI hiện chỉ dùng package service và fixture SQL độc lập. Xem [kết quả dọn source](docs/migration/backend-removal.md).
+
 Kết quả và giới hạn kiểm chứng: [M10](docs/migration/reporting-phase.md). Quy trình chạy, bootstrap và phục hồi: [runbook runtime](docs/runbooks/final-runtime.md). Lịch sử từng mốc: [kế hoạch M1–M10](MICROSERVICES_MIGRATION_PLAN.md).
 
 ## Cấu trúc
@@ -17,11 +19,12 @@ contracts/                 Hợp đồng public/private API và events
 scripts/                   Migration, smoke, audit credential/runtime
 infra/                     RabbitMQ và môi trường kiểm thử độc lập
 compose.yml                Runtime chính tại repository root
-Backend/                   Source/migration/test lịch sử, không nằm trong runtime chính
+tests/contracts/           Contract web và kiểm tra ranh giới source/build
+tests/fixtures/            Schema nguồn đóng băng cho test chuyển dữ liệu
 docs/                      ADR, bằng chứng chuyển đổi và runbook
 ```
 
-`main.py` của service khởi tạo app, middleware/lifespan; `router/` định nghĩa endpoint và dependency HTTP. Business logic và model thuộc owner tương ứng. Service không truy vấn database của service khác. `Backend/` còn để đối chiếu và phục hồi dữ liệu lịch sử, không phải backend đang phục vụ người dùng.
+`main.py` của service khởi tạo app, middleware/lifespan; `router/` định nghĩa endpoint và dependency HTTP. Business logic và model thuộc owner tương ứng. Service không truy vấn database của service khác. Ứng dụng monolith đã xóa khỏi working tree; test/công cụ hiện chạy độc lập. Xem [đợt bỏ monolith](docs/migration/backend-removal.md).
 
 ## Chạy local
 
@@ -48,13 +51,13 @@ python scripts/dev/audit_runtime.py
 | http://127.0.0.1:8025 | Mailpit cho email local |
 | 127.0.0.1:8081–8089 | Notification, AI, Review, Identity, Catalog, Cinema, Booking, Payment, Reporting |
 
-Fresh database không có tài khoản/dữ liệu phim/ghế mẫu; tạo qua quy trình quản trị của owner. Không khởi động lại `Backend/docker-compose.yml` trên dữ liệu đã chuyển quyền sở hữu. Không dùng `--remove-orphans` hay `down -v` với môi trường chuyển đổi còn giữ archive.
+Fresh database không có tài khoản/dữ liệu phim/ghế mẫu; tạo qua quy trình quản trị của owner. Không dùng `--remove-orphans` hay `down -v` với môi trường chuyển đổi còn giữ archive.
 
 ## Kiểm thử
 
 ```powershell
 python scripts/dev/prepare_messaging.py --test
-docker compose -p cinema-migration-tests -f infra/compose/compose.migration-tests.yml run --build --rm backend-test
+docker compose -p cinema-migration-tests -f infra/compose/compose.migration-tests.yml run --build --rm service-tests
 docker compose -p cinema-migration-tests -f infra/compose/compose.migration-tests.yml --profile verification run --build --rm review-inference-smoke
 docker compose -p cinema-migration-tests -f infra/compose/compose.migration-tests.yml down
 

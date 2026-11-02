@@ -1,5 +1,6 @@
 param(
-    [string]$Container = 'postgres'
+    [Parameter(Mandatory = $true)]
+    [string]$Container
 )
 # Requires application writers to be stopped/read-only while comparing snapshot checksums.
 $ErrorActionPreference = 'Stop'

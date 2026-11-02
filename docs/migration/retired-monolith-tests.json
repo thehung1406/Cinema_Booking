@@ -1,0 +1,580 @@
+[
+  {
+    "retired_file": "Backend/tests/test_admin_management.py",
+    "former_test_functions": [
+      "test_permissions_are_enforced_on_every_management_resource",
+      "test_film_links_crud_search_and_transactional_validation",
+      "test_rooms_seats_capacity_duplicates_and_room_ownership",
+      "test_room_maintenance_checks_upcoming_schedules_without_rewriting_history",
+      "test_showtime_duration_formats_conflicts_and_crud",
+      "test_booked_records_are_protected_and_prices_are_snapshots",
+      "test_knowledge_review_version_checks_and_retrieval",
+      "test_future_and_unprocessed_documents_do_not_become_retrievable",
+      "test_failed_document_processing_rolls_back_document_and_chunks",
+      "test_employee_management_safe_responses_role_assignment_and_locking",
+      "test_report_paid_bookings_are_not_multiplied_and_sentiments_are_current"
+    ],
+    "current_suites": [
+      "services/cinema-service/tests",
+      "services/catalog-service/tests",
+      "services/identity-service/tests",
+      "services/reporting-service/tests",
+      "tests/contracts/test_web_contracts.py"
+    ],
+    "reason": "Retired monolith implementation/transition tests; owner suites validate current behavior. Selected web, ML and conversation regressions moved independently."
+  },
+  {
+    "retired_file": "Backend/tests/test_admin_postgres.py",
+    "former_test_functions": [
+      "test_concurrent_writers_cannot_overlap_or_exceed_room_capacity"
+    ],
+    "current_suites": [
+      "services/cinema-service/tests",
+      "services/catalog-service/tests",
+      "services/identity-service/tests",
+      "services/reporting-service/tests",
+      "tests/contracts/test_web_contracts.py"
+    ],
+    "reason": "Retired monolith implementation/transition tests; owner suites validate current behavior. Selected web, ML and conversation regressions moved independently."
+  },
+  {
+    "retired_file": "Backend/tests/test_ai_features.py",
+    "former_test_functions": [
+      "test_duplicate_owner_and_optimistic_edits",
+      "test_moderation_retry_edit_delete_and_recreate",
+      "test_inference_race_discards_old_result",
+      "test_low_confidence_and_failure_are_excluded",
+      "test_window_and_ranking_only_future_active_shows",
+      "test_neutral_separate_and_ineligible_movies_hidden",
+      "test_rag_approval_effectivity_replacement_and_revocation",
+      "test_chat_clarifies_and_scopes_context_without_text",
+      "test_chat_persists_messages_sources_and_recovers_expired_context",
+      "test_history_routes_require_owner_paginate_and_delete",
+      "test_chat_failed_commit_does_not_leave_partial_history",
+      "test_chat_cache_write_failure_still_returns_saved_reply",
+      "test_chat_does_not_overwrite_concurrent_turn_or_recreate_deleted_chat",
+      "test_invalid_chat_context_creates_no_history",
+      "test_new_policy_question_overrides_pending_tool",
+      "test_film_name_completes_pending_showtime_lookup",
+      "test_showtime_number_completes_pending_price_lookup",
+      "test_explicit_new_request_overrides_pending_lookup",
+      "test_changed_selection_clears_carried_showtime",
+      "test_unchanged_selection_preserves_showtime",
+      "test_explicit_showtime_is_validated_after_selection_change",
+      "test_chat_readonly_prices_and_invalid_tools",
+      "test_rate_limit_redis_outage_and_tool_outage",
+      "test_prompt_injection_cannot_generate_claims_or_actions",
+      "test_http_routes_auth_validation_and_static_route",
+      "test_drafts_cannot_be_trained_without_review",
+      "test_model_abstention_is_not_overridden",
+      "test_saved_review_survives_broker_outage",
+      "test_seat_tool_reuses_current_service_and_exposes_no_owner"
+    ],
+    "current_suites": [
+      "services/ai-service/tests",
+      "services/review-service/tests",
+      "services/ai-service/tests/test_chat_context.py",
+      "pipelines/tests"
+    ],
+    "reason": "Retired monolith implementation/transition tests; owner suites validate current behavior. Selected web, ML and conversation regressions moved independently."
+  },
+  {
+    "retired_file": "Backend/tests/test_auth_contract.py",
+    "former_test_functions": [
+      "test_user_read_exposes_username_without_password",
+      "test_me_route_uses_safe_user_response_model",
+      "test_logout_decodes_expired_tokens_safely_and_ignores_invalid_tokens",
+      "test_logout_route_allows_expired_token_to_reach_service",
+      "test_auth_token_time_handling_uses_timezone_aware_utc"
+    ],
+    "current_suites": [
+      "services/identity-service/tests",
+      "tests/integration/test_gateway_services.py"
+    ],
+    "reason": "Retired monolith implementation/transition tests; owner suites validate current behavior. Selected web, ML and conversation regressions moved independently."
+  },
+  {
+    "retired_file": "Backend/tests/test_booking_flow_contract.py",
+    "former_test_functions": [
+      "test_ticket_booking_reads_query_params",
+      "test_home_page_passes_film_id_to_booking",
+      "test_movie_pages_pass_film_id_to_booking",
+      "test_app_router_has_standard_routes"
+    ],
+    "current_suites": [
+      "services/booking-service/tests",
+      "services/cinema-service/tests",
+      "services/payment-service/tests",
+      "tests/contracts/test_source_schema.py"
+    ],
+    "reason": "Retired monolith implementation/transition tests; owner suites validate current behavior. Selected web, ML and conversation regressions moved independently."
+  },
+  {
+    "retired_file": "Backend/tests/test_booking_service.py",
+    "former_test_functions": [
+      "test_booking_service_has_required_methods",
+      "test_create_booking_validates_user_ownership",
+      "test_create_booking_checks_hold_ownership",
+      "test_create_booking_checks_hold_expiry",
+      "test_create_booking_checks_seat_in_room",
+      "test_create_booking_checks_duplicate_seats",
+      "test_update_payment_status_restricts_values",
+      "test_update_payment_status_admin_only",
+      "test_booking_schemas_have_required_fields",
+      "test_booking_repository_uses_join_queries",
+      "test_booking_repository_supports_pagination"
+    ],
+    "current_suites": [
+      "services/booking-service/tests",
+      "services/cinema-service/tests",
+      "services/payment-service/tests",
+      "tests/contracts/test_source_schema.py"
+    ],
+    "reason": "Retired monolith implementation/transition tests; owner suites validate current behavior. Selected web, ML and conversation regressions moved independently."
+  },
+  {
+    "retired_file": "Backend/tests/test_concurrency_lock.py",
+    "former_test_functions": [
+      "test_seat_lock_manager_uses_atomic_operations",
+      "test_seat_lock_manager_checks_ownership_on_unlock",
+      "test_seat_lock_manager_supports_renew",
+      "test_seat_lock_manager_supports_bulk_unlock",
+      "test_hold_seats_has_precheck_phase",
+      "test_hold_seats_rollbacks_redis_on_failure",
+      "test_hold_seats_checks_duplicate_seat_ids",
+      "test_hold_seats_commits_only_on_full_success",
+      "test_cleanup_task_cancels_expired_bookings",
+      "test_cleanup_task_releases_expired_holds",
+      "test_cleanup_task_unlocks_redis",
+      "test_celery_beat_schedule_exists",
+      "test_lock_seat_handles_same_user_renew",
+      "test_lock_seat_rejects_different_user",
+      "test_book_seats_after_payment_removes_redis_locks",
+      "test_payment_confirmation_uses_distributed_lock",
+      "test_payment_confirmation_lock_has_bounded_wait_and_longer_lease",
+      "test_cleanup_expired_bookings_uses_payment_confirmation_lock",
+      "test_cleanup_expired_bookings_rechecks_pending_status_inside_lock"
+    ],
+    "current_suites": [
+      "services/booking-service/tests",
+      "services/cinema-service/tests",
+      "services/payment-service/tests",
+      "tests/contracts/test_source_schema.py"
+    ],
+    "reason": "Retired monolith implementation/transition tests; owner suites validate current behavior. Selected web, ML and conversation regressions moved independently."
+  },
+  {
+    "retired_file": "Backend/tests/test_docker_compose_contract.py",
+    "former_test_functions": [
+      "test_compose_app_services_use_redis_service_hostname",
+      "test_ai_overlay_resolves_paths_network_and_database"
+    ],
+    "current_suites": [
+      "tests/contracts/test_repository_boundaries.py",
+      "gateway/tests/test_runtime_audit.py"
+    ],
+    "reason": "Retired monolith implementation/transition tests; owner suites validate current behavior. Selected web, ML and conversation regressions moved independently."
+  },
+  {
+    "retired_file": "Backend/tests/test_film_contract.py",
+    "former_test_functions": [
+      "test_film_read_schema_has_list_and_filter_fields",
+      "test_no_n_plus_one_in_main_home_page",
+      "test_no_n_plus_one_in_movie_page",
+      "test_film_service_and_utils_exist"
+    ],
+    "current_suites": [
+      "services/catalog-service/tests",
+      "tests/integration/test_booking_food_quote.py",
+      "tests/contracts/test_web_contracts.py"
+    ],
+    "reason": "Retired monolith implementation/transition tests; owner suites validate current behavior. Selected web, ML and conversation regressions moved independently."
+  },
+  {
+    "retired_file": "Backend/tests/test_food_combos.py",
+    "former_test_functions": [
+      "test_catalog_and_booking_http_contract",
+      "test_combo_catalog_contents_and_price",
+      "test_booking_food_snapshot_and_combined_payment",
+      "test_optional_food_keeps_existing_booking_contract",
+      "test_invalid_selection_or_tampered_total_creates_no_partial_order",
+      "test_food_save_failure_rolls_back_booking_and_seats",
+      "test_invalid_quantities_rejected",
+      "test_expired_hold_cannot_buy_food"
+    ],
+    "current_suites": [
+      "services/catalog-service/tests",
+      "tests/integration/test_booking_food_quote.py",
+      "tests/contracts/test_web_contracts.py"
+    ],
+    "reason": "Retired monolith implementation/transition tests; owner suites validate current behavior. Selected web, ML and conversation regressions moved independently."
+  },
+  {
+    "retired_file": "Backend/tests/test_ml_data.py",
+    "former_test_functions": [
+      "test_split_keeps_duplicates_and_groups_together",
+      "test_load_rejects_cross_split_near_duplicates",
+      "test_offline_pipeline_normalization_matches_independent_inference_worker",
+      "test_training_and_evaluation_have_no_legacy_application_or_database_imports"
+    ],
+    "current_suites": [
+      "pipelines/tests/test_ml_data.py"
+    ],
+    "reason": "Retired monolith implementation/transition tests; owner suites validate current behavior. Selected web, ML and conversation regressions moved independently."
+  },
+  {
+    "retired_file": "Backend/tests/test_normalized_schema.py",
+    "former_test_functions": [
+      "test_all_tables_and_api_compatibility",
+      "test_postgres_chat_persistence_resume_and_cascade",
+      "test_format_must_be_supported_by_film",
+      "test_availability_and_hold_respect_inactive_seats",
+      "test_cross_room_seats_rejected",
+      "test_overlapping_showtimes_rejected",
+      "test_adjacent_showtimes_allowed",
+      "test_overnight_overlap_rejected",
+      "test_ticket_not_issued_for_pending_booking",
+      "test_payment_callback_idempotency_and_checkin",
+      "test_ipn_duplicate_and_failed_callback_dont_undo_paid",
+      "test_wrong_amount_cannot_issue_tickets",
+      "test_expired_booking_records_provider_payment_without_issuing_ticket",
+      "test_unknown_reference_rejected",
+      "test_provider_result_survives_seat_confirmation_failure",
+      "test_registration_assigns_default_role_and_hashes_password",
+      "test_payment_attempt_history_and_provider_reference_unique",
+      "test_catalog_deletion_preserves_booking_history",
+      "test_permission_is_checked_from_current_db",
+      "test_ticket_endpoint_enforces_ownership_and_checkin_permission"
+    ],
+    "current_suites": [
+      "services/booking-service/tests",
+      "services/cinema-service/tests",
+      "services/payment-service/tests",
+      "tests/contracts/test_source_schema.py"
+    ],
+    "reason": "Retired monolith implementation/transition tests; owner suites validate current behavior. Selected web, ML and conversation regressions moved independently."
+  },
+  {
+    "retired_file": "Backend/tests/test_payment_consistency.py",
+    "former_test_functions": [
+      "test_payment_confirm_commits_db_before_redis_unlock",
+      "test_booking_cancel_commits_db_before_redis_unlock",
+      "test_booking_router_uses_literal_validation"
+    ],
+    "current_suites": [
+      "services/payment-service/tests",
+      "services/notification-service/tests",
+      "tests/integration/test_broker_delivery.py",
+      "tests/integration/test_gateway_services.py"
+    ],
+    "reason": "Retired monolith implementation/transition tests; owner suites validate current behavior. Selected web, ML and conversation regressions moved independently."
+  },
+  {
+    "retired_file": "Backend/tests/test_payment_contract.py",
+    "former_test_functions": [
+      "test_verify_vnpay_signature_valid",
+      "test_verify_vnpay_signature_tampered",
+      "test_verify_vnpay_signature_missing_or_empty",
+      "test_payment_schemas_fields",
+      "test_payment_router_endpoints_exist",
+      "test_payment_service_methods_and_status_transitions",
+      "test_expired_booking_cleanup_uses_expired_status",
+      "test_vnpay_url_generation_uses_sha512_and_amount_multiplier",
+      "test_vnpay_return_validates_amount_tmn_and_transaction_status_before_paid",
+      "test_payment_status_endpoint_requires_current_user",
+      "test_vnpay_ipn_post_reads_body_or_form_params",
+      "test_frontend_payment_components_contract"
+    ],
+    "current_suites": [
+      "services/payment-service/tests",
+      "services/notification-service/tests",
+      "tests/integration/test_broker_delivery.py",
+      "tests/integration/test_gateway_services.py"
+    ],
+    "reason": "Retired monolith implementation/transition tests; owner suites validate current behavior. Selected web, ML and conversation regressions moved independently."
+  },
+  {
+    "retired_file": "Backend/tests/test_payment_service.py",
+    "former_test_functions": [
+      "test_validate_params_returns_none_on_valid",
+      "test_validate_params_missing_params",
+      "test_validate_params_wrong_txn_ref",
+      "test_validate_params_wrong_tmn_code",
+      "test_validate_params_wrong_amount",
+      "test_validate_params_invalid_amount_type",
+      "test_confirm_vnpay_handles_all_status_transitions",
+      "test_confirm_vnpay_checks_idempotency",
+      "test_confirm_vnpay_validates_before_marking_paid",
+      "test_ipn_returns_correct_response_codes",
+      "test_ipn_verifies_signature",
+      "test_payment_sends_email_safely",
+      "test_payment_service_has_get_payment_status",
+      "test_confirm_vnpay_payment_with_lock_success",
+      "test_confirm_vnpay_payment_already_paid_idempotency",
+      "test_process_vnpay_ipn_success_and_idempotency"
+    ],
+    "current_suites": [
+      "services/payment-service/tests",
+      "services/notification-service/tests",
+      "tests/integration/test_broker_delivery.py",
+      "tests/integration/test_gateway_services.py"
+    ],
+    "reason": "Retired monolith implementation/transition tests; owner suites validate current behavior. Selected web, ML and conversation regressions moved independently."
+  },
+  {
+    "retired_file": "Backend/tests/test_redis_scan_performance.py",
+    "former_test_functions": [
+      "test_contract_no_redis_keys_command_used",
+      "test_get_all_locks_uses_scan_and_pipeline",
+      "test_get_all_locks_handles_empty_keys",
+      "test_get_all_locks_handles_expired_or_corrupt_entries"
+    ],
+    "current_suites": [
+      "services/booking-service/tests",
+      "services/cinema-service/tests",
+      "services/payment-service/tests",
+      "tests/contracts/test_source_schema.py"
+    ],
+    "reason": "Retired monolith implementation/transition tests; owner suites validate current behavior. Selected web, ML and conversation regressions moved independently."
+  },
+  {
+    "retired_file": "Backend/tests/test_sales_boundary.py",
+    "former_test_functions": [
+      "test_protocol_rejects_incomplete_checksum_mutation_and_stale_commands",
+      "test_external_show_and_seat_checkout_during_close_keeps_price_and_payment_history",
+      "test_expired_old_payment_cannot_consume_new_version_hold",
+      "test_raw_legacy_writer_stays_fenced_after_environment_reset"
+    ],
+    "current_suites": [
+      "services/booking-service/tests",
+      "services/cinema-service/tests",
+      "services/payment-service/tests",
+      "tests/contracts/test_source_schema.py"
+    ],
+    "reason": "Retired monolith implementation/transition tests; owner suites validate current behavior. Selected web, ML and conversation regressions moved independently."
+  },
+  {
+    "retired_file": "Backend/tests/test_sales_concurrency.py",
+    "former_test_functions": [
+      "test_sales_gate_serializes_control_against_customer_transactions"
+    ],
+    "current_suites": [
+      "services/booking-service/tests",
+      "services/cinema-service/tests",
+      "services/payment-service/tests",
+      "tests/contracts/test_source_schema.py"
+    ],
+    "reason": "Retired monolith implementation/transition tests; owner suites validate current behavior. Selected web, ML and conversation regressions moved independently."
+  },
+  {
+    "retired_file": "Backend/tests/test_seat_lock_contract.py",
+    "former_test_functions": [
+      "test_redis_lock_uses_atomic_set_nx",
+      "test_seat_status_model_has_version",
+      "test_seat_repo_has_optimistic_methods",
+      "test_booking_requires_current_user_hold_before_creating_booking",
+      "test_payment_books_only_owned_valid_holds_and_unlocks_by_owner",
+      "test_hold_and_booking_validate_seat_belongs_to_showtime_room",
+      "test_available_count_includes_db_holds_when_redis_is_empty",
+      "test_seat_selection_calls_hold_endpoint_before_booking",
+      "test_payment_return_verifies_vnpay_secure_hash",
+      "test_booking_and_hold_reject_duplicate_seat_ids",
+      "test_datetime_columns_are_timezone_aware",
+      "test_seat_type_model_declares_room_name_unique_constraint",
+      "test_celery_cleanup_handles_expired_seat_holds",
+      "test_alembic_migration_004_exists",
+      "test_seat_status_response_does_not_leak_hold_user_id",
+      "test_showtime_repository_exposes_method_used_by_seat_and_booking_services",
+      "test_sqlmodel_pin_supports_current_pydantic_runtime"
+    ],
+    "current_suites": [
+      "services/booking-service/tests",
+      "services/cinema-service/tests",
+      "services/payment-service/tests",
+      "tests/contracts/test_source_schema.py"
+    ],
+    "reason": "Retired monolith implementation/transition tests; owner suites validate current behavior. Selected web, ML and conversation regressions moved independently."
+  },
+  {
+    "retired_file": "Backend/tests/test_theater_contract.py",
+    "former_test_functions": [
+      "test_theater_by_film_route_has_distinct_path",
+      "test_theater_read_schema_matches_jsonb_technologies_shape",
+      "test_ticket_booking_uses_api_config_and_distinct_theater_route",
+      "test_cinema_list_uses_existing_routes_and_api_config",
+      "test_api_config_does_not_fallback_to_localhost_in_production"
+    ],
+    "current_suites": [
+      "services/cinema-service/tests",
+      "services/catalog-service/tests",
+      "services/identity-service/tests",
+      "services/reporting-service/tests",
+      "tests/contracts/test_web_contracts.py"
+    ],
+    "reason": "Retired monolith implementation/transition tests; owner suites validate current behavior. Selected web, ML and conversation regressions moved independently."
+  },
+  {
+    "retired_file": "Backend/tests/test_worker_and_schema_hardening.py",
+    "former_test_functions": [
+      "test_vnpay_url_request_schema_hardened",
+      "test_celery_database_task_dead_code_removed"
+    ],
+    "current_suites": [
+      "services/booking-service/tests",
+      "services/cinema-service/tests",
+      "services/payment-service/tests",
+      "tests/contracts/test_source_schema.py"
+    ],
+    "reason": "Retired monolith implementation/transition tests; owner suites validate current behavior. Selected web, ML and conversation regressions moved independently."
+  },
+  {
+    "retired_file": "tests/integration/test_ai_boundary.py",
+    "former_test_functions": [
+      "test_extracted_ai_uses_real_private_identity_and_read_only_business_apis",
+      "test_legacy_ai_direct_writers_are_disabled_after_freeze"
+    ],
+    "current_suites": [
+      "services/ai-service/tests",
+      "services/review-service/tests",
+      "services/ai-service/tests/test_chat_context.py",
+      "pipelines/tests"
+    ],
+    "reason": "Retired monolith implementation/transition tests; owner suites validate current behavior. Selected web, ML and conversation regressions moved independently."
+  },
+  {
+    "retired_file": "tests/integration/test_ai_ownership.py",
+    "former_test_functions": [
+      "test_persisted_fence_blocks_old_writer_even_with_default_config",
+      "test_freeze_waits_for_existing_writer_transaction",
+      "test_missing_ownership_row_fails_closed"
+    ],
+    "current_suites": [
+      "services/ai-service/tests",
+      "services/review-service/tests",
+      "services/ai-service/tests/test_chat_context.py",
+      "pipelines/tests"
+    ],
+    "reason": "Retired monolith implementation/transition tests; owner suites validate current behavior. Selected web, ML and conversation regressions moved independently."
+  },
+  {
+    "retired_file": "tests/integration/test_booking_boundary.py",
+    "former_test_functions": [
+      "test_source_ai_review_report_use_booking_owner_without_reading_frozen_tables"
+    ],
+    "current_suites": [
+      "services/booking-service/tests",
+      "services/cinema-service/tests",
+      "services/payment-service/tests",
+      "tests/contracts/test_source_schema.py"
+    ],
+    "reason": "Retired monolith implementation/transition tests; owner suites validate current behavior. Selected web, ML and conversation regressions moved independently."
+  },
+  {
+    "retired_file": "tests/integration/test_catalog_boundary.py",
+    "former_test_functions": [
+      "test_new_catalog_film_schedule_and_food_quote_work_without_mirrors_and_keep_history",
+      "test_db_fence_freezes_catalog_and_schedule_writers",
+      "test_expired_quote_is_rejected_at_booking_snapshot_save",
+      "test_catalog_outage_never_falls_back_to_archive"
+    ],
+    "current_suites": [
+      "services/catalog-service/tests",
+      "tests/integration/test_booking_food_quote.py",
+      "tests/contracts/test_web_contracts.py"
+    ],
+    "reason": "Retired monolith implementation/transition tests; owner suites validate current behavior. Selected web, ML and conversation regressions moved independently."
+  },
+  {
+    "retired_file": "tests/integration/test_cinema_boundary.py",
+    "former_test_functions": [
+      "test_cinema_creates_new_entities_publishes_via_private_api_and_booking_works_without_mirrors"
+    ],
+    "current_suites": [
+      "services/cinema-service/tests",
+      "services/catalog-service/tests",
+      "services/identity-service/tests",
+      "services/reporting-service/tests",
+      "tests/contracts/test_web_contracts.py"
+    ],
+    "reason": "Retired monolith implementation/transition tests; owner suites validate current behavior. Selected web, ML and conversation regressions moved independently."
+  },
+  {
+    "retired_file": "tests/integration/test_confirmation_outbox.py",
+    "former_test_functions": [
+      "test_confirmation_and_private_email_event_commit_once_together",
+      "test_failure_after_event_flush_rolls_back_ticket_and_outbox_but_preserves_provider_evidence",
+      "test_legacy_queued_task_bridges_to_one_private_outbox_instead_of_smtp"
+    ],
+    "current_suites": [
+      "services/payment-service/tests",
+      "services/notification-service/tests",
+      "tests/integration/test_broker_delivery.py",
+      "tests/integration/test_gateway_services.py"
+    ],
+    "reason": "Retired monolith implementation/transition tests; owner suites validate current behavior. Selected web, ML and conversation regressions moved independently."
+  },
+  {
+    "retired_file": "tests/integration/test_gateway_monolith.py",
+    "former_test_functions": [
+      "test_film_food_auth_and_admin_permissions_keep_their_contract",
+      "test_actual_vnpay_ipn_duplicate_callback_issues_one_ticket",
+      "test_booking_validation_and_ownership_are_not_bypassed",
+      "test_real_signed_callback_and_booking_with_combo_through_gateway"
+    ],
+    "current_suites": [
+      "services/booking-service/tests",
+      "services/cinema-service/tests",
+      "services/payment-service/tests",
+      "tests/contracts/test_source_schema.py"
+    ],
+    "reason": "Retired monolith implementation/transition tests; owner suites validate current behavior. Selected web, ML and conversation regressions moved independently."
+  },
+  {
+    "retired_file": "tests/integration/test_identity_boundary.py",
+    "former_test_functions": [
+      "test_db_fence_blocks_raw_legacy_writers_even_after_env_reset",
+      "test_new_identity_user_holds_books_confirms_reviews_and_chats_without_legacy_user",
+      "test_identity_outage_fails_closed_without_archive_fallback"
+    ],
+    "current_suites": [
+      "services/identity-service/tests",
+      "tests/integration/test_gateway_services.py"
+    ],
+    "reason": "Retired monolith implementation/transition tests; owner suites validate current behavior. Selected web, ML and conversation regressions moved independently."
+  },
+  {
+    "retired_file": "tests/integration/test_internal_auth.py",
+    "former_test_functions": [
+      "test_internal_identity_requires_service_credential_and_rechecks_revocation_active_and_permissions"
+    ],
+    "current_suites": [
+      "services/identity-service/tests",
+      "tests/integration/test_gateway_services.py"
+    ],
+    "reason": "Retired monolith implementation/transition tests; owner suites validate current behavior. Selected web, ML and conversation regressions moved independently."
+  },
+  {
+    "retired_file": "tests/integration/test_review_boundary.py",
+    "former_test_functions": [
+      "test_real_auth_read_facade_ai_ranking_and_admin_report_use_review_owner",
+      "test_old_review_writers_and_inference_are_fenced",
+      "test_review_connection_outage_fails_closed_for_ranking_and_report_without_legacy_reads"
+    ],
+    "current_suites": [
+      "services/review-service/tests",
+      "services/reporting-service/tests"
+    ],
+    "reason": "Retired monolith implementation/transition tests; owner suites validate current behavior. Selected web, ML and conversation regressions moved independently."
+  },
+  {
+    "retired_file": "tests/integration/test_review_ownership.py",
+    "former_test_functions": [
+      "test_review_fence_survives_env_rollback_independently_of_ai"
+    ],
+    "current_suites": [
+      "services/review-service/tests",
+      "services/reporting-service/tests"
+    ],
+    "reason": "Retired monolith implementation/transition tests; owner suites validate current behavior. Selected web, ML and conversation regressions moved independently."
+  }
+]

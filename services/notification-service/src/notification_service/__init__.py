@@ -1,1 +1,1 @@
-"""Owns delivery state only, with no import of Backend.app or booking ORM."""
+"""Owns delivery state only, with no import of retired application models or booking ORM."""

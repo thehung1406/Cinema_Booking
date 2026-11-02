@@ -1,5 +1,7 @@
 # Kế hoạch chuyển Cinema Booking sang microservices
 
+> Sau M10: đã bỏ ứng dụng monolith/overlay cũ và chuyển kiểm chứng sang owner packages; xem [đợt dọn source](docs/migration/backend-removal.md). Các mô tả Backend trong mốc cũ là lịch sử.
+
 > Ngày lập: 02/11/2026. Baseline mã nguồn: `main` / `3db6e3b`.
 > Trạng thái: **M1–M10 đã triển khai/kiểm chứng và cutover local** trên nhánh `codex/microservices-foundation`. Đủ 9 service/DB riêng, root Compose; monolith/job cũ đã dừng. M0.7 đã đo/nghiệm thu tải local; SLA production cần đo trên hạ tầng đích.
 > Thiết kế tham chiếu: [Cấu trúc dự án và 9 service đích](PROJECT_STRUCTURE_MICROSERVICES.md).

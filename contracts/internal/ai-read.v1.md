@@ -1,14 +1,15 @@
-# AI read facade v1
+# AI read contracts v1 — owner APIs
 
-API tạm tại monolith, không public OpenAPI. Mọi endpoint yêu cầu `X-Service-Key` hợp lệ; gateway chặn `/api/internal/*`. Chỉ process nội bộ được cấu hình origin cố định mới gọi; không chuyển user SQL/model action vào facade.
+Root runtime bật `AI_DIRECT_READS_ENABLED=true`. AI đọc fixed-origin APIs của Catalog/Cinema/Booking/Review; không dùng HTTP facade monolith đã nghỉ hoạt động. Mọi private call có `X-Service-Key`, timeout 5 giây, không theo redirect. Gateway chặn `/api/internal/*`.
 
-| Method/path | Input | Output |
-| --- | --- | --- |
-| POST `/internal/v1/ai-read/matches` | `{message: string}` tối đa 2000 ký tự | `{film_id: [{id, name}], theater_id: [{id, name}]}`; entity đang hoạt động khớp tên đã bỏ dấu |
-| POST `/internal/v1/ai-read/context` | `ToolContext` theo AI OpenAPI | `{film_name: string hoặc null, theater_name: string hoặc null}` sau kiểm tra ID/ngày/suất tương thích |
-| POST `/internal/v1/ai-read/tool` | `{call: ToolCall, evening: boolean}` | List evidence `{id, title, text, url, kind, version?}`; URL nội bộ |
-| GET `/internal/v1/ai-read/ownership` | Không có | `{owner: monolith hoặc maintenance hoặc service}` từ fence bền vững + cấu hình chặt hơn; dùng bởi job migration |
+| Nhu cầu | API owner |
+| --- | --- |
+| Match tên phim/rạp | Catalog `POST /internal/v1/films/matches`; Cinema `POST /internal/v1/theaters/matches` |
+| Thông tin phim | Catalog `POST /internal/v1/films/batch` hoặc `/search` |
+| Xác minh context phim/rạp/ngày/suất | Catalog batch, Cinema `GET /theaters/{id}`, Booking `POST /internal/v1/booking-read/context` |
+| Suất/giá/ghế | Booking `POST /internal/v1/booking-read/tool` |
+| Phim được đánh giá tích cực còn suất phù hợp | Review `GET /films/positive-trending` với theater/date/evening |
 
-Ba POST đều chỉ đọc. `ToolCall.name` chỉ chấp nhận `search_films`, `get_showtimes`, `get_positive_films`, `get_ticket_prices`, `get_seat_availability`; không có tạo đơn, giữ ghế, thanh toán hoặc SQL. DTO `ToolCall`/`ToolContext` nằm trong [schema typed của facade](../../Backend/app/schemas/ai.py); response/client typed ở [read_client.py](../../services/ai-service/src/ai_service/read_client.py). API public riêng được lưu tại [AI OpenAPI](../openapi/ai.v1.json).
+DTO `ToolCall`/`ToolContext` ở [AI schemas](../../services/ai-service/src/ai_service/schemas.py); response/client typed ở [read_client.py](../../services/ai-service/src/ai_service/read_client.py). Các công cụ được phép: `search_films`, `get_showtimes`, `get_positive_films`, `get_ticket_prices`, `get_seat_availability`. Evidence có `{id,title,text,url,kind,version?}`; URL nội bộ được validate. Model không được chọn API/URL tùy ý, viết SQL, tạo đơn, giữ ghế hoặc thanh toán.
 
-Sai credential: 401; credential chưa cấu hình: 503; input/context không hợp lệ: 422. Client có timeout 5 giây, không theo redirect; lỗi kết nối/response không đúng contract làm AI fail-closed. Facade không chép giá/ghế vào DB AI. Private migration state ở AI là GET `/internal/v1/migration/state`, cùng credential, trả `{writes_enabled: boolean}`.
+Credential sai: 401; thiếu credential: 503; context không hợp lệ: 422. Lỗi kết nối/DTO fail closed, không fallback sang archive hoặc truy cập DB owner. AI không chép giá/ghế vào DB của mình. Public API được xuất tại [AI OpenAPI](../openapi/ai.v1.json). Contract HTTP facade M3 trước đây xem trong Git tại commit `7d31b45`.

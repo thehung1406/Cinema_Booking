@@ -8,17 +8,17 @@ Từ root, Python trong lệnh đầu chỉ cần standard library:
 
 ```powershell
 python scripts/dev/prepare_messaging.py
-docker compose --env-file .env.microservices -f Backend/docker-compose.yml -f docker-compose.microservices.yml -f docker-compose.notifications.yml -f docker-compose.ai-service.yml -f docker-compose.reviews.yml up -d --build
+docker compose --env-file .env.microservices -f compose.yml up -d --build
 ```
 
-Chuẩn bị [backup/restore](../../docs/runbooks/backup-restore.md) trước khi dùng DB có dữ liệu. Backend image chạy Alembic khi khởi động; nguồn hiện tại ở `012` (messaging được thêm ở `010`). Notification có migration riêng `notification_001`, chạy bằng job `notification-migrate` trước consumer/dispatcher.
+Chuẩn bị [backup/restore](../../docs/runbooks/backup-restore.md) trước khi dùng DB có dữ liệu. Notification có migration riêng `notification_001`, chạy bằng job `notification-migrate` trước consumer/dispatcher.
 
 - Giao diện hiện tại: `http://127.0.0.1:5173`.
 - Gateway: `http://127.0.0.1:8080/api/`.
 - Notification health: `http://127.0.0.1:8081/health/ready`.
 - **Mailpit local:** `http://127.0.0.1:8025`. SMTP mặc định chỉ vào Mailpit, không chuyển thư ra ngoài.
 
-`.env.microservices` và `infra/broker/.runtime/definitions.json` là tệp credential/hash sinh local, bị ignore. Giữ chúng cùng bản backup broker; không xóa rồi sinh credential khác trong khi volume broker vẫn dùng credential cũ. Script không in giá trị bí mật. Notification không đọc `Backend/.env`.
+`.env.microservices` và `infra/broker/.runtime/definitions.json` là tệp credential/hash sinh local, bị ignore. Giữ chúng cùng bản backup broker; không xóa rồi sinh credential khác trong khi volume broker vẫn dùng credential cũ. Script không in giá trị bí mật. Notification chỉ nhận cấu hình theo role, không đọc env nguồn.
 
 ## Process và dữ liệu
 
@@ -28,21 +28,21 @@ Chuẩn bị [backup/restore](../../docs/runbooks/backup-restore.md) trước kh
 | `notification-consumer` | RabbitMQ → inbox + delivery job trong cùng transaction → ACK |
 | `notification-dispatcher` | Claim/lease job, gửi SMTP ngoài transaction, ghi attempt và trạng thái |
 | `notification-db` | Store riêng: delivery_jobs, delivery_attempts và ba bảng messaging kỹ thuật |
-| `outbox-relay` | Process của monolith: chỉ đọc/ghi outbox nguồn, publish có confirms |
+| `booking-relay` | Publish event từ outbox của Booking với confirms |
 | `rabbitmq` | Public/private vhost, durable queues, DLQ, credential tách theo quyền |
 
-`POST /internal/v1/deliveries/{job_id}/retry` chỉ nhận job DEAD, yêu cầu service credential + bearer user có quyền `notifications.manage`; quyền được hỏi lại ở monolith, không cache. Không gửi lại SENT job bằng endpoint này. Thống kê tại `GET /internal/v1/deliveries/summary` cũng cùng quyền, không trả recipient/payload.
+`POST /internal/v1/deliveries/{job_id}/retry` chỉ nhận job DEAD, yêu cầu service credential + bearer user có quyền `notifications.manage`; quyền được hỏi lại ở Identity, không cache. Không gửi lại SENT job bằng endpoint này. Thống kê tại `GET /internal/v1/deliveries/summary` cũng cùng quyền, không trả recipient/payload.
 
 ## Chạy test
 
 ```powershell
 python scripts/dev/prepare_messaging.py --test
-docker compose -p cinema-migration-tests -f infra/compose/compose.migration-tests.yml run --build --rm backend-test
+docker compose -p cinema-migration-tests -f infra/compose/compose.migration-tests.yml run --build --rm service-tests
 ```
 
 Môi trường này có PostgreSQL nguồn, PostgreSQL notification, RabbitMQ và Mailpit riêng; không dùng credential/volume ứng dụng. Bao gồm full pipeline chạy consumer/dispatcher thật, giao lại sau mất ACK, duplicate event ID, nhiều consumer/dispatcher, lease recovery, SMTP retry/DEAD/audit và schema migration của service template.
 
-Backend test mặc định giữ `NOTIFICATION_TRANSPORT=legacy` để kiểm chứng hành vi cũ; các bài chuyển đổi bật events riêng và kiểm tra outbox cùng transaction. Sáu source-contract failures cũ được báo riêng; mọi lỗi mới làm runner thất bại.
+Test runner độc lập chỉ cài package service; mọi lỗi làm runner thất bại. Không chạy ứng dụng monolith.
 
 ## Đặc tính và giới hạn
 

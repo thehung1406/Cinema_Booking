@@ -21,7 +21,7 @@ def main():
     with tempfile.TemporaryDirectory(prefix="cinema-pytest-") as directory:
         fresh = Path(directory) / "results.xml"
         result = subprocess.run([
-            sys.executable, "-m", "pytest", "Backend/tests", "gateway/tests", "tests/integration",
+            sys.executable, "-m", "pytest", "tests/contracts", "pipelines/tests", "gateway/tests", "tests/integration",
             "packages/python-platform/tests", "services/notification-service/tests",
             "services/ai-service/tests", "services/review-service/tests", "services/identity-service/tests", "services/catalog-service/tests", "services/cinema-service/tests", "services/booking-service/tests", "services/payment-service/tests", "services/reporting-service/tests",
             f"--rootdir={ROOT}",

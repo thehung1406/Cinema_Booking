@@ -1,4 +1,4 @@
-"""Owner-side replacement for Backend/ml/import_knowledge.py after cutover."""
+"""Owner-side operator import of reviewed knowledge documents."""
 
 import argparse
 import json

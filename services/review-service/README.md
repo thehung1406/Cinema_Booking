@@ -12,7 +12,7 @@ Owner của reviews, moderation và sentiment, có DB/Alembic/image riêng. User
 
 API giữ các route cũ qua `/api`: `/films/positive-trending`, `/films/{id}/reviews*`, `/films/{id}/sentiment-summary`, `/reviews/*`. Gateway chọn Review trước Catalog. Các thao tác kiểm duyệt/retry yêu cầu `reviews.moderate`, không suy quyền từ claim role. Public list chỉ thấy bản approved/chưa xóa; mỗi user–film có một row, khôi phục sau xóa tiếp tục tăng content version.
 
-Phim/lịch đang bán, tên tác giả và badge đã mua được lấy qua typed read-only facade. Badge giữ semantics cũ: có booking PAID cho user/phim; không thêm điều kiện mua vé để được viết review. Ranking Wilson chỉ dùng kết quả hiện hành, review approved/chưa xóa, trong cửa sổ và có lịch chiếu phù hợp.
+Phim/lịch đang bán, tên tác giả và badge đã mua được lấy qua typed read-only APIs của Catalog/Booking/Identity. Badge giữ semantics cũ: có booking PAID cho user/phim; không thêm điều kiện mua vé để được viết review. Ranking Wilson chỉ dùng kết quả hiện hành, review approved/chưa xóa, trong cửa sổ và có lịch chiếu phù hợp.
 
 ## Chạy local
 
@@ -20,10 +20,10 @@ Chuẩn bị [runbook Review](../../docs/runbooks/review.md) trước lần cuto
 
 ```powershell
 python scripts/dev/prepare_messaging.py
-docker compose --env-file .env.microservices -f Backend/docker-compose.yml -f docker-compose.microservices.yml -f docker-compose.notifications.yml -f docker-compose.ai-service.yml -f docker-compose.reviews.yml -f docker-compose.identity.yml -f docker-compose.catalog.yml up -d --build
+docker compose --env-file .env.microservices -f compose.yml up -d --build
 ```
 
-Health: `http://127.0.0.1:8083/health/ready`. Nguồn hiện `014`, AI `ai_001`, Review `review_001`, Notification `notification_001`, Identity `identity_001`, Catalog `catalog_001`. Mặc định install mới chưa chuyển owner/writer; cần làm M3, M4 rồi M5 theo runbook. Máy đã cutover dùng `.env.microservices` hiện có.
+Health: `http://127.0.0.1:8083/health/ready`. Dùng root runtime và migrations thuộc Review; snapshot nguồn chỉ còn là fixture kiểm thử. Xem runbook runtime cho lần khởi tạo mới.
 
 ## Inference và lỗi
 
@@ -37,9 +37,9 @@ Lease 5 phút phục hồi worker crash; retry tối đa 5 attempts, failed job 
 
 ```powershell
 python scripts/dev/prepare_messaging.py --test
-docker compose -p cinema-migration-tests -f infra/compose/compose.migration-tests.yml run --build --rm backend-test
+docker compose -p cinema-migration-tests -f infra/compose/compose.migration-tests.yml run --build --rm service-tests
 docker compose -p cinema-migration-tests -f infra/compose/compose.migration-tests.yml --profile verification run --build --rm review-inference-smoke
-python -m pytest Backend/tests/test_docker_compose_contract.py -q
+python scripts/dev/audit_runtime.py
 .venv/Scripts/python.exe scripts/migration/smoke_gateway.py --ai http://127.0.0.1:8082 --review http://127.0.0.1:8083
 ```
 

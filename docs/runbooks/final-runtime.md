@@ -2,6 +2,8 @@
 
 Root `compose.yml` thay bộ overlay chuyển đổi. Compose project name `backend` cố định để giữ volume/network local hiện có. Không đổi project name khi dùng dữ liệu đã cutover. `.env.microservices` và broker definitions là private; không in `docker compose config` chứa secret vào log chia sẻ. `python scripts/dev/audit_runtime.py` chỉ xuất kết quả audit đã lược giá trị.
 
+Ứng dụng monolith và 10 overlay chuyển tiếp đã xóa khỏi working tree. Schema nguồn dùng kiểm thử nằm ở `tests/fixtures/source-schema`, không thuộc runtime. [Chi tiết](../migration/backend-removal.md).
+
 ## Khởi tạo mới
 
 Quy trình này chỉ dành cho DB mới rỗng. DB nguồn đang có dữ liệu phải đi qua transfer/fence theo từng runbook M2–M9, không seed/ghi đè. Đặc biệt Booking initializer từ chối tự bàn giao ledger payment legacy không rỗng.

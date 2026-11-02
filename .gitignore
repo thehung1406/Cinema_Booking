@@ -62,7 +62,6 @@ htmlcov/
 
 # Alembic cache
 alembic/__pycache__/
-Backend/alembic/__pycache__/
 BackendTTCS/alembic/__pycache__/
 
 # =====================
@@ -115,9 +114,10 @@ redisdata/
 skills-lock.json
 
 # Local training data, checkpoints and frozen evaluation runs
-Backend/artifacts/
 pipelines/ml/data/reviewed/
 pipelines/ml/runs/
 
 /model-store/
 /pipelines/ml/artifacts/
+
+/.local/

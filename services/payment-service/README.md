@@ -4,8 +4,7 @@ Own PostgreSQL, API 8088, inbox/reconciliation worker and outbox relay. The API
 validates VNPay signatures and fresh authenticated checkout facts from Booking.
 Booking alone confirms seats and tickets after PaymentCaptured.v1.
 
-Apply `docker-compose.payment.yml` after the nine M8 overlays. Defaults keep
-Payment writes disabled. Prepare ignored credentials/topology with
+Use root `compose.yml` and the [final runtime runbook](../../docs/runbooks/final-runtime.md). Defaults keep Payment writes disabled until initialization/cutover. Prepare ignored credentials/topology with
 `python scripts/dev/prepare_messaging.py`, then follow the
 [cutover and recovery runbook](../../docs/runbooks/payment.md).
 

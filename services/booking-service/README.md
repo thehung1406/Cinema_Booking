@@ -1,13 +1,11 @@
-> M9: Payment đã tách DB/API/worker/relay riêng. Booking tiếp nhận PaymentCaptured và là owner duy nhất của ghế/vé. Các mô tả payment chung dưới đây ghi lại giai đoạn M8; xem [Payment runbook](../../docs/runbooks/payment.md).
+# Booking Service
 
-# Booking and legacy Payment
+API 8087 sở hữu reservation, immutable checkout, đơn, ghế theo suất, vé/check-in và sales configuration nhận từ Cinema. PostgreSQL riêng tại `booking_003`, expiry worker và outbox relay riêng. Không có ORM/DB credential của Identity/Catalog/Cinema; thông tin liên hệ và quote được đọc từ owner API, sau đó chụp vào checkout.
 
-Independent API on `8087`, PostgreSQL store at `booking_001`, expiry worker and outbox relay. Own transaction/reservation/checkout models and local Cinema sales publications only; no foreign-domain ORM, source DB, JWT signing or SMTP secrets. The API temporarily holds the legacy VNPay credential. Expiry/relay processes do not receive that credential.
+Payment đã tách sang DB/API riêng ở M9. Booking nhận `PaymentCaptured.v1`, xác nhận ghế/cấp vé trong transaction riêng và phát `PaymentBookingResult.v1`; gateway payment routes đi Payment API 8088. Bảng/payment helper giai đoạn M8 còn phục vụ transfer/test lịch sử và được ownership fence chặn ghi sau bàn giao. Runtime Booking không nhận merchant secret.
 
-Payment remains co-located and transactionally coupled with Booking/seat/ticket/outbox in M8. The gateway's payment alias points to this API; M9 separation is pending.
+Chạy root `compose.yml` theo [runtime cuối](../../docs/runbooks/final-runtime.md). Initializer chỉ tự bật ranh giới Payment khi ledger legacy rỗng; DB không rỗng phải thực hiện handoff có đối chiếu, không seed hoặc ghi đè. Mỗi migrate/API/worker/capture chỉ nhận credential theo vai trò.
 
-[Contract](../../contracts/internal/booking.v1.md), [runbook](../../docs/runbooks/booking.md), [evidence](../../docs/migration/booking-phase.md), [ADR](../../docs/adr/0009-booking-store-and-immutable-checkout.md).
+[Contract](../../contracts/internal/booking.v1.md), [cutover lịch sử](../../docs/runbooks/booking.md), [evidence M8](../../docs/migration/booking-phase.md), [Payment M9](../../docs/migration/payment-phase.md), [ADR](../../docs/adr/0009-booking-store-and-immutable-checkout.md).
 
-Use all nine overlays in the runbook. Default writer is false; `booking-backfill` alone receives the source credential through its migration profile. Do not seed physical Cinema/Catalog/Identity rows or run the copy after target writes diverge. Source archive guards and stopped schedulers remain in place after cutover.
-
-Run the full isolated suite with `python scripts/dev/prepare_messaging.py --test` and `docker compose -p cinema-migration-tests -f infra/compose/compose.migration-tests.yml run --build --rm backend-test`. Tests use real migrations/constraints, copied historical rows, callback/expiry/idempotency races and HTTP boundaries. Frontend browser fixtures block every fetch/XHR from reaching live services.
+Kiểm tra đầy đủ: `python scripts/dev/prepare_messaging.py --test`, rồi `docker compose -p cinema-migration-tests -f infra/compose/compose.migration-tests.yml run --build --rm service-tests`. Bao gồm migrations/constraints, lịch sử copy/checksum/sequence, hold/checkout/expiry/callback races, saga/outbox và HTTP qua gateway tới owner APIs.

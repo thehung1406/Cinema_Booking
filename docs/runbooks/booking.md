@@ -1,5 +1,7 @@
 > M9 đã thay phần payment tạm ở tài liệu M8 này bằng Payment Service riêng. Luồng hiện tại và các lệnh cutover/recovery: [runbook Payment](payment.md). Không bật lại legacy payment sau M9.
 
+> Tài liệu lưu bằng chứng cutover lịch sử. Ứng dụng monolith và các overlay đã xóa ở đợt [dọn source](../migration/backend-removal.md); lệnh lịch sử cần source tại [commit 7d31b45](https://github.com/thehung1406/Cinema_Booking/tree/7d31b452d6ae0b05b8fa946759c5945c9805733e). Vận hành hiện tại dùng root `compose.yml` và [runbook runtime](../runbooks/final-runtime.md).
+
 > Runbook này lưu quy trình cutover tại mốc lịch sử. Runtime hiện hành dùng root `compose.yml`: xem [runbook cuối](final-runtime.md) và [M10](../migration/reporting-phase.md). Không khởi động source/overlay cũ trên dữ liệu đã bàn giao.
 
 # Booking M8 — operation and local cutover
