@@ -19,7 +19,8 @@ def test_new_migrations_preserve_existing_rows(monkeypatch, domain, initial):
     root = create_engine(url)
     with root.begin() as connection:
         connection.execute(text(f'CREATE SCHEMA "{schema}"'))
-    isolated = make_url(url).update_query_dict({"options": f"-csearch_path={schema},public"})
+    # Keep Alembic from finding the already-upgraded version table in public.
+    isolated = make_url(url).update_query_dict({"options": f"-csearch_path={schema}"})
     monkeypatch.setenv(f"{domain.upper()}_DATABASE_URL", isolated.render_as_string(hide_password=False))
     config = Config(str(Path(__file__).resolve().parents[2]/f"services/{domain}-service/alembic.ini"))
     engine = create_engine(isolated)
