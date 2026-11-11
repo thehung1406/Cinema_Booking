@@ -41,3 +41,25 @@ class ReviewSentiment(Base):
 
     lease_token: Mapped[str | None] = mapped_column(String(36))
     lease_until: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    predicted_label: Mapped[str | None] = mapped_column(String(20))
+    decision_source: Mapped[str | None] = mapped_column(String(20))
+    confirmed_by_user_id: Mapped[int | None] = mapped_column(Integer)
+    confirmed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    confirmation_note: Mapped[str | None] = mapped_column(String(1000))
+
+
+class SentimentDecision(Base):
+    __tablename__ = "sentiment_decisions"
+    __table_args__ = (UniqueConstraint("actor_user_id", "request_id", name="uq_sentiment_decision_request"),)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    review_id: Mapped[int] = mapped_column(ForeignKey("reviews.id"), index=True)
+    actor_user_id: Mapped[int] = mapped_column(Integer)
+    request_id: Mapped[str] = mapped_column(String(36))
+    content_version: Mapped[int] = mapped_column(Integer)
+    analysis_generation: Mapped[int] = mapped_column(Integer)
+    previous_label: Mapped[str | None] = mapped_column(String(20))
+    label: Mapped[str] = mapped_column(String(20))
+    reason: Mapped[str] = mapped_column(String(1000))
+    request_digest: Mapped[str] = mapped_column(String(64))
+    response: Mapped[dict] = mapped_column(JSON, default=dict)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)

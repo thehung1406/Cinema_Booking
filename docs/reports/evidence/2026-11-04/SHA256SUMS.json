@@ -1,0 +1,981 @@
+{
+  "created_at": "2026-11-04T09:44:41.273623+00:00",
+  "files": {
+    "bank-ablation.png": {
+      "bytes": 33981,
+      "sha256": "8542b64f68730db0718d9e1005c7ea04aa3915a146d1405157b7a309269c155a"
+    },
+    "rag-development-before-after.png": {
+      "bytes": 48814,
+      "sha256": "a6f80c47db465d11a0626721d742c623f922e4a39022315a1a8ee10a1b28d969"
+    },
+    "rag-in-out.json": {
+      "bytes": 18735,
+      "sha256": "7e66b0e6d6f7eee219d88c09dcea8e111a037d583aa324dcf2fac8dbfbf224ec"
+    },
+    "README.md": {
+      "bytes": 2355,
+      "sha256": "b1c857dac99dd792dcd558659f7123013d9d04862e2bad26aa643c619f58014e"
+    },
+    "source-code-at-export.json": {
+      "bytes": 1002,
+      "sha256": "30a3d35499a07c008d67d7c395445ea1cec661197f4b577921edbb38ce196de8"
+    },
+    "annotation/agreement-before-human-review.json": {
+      "bytes": 23344,
+      "sha256": "d461ec98fc65ec34080d501c956710ed52848d4f499ed5d4aae7f16aee694d7f"
+    },
+    "annotation/preparation-manifest.json": {
+      "bytes": 1435,
+      "sha256": "2702c6820504c0a8ab116a31d66b5b3f508cf363bce5da2f3760c1793e177455"
+    },
+    "bank-ablation/protocol.json": {
+      "bytes": 2495,
+      "sha256": "f242dcc7aaf317f06ab6f245002c6afee99d3e81eb085ec5f9dd586b1914effa"
+    },
+    "bank-ablation/results.json": {
+      "bytes": 14833,
+      "sha256": "0082f8d32ed5cef1fc8a45f0d0e48b4cc3e4495056463bf486666d12517df662"
+    },
+    "baseline/error-summary.json": {
+      "bytes": 3478,
+      "sha256": "ba75c3a159175c033f8ce8c6bf8ef94696630bd4d850940c9e613138476c1afc"
+    },
+    "baseline/model-table-planned.csv": {
+      "bytes": 1263,
+      "sha256": "04dda36672d196af722ed4cb037eadf51a857cd8c079cd9ccd344611833b75ec"
+    },
+    "baseline/MODEL_TABLE.md": {
+      "bytes": 1343,
+      "sha256": "281c84ef3e898eac3c0f57b214350c2cdb6ba9270f488b239141eb36f04ddfb1"
+    },
+    "baseline/validation-summary.csv": {
+      "bytes": 420,
+      "sha256": "4156b8e2c1a0c9b1cf378230d9174db6994a5d03f6f18d5eb4b6ecf6e07870bd"
+    },
+    "baseline/validation-summary.json": {
+      "bytes": 1186,
+      "sha256": "f837463fe388b9adcac251350495e09e14cc604344947a5d50a47141ad7d4ce0"
+    },
+    "baseline/VALIDATION_ERROR_ANALYSIS.md": {
+      "bytes": 2489,
+      "sha256": "81813b62b96eab8ebc7c55a5f1d82c110667fd8c3d2e04211158fd1dac3cf5b3"
+    },
+    "eda/audit.json": {
+      "bytes": 62357,
+      "sha256": "6cee280bda67b108cc35a6129bd1bb52d48c069599f1ed12fbd5a0df04e902e4"
+    },
+    "eda/DATA_CARD.md": {
+      "bytes": 402,
+      "sha256": "e9d6b355250e9bbe8370e3acc71a78249954c857c60b39180ec08204f813b042"
+    },
+    "eda/distribution.png": {
+      "bytes": 38788,
+      "sha256": "03b09d4fcbc927fe0128d99dc4ed304df5a993dd1c83013e70be656d0e17fa9e"
+    },
+    "eda/token-lengths.png": {
+      "bytes": 69291,
+      "sha256": "071a33af964308dc3ecb6d6ab23c31a235d9870b09bb87f18dcaa6f2b1bc348b"
+    },
+    "eda/tokenization-audit.json": {
+      "bytes": 4596,
+      "sha256": "ecc501b3449437c34e49b0ed56bb8f243860dc45b271b8fbe7017f11f3c24807"
+    },
+    "figures/class-and-learning-uts2017-bank.png": {
+      "bytes": 63272,
+      "sha256": "f4a60e995083a502f9f3994c00dbc88af00380a5bedd0ccdd49f951020595507"
+    },
+    "figures/validation-matrix.png": {
+      "bytes": 61564,
+      "sha256": "8e61138b89eec32e25314823a2ebc840b5a259b0057e6b3b790bd1cefe70515e"
+    },
+    "history/rag-in-out-dense-before-rerank.json": {
+      "bytes": 13812,
+      "sha256": "42277708ea9cb09ef8bc1f94353a2d025eed66722c28f837ab5cabf35de9f97e"
+    },
+    "history/rag-in-out-rerank-initial.json": {
+      "bytes": 17463,
+      "sha256": "07ed8c10b9f4905a4e870489d1540512dbcf18c0db515d0c9f0c1c56779b19e1"
+    },
+    "integration/portable-source-manifest.json": {
+      "bytes": 71442,
+      "sha256": "c734e5ae91821e13b46597d679c96122ba81b28f0bac2e9eff97059392a806c3"
+    },
+    "integration/portable-stack.json": {
+      "bytes": 2844,
+      "sha256": "905ea31aa92ad2f0cc3f2eeb45c9b3f60a9af6ff7f964b268e2d2bcce47c47f6"
+    },
+    "integration/portable-ui-chat.png": {
+      "bytes": 105788,
+      "sha256": "328fbb7e82565b61cafd189457f6b40b853b2d963203efc9641b00070b501293"
+    },
+    "integration/portable-ui-seats.png": {
+      "bytes": 90334,
+      "sha256": "7e94a6a38e09dcbacb34047b8b6a54dc4a4f3470d1ded7bc64b47e785bfe27ac"
+    },
+    "integration/portable-ui.json": {
+      "bytes": 282,
+      "sha256": "7f0d542648854028eb24da54b518c51d98f3fb3de0ad5e24eee6bce40026f702"
+    },
+    "integration/python-tests.json": {
+      "bytes": 250,
+      "sha256": "9e638b5bc20d608cc2d18716ae232fc88e0ba863a02aaa738e9d3694b031c681"
+    },
+    "integration/review-model-integration.json": {
+      "bytes": 2336,
+      "sha256": "98a834543c215103d82b830cb55c0231a2c8863ff2691f36b9af494a5153de1e"
+    },
+    "kb/kb-chunks.jsonl": {
+      "bytes": 1037437,
+      "sha256": "42fbaab56be45b9f4bbe1d611b52bfa25324da7ded9c1596adc9b7d6bb69998e"
+    },
+    "kb/kb-page-sample.json": {
+      "bytes": 6915,
+      "sha256": "26747164ca6f20f373d5392d02acb4632e69dd867b47cf3f04b5dbc0a43713bf"
+    },
+    "kb/KB_SOURCES.md": {
+      "bytes": 1642,
+      "sha256": "ecc82c8ba43169034012ef8823e6bb396697f7afbc552899c1d13d7dd8ea5625"
+    },
+    "kb/knowledge-inventory.json": {
+      "bytes": 13012,
+      "sha256": "be49912d7ff3ea30ed5a00595e8fdd3d2bcb8059e0020a45ad94406187c50c26"
+    },
+    "rag-chunk-ablation/chunks-1200-0.json": {
+      "bytes": 545850,
+      "sha256": "d8fe5aaf9fe3832483e48a47f93696cc7f7a967e4aeb9b89edda3fb545ebf7d3"
+    },
+    "rag-chunk-ablation/chunks-1200-120.json": {
+      "bytes": 546905,
+      "sha256": "a68f400bf1b17e4e27ad5e1ff8131cb50a19aa681e0e7801caf8faf92c9aced5"
+    },
+    "rag-chunk-ablation/chunks-600-0.json": {
+      "bytes": 528135,
+      "sha256": "217bcb315607af22271818fd2401a3c3a11d8098ee8ab9b689dad548941dd379"
+    },
+    "rag-chunk-ablation/protocol.json": {
+      "bytes": 1058,
+      "sha256": "72ec79b3d6414eca6f362bb054e0f17f66d66dac11217e9f4acd20269e176451"
+    },
+    "rag-chunk-ablation/summary.json": {
+      "bytes": 5657,
+      "sha256": "8cae94ab61db70b0a5be715c47d733ed285e538d3ea2c7d617a54f51d21f8025"
+    },
+    "rag-generation/run.json": {
+      "bytes": 10577,
+      "sha256": "d33317f81b88df9ce9c7b49fdbfcf8a9bec6ef5003dbe0e2bc8ee10b12f39208"
+    },
+    "rag-generation-final/human-review.csv": {
+      "bytes": 9933,
+      "sha256": "1e6dd94454af11cb7ab1477b1e468f961123ee3175b642e6f8f3fbeea13c0640"
+    },
+    "rag-generation-final/run.json": {
+      "bytes": 10559,
+      "sha256": "c2a824eb3de0648bac84990eb1b8b5dfcd85b57fa0f579a878baab70ad1a5908"
+    },
+    "rag-generation-final-line-fragments/run.json": {
+      "bytes": 10556,
+      "sha256": "91ec44722c6e8d0f6514cd919d6b76b4e824907e2fc36ce472a5b7f7b225f6fc"
+    },
+    "rag-generation-guarded/run.json": {
+      "bytes": 10570,
+      "sha256": "0646f7191ac4c933c38ef27772139f820a7c1a648e705bdc7d91ed222de5ab04"
+    },
+    "rag-generation-spans/run.json": {
+      "bytes": 10501,
+      "sha256": "dd42aee1ac9df1b01d235d0bb92c5560551ece5e64b472e6a43fd228acef75c6"
+    },
+    "rag-generation-supported-spans/run.json": {
+      "bytes": 10558,
+      "sha256": "17dbb3983d58c7fcbc2f87f87e5438b0829f8fe6c89a980c14b0b61a12af3358"
+    },
+    "research/error-summary.json": {
+      "bytes": 3478,
+      "sha256": "ba75c3a159175c033f8ce8c6bf8ef94696630bd4d850940c9e613138476c1afc"
+    },
+    "research/hardware.json": {
+      "bytes": 219,
+      "sha256": "e7145c6a3abfc9f38a0321b696df1d2a9c34789cc95fd6c3a491f2338c82a803"
+    },
+    "research/research-evidence.json": {
+      "bytes": 114927,
+      "sha256": "4106b50fb16f539cd2d528bca99d71e544a486dfdf0298ac0012577d8b3ad7c8"
+    },
+    "bank-ablation/runs/lower-lr/17/metadata.json": {
+      "bytes": 5267,
+      "sha256": "28fa2d6ebd98a188d1c18771534f4cfd3c0722b371a3baa383f3b704474c87e6"
+    },
+    "bank-ablation/runs/lower-lr/17/model_config.json": {
+      "bytes": 896,
+      "sha256": "dbceaeec2d29e75f58b1192bd82589045c1c825ccdf809049e8f1ab20027a4f4"
+    },
+    "bank-ablation/runs/lower-lr/17/training_arguments.json": {
+      "bytes": 4436,
+      "sha256": "d8a2a92d8574133c06272dd1b58c1c11431a58f98be0cdfdf37f5dbe15328b37"
+    },
+    "bank-ablation/runs/lower-lr/17/training_history.json": {
+      "bytes": 1115,
+      "sha256": "fca81435088b21d107b9fd13a810d005a4b166159b269146a314363ff6829fcc"
+    },
+    "bank-ablation/runs/lower-lr/17/validation.json": {
+      "bytes": 2011,
+      "sha256": "f7f10326e464f27f234306fd7a58bb08d008032d0b623d10287cef6e7ca97395"
+    },
+    "bank-ablation/runs/lower-lr/42/metadata.json": {
+      "bytes": 5266,
+      "sha256": "97ee0f23347e9455cc44a2a83532c447aa99a1bc321218078aad61b49be26608"
+    },
+    "bank-ablation/runs/lower-lr/42/model_config.json": {
+      "bytes": 896,
+      "sha256": "dbceaeec2d29e75f58b1192bd82589045c1c825ccdf809049e8f1ab20027a4f4"
+    },
+    "bank-ablation/runs/lower-lr/42/training_arguments.json": {
+      "bytes": 4436,
+      "sha256": "586ff7b56f411b1dfdd9f8907b3e709a2c0a04fa8b4ce1949fc28ad2a4734352"
+    },
+    "bank-ablation/runs/lower-lr/42/training_history.json": {
+      "bytes": 1107,
+      "sha256": "635238eaa9fcb91925095c5bcf79995d3223ed74faa01e982aa80eb4a1f06f8e"
+    },
+    "bank-ablation/runs/lower-lr/42/validation.json": {
+      "bytes": 1879,
+      "sha256": "925c34e3b34554bb9bdc71a0311445a61657c9adb8cbb69230d8a57f14f005ce"
+    },
+    "bank-ablation/runs/lower-lr/73/metadata.json": {
+      "bytes": 5267,
+      "sha256": "374974e18c0432823157ba47a5c43f8f04c9dc6b93fe1686bce904f683d50f67"
+    },
+    "bank-ablation/runs/lower-lr/73/model_config.json": {
+      "bytes": 896,
+      "sha256": "dbceaeec2d29e75f58b1192bd82589045c1c825ccdf809049e8f1ab20027a4f4"
+    },
+    "bank-ablation/runs/lower-lr/73/training_arguments.json": {
+      "bytes": 4436,
+      "sha256": "77b8a8942d1248944f817363a4a4844c015fa7b52f0c4b2170b777ed3949b9ea"
+    },
+    "bank-ablation/runs/lower-lr/73/training_history.json": {
+      "bytes": 1110,
+      "sha256": "b2ce674125bc05054bc11c2d2d984555016193f01dcd4e0f2282e2ad748d1849"
+    },
+    "bank-ablation/runs/lower-lr/73/validation.json": {
+      "bytes": 2011,
+      "sha256": "8195bfd8b5ba20c1e40bdd4e7dfd8b796df06b64abad237015b58ba210875d03"
+    },
+    "bank-ablation/runs/sqrt-balanced/17/metadata.json": {
+      "bytes": 5368,
+      "sha256": "087707ec9109e522ba279adb2fdf18dbeab03654db12f17cb1cd8504f374278c"
+    },
+    "bank-ablation/runs/sqrt-balanced/17/model_config.json": {
+      "bytes": 896,
+      "sha256": "dbceaeec2d29e75f58b1192bd82589045c1c825ccdf809049e8f1ab20027a4f4"
+    },
+    "bank-ablation/runs/sqrt-balanced/17/training_arguments.json": {
+      "bytes": 4446,
+      "sha256": "64f1ddbb1bfc89913c3177a366bbff537817ab3d9280a54bec7e340be8dfb047"
+    },
+    "bank-ablation/runs/sqrt-balanced/17/training_history.json": {
+      "bytes": 1108,
+      "sha256": "39e8f3ce487ab5411615a52049d141c6c18cfb16ea0a9ef63f20e586adbd1a05"
+    },
+    "bank-ablation/runs/sqrt-balanced/17/validation.json": {
+      "bytes": 1881,
+      "sha256": "87f0908630abb095444563dbe5fd33bc9f2d6bbe02cd30f9d64d1aacf6aa487a"
+    },
+    "bank-ablation/runs/sqrt-balanced/42/metadata.json": {
+      "bytes": 5368,
+      "sha256": "10466349068c971ab3b8f64c3143f9df1bdc5c8879d9dfb3c2a6773050686efb"
+    },
+    "bank-ablation/runs/sqrt-balanced/42/model_config.json": {
+      "bytes": 896,
+      "sha256": "dbceaeec2d29e75f58b1192bd82589045c1c825ccdf809049e8f1ab20027a4f4"
+    },
+    "bank-ablation/runs/sqrt-balanced/42/training_arguments.json": {
+      "bytes": 4446,
+      "sha256": "ddb13472ed6f3c50ead6130a73b88acf738e151e3f81ac396631b4e8ef149a4f"
+    },
+    "bank-ablation/runs/sqrt-balanced/42/training_history.json": {
+      "bytes": 1110,
+      "sha256": "05fcea614a04ec9012ad467e74e65ab9a7757928fc8cca474a62fecf86aa74af"
+    },
+    "bank-ablation/runs/sqrt-balanced/42/validation.json": {
+      "bytes": 1879,
+      "sha256": "98840a91eb3258eb51bf207ec4fe944db74eed66b0aad1d4b581715dc4ca38c0"
+    },
+    "bank-ablation/runs/sqrt-balanced/73/metadata.json": {
+      "bytes": 5369,
+      "sha256": "39925afbbf9ff42394662f4860c03a111c49040c6360316b3b91477eeb045db2"
+    },
+    "bank-ablation/runs/sqrt-balanced/73/model_config.json": {
+      "bytes": 896,
+      "sha256": "dbceaeec2d29e75f58b1192bd82589045c1c825ccdf809049e8f1ab20027a4f4"
+    },
+    "bank-ablation/runs/sqrt-balanced/73/training_arguments.json": {
+      "bytes": 4446,
+      "sha256": "93cde7f71f6c197c01b8ef8817fc5bf1d55c3b5dc9ea4f1e0cd05212cb75b1e2"
+    },
+    "bank-ablation/runs/sqrt-balanced/73/training_history.json": {
+      "bytes": 1111,
+      "sha256": "1a09ee5a96c4d284e2920c428df2a2559961f49797ab8fda4857815f82dfb1e6"
+    },
+    "bank-ablation/runs/sqrt-balanced/73/validation.json": {
+      "bytes": 2041,
+      "sha256": "550711852c7e318220b9531fc21b13c28f155908bf060e8297abb748ebcbaba9"
+    },
+    "figures/baseline/class-and-learning-uts2017-bank.png": {
+      "bytes": 63272,
+      "sha256": "f4a60e995083a502f9f3994c00dbc88af00380a5bedd0ccdd49f951020595507"
+    },
+    "figures/baseline/confusion-uts2017-bank-lr-17.png": {
+      "bytes": 33894,
+      "sha256": "51a2d26660473e5373c21bc13e09e68968c6bf9c799f610f260d75242c0b3f56"
+    },
+    "figures/baseline/confusion-uts2017-bank-lr-42.png": {
+      "bytes": 34139,
+      "sha256": "9b5dddd1f9764c9fd63555d866366d1c0a9343a08013c05c19c3ba434e53053c"
+    },
+    "figures/baseline/confusion-uts2017-bank-lr-73.png": {
+      "bytes": 34273,
+      "sha256": "1d84e96a5cef2886db3f106d6e49b88ec28ff9ee239fb61989ec8c1124a8ae72"
+    },
+    "figures/baseline/confusion-uts2017-bank-mbert-17.png": {
+      "bytes": 35137,
+      "sha256": "2840934bc3aadac99dede39acfad4e495b5f25ffec69708219b46b568a5be037"
+    },
+    "figures/baseline/confusion-uts2017-bank-mbert-42.png": {
+      "bytes": 34727,
+      "sha256": "32afc3dc43e026c7d3c854830d3d3966705487ae67a3459451945dead3748182"
+    },
+    "figures/baseline/confusion-uts2017-bank-mbert-73.png": {
+      "bytes": 35430,
+      "sha256": "d1d52e6a8005c389d5a80511fe2e00573ce029e9eaea3d1ba870b240debd57dd"
+    },
+    "figures/baseline/confusion-uts2017-bank-phobert-17.png": {
+      "bytes": 34619,
+      "sha256": "81e24c096774ee3c028cb8cdfe47636f89237a54ab4225cb61ce65fee3416da0"
+    },
+    "figures/baseline/confusion-uts2017-bank-phobert-42.png": {
+      "bytes": 34871,
+      "sha256": "16094230c4e20e86d1d187504562cccc702fdc5e6030d929c9364d714cc507a7"
+    },
+    "figures/baseline/confusion-uts2017-bank-phobert-73.png": {
+      "bytes": 35025,
+      "sha256": "1bb9382b232cb48ca8b7714d669f953d9bf1cac73c0df9b1b86b12a5da1353d9"
+    },
+    "figures/baseline/confusion-uts2017-bank-videberta-17.png": {
+      "bytes": 34640,
+      "sha256": "8b4d9ff3aa002bc44dcd15d9dffd093b1f1c834e7469c93255400d1e04e3f11e"
+    },
+    "figures/baseline/confusion-uts2017-bank-videberta-42.png": {
+      "bytes": 35404,
+      "sha256": "90a1da093b4406b77570ed520d0edcefbf554d8fe96fd2872f3ebac03f2d7911"
+    },
+    "figures/baseline/confusion-uts2017-bank-videberta-73.png": {
+      "bytes": 34820,
+      "sha256": "5a8f8a7ae911fba10e01a7ceed223433c6fdbd2c52596df316fa2b7237311e9a"
+    },
+    "figures/baseline/confusion-uts2017-bank-visobert-17.png": {
+      "bytes": 34589,
+      "sha256": "5a71ee99a215d55a009b6a17060ae8d79bf2658ae8302bf5d58e4f3469bb12d2"
+    },
+    "figures/baseline/confusion-uts2017-bank-visobert-42.png": {
+      "bytes": 34600,
+      "sha256": "87b0f438595f71ddb70718a1a56d49c7ec1fb6720f84264e5e2fbce44559a272"
+    },
+    "figures/baseline/confusion-uts2017-bank-visobert-73.png": {
+      "bytes": 35477,
+      "sha256": "4030b67e194c8522543f1af7a60b7ce9df66169c57fe17759ea98b135052d22b"
+    },
+    "figures/baseline/confusion-uts2017-bank-xlmr-17.png": {
+      "bytes": 35194,
+      "sha256": "afd42f7b66e9b110b178042d8dbb019cbaaa1fbc77dcf302895cbd1efa50d330"
+    },
+    "figures/baseline/confusion-uts2017-bank-xlmr-42.png": {
+      "bytes": 35255,
+      "sha256": "8e17f9abb6b3f8297dfc7c88d0de8dac4e0f496ace24163286c9d449a989fc8b"
+    },
+    "figures/baseline/confusion-uts2017-bank-xlmr-73.png": {
+      "bytes": 35383,
+      "sha256": "d0e99fd802513d0bf72a5a4adf9e944d3ada8e70a6023acbf28d08c9339a8ac5"
+    },
+    "figures/baseline/validation-matrix.png": {
+      "bytes": 61564,
+      "sha256": "8e61138b89eec32e25314823a2ebc840b5a259b0057e6b3b790bd1cefe70515e"
+    },
+    "rag-generation/traces/age-policy.json": {
+      "bytes": 8727,
+      "sha256": "d22229f859739a6f4995cd34e5b39fd2b4455881450e1da180cf97c868a10dae"
+    },
+    "rag-generation/traces/booking-steps.json": {
+      "bytes": 8238,
+      "sha256": "1795dae3d894f0186f534ed61e5d768602d4ae7c46831a5410ee4d5a8a961ccf"
+    },
+    "rag-generation/traces/camera-emotion.json": {
+      "bytes": 12077,
+      "sha256": "83698d74654b49afd7a2463e2cf6815bde6b5a9378b27623b356df72e6f20df9"
+    },
+    "rag-generation/traces/camera-techniques.json": {
+      "bytes": 10562,
+      "sha256": "703d27cf9c2da11516ee139f4d64c0cbd96cc2bef24a7f3d470d48990026d7d4"
+    },
+    "rag-generation/traces/chat-hold.json": {
+      "bytes": 8271,
+      "sha256": "412af47f6154d7664ac72afb137e1b570815aaf07e35f48deaaad5f13ef99938"
+    },
+    "rag-generation/traces/child-discount.json": {
+      "bytes": 7240,
+      "sha256": "9c0613a6a9245f48c32d45c6eca08589c3a6d99c131d8c1c757b9a1a7d1373d7"
+    },
+    "rag-generation/traces/cinematography-definition.json": {
+      "bytes": 10970,
+      "sha256": "258493c5c654a7e9e8c091220fccdf0f107a55e157d7eae10ac7b2731a29c38a"
+    },
+    "rag-generation/traces/delete-history.json": {
+      "bytes": 7889,
+      "sha256": "23161344b2de736c5d0f573e870f8fcb41a6e57e2622437747cd086a1ef01b9a"
+    },
+    "rag-generation/traces/fictional-director.json": {
+      "bytes": 13488,
+      "sha256": "eccb09e68cb5f9baf4cc5498cfbe5ec35163bf6b724e41644897add0602930bf"
+    },
+    "rag-generation/traces/final-price.json": {
+      "bytes": 7919,
+      "sha256": "96b2a37e3071e956e8fef07f890fc1a211d3a96c7e8fbb0e63505222864fc44d"
+    },
+    "rag-generation/traces/genre-en.json": {
+      "bytes": 14877,
+      "sha256": "afb170c6d9e972b454bbedda0715f80590359e5d1ef753b3d0b34b0cad27f93f"
+    },
+    "rag-generation/traces/genre-vi.json": {
+      "bytes": 15043,
+      "sha256": "5bbbd47f782169ba17578687c2add2754e726bfcb182901f8b03ad89846b7422"
+    },
+    "rag-generation/traces/history.json": {
+      "bytes": 7941,
+      "sha256": "cc2bf3d2112eeb43fdd1e2575d1ad82ef9a09a2a1ef93b5c9642c122d186cd7a"
+    },
+    "rag-generation/traces/hold-minutes.json": {
+      "bytes": 7488,
+      "sha256": "0e13c3b7b1a7051bc33818f1760a917c62dd15e18fdb81067070df868c1cbcbc"
+    },
+    "rag-generation/traces/login-seats.json": {
+      "bytes": 7938,
+      "sha256": "6b88c5a95aafc7b0c2513852af50c5fa91a9aa4a8a61815acaa80525797c27b1"
+    },
+    "rag-generation/traces/moving-image.json": {
+      "bytes": 12311,
+      "sha256": "48aee76d758f9381a36ec328b3816d690d3d9af2770eea353bf0625f97db3057"
+    },
+    "rag-generation/traces/not-in-book-awards.json": {
+      "bytes": 14429,
+      "sha256": "43e9f1c08eb088d85554a3fd4d562de5fcf4b401930b493f3703728274165e29"
+    },
+    "rag-generation/traces/payment-permission.json": {
+      "bytes": 7690,
+      "sha256": "6320a994fdb7b01ab1bc22c99f6403ae44c7415857fbbd1d7d790ddb11c70c57"
+    },
+    "rag-generation/traces/refund-days.json": {
+      "bytes": 8899,
+      "sha256": "0141a15295a7d353e19988d08b7e2850eb3efa14921e292bcb8209aa45d14847"
+    },
+    "rag-generation/traces/refund-percent.json": {
+      "bytes": 8900,
+      "sha256": "4888b93d3c07d06baf5d14d224172576e289515f796df32c24ae816505bada87"
+    },
+    "rag-generation/traces/seat-changed.json": {
+      "bytes": 7909,
+      "sha256": "b37564c21aff4a830b4609c9ff312adf1a902e982614f55458e54c32ac0a33b0"
+    },
+    "rag-generation/traces/student-discount.json": {
+      "bytes": 7906,
+      "sha256": "f54a836a722485d9106ae089b95ff7d60ca11c0ec9ea333a57fe9cffc0e13f38"
+    },
+    "rag-generation/traces/support-phone.json": {
+      "bytes": 7224,
+      "sha256": "7884f964521e01b23d44fa138a00a535278672b7d3d9dd16158f8cdd91c029de"
+    },
+    "rag-generation/traces/ticket-vat.json": {
+      "bytes": 7210,
+      "sha256": "0474fc94766282eae9e5a7234fb49f01fd11fd9d8e9d7d6be6ed3a32ede78a13"
+    },
+    "rag-generation-final/traces/age-policy.json": {
+      "bytes": 4085,
+      "sha256": "30ba58cc7ff1fb6d614397d1faa1303db8537454da04ad982e77fe49ba4b31b0"
+    },
+    "rag-generation-final/traces/booking-steps.json": {
+      "bytes": 9091,
+      "sha256": "caf4727c91db4756bffec420ac9986d63a529cfc3fb6035bf06e06a45959edde"
+    },
+    "rag-generation-final/traces/camera-emotion.json": {
+      "bytes": 13473,
+      "sha256": "35689eaee390da683307cb72740f0b9aabbbb27fcf6dead0730198a5713ee72c"
+    },
+    "rag-generation-final/traces/camera-techniques.json": {
+      "bytes": 11836,
+      "sha256": "1198b11f4bf37fbaf6a29eb3fe8f43577c5f1ef42b11c452903c12783ff15559"
+    },
+    "rag-generation-final/traces/chat-hold.json": {
+      "bytes": 8883,
+      "sha256": "c8f813d8268451a811208453ca0567e81aebcc043b8c8b355d5fb0d86bb3892a"
+    },
+    "rag-generation-final/traces/child-discount.json": {
+      "bytes": 3973,
+      "sha256": "92573336e641ca9232406f4236866a9119b26a3efb666c670bd8f903bb72ba9f"
+    },
+    "rag-generation-final/traces/cinematography-definition.json": {
+      "bytes": 11778,
+      "sha256": "6d5122d3dd24d383ea2b90406a153a58756306237bc5879290b9035db68e996b"
+    },
+    "rag-generation-final/traces/delete-history.json": {
+      "bytes": 9607,
+      "sha256": "09d4da4b9ee025e45d14baa6ce9718291f7e1867276b61535568355519d53643"
+    },
+    "rag-generation-final/traces/fictional-director.json": {
+      "bytes": 7138,
+      "sha256": "39093c873395c1a1444a80c70ef18699cc87f8ee1b7d4661122bbd94370a1349"
+    },
+    "rag-generation-final/traces/final-price.json": {
+      "bytes": 9019,
+      "sha256": "fbf56fba49c7753df16796446532025917a782c2f6d7fee4dd5ac2dc90cbda20"
+    },
+    "rag-generation-final/traces/genre-en.json": {
+      "bytes": 17166,
+      "sha256": "7f720399287e32e23b6f049471be4b66cfc1ef8aba731cb74e71ba3a474dc470"
+    },
+    "rag-generation-final/traces/genre-vi.json": {
+      "bytes": 17207,
+      "sha256": "612fe9478682db22bab7b400c73eec6b826ba699e0debc3cd3b069a2736897f0"
+    },
+    "rag-generation-final/traces/history.json": {
+      "bytes": 8974,
+      "sha256": "f4439ba7bbaf6c0b83926749d0bd17fb08b626610b7b9ff38c0c7a17a33dbf0d"
+    },
+    "rag-generation-final/traces/hold-minutes.json": {
+      "bytes": 4096,
+      "sha256": "19330be6de46f141ea72bc4e42fc7e3946d162ed4bef08e6d669f0b96c2be826"
+    },
+    "rag-generation-final/traces/login-seats.json": {
+      "bytes": 9649,
+      "sha256": "3f7ff50858a0b0fb14a0ccdbb8a61e94a9b64b9408b347cee31a718aff5ba1fd"
+    },
+    "rag-generation-final/traces/moving-image.json": {
+      "bytes": 14766,
+      "sha256": "631e51fb7ff3cee417a237a4aedd8d9476fd79d9789693fae941af4c00d0cf4c"
+    },
+    "rag-generation-final/traces/not-in-book-awards.json": {
+      "bytes": 7304,
+      "sha256": "cda6a0c731a8e4c79807a9cbfcee8bb79eaf18c08ccd3f5f04a42d1274a3979d"
+    },
+    "rag-generation-final/traces/payment-permission.json": {
+      "bytes": 8642,
+      "sha256": "92929cf1f7721a61c3b20f8d9a7636ea1620796a06ee3988b73abe14f2675713"
+    },
+    "rag-generation-final/traces/refund-days.json": {
+      "bytes": 4108,
+      "sha256": "01c60a1ad10179bab1120a7dc1c35d56213b4f1358c720b52e4c10efd95ccc10"
+    },
+    "rag-generation-final/traces/refund-percent.json": {
+      "bytes": 4166,
+      "sha256": "b709e4288a80c79a49aed536e3de9aebbf981fcf717084c3da77065737132827"
+    },
+    "rag-generation-final/traces/seat-changed.json": {
+      "bytes": 9745,
+      "sha256": "fa69f9e0d296fbf769e7c203ba01a1660f3e26ca9977207a0bb6852408c90ac0"
+    },
+    "rag-generation-final/traces/student-discount.json": {
+      "bytes": 3965,
+      "sha256": "a6cd6bc4faa31b450cb48a953258d01e065c01e19028024304ecc25d2afe5829"
+    },
+    "rag-generation-final/traces/support-phone.json": {
+      "bytes": 3964,
+      "sha256": "b676fd288af3c92c189db861fc85f604f00e30dcf3a4691f544883976a6d4f53"
+    },
+    "rag-generation-final/traces/ticket-vat.json": {
+      "bytes": 3955,
+      "sha256": "4ce19c636518e3c3716d28d0c0109b28cef64c7a6c7084acc81dcbeb51b05170"
+    },
+    "rag-generation-final-line-fragments/traces/age-policy.json": {
+      "bytes": 4086,
+      "sha256": "7b8425bf151edac60bcc4bf5ef131168501fadc0022d580b7f46ef42d32cb133"
+    },
+    "rag-generation-final-line-fragments/traces/booking-steps.json": {
+      "bytes": 9201,
+      "sha256": "952dd9e604a11fd1d04054f396be598e7c0cf22da1cf83f221c36350ae761f27"
+    },
+    "rag-generation-final-line-fragments/traces/camera-emotion.json": {
+      "bytes": 14573,
+      "sha256": "8a45babf7ba7d3754f8f61c67182f1014db418c4f30f662eecfd21f36389ac02"
+    },
+    "rag-generation-final-line-fragments/traces/camera-techniques.json": {
+      "bytes": 12494,
+      "sha256": "5cb827fe4b30e601548c3472e3d03074081f61e7b69884817bcf54ae584f9e7a"
+    },
+    "rag-generation-final-line-fragments/traces/chat-hold.json": {
+      "bytes": 8884,
+      "sha256": "4455f89f1de844d37473a75a6e9a8e56203e7306deb1c374521aac6d629e4444"
+    },
+    "rag-generation-final-line-fragments/traces/child-discount.json": {
+      "bytes": 3972,
+      "sha256": "fdc4f51b41b3a80f16d1daa2d8eab18ab224ead14a7930a33feec3cad8790944"
+    },
+    "rag-generation-final-line-fragments/traces/cinematography-definition.json": {
+      "bytes": 12556,
+      "sha256": "0e2bce05d53c04fdbb8abdcd62553f5050103baf293e15459011d99ba5c29c96"
+    },
+    "rag-generation-final-line-fragments/traces/delete-history.json": {
+      "bytes": 9603,
+      "sha256": "209eded2e005680010dae0f996f9863750a220184d1f9353137ca6e7fe617cab"
+    },
+    "rag-generation-final-line-fragments/traces/fictional-director.json": {
+      "bytes": 7137,
+      "sha256": "f6854d03d0b120cb9b005bda8ab46dc6d21d1694ecb91500909c713c69b43a09"
+    },
+    "rag-generation-final-line-fragments/traces/final-price.json": {
+      "bytes": 9032,
+      "sha256": "c37e0897183a8e734e6dc89120865b0766b4746da444cdd1863f9e24b848f3c5"
+    },
+    "rag-generation-final-line-fragments/traces/genre-en.json": {
+      "bytes": 18640,
+      "sha256": "22a6f22287495a97c58c95191f71dbcc57a7e0095e5428dce553a41f5dc42a35"
+    },
+    "rag-generation-final-line-fragments/traces/genre-vi.json": {
+      "bytes": 18843,
+      "sha256": "757afa927971c1561425fce5ecaeab8537918f7415775aa4a402e4ca4ea1ff7b"
+    },
+    "rag-generation-final-line-fragments/traces/history.json": {
+      "bytes": 8990,
+      "sha256": "59f63a213d906393e9e4a7f1bf68e13ed6282b7f39f1b6d914249e299c321bdd"
+    },
+    "rag-generation-final-line-fragments/traces/hold-minutes.json": {
+      "bytes": 4096,
+      "sha256": "a58c52167df3fb1a15f0aa3de4560d976a2dee54148f28df9f95f3312e96a2c6"
+    },
+    "rag-generation-final-line-fragments/traces/login-seats.json": {
+      "bytes": 9650,
+      "sha256": "62d2806dcb1119bad5d9be4d6dcdd3a3cfa617b050e3679f24eb7138c25af133"
+    },
+    "rag-generation-final-line-fragments/traces/moving-image.json": {
+      "bytes": 15703,
+      "sha256": "2d8e9201ac5d24d7b07f30a1c8814f048596856b903491fcca0d6acc4b8b2ccf"
+    },
+    "rag-generation-final-line-fragments/traces/not-in-book-awards.json": {
+      "bytes": 7304,
+      "sha256": "705354d3b673ab767bbe90aebbd6a4795b5b6d353ff30944de8d723adc5d7833"
+    },
+    "rag-generation-final-line-fragments/traces/payment-permission.json": {
+      "bytes": 8750,
+      "sha256": "346c84cd214ea011f80e15b1a70d7b8f87ad940ea9d46d9f43f3f5e268793f0d"
+    },
+    "rag-generation-final-line-fragments/traces/refund-days.json": {
+      "bytes": 4109,
+      "sha256": "7305f3d5ed55235af967e8f1e47e7310ef4272f708b83bb31c4b16377d473b14"
+    },
+    "rag-generation-final-line-fragments/traces/refund-percent.json": {
+      "bytes": 4166,
+      "sha256": "b5c84e8dfafb070591403751c60e8d0005be999ad0d8b5dfbf1bf33f0b52c3c5"
+    },
+    "rag-generation-final-line-fragments/traces/seat-changed.json": {
+      "bytes": 9744,
+      "sha256": "7872b0d05036930a686fc93e6b9f216804c56698f8b086c99caa798030b0269c"
+    },
+    "rag-generation-final-line-fragments/traces/student-discount.json": {
+      "bytes": 3961,
+      "sha256": "e2a3c896e9f2f06b64df317a9c8d2c14cec98ca97c4a42ca664c8fe1e71a3f50"
+    },
+    "rag-generation-final-line-fragments/traces/support-phone.json": {
+      "bytes": 3964,
+      "sha256": "1a2ae0d5e7c1dd15f446dc98254cb888b39d330f14ac80cc1cd20f6f5ba8e8ef"
+    },
+    "rag-generation-final-line-fragments/traces/ticket-vat.json": {
+      "bytes": 3957,
+      "sha256": "458552eb0c7eb570ef6abdf66634183ce06f7ac584d0fab8bf3e4b5eadb47272"
+    },
+    "rag-generation-guarded/traces/age-policy.json": {
+      "bytes": 4083,
+      "sha256": "1dae937fd45adff79fd7484356ab287f3bd8f7dea2dff43485d5e118ff645f01"
+    },
+    "rag-generation-guarded/traces/booking-steps.json": {
+      "bytes": 9508,
+      "sha256": "7c98f5e1a12385bc86deeee270aa75153ae4cf0a2de7073e92bab89aafb9641b"
+    },
+    "rag-generation-guarded/traces/camera-emotion.json": {
+      "bytes": 12870,
+      "sha256": "b9cc9c2f53ef39ea736b1d5a78cd919b5129bafaaf2928484e92b93720ace8ba"
+    },
+    "rag-generation-guarded/traces/camera-techniques.json": {
+      "bytes": 11461,
+      "sha256": "503d16b4f262839e041fd4b84007fdb6780ba97f3651782f17172b409b44d011"
+    },
+    "rag-generation-guarded/traces/chat-hold.json": {
+      "bytes": 8561,
+      "sha256": "256075ed8c9f3a03d7c9f5ce5dede84a6c5da4a13b2de140ab10d05622985f51"
+    },
+    "rag-generation-guarded/traces/child-discount.json": {
+      "bytes": 3973,
+      "sha256": "5eb4e8da7545bf0448ff114afa0d87c8ee23b04c400ab0701876aa2eb2ce219e"
+    },
+    "rag-generation-guarded/traces/cinematography-definition.json": {
+      "bytes": 11480,
+      "sha256": "302729783fcd8ac3993934062b07dd68b6e51a442fde880ba22c1ccf1afc5368"
+    },
+    "rag-generation-guarded/traces/delete-history.json": {
+      "bytes": 8792,
+      "sha256": "a0bbf1570ff0812be8e0df02a8e118de0cc4b71eeb3a1b7b7353ae1efe9ccc2b"
+    },
+    "rag-generation-guarded/traces/fictional-director.json": {
+      "bytes": 7138,
+      "sha256": "0da8354e14c0edfbafaf5268d9910354062f5f8e04ca6b049d5a6ee28e9e66be"
+    },
+    "rag-generation-guarded/traces/final-price.json": {
+      "bytes": 8793,
+      "sha256": "95a6b19c1b64974da37bf6102e23c22c2d47c3628b7d7910f61b78a61ba62cc2"
+    },
+    "rag-generation-guarded/traces/genre-en.json": {
+      "bytes": 15412,
+      "sha256": "2789770be3bd634b87bf329e2c97e1be50c2207cb1f6c20d94e83254fcdfad83"
+    },
+    "rag-generation-guarded/traces/genre-vi.json": {
+      "bytes": 16065,
+      "sha256": "b7cd2c7f9a1b25c61e7368926bf3cde87b6c9f09ea6502303599411b9ba80cd6"
+    },
+    "rag-generation-guarded/traces/history.json": {
+      "bytes": 8860,
+      "sha256": "1f111e2e7f1dd2701d116cd15c1dc8a2656189ddb4b657aad57dd2aa2fb3502e"
+    },
+    "rag-generation-guarded/traces/hold-minutes.json": {
+      "bytes": 4096,
+      "sha256": "d146fbdef730179ca9e88fbc487e4f2b1622d82879b41f6f183582c5afe6071a"
+    },
+    "rag-generation-guarded/traces/login-seats.json": {
+      "bytes": 8855,
+      "sha256": "9dbb8b7b5039ea5ab77d1a3e6910c8c9ab66a83a52df1d513ce0123137bd722a"
+    },
+    "rag-generation-guarded/traces/moving-image.json": {
+      "bytes": 13176,
+      "sha256": "6ff4ef62829eea7e178fcc14500e49b9183e6e7176b0906f7724e2d3b904e5f2"
+    },
+    "rag-generation-guarded/traces/not-in-book-awards.json": {
+      "bytes": 7304,
+      "sha256": "aed9e53a42900816edf993263f3fb4d4858625cad68f2a89836b34abfed10cce"
+    },
+    "rag-generation-guarded/traces/payment-permission.json": {
+      "bytes": 8581,
+      "sha256": "54542bbd462eae4cc0e7beb603cefb02f49b395afadee4d6b5cea56527b1ebf2"
+    },
+    "rag-generation-guarded/traces/refund-days.json": {
+      "bytes": 4109,
+      "sha256": "c36b0682a05f83e880fcf7e29141ec29d2ad669c67139b911b1f5d82eee030ad"
+    },
+    "rag-generation-guarded/traces/refund-percent.json": {
+      "bytes": 4166,
+      "sha256": "efb25f752ff928c7972b75377375f619a75834c2e05fe331636628bdacb3732e"
+    },
+    "rag-generation-guarded/traces/seat-changed.json": {
+      "bytes": 9096,
+      "sha256": "b22e938e49579fbf119ce009e6b1688d31f9bbfa4bb9619e1b72eb604c0e38ac"
+    },
+    "rag-generation-guarded/traces/student-discount.json": {
+      "bytes": 3962,
+      "sha256": "c8e903ca10e54f429d8d3ddc6e3cb6678083184e14aeefb0a1b98debbd4d4298"
+    },
+    "rag-generation-guarded/traces/support-phone.json": {
+      "bytes": 3964,
+      "sha256": "c7cb3aeb125268c38e9a788833ae0c6b0663321317e32380397ffd79500c29a9"
+    },
+    "rag-generation-guarded/traces/ticket-vat.json": {
+      "bytes": 8751,
+      "sha256": "c2b84b6aa93d7d7954973caf9f5ae48dfb6e9c9249751aca377027b304a7ef61"
+    },
+    "rag-generation-spans/traces/age-policy.json": {
+      "bytes": 4085,
+      "sha256": "ef749d3040c9d18d41a6ae12f946ba2bf72a9849fc337a37cc069c3e75016a8d"
+    },
+    "rag-generation-spans/traces/booking-steps.json": {
+      "bytes": 8961,
+      "sha256": "80c54f0b4370c580b8c09e543c38c38d44445f9fde2fe2351ef33ad4817d1ee9"
+    },
+    "rag-generation-spans/traces/camera-emotion.json": {
+      "bytes": 14444,
+      "sha256": "dbb3f77867d50689c6adc204e28dfd9881aada9d47120494a7f7e95c7a4fc0e9"
+    },
+    "rag-generation-spans/traces/camera-techniques.json": {
+      "bytes": 12453,
+      "sha256": "4915fc1413e42f10653bf31a389e7d35b8cc6227dc8b4da7d727c87f1b1c2103"
+    },
+    "rag-generation-spans/traces/chat-hold.json": {
+      "bytes": 8921,
+      "sha256": "ead176b7e9150b47c853328f997c527d97abec6ec3f8bad65bdc9190cffc2a1f"
+    },
+    "rag-generation-spans/traces/child-discount.json": {
+      "bytes": 3973,
+      "sha256": "d82846790b84dc16c858bacc7eb5e9d32df38db1412d4b55165364237c9e23b2"
+    },
+    "rag-generation-spans/traces/cinematography-definition.json": {
+      "bytes": 12869,
+      "sha256": "136639bd288feb5216f9841cb6574f0d2544e2456abd8a0daf25473e0553fcee"
+    },
+    "rag-generation-spans/traces/delete-history.json": {
+      "bytes": 9246,
+      "sha256": "db0fe9710676d9e591f73ab2479713958f730a338fcaf72b68577a3fcf474b30"
+    },
+    "rag-generation-spans/traces/fictional-director.json": {
+      "bytes": 7138,
+      "sha256": "1903f5f4b813b3ce38edc681550e7ee45bc63c01c4a386b687899c7f3ca1c7a8"
+    },
+    "rag-generation-spans/traces/final-price.json": {
+      "bytes": 9310,
+      "sha256": "cb43d7dc347414e1be712c13f64ed4de80e0de7eae9dccc02d5cf07889d0513a"
+    },
+    "rag-generation-spans/traces/genre-en.json": {
+      "bytes": 18917,
+      "sha256": "62c7580a416ba3e995c4f1bab7ef44f3003c1132ef51697df5f84b1178b49008"
+    },
+    "rag-generation-spans/traces/genre-vi.json": {
+      "bytes": 17999,
+      "sha256": "f58d1633ed023959d43908f7c6eb1b03a62cd6cd6f4005fcce99f06889914212"
+    },
+    "rag-generation-spans/traces/history.json": {
+      "bytes": 8869,
+      "sha256": "8171b90df05eb15d1bd1ba92d8c35d7e31ab1befb8815f3b39b85a54ebb81b6c"
+    },
+    "rag-generation-spans/traces/hold-minutes.json": {
+      "bytes": 4096,
+      "sha256": "bf014ca8ea4255143185662a7526d08feffcfe1d9d69e4f708ee42eaf80d4cfc"
+    },
+    "rag-generation-spans/traces/login-seats.json": {
+      "bytes": 8799,
+      "sha256": "abbacf8a08369cf7a226eeae58473e3cbe992df2712209c9a90e5fddde3a38d5"
+    },
+    "rag-generation-spans/traces/moving-image.json": {
+      "bytes": 14877,
+      "sha256": "c86d6e861906f3278c27910886fc7235e0863f15948bff93520195f20c33e6ec"
+    },
+    "rag-generation-spans/traces/not-in-book-awards.json": {
+      "bytes": 7304,
+      "sha256": "45771aea2912d8a077ee89815846ee5ab4b533ea68098edae1b20374088a14f7"
+    },
+    "rag-generation-spans/traces/payment-permission.json": {
+      "bytes": 8577,
+      "sha256": "ca63531da15ef80ded82e920a51a2ae5d4997434c395f5a6577b00b310ef810f"
+    },
+    "rag-generation-spans/traces/refund-days.json": {
+      "bytes": 4109,
+      "sha256": "c8aa04d55db60d2dde12103bac31de0e3b6b00be66f08974384b5e4284f74db8"
+    },
+    "rag-generation-spans/traces/refund-percent.json": {
+      "bytes": 4166,
+      "sha256": "eaabc7937c399a0ce0c07b348f892357ee18658915cf05774daf7b48d238ccf0"
+    },
+    "rag-generation-spans/traces/seat-changed.json": {
+      "bytes": 8792,
+      "sha256": "743841cb8091c34bf595f27282e20682a8e4cb19abdbb8d93ccbd1d74f2b2ab9"
+    },
+    "rag-generation-spans/traces/student-discount.json": {
+      "bytes": 3963,
+      "sha256": "9ff343ad074a7b57293a025294ff4ff57836dc0bf6246196efccb507039ebbba"
+    },
+    "rag-generation-spans/traces/support-phone.json": {
+      "bytes": 3964,
+      "sha256": "76b20ebe44aabc2bdd7777e3ae8fa006bacc085df0387402cf63eea1dcc4089d"
+    },
+    "rag-generation-spans/traces/ticket-vat.json": {
+      "bytes": 8972,
+      "sha256": "904e971587dbd4735bbbe37b99ef525ec8f687676e32f038128291723fa42235"
+    },
+    "rag-generation-supported-spans/traces/age-policy.json": {
+      "bytes": 4085,
+      "sha256": "75e93da2f8154224160583bfd773147da4002e1de269c1ca4a30f20f8fbd9c1d"
+    },
+    "rag-generation-supported-spans/traces/booking-steps.json": {
+      "bytes": 9199,
+      "sha256": "3c870069e52171b342cf596476302af0c2e7e49f3bd001be5a24065f367c1d53"
+    },
+    "rag-generation-supported-spans/traces/camera-emotion.json": {
+      "bytes": 14572,
+      "sha256": "aaf37f0a1e1e02b76436df19d1227333911942ed4742640852b1a4cc1e3e35b5"
+    },
+    "rag-generation-supported-spans/traces/camera-techniques.json": {
+      "bytes": 12586,
+      "sha256": "b17b87c4b1de5dca28bddb11a3a5bd4c79dcdf7c247b8bbe384d1a1cd08d3ec8"
+    },
+    "rag-generation-supported-spans/traces/chat-hold.json": {
+      "bytes": 8884,
+      "sha256": "e1b57a06c6196f8de562c86189f712aa60729ac9201b3306164bfa57eaed0ac3"
+    },
+    "rag-generation-supported-spans/traces/child-discount.json": {
+      "bytes": 3973,
+      "sha256": "be48f3248672ac4f66f0789929999857d394a677a1f3bcb6d7734ae01f69d803"
+    },
+    "rag-generation-supported-spans/traces/cinematography-definition.json": {
+      "bytes": 13312,
+      "sha256": "f94d80d61f9a28fc542008cd33b5648429b3fcc1e4cfc17721da0788c303d08f"
+    },
+    "rag-generation-supported-spans/traces/delete-history.json": {
+      "bytes": 9603,
+      "sha256": "5424a017824fc9a3eb84a17f7b6f0bad4065d4af3c47e3c78419f2ddaf53f13b"
+    },
+    "rag-generation-supported-spans/traces/fictional-director.json": {
+      "bytes": 7140,
+      "sha256": "f36b5bce097b4293af2c27913dcb314fe78f09b6c371742e7a1c5d158977cff9"
+    },
+    "rag-generation-supported-spans/traces/final-price.json": {
+      "bytes": 9034,
+      "sha256": "8b1f9bce5800e7c6e7da51c5a7e3e3b347783a2ec42017c9e653f19dbac62314"
+    },
+    "rag-generation-supported-spans/traces/genre-en.json": {
+      "bytes": 18639,
+      "sha256": "429a268735a262b5d66956052e86d7b292ec5765beae567ea9c2dd2dbec560b4"
+    },
+    "rag-generation-supported-spans/traces/genre-vi.json": {
+      "bytes": 18843,
+      "sha256": "12347464470331792275c16619adc05b3b206f630e643beef84f34206cd86fbf"
+    },
+    "rag-generation-supported-spans/traces/history.json": {
+      "bytes": 8990,
+      "sha256": "c6a7c82f0c36f19495d25d1464e2a27379d310b752ef0657193088b2e877bf23"
+    },
+    "rag-generation-supported-spans/traces/hold-minutes.json": {
+      "bytes": 4096,
+      "sha256": "abad637730f13de9f4512994204f78bde69ab3fbd2a7dacd39a3a0ebdc3b8a47"
+    },
+    "rag-generation-supported-spans/traces/login-seats.json": {
+      "bytes": 9650,
+      "sha256": "f804de0baf903432d5c94e3e7a09b21d073848ec437718b939b6148397d470b8"
+    },
+    "rag-generation-supported-spans/traces/moving-image.json": {
+      "bytes": 15704,
+      "sha256": "c45c8bd3d28c6c963c37cd3e86997c505eb547f01af613fc71ddb51d1e778d3e"
+    },
+    "rag-generation-supported-spans/traces/not-in-book-awards.json": {
+      "bytes": 7303,
+      "sha256": "567870b228bb74cb383f390e39f9ffb5a51f23a7301a50770974f3d908d4d146"
+    },
+    "rag-generation-supported-spans/traces/payment-permission.json": {
+      "bytes": 8751,
+      "sha256": "0d7594ca9e51a1134fac0c0775f4ac6f62b4854e402a4e8a3448cce59bfefbdc"
+    },
+    "rag-generation-supported-spans/traces/refund-days.json": {
+      "bytes": 4109,
+      "sha256": "adc3faee6c892fb38a115b4122b4a9c971c8798c943d0cc7d33cfeb3a2e50244"
+    },
+    "rag-generation-supported-spans/traces/refund-percent.json": {
+      "bytes": 4166,
+      "sha256": "4fae777663e30582335bab3bc5e1be06b65ca71e86fcbde831bc2e909b53a7e6"
+    },
+    "rag-generation-supported-spans/traces/seat-changed.json": {
+      "bytes": 9720,
+      "sha256": "0c4094735d477cc2901b0a9987609f85fe6d6750a83cc706c88315419f331bc5"
+    },
+    "rag-generation-supported-spans/traces/student-discount.json": {
+      "bytes": 3963,
+      "sha256": "9a2127540f5ad76fd75c2717a899a75161429661a8e90bb79efb2b9d7b53a4ea"
+    },
+    "rag-generation-supported-spans/traces/support-phone.json": {
+      "bytes": 3964,
+      "sha256": "6424155ac95828865e3cd3829ed25a116e1b2dc70a7cdb4262f999a2183d12a4"
+    },
+    "rag-generation-supported-spans/traces/ticket-vat.json": {
+      "bytes": 9317,
+      "sha256": "88a03005ebe0a54f373cfb34ec3b449545906354c1270c5faf6f435ad78061d8"
+    }
+  }
+}

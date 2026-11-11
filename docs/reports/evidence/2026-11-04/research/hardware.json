@@ -1,0 +1,10 @@
+{
+  "os": "Windows-11-10.0.26300-SP0",
+  "python": "3.12.10",
+  "torch": "2.10.0+cu128",
+  "transformers": "4.57.1",
+  "cuda_runtime": "12.8",
+  "gpu": {
+    "name": "NVIDIA GeForce RTX 5060 Laptop GPU"
+  }
+}

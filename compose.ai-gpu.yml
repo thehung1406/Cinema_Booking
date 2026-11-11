@@ -1,0 +1,4 @@
+# Optional NVIDIA Docker runtime; omit this file for a portable CPU start.
+services:
+  ollama:
+    gpus: all

@@ -29,6 +29,15 @@ from ..schemas import (
 )
 
 from fastapi import APIRouter
+from pydantic import BaseModel, Field
+from typing import Literal
+
+
+class KnowledgeSearch(BaseModel):
+    question: str = Field(min_length=1, max_length=2000)
+    scope: Literal["policy", "film_education", "reference"] = "policy"
+    strategy: Literal["lexical", "bm25", "dense", "hybrid", "rerank"] = "bm25"
+    limit: int = Field(default=5, ge=1, le=20)
 
 
 def create_router(app, engine, settings, logger, cache):
@@ -150,6 +159,19 @@ def create_router(app, engine, settings, logger, cache):
             ).all(),
             "total": total,
         }
+
+    @router.post("/admin/knowledge/search")
+    def knowledge_search(body: KnowledgeSearch, user=Depends(knowledge_user), db=Depends(db_session)):
+        from ..rag import retrieve
+        from time import perf_counter
+        started = perf_counter()
+        try:
+            sources = retrieve(db, body.question, body.limit, strategy=body.strategy, scope=body.scope,
+                              embedding_url=settings.embedding_url, reranker_url=settings.reranker_url)
+        except Exception:
+            raise HTTPException(503, "Không chạy được cấu hình truy xuất; kiểm tra inference service")
+        return dict(question=body.question, strategy=body.strategy, scope=body.scope, sources=sources,
+                    latency_ms=round((perf_counter()-started)*1000, 2))
 
     @router.get("/admin/documents/{document_id}")
     def document(

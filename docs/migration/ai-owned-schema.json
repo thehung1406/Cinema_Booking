@@ -6,7 +6,8 @@
       "document_id",
       "content",
       "embedding",
-      "embedding_version"
+      "embedding_version",
+      "provenance"
     ],
     "foreign_keys": [
       "document_id -> ai_documents.id"
@@ -34,7 +35,8 @@
       "source_url",
       "approved",
       "effective_at",
-      "updated_at"
+      "updated_at",
+      "provenance"
     ],
     "foreign_keys": []
   },

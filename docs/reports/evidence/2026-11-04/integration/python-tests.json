@@ -1,0 +1,9 @@
+{
+  "tests": "227",
+  "failures": "0",
+  "errors": "0",
+  "skipped": "0",
+  "time": "43.596",
+  "junit_sha256": "c0ff131324e655f80dca4427e1fc008ebcc91b085378135ee6a56671c11a2fb6",
+  "broker": "dedicated RabbitMQ test vhost and credential"
+}

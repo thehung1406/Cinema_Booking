@@ -1,0 +1,87 @@
+﻿id,trace_sha256,question,answer,sources,reviewer,correctness,groundedness,citation,refusal,note
+booking-steps,caf4727c91db4756bffec420ac9986d63a529cfc3fb6035bf06e06a45959edde,Tôi cần làm những bước nào để đặt vé?,"Chọn phim, rạp, ngày và suất chiếu trên trang đặt vé. [doc:2]
+
+Mở màn hình chọn ghế để kiểm tra ghế và giá hiện hành. [doc:2]","/ticket-booking
+/ticket-booking
+/ticket-booking",,,,,,
+chat-hold,c8f813d8268451a811208453ca0567e81aebcc043b8c8b355d5fb0d86bb3892a,Tra cứu suất chiếu trong trợ lý có giữ ghế cho tôi chưa?,Tra cứu trong trợ lý chưa giữ ghế. [doc:2],"/ticket-booking
+/ticket-booking
+/ticket-booking",,,,,,
+login-seats,3f7ff50858a0b0fb14a0ccdbb8a61e94a9b64b9408b347cee31a718aff5ba1fd,Chọn ghế có cần đăng nhập không?,"Khi chọn ghế, hệ thống yêu cầu đăng nhập và kiểm tra lại tình trạng ghế với Booking Service. [doc:3]
+
+Sau đó mở màn hình chọn ghế để kiểm tra ghế và giá hiện hành. [doc:2]","/ticket-booking
+/ticket-booking
+/ticket-booking",,,,,,
+seat-changed,fa69f9e0d296fbf769e7c203ba01a1660f3e26ca9977207a0bb6852408c90ac0,Vì sao ghế tôi vừa thấy lại không chọn được?,"Ghế đã bán hoặc đang được người khác giữ có thể không còn chọn được. [doc:3]
+
+Khi chọn ghế, hệ thống yêu cầu đăng nhập và kiểm tra lại tình trạng ghế với Booking Service. [doc:3]","/ticket-booking
+/ticket-booking
+/ticket-booking",,,,,,
+final-price,fbf56fba49c7753df16796446532025917a782c2f6d7fee4dd5ac2dc90cbda20,Giá trong hội thoại có thay thế giá xác nhận của đơn không?,Nội dung trong hội thoại không thay thế giá xác nhận của đơn. [doc:4],"/ticket-booking
+/ticket-booking
+/ticket-booking",,,,,,
+payment-permission,92929cf1f7721a61c3b20f8d9a7636ea1620796a06ee3988b73abe14f2675713,Trợ lý có được tự xác nhận giao dịch và cấp vé cho tôi không?,"Trợ lý không được tự xác nhận giao dịch, cấp vé hoặc hứa hoàn tiền. [doc:5]","/ticket-booking
+/ticket-booking
+/ticket-booking",,,,,,
+history,f4439ba7bbaf6c0b83926749d0bd17fb08b626610b7b9ff38c0c7a17a33dbf0d,Tài khoản khác có xem được lịch sử trò chuyện của tôi không?,Mỗi người chỉ xem được lịch sử thuộc tài khoản của mình. [doc:6],"/ticket-booking
+/ticket-booking
+/ticket-booking",,,,,,
+delete-history,09d4da4b9ee025e45d14baa6ce9718291f7e1867276b61535568355519d53643,Tôi có thể xóa hội thoại ở đâu?,"Hội thoại có thể được xem lại và xóa trong khung trợ lý sau khi đăng nhập. [doc:6]
+
+Mỗi người chỉ xem được lịch sử thuộc tài khoản của mình. [doc:6]","/ticket-booking
+/ticket-booking
+/ticket-booking",,,,,,
+genre-vi,612fe9478682db22bab7b400c73eec6b826ba699e0debc3cd3b069a2736897f0,Thể loại phim là gì?,"Thể loại phim là một danh mục tác phẩm nghệ thuật, nhạc, hoặc văn học được đặc trưng bởi phong cách, hình thức, hoặc nội dung cụ thể. [doc:52]
+
+Thể loại phim bao gồm bốn yếu tố: nhân vật, câu chuyện, kịch bản và bối cảnh. [doc:52]","https://openlibrary-repo.ecampusontario.ca/jspui/bitstream/123456789/429/1/Exploring-Movie-Construction-and-Production-1499438054.pdf#page=26
+https://openlibrary-repo.ecampusontario.ca/jspui/bitstream/123456789/429/1/Exploring-Movie-Construction-and-Production-1499438054.pdf#page=26
+https://openlibrary-repo.ecampusontario.ca/jspui/bitstream/123456789/429/1/Exploring-Movie-Construction-and-Production-1499438054.pdf#page=40",,,,,,
+genre-en,7f720399287e32e23b6f049471be4b66cfc1ef8aba731cb74e71ba3a474dc470,What is film genre?,"Genre là một danh mục của tác phẩm nghệ thuật, âm nhạc hoặc văn học được đặc trưng bởi một phong cách, hình thức hoặc nội dung cụ thể. [doc:52]
+
+Genre bao gồm bốn yếu tố: nhân vật, câu chuyện, kịch bản và bối cảnh. [doc:52]","https://openlibrary-repo.ecampusontario.ca/jspui/bitstream/123456789/429/1/Exploring-Movie-Construction-and-Production-1499438054.pdf#page=26
+https://openlibrary-repo.ecampusontario.ca/jspui/bitstream/123456789/429/1/Exploring-Movie-Construction-and-Production-1499438054.pdf#page=26
+https://openlibrary-repo.ecampusontario.ca/jspui/bitstream/123456789/429/1/Exploring-Movie-Construction-and-Production-1499438054.pdf#page=40",,,,,,
+cinematography-definition,6d5122d3dd24d383ea2b90406a153a58756306237bc5879290b9035db68e996b,Cinematography là gì?,Cinematography là quá trình tạo hình ảnh chuyển động bằng phim hoặc kỹ thuật số. [doc:225],"https://en.wikibooks.org/w/index.php?title=Movie_Making_Manual/Cinematography&oldid=3335736
+https://openlibrary-repo.ecampusontario.ca/jspui/bitstream/123456789/429/1/Exploring-Movie-Construction-and-Production-1499438054.pdf#page=62
+https://openlibrary-repo.ecampusontario.ca/jspui/bitstream/123456789/429/1/Exploring-Movie-Construction-and-Production-1499438054.pdf#page=65",,,,,,
+camera-techniques,1198b11f4bf37fbaf6a29eb3fe8f43577c5f1ef42b11c452903c12783ff15559,Có những kỹ thuật chuyển động máy quay nào trong bản tóm tắt?,"Các kỹ thuật chuyển động máy quay bao gồm quay cầm tay, dolly, slider và cần cẩu. [doc:225]","https://en.wikibooks.org/w/index.php?title=Movie_Making_Manual/Cinematography&oldid=3335736
+https://en.wikibooks.org/w/index.php?title=Movie_Making_Manual/Cinematography&oldid=3335736
+https://openlibrary-repo.ecampusontario.ca/jspui/bitstream/123456789/429/1/Exploring-Movie-Construction-and-Production-1499438054.pdf#page=72",,,,,,
+moving-image,631e51fb7ff3cee417a237a4aedd8d9476fd79d9789693fae941af4c00d0cf4c,Quay phim khác chụp ảnh tĩnh ở điểm nào?,"Khác với ảnh tĩnh, máy quay và cảnh vật có thể cùng chuyển động, tạo thêm khả năng biểu đạt. [doc:225]
+
+Chuyển động máy quay có thể góp phần thể hiện cảm xúc. [doc:225]","https://en.wikibooks.org/w/index.php?title=Movie_Making_Manual/Cinematography&oldid=3335736
+https://openlibrary-repo.ecampusontario.ca/jspui/bitstream/123456789/429/1/Exploring-Movie-Construction-and-Production-1499438054.pdf#page=12
+https://openlibrary-repo.ecampusontario.ca/jspui/bitstream/123456789/429/1/Exploring-Movie-Construction-and-Production-1499438054.pdf#page=13",,,,,,
+camera-emotion,35689eaee390da683307cb72740f0b9aabbbb27fcf6dead0730198a5713ee72c,Chuyển động máy quay có thể góp phần thể hiện cảm xúc không?,Chuyển động máy quay có thể góp phần thể hiện cảm xúc. [doc:225],"https://en.wikibooks.org/w/index.php?title=Movie_Making_Manual/Cinematography&oldid=3335736
+https://openlibrary-repo.ecampusontario.ca/jspui/bitstream/123456789/429/1/Exploring-Movie-Construction-and-Production-1499438054.pdf#page=63
+https://openlibrary-repo.ecampusontario.ca/jspui/bitstream/123456789/429/1/Exploring-Movie-Construction-and-Production-1499438054.pdf#page=72",,,,,,
+refund-percent,b709e4288a80c79a49aed536e3de9aebbf981fcf717084c3da77065737132827,Hủy vé được hoàn lại chính xác bao nhiêu phần trăm tiền?,,"/ticket-booking
+/ticket-booking
+/ticket-booking",,,,,,
+hold-minutes,19330be6de46f141ea72bc4e42fc7e3946d162ed4bef08e6d669f0b96c2be826,Ghế được giữ chính xác bao nhiêu phút trước khi tự nhả?,,"/ticket-booking
+/ticket-booking
+/ticket-booking",,,,,,
+child-discount,92573336e641ca9232406f4236866a9119b26a3efb666c670bd8f903bb72ba9f,Trẻ em dưới sáu tuổi được giảm giá bao nhiêu phần trăm?,,"/ticket-booking
+/ticket-booking
+/ticket-booking",,,,,,
+student-discount,a6cd6bc4faa31b450cb48a953258d01e065c01e19028024304ecc25d2afe5829,Sinh viên có được giảm 50 phần trăm giá vé không?,,"/ticket-booking
+/ticket-booking
+/ticket-booking",,,,,,
+refund-days,01c60a1ad10179bab1120a7dc1c35d56213b4f1358c720b52e4c10efd95ccc10,Nếu hoàn tiền thì mấy ngày tiền về tài khoản?,,"/ticket-booking
+/ticket-booking
+/ticket-booking",,,,,,
+support-phone,b676fd288af3c92c189db861fc85f604f00e30dcf3a4691f544883976a6d4f53,Số điện thoại hotline hỗ trợ của rạp là bao nhiêu?,,"/ticket-booking
+/ticket-booking
+/ticket-booking",,,,,,
+ticket-vat,4ce19c636518e3c3716d28d0c0109b28cef64c7a6c7084acc81dcbeb51b05170,Giá vé đã bao gồm thuế VAT mười phần trăm chưa?,,"/ticket-booking
+/ticket-booking
+/ticket-booking",,,,,,
+age-policy,30ba58cc7ff1fb6d614397d1faa1303db8537454da04ad982e77fe49ba4b31b0,Người 15 tuổi có được xem phim gắn nhãn T18 ở rạp này không?,,"/ticket-booking
+/ticket-booking
+/ticket-booking",,,,,,
+fictional-director,39093c873395c1a1444a80c70ef18699cc87f8ee1b7d4661122bbd94370a1349,Đạo diễn bộ phim Hành Tinh Không Tồn Tại 2099 là ai?,,"https://openlibrary-repo.ecampusontario.ca/jspui/bitstream/123456789/429/1/Exploring-Movie-Construction-and-Production-1499438054.pdf#page=61
+https://openlibrary-repo.ecampusontario.ca/jspui/bitstream/123456789/429/1/Exploring-Movie-Construction-and-Production-1499438054.pdf#page=13
+https://openlibrary-repo.ecampusontario.ca/jspui/bitstream/123456789/429/1/Exploring-Movie-Construction-and-Production-1499438054.pdf#page=4",,,,,,
+not-in-book-awards,cda6a0c731a8e4c79807a9cbfcee8bb79eaf18c08ccd3f5f04a42d1274a3979d,Bộ phim nào đoạt giải Oscar phim hay nhất năm 2026?,,"https://openlibrary-repo.ecampusontario.ca/jspui/bitstream/123456789/429/1/Exploring-Movie-Construction-and-Production-1499438054.pdf#page=13
+https://openlibrary-repo.ecampusontario.ca/jspui/bitstream/123456789/429/1/Exploring-Movie-Construction-and-Production-1499438054.pdf#page=24
+https://openlibrary-repo.ecampusontario.ca/jspui/bitstream/123456789/429/1/Exploring-Movie-Construction-and-Production-1499438054.pdf#page=13",,,,,,

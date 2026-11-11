@@ -33,6 +33,124 @@ def client_for(store, settings, *, permissions=None, read=None, cache=None):
 HEADERS = {"Authorization": "Bearer test-token"}
 
 
+@pytest.mark.parametrize('message,intent', [('Mã suất 1 còn ghế nào?', 'get_seat_availability'), ('Giá vé mã suất 1?', 'get_ticket_prices')])
+def test_explicit_live_fact_request_overrides_wrong_model_tool(ai_store, ai_settings, monkeypatch, message, intent):
+    from ai_service.schemas import AssistantPlan
+    from ai_service import llm
+    ai_settings.llm_provider = 'ollama'
+    monkeypatch.setattr(llm, 'plan', lambda *args: AssistantPlan(intent='search_films'))
+    client, _ = client_for(ai_store, ai_settings)
+    with client:
+        response = client.post('/ai/chat', headers=HEADERS, json={'message': message})
+        assert response.status_code == 200
+        assert response.json()['tool'] == intent
+
+
+def test_planner_timeout_leaves_time_for_direct_booking(ai_store, ai_settings, monkeypatch):
+    from types import SimpleNamespace
+    from ai_service import chat, llm, read_client
+
+    elapsed = 0
+    monkeypatch.setattr(chat, "monotonic", lambda: elapsed)
+    monkeypatch.setattr(read_client, "time", SimpleNamespace(monotonic=lambda: elapsed))
+    ai_settings.llm_provider = "ollama"
+    ai_settings.llm_timeout_seconds = 20
+    ai_settings.direct_reads_enabled = True
+
+    def timeout(settings, *_):
+        nonlocal elapsed
+        elapsed += settings.llm_timeout_seconds
+        raise httpx.ReadTimeout("Simulated slow model")
+
+    def reads(request):
+        if request.url.path.endswith("/options"):
+            return httpx.Response(200, json={"items": []})
+        assert request.url.path.endswith("/matches")
+        return httpx.Response(200, json=[])
+
+    monkeypatch.setattr(llm, "plan", timeout)
+    client, _ = client_for(ai_store, ai_settings, read=reads)
+    with client:
+        response = client.post("/ai/chat", headers=HEADERS, json={"message": "Ngày mai muốn xem phim hài"})
+    assert response.status_code == 200
+    assert response.json()["status"] == "no_results"
+    assert response.json()["mode"] == "model_unavailable"
+
+
+def test_knowledge_inference_shares_one_budget(ai_store, ai_settings, monkeypatch):
+    from ai_service import chat, llm
+    from ai_service.schemas import AssistantPlan
+
+    elapsed = 0
+    monkeypatch.setattr(chat, "monotonic", lambda: elapsed)
+    ai_settings.llm_provider = "ollama"
+    ai_settings.llm_timeout_seconds = 20
+
+    def plan(settings, *_):
+        nonlocal elapsed
+        elapsed += settings.llm_timeout_seconds
+        return AssistantPlan(intent="knowledge")
+
+    def answer(settings, *_):
+        assert elapsed + settings.llm_timeout_seconds < 25
+        return "Đoạn trích đã duyệt."
+
+    monkeypatch.setattr(llm, "plan", plan)
+    monkeypatch.setattr(llm, "grounded_answer", answer)
+    monkeypatch.setattr(chat, "retrieve", lambda *args, **kwargs: [
+        {"id": "doc:1", "text": "Đoạn trích đã duyệt.", "kind": "document"}
+    ])
+    client, _ = client_for(ai_store, ai_settings)
+    with client:
+        response = client.post("/ai/chat", headers=HEADERS, json={"message": "Thể loại điện ảnh là gì?"})
+    assert response.status_code == 200
+    assert response.json()["mode"] == "grounded_generation"
+
+
+def test_recommendation_budget_followup_preserves_party_and_allows_topic_change(ai_store, ai_settings):
+    from datetime import datetime
+    from zoneinfo import ZoneInfo
+    import json
+    options = []
+    def reads(request):
+        if request.url.path.endswith('/options'):
+            payload = json.loads(request.content)
+            options.append(payload)
+            items = [dict(showtime_id=1, sales_version=1, film_id=1, film_title="Phim hài",
+                theater_id=1, theater_name="Rạp", room_name="Phòng 1", show_date=payload["show_date"],
+                start_time="19:00:00", format="2D", available_seats=10, min_ticket_price=75000,
+                minimum_total=150000, party_size=2, currency="VND", url="/seat-selection/1")
+            ] if payload["budget_total"] == "250000" else []
+            return httpx.Response(200, json={"items": items, "has_more": False})
+        if request.url.path.endswith('/matches'):
+            return httpx.Response(200, json={"film_id": [], "theater_id": []})
+        return httpx.Response(200, json={"film_name": None, "theater_name": None})
+    client, _ = client_for(ai_store, ai_settings, read=reads)
+    with client:
+        question = {"message": "Ngày mai muốn xem phim hài, hai người, dưới 250k"}
+        first = client.post('/ai/chat', headers=HEADERS, json=question).json()
+        assert first['missing_fields'] == ['budget_scope'] and not options
+        second = client.post('/ai/chat', headers=HEADERS,
+            json={"conversation_id": first['conversation_id'], "message": "Tổng cả nhóm"})
+        assert second.status_code == 200 and len(second.json()['cards']) == 1
+        assert options[-1]['party_size'] == 2 and options[-1]['budget_total'] == '250000'
+        assert options[-1]['show_date'] == (datetime.now(ZoneInfo('Asia/Ho_Chi_Minh')).date()+timedelta(days=1)).isoformat()
+        refined = client.post('/ai/chat', headers=HEADERS,
+            json={"conversation_id": first['conversation_id'], "message": "Tổng dưới 100k"})
+        assert refined.status_code == 200 and refined.json()['status'] == 'no_results'
+        assert options[-1]['party_size'] == 2 and options[-1]['budget_total'] == '100000'
+        with Session(ai_store) as db:
+            assert db.get(AIConversation, UUID(first['conversation_id'])).context['options'] == []
+        policy = client.post('/ai/chat', headers=HEADERS,
+            json={"conversation_id": first['conversation_id'], "message": "Chính sách hoàn tiền là gì?"})
+        assert policy.status_code == 200 and policy.json()['status'] == 'no_evidence'
+        assert len(options) == 2
+        pending = client.post('/ai/chat', headers=HEADERS, json=question).json()
+        changed = client.post('/ai/chat', headers=HEADERS,
+            json={"conversation_id": pending['conversation_id'], "message": "Đặt hộ hai vé"}).json()
+        assert changed['status'] == 'out_of_scope' and len(options) == 2
+
+
 def test_history_context_pagination_owner_and_delete(ai_store, ai_settings):
     client, state = client_for(ai_store, ai_settings)
     with client:
@@ -85,12 +203,14 @@ def test_concurrent_turn_cannot_overwrite_or_recreate_chat(ai_store, ai_settings
     client, state = client_for(ai_store, ai_settings)
     with client:
         cid = client.post("/ai/chat", headers=HEADERS, json={"message": "Xin chào"}).json()["conversation_id"]
-        def concurrent(*args):
+        def concurrent(*args, **kwargs):
             with Session(ai_store) as db:
                 if deleted:
                     db.execute(delete(AIConversation).where(AIConversation.id == UUID(cid)))
                 else:
-                    db.execute(update(AIConversation).where(AIConversation.id == UUID(cid)).values(updated_at=utcnow()))
+                    # Windows clocks can return the same instant for two quick writes.
+                    # Make the simulated competing revision unambiguously different.
+                    db.execute(update(AIConversation).where(AIConversation.id == UUID(cid)).values(updated_at=utcnow() + timedelta(seconds=1)))
                 db.commit()
             return [], "retrieval_only"
         monkeypatch.setattr(chat, "select_evidence", concurrent)

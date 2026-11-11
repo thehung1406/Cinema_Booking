@@ -1,0 +1,109 @@
+{
+  "id": "student-discount",
+  "question": "Sinh viên có được giảm 50 phần trăm giá vé không?",
+  "scope": "policy",
+  "expected_answerable_development": false,
+  "state": "completed",
+  "sources": [
+    {
+      "id": "doc:5",
+      "title": "Hướng dẫn đặt vé Cinema Booking",
+      "text": "Người dùng thực hiện thanh toán qua giao diện của hệ thống. Trợ lý không được tự xác nhận giao dịch, cấp vé hoặc hứa hoàn tiền. Khi gặp vấn đề cần xem trạng thái tại màn hình thanh toán hoặc liên hệ bộ phận hỗ trợ.",
+      "url": "/ticket-booking",
+      "version": "draft-1",
+      "kind": "document",
+      "score": 0.00019109249114990234,
+      "provenance": {
+        "source_type": "internal",
+        "scope": "policy",
+        "author": "Cinema Booking project",
+        "license": "Project-authored; policy review required",
+        "language": "vi",
+        "checksum": "9a9dc02618464712edfa2601b96d2332c93ce45efea0c2c749b33084bf0bea5c",
+        "extraction": "utf8-text-v1",
+        "page_start": null,
+        "page_end": null,
+        "section": "",
+        "block_index": 4,
+        "character_start": 0,
+        "character_end": 214,
+        "chunking": "characters-1200-v1"
+      },
+      "document_id": 1,
+      "source_id": "cinema-booking-guide"
+    },
+    {
+      "id": "doc:2",
+      "title": "Hướng dẫn đặt vé Cinema Booking",
+      "text": "Người dùng chọn phim, rạp, ngày và suất chiếu trên trang đặt vé. Sau đó mở màn hình chọn ghế để kiểm tra ghế và giá hiện hành. Việc tra cứu trong trợ lý chưa giữ ghế.",
+      "url": "/ticket-booking",
+      "version": "draft-1",
+      "kind": "document",
+      "score": 0.0001499652862548828,
+      "provenance": {
+        "source_type": "internal",
+        "scope": "policy",
+        "author": "Cinema Booking project",
+        "license": "Project-authored; policy review required",
+        "language": "vi",
+        "checksum": "9a9dc02618464712edfa2601b96d2332c93ce45efea0c2c749b33084bf0bea5c",
+        "extraction": "utf8-text-v1",
+        "page_start": null,
+        "page_end": null,
+        "section": "",
+        "block_index": 1,
+        "character_start": 0,
+        "character_end": 166,
+        "chunking": "characters-1200-v1"
+      },
+      "document_id": 1,
+      "source_id": "cinema-booking-guide"
+    },
+    {
+      "id": "doc:1",
+      "title": "Hướng dẫn đặt vé Cinema Booking",
+      "text": "# Hướng dẫn đặt vé Cinema Booking — bản chờ duyệt",
+      "url": "/ticket-booking",
+      "version": "draft-1",
+      "kind": "document",
+      "score": 7.200241088867188e-05,
+      "provenance": {
+        "source_type": "internal",
+        "scope": "policy",
+        "author": "Cinema Booking project",
+        "license": "Project-authored; policy review required",
+        "language": "vi",
+        "checksum": "9a9dc02618464712edfa2601b96d2332c93ce45efea0c2c749b33084bf0bea5c",
+        "extraction": "utf8-text-v1",
+        "page_start": null,
+        "page_end": null,
+        "section": "",
+        "block_index": 0,
+        "character_start": 0,
+        "character_end": 49,
+        "chunking": "characters-1200-v1"
+      },
+      "document_id": 1,
+      "source_id": "cinema-booking-guide"
+    }
+  ],
+  "answer": "",
+  "generation_trace": {
+    "grounding_validation": {
+      "accepted": false,
+      "reason": "requested_specific_fact_absent_from_evidence",
+      "model_called": false
+    }
+  },
+  "retrieval_ms": 714.9726999996346,
+  "retrieval_metrics_development": {
+    "recall_at_k": null,
+    "mrr_at_k": null,
+    "ndcg_at_k": null,
+    "returned_any": true,
+    "relevant_retrieved": 0
+  },
+  "citation_ids_validated": false,
+  "abstained": true,
+  "elapsed_ms": 715.1030000022729
+}

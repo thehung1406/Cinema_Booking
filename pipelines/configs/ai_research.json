@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "task": "document-sentiment-3class",
+  "labels": ["negative", "neutral", "positive"],
+  "seeds": [17, 42, 73],
+  "models": [
+    {"id": "phobert", "checkpoint": "vinai/phobert-base", "revision": null, "preprocessing": "vncorenlp"},
+    {"id": "visobert", "checkpoint": "uitnlp/visobert", "revision": null, "preprocessing": "normalize"},
+    {"id": "videberta", "checkpoint": "Fsoft-AIC/videberta-xsmall", "revision": null, "preprocessing": "normalize"},
+    {"id": "mbert", "checkpoint": "google-bert/bert-base-multilingual-cased", "revision": null, "preprocessing": "normalize"},
+    {"id": "xlmr", "checkpoint": "FacebookAI/xlm-roberta-base", "revision": null, "preprocessing": "normalize"},
+    {"id": "lr", "backend": "sklearn", "preprocessing": "normalize"}
+  ],
+  "datasets": [
+    {"id": "cinema-vi", "path": "ml/data/reviewed/cinema-vi", "domain": "film", "status": "needs-human-annotation", "source": null},
+    {"id": "uit-vsfc", "path": "ml/data/reviewed/uit-vsfc", "domain": "student-feedback", "status": "needs-source-verification", "source": "https://github.com/kietnv/uit-vsfc"},
+    {"id": "vlsp2016", "path": "ml/data/reviewed/vlsp2016", "domain": "technology", "status": "needs-source-access", "source": "https://vlsp.org.vn/vi/resources"},
+    {"id": "uts2017-bank", "path": "ml/data/reviewed/uts2017-bank", "domain": "banking", "status": "needs-source-verification", "source": "https://huggingface.co/datasets/undertheseanlp/UTS2017_Bank"}
+  ],
+  "training": {"epochs": 3, "max_length": 256, "batch_size": 1, "gradient_accumulation_steps": 8, "learning_rate": 0.00002},
+  "test_policy": "Run final evaluation only with an explicit --final-test flag after validation selection is frozen."
+}

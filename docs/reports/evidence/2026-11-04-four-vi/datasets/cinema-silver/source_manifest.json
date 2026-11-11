@@ -1,0 +1,46 @@
+{
+  "source": "https://github.com/AlyThien/ViMovieABSA-A-Vietnamese-Aspect-Based-Sentiment-Dataset-for-Movie-Reviews-with-Reliability-Decompos",
+  "revision": "2ceae3b15ece8f9a6c24f7b73465d940b0f8ce18",
+  "human_snapshot_sha256": "408c11dcb0b365de867642901da7b326e3a53855ed81e217bd4aa15e640cfcdf",
+  "license_spdx": "CC-BY-4.0 (publisher)",
+  "human_reviewer_count": 1,
+  "primary_human_gold_D1_admitted": false,
+  "partition_sha256": "2284e75a58e685ab63382416a94c4ecbb04eb3a5463b43544ad919f489b36761",
+  "annotation_model": "qwen3:4b",
+  "annotation_model_digest": "359d7dd4bcdab3d86b87d73ac27966f4dbb9f5efdfcc75d34a8764a09474fae7",
+  "labels_are_unchanged": true,
+  "reviewer_names_private": true,
+  "created_at": "2026-11-04T12:29:41.163799+00:00",
+  "near_duplicate_threshold": 0.88,
+  "split_sha256": {
+    "train": "70c1e91b846e42bb24a7d736a7e0eb5ca9098898d6feff27d734f9dd1528bf09",
+    "validation": "1c16082ce53e4fe37b14fcdf82df2ba3a224f1be0a3e81cc0a8fcfe98cd1a71d",
+    "test": "408c11dcb0b365de867642901da7b326e3a53855ed81e217bd4aa15e640cfcdf"
+  },
+  "splits": {
+    "train": {
+      "count": 426,
+      "labels": {
+        "negative": 140,
+        "neutral": 161,
+        "positive": 125
+      }
+    },
+    "validation": {
+      "count": 36,
+      "labels": {
+        "neutral": 7,
+        "positive": 12,
+        "negative": 17
+      }
+    },
+    "test": {
+      "count": 100,
+      "labels": {
+        "negative": 50,
+        "neutral": 27,
+        "positive": 23
+      }
+    }
+  }
+}

@@ -1,0 +1,5 @@
+{
+  "result": "242 passed, 6 warnings in 46.49s",
+  "log_sha256": "9911cac71e2b1b015cf316027072d19a23ed82e7a708265926cd5e5f827aa326",
+  "scope": "scripts/ai/check.ps1 -WithBroker"
+}

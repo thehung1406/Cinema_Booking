@@ -1,0 +1,303 @@
+{
+  "macro_f1": 0.5670742818779072,
+  "per_class": {
+    "negative": {
+      "precision": 0.86,
+      "recall": 0.7818181818181819,
+      "f1-score": 0.819047619047619,
+      "support": 110.0
+    },
+    "neutral": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1-score": 0.0,
+      "support": 3.0
+    },
+    "positive": {
+      "precision": 0.8488372093023255,
+      "recall": 0.9182389937106918,
+      "f1-score": 0.8821752265861027,
+      "support": 159.0
+    },
+    "accuracy": 0.8529411764705882,
+    "macro avg": {
+      "precision": 0.5696124031007752,
+      "recall": 0.5666857251762912,
+      "f1-score": 0.5670742818779072,
+      "support": 272.0
+    },
+    "weighted avg": {
+      "precision": 0.8439893980848152,
+      "recall": 0.8529411764705882,
+      "f1-score": 0.8469158055971633,
+      "support": 272.0
+    }
+  },
+  "confusion_matrix": [
+    [
+      86,
+      0,
+      24
+    ],
+    [
+      1,
+      0,
+      2
+    ],
+    [
+      13,
+      0,
+      146
+    ]
+  ],
+  "label_order": [
+    "negative",
+    "neutral",
+    "positive"
+  ],
+  "trainable_parameters": 70792707,
+  "peak_vram_bytes": 1806402560,
+  "errors": [
+    {
+      "id": "uts2017:train:781",
+      "expected": "neutral",
+      "predicted": "negative",
+      "tags": []
+    },
+    {
+      "id": "uts2017:train:164",
+      "expected": "neutral",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "uts2017:train:1956",
+      "expected": "neutral",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "uts2017:train:292",
+      "expected": "negative",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "uts2017:train:69",
+      "expected": "negative",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "uts2017:train:57",
+      "expected": "positive",
+      "predicted": "negative",
+      "tags": []
+    },
+    {
+      "id": "uts2017:train:136",
+      "expected": "negative",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "uts2017:train:175",
+      "expected": "positive",
+      "predicted": "negative",
+      "tags": []
+    },
+    {
+      "id": "uts2017:train:1884",
+      "expected": "negative",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "uts2017:train:1165",
+      "expected": "positive",
+      "predicted": "negative",
+      "tags": []
+    },
+    {
+      "id": "uts2017:train:1863",
+      "expected": "negative",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "uts2017:train:1140",
+      "expected": "positive",
+      "predicted": "negative",
+      "tags": []
+    },
+    {
+      "id": "uts2017:train:308",
+      "expected": "negative",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "uts2017:train:102",
+      "expected": "positive",
+      "predicted": "negative",
+      "tags": []
+    },
+    {
+      "id": "uts2017:train:1341",
+      "expected": "negative",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "uts2017:train:805",
+      "expected": "negative",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "uts2017:train:1561",
+      "expected": "negative",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "uts2017:train:177",
+      "expected": "negative",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "uts2017:train:933",
+      "expected": "positive",
+      "predicted": "negative",
+      "tags": []
+    },
+    {
+      "id": "uts2017:train:192",
+      "expected": "negative",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "uts2017:train:1385",
+      "expected": "negative",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "uts2017:train:190",
+      "expected": "negative",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "uts2017:train:1174",
+      "expected": "negative",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "uts2017:train:795",
+      "expected": "negative",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "uts2017:train:1054",
+      "expected": "positive",
+      "predicted": "negative",
+      "tags": []
+    },
+    {
+      "id": "uts2017:train:1395",
+      "expected": "negative",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "uts2017:train:1248",
+      "expected": "positive",
+      "predicted": "negative",
+      "tags": []
+    },
+    {
+      "id": "uts2017:train:788",
+      "expected": "negative",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "uts2017:train:1495",
+      "expected": "positive",
+      "predicted": "negative",
+      "tags": []
+    },
+    {
+      "id": "uts2017:train:1288",
+      "expected": "positive",
+      "predicted": "negative",
+      "tags": []
+    },
+    {
+      "id": "uts2017:train:1497",
+      "expected": "positive",
+      "predicted": "negative",
+      "tags": []
+    },
+    {
+      "id": "uts2017:train:1810",
+      "expected": "negative",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "uts2017:train:956",
+      "expected": "positive",
+      "predicted": "negative",
+      "tags": []
+    },
+    {
+      "id": "uts2017:train:1405",
+      "expected": "negative",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "uts2017:train:274",
+      "expected": "negative",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "uts2017:train:1084",
+      "expected": "positive",
+      "predicted": "negative",
+      "tags": []
+    },
+    {
+      "id": "uts2017:train:1877",
+      "expected": "negative",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "uts2017:train:1170",
+      "expected": "negative",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "uts2017:train:1587",
+      "expected": "negative",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "uts2017:train:5",
+      "expected": "negative",
+      "predicted": "positive",
+      "tags": []
+    }
+  ],
+  "elapsed_seconds": 111.21798169999965
+}

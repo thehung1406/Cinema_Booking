@@ -1,0 +1,7 @@
+{
+  "source_snapshot_verified": true,
+  "java_or_segmenter_needed": false,
+  "validation_macro_f1": 0.6054150702426565,
+  "matches_existing_LR_validation": true,
+  "primary_matrix_credit": false
+}

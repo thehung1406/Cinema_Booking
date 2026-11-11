@@ -1,0 +1,183 @@
+{
+  "macro_f1": 0.3317384370015949,
+  "per_class": {
+    "negative": {
+      "precision": 0.5714285714285714,
+      "recall": 0.7058823529411765,
+      "f1-score": 0.631578947368421,
+      "support": 17.0
+    },
+    "neutral": {
+      "precision": 0.26666666666666666,
+      "recall": 0.5714285714285714,
+      "f1-score": 0.36363636363636365,
+      "support": 7.0
+    },
+    "positive": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1-score": 0.0,
+      "support": 12.0
+    },
+    "accuracy": 0.4444444444444444,
+    "macro avg": {
+      "precision": 0.2793650793650793,
+      "recall": 0.4257703081232493,
+      "f1-score": 0.3317384370015949,
+      "support": 36.0
+    },
+    "weighted avg": {
+      "precision": 0.3216931216931217,
+      "recall": 0.4444444444444444,
+      "f1-score": 0.3689526847421584,
+      "support": 36.0
+    }
+  },
+  "confusion_matrix": [
+    [
+      12,
+      5,
+      0
+    ],
+    [
+      3,
+      4,
+      0
+    ],
+    [
+      6,
+      6,
+      0
+    ]
+  ],
+  "label_order": [
+    "negative",
+    "neutral",
+    "positive"
+  ],
+  "trainable_parameters": 70792707,
+  "peak_vram_bytes": 1812538880,
+  "errors": [
+    {
+      "id": "vimovie:2ceae3b15ece:row:5191",
+      "expected": "positive",
+      "predicted": "negative",
+      "tags": []
+    },
+    {
+      "id": "vimovie:2ceae3b15ece:row:7561",
+      "expected": "negative",
+      "predicted": "neutral",
+      "tags": []
+    },
+    {
+      "id": "vimovie:2ceae3b15ece:row:7489",
+      "expected": "positive",
+      "predicted": "neutral",
+      "tags": []
+    },
+    {
+      "id": "vimovie:2ceae3b15ece:row:9665",
+      "expected": "positive",
+      "predicted": "negative",
+      "tags": []
+    },
+    {
+      "id": "vimovie:2ceae3b15ece:row:10417",
+      "expected": "neutral",
+      "predicted": "negative",
+      "tags": []
+    },
+    {
+      "id": "vimovie:2ceae3b15ece:row:10591",
+      "expected": "positive",
+      "predicted": "negative",
+      "tags": []
+    },
+    {
+      "id": "vimovie:2ceae3b15ece:row:7137",
+      "expected": "neutral",
+      "predicted": "negative",
+      "tags": []
+    },
+    {
+      "id": "vimovie:2ceae3b15ece:row:7228",
+      "expected": "positive",
+      "predicted": "negative",
+      "tags": []
+    },
+    {
+      "id": "vimovie:2ceae3b15ece:row:10586",
+      "expected": "negative",
+      "predicted": "neutral",
+      "tags": []
+    },
+    {
+      "id": "vimovie:2ceae3b15ece:row:8503",
+      "expected": "positive",
+      "predicted": "neutral",
+      "tags": []
+    },
+    {
+      "id": "vimovie:2ceae3b15ece:row:6638",
+      "expected": "positive",
+      "predicted": "neutral",
+      "tags": []
+    },
+    {
+      "id": "vimovie:2ceae3b15ece:row:8742",
+      "expected": "negative",
+      "predicted": "neutral",
+      "tags": []
+    },
+    {
+      "id": "vimovie:2ceae3b15ece:row:7187",
+      "expected": "positive",
+      "predicted": "neutral",
+      "tags": []
+    },
+    {
+      "id": "vimovie:2ceae3b15ece:row:10164",
+      "expected": "neutral",
+      "predicted": "negative",
+      "tags": []
+    },
+    {
+      "id": "vimovie:2ceae3b15ece:row:9815",
+      "expected": "negative",
+      "predicted": "neutral",
+      "tags": []
+    },
+    {
+      "id": "vimovie:2ceae3b15ece:row:10571",
+      "expected": "positive",
+      "predicted": "neutral",
+      "tags": []
+    },
+    {
+      "id": "vimovie:2ceae3b15ece:row:2667",
+      "expected": "positive",
+      "predicted": "neutral",
+      "tags": []
+    },
+    {
+      "id": "vimovie:2ceae3b15ece:row:8087",
+      "expected": "negative",
+      "predicted": "neutral",
+      "tags": []
+    },
+    {
+      "id": "vimovie:2ceae3b15ece:row:10604",
+      "expected": "positive",
+      "predicted": "negative",
+      "tags": []
+    },
+    {
+      "id": "vimovie:2ceae3b15ece:row:9573",
+      "expected": "positive",
+      "predicted": "negative",
+      "tags": []
+    }
+  ],
+  "elapsed_seconds": 47.01483250000456
+}

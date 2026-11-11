@@ -1,0 +1,13 @@
+{
+  "labels": [
+    "negative",
+    "neutral",
+    "positive"
+  ],
+  "task": "film-sentiment-weak-supervision",
+  "language": "vi",
+  "supervision": "AI-silver-train-human-development-evaluation",
+  "scope": "426 unreviewed AI train labels, 36 earlier human validation decisions, 100 single-reviewer human development evaluation; NOT a final untouched test.",
+  "evaluation_stage": "previously-consumed-development-pilot",
+  "production_eligible": false
+}

@@ -1,0 +1,519 @@
+{
+  "macro_f1": 0.5799350893865768,
+  "per_class": {
+    "negative": {
+      "precision": 0.7923076923076923,
+      "recall": 0.8110236220472441,
+      "f1-score": 0.8015564202334631,
+      "support": 127.0
+    },
+    "neutral": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1-score": 0.0,
+      "support": 34.0
+    },
+    "positive": {
+      "precision": 0.9121863799283154,
+      "recall": 0.9658444022770398,
+      "f1-score": 0.9382488479262673,
+      "support": 527.0
+    },
+    "accuracy": 0.8895348837209303,
+    "macro avg": {
+      "precision": 0.5681646907453359,
+      "recall": 0.592289341441428,
+      "f1-score": 0.5799350893865768,
+      "support": 688.0
+    },
+    "weighted avg": {
+      "precision": 0.8449786324786325,
+      "recall": 0.8895348837209303,
+      "f1-score": 0.8666494305621986,
+      "support": 688.0
+    }
+  },
+  "confusion_matrix": [
+    [
+      103,
+      0,
+      24
+    ],
+    [
+      9,
+      0,
+      25
+    ],
+    [
+      18,
+      0,
+      509
+    ]
+  ],
+  "label_order": [
+    "negative",
+    "neutral",
+    "positive"
+  ],
+  "trainable_parameters": 70792707,
+  "peak_vram_bytes": 1752460288,
+  "errors": [
+    {
+      "id": "uit-visfd:Dev.csv:47",
+      "expected": "negative",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:53",
+      "expected": "positive",
+      "predicted": "negative",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:101",
+      "expected": "positive",
+      "predicted": "negative",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:103",
+      "expected": "negative",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:105",
+      "expected": "neutral",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:110",
+      "expected": "neutral",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:117",
+      "expected": "negative",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:127",
+      "expected": "negative",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:146",
+      "expected": "negative",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:158",
+      "expected": "negative",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:161",
+      "expected": "negative",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:251",
+      "expected": "positive",
+      "predicted": "negative",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:269",
+      "expected": "neutral",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:273",
+      "expected": "positive",
+      "predicted": "negative",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:284",
+      "expected": "neutral",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:320",
+      "expected": "neutral",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:324",
+      "expected": "negative",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:328",
+      "expected": "neutral",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:335",
+      "expected": "negative",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:382",
+      "expected": "neutral",
+      "predicted": "negative",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:388",
+      "expected": "positive",
+      "predicted": "negative",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:389",
+      "expected": "neutral",
+      "predicted": "negative",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:394",
+      "expected": "neutral",
+      "predicted": "negative",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:401",
+      "expected": "negative",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:408",
+      "expected": "neutral",
+      "predicted": "negative",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:432",
+      "expected": "positive",
+      "predicted": "negative",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:437",
+      "expected": "positive",
+      "predicted": "negative",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:441",
+      "expected": "negative",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:449",
+      "expected": "negative",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:457",
+      "expected": "positive",
+      "predicted": "negative",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:495",
+      "expected": "positive",
+      "predicted": "negative",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:501",
+      "expected": "negative",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:515",
+      "expected": "neutral",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:555",
+      "expected": "neutral",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:574",
+      "expected": "positive",
+      "predicted": "negative",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:580",
+      "expected": "positive",
+      "predicted": "negative",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:586",
+      "expected": "negative",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:590",
+      "expected": "negative",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:596",
+      "expected": "positive",
+      "predicted": "negative",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:611",
+      "expected": "negative",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:628",
+      "expected": "neutral",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:631",
+      "expected": "positive",
+      "predicted": "negative",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:646",
+      "expected": "neutral",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:647",
+      "expected": "neutral",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:659",
+      "expected": "neutral",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:676",
+      "expected": "neutral",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:692",
+      "expected": "negative",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:695",
+      "expected": "neutral",
+      "predicted": "negative",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:699",
+      "expected": "neutral",
+      "predicted": "negative",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:700",
+      "expected": "neutral",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:702",
+      "expected": "neutral",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:724",
+      "expected": "neutral",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:738",
+      "expected": "negative",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:749",
+      "expected": "neutral",
+      "predicted": "negative",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:771",
+      "expected": "neutral",
+      "predicted": "negative",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:779",
+      "expected": "negative",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:783",
+      "expected": "neutral",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:790",
+      "expected": "positive",
+      "predicted": "negative",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:807",
+      "expected": "negative",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:844",
+      "expected": "neutral",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:845",
+      "expected": "neutral",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:851",
+      "expected": "positive",
+      "predicted": "negative",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:891",
+      "expected": "neutral",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:958",
+      "expected": "positive",
+      "predicted": "negative",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:965",
+      "expected": "positive",
+      "predicted": "negative",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:970",
+      "expected": "neutral",
+      "predicted": "negative",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:973",
+      "expected": "positive",
+      "predicted": "negative",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:985",
+      "expected": "negative",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:989",
+      "expected": "neutral",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:991",
+      "expected": "negative",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:993",
+      "expected": "neutral",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:1021",
+      "expected": "neutral",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:1080",
+      "expected": "neutral",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:1098",
+      "expected": "negative",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:1104",
+      "expected": "negative",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:1105",
+      "expected": "neutral",
+      "predicted": "positive",
+      "tags": []
+    }
+  ],
+  "elapsed_seconds": 306.0481079999954
+}

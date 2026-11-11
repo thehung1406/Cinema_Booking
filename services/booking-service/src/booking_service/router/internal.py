@@ -4,8 +4,15 @@ from pydantic import BaseModel,Field
 from ..dependencies import private,writes,get_session
 from ..schemas.sales import SalesCommand,ImportSales,OpenSales
 from .. import sales,facts
+from ..schemas.options import BookingOptions
 
 router=APIRouter(dependencies=[Depends(private)],include_in_schema=False)
+
+
+@router.post('/internal/v1/booking-read/options')
+def booking_options(body:BookingOptions,db=Depends(get_session)):
+    from ..options import discover
+    return discover(db,body)
 
 @router.get('/internal/v1/migration/state')
 def migration(request:Request): return dict(writes_enabled=request.app.state.settings.writes_enabled)

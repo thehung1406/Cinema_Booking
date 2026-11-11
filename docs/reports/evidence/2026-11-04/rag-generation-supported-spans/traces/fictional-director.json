@@ -1,0 +1,109 @@
+{
+  "id": "fictional-director",
+  "question": "Đạo diễn bộ phim Hành Tinh Không Tồn Tại 2099 là ai?",
+  "scope": "film_education",
+  "expected_answerable_development": false,
+  "state": "completed",
+  "sources": [
+    {
+      "id": "doc:159",
+      "title": "Exploring Movie Construction and Production",
+      "text": "and Anthony Quinn. This movie is an excellent example in cinematography and\ncharacter development.\n• The Godfather, 1972, directed by Francis Ford Coppola, starring Marlon Brando, Al\nPacino, and James Caan. This movie is an excellent example of timelessness, presenting a\ntopic that is still pertinent over four decades later.\n• Breaker Morant, 1980, directed by Bruce Beresford, starring Edward Woodward, Jack\nThompson, and Bryon Brown. This movie is an excellent example of timelessness,\npresenting a topic that is still pertinent over three decades later.\n• Schindler’s List, 1993, directed by Steven Spielberg, starring Liam Neeson, Ralph Fiennes,\nand Ben Kingsley. This movie is an excellent example in directing a realistic view of a\ndark chapter in the history of the world.\n• Pulp Fiction, 1994, directed by Quentin Tarantino, starring John Travolta, Uma\nThurman, and Samuel L. Jackson. This movie is an excellent example of a different\ndirecting style of storytelling.\nAssignment\nAs Jack looks at Alec, he has a flashback to when they first met. Jack enters the bar that they are\nin, and Suzie asks Jack to buy her some flowers because it is her birthday. Jack buys the flowers\nfor Suzie. Al",
+      "url": "https://openlibrary-repo.ecampusontario.ca/jspui/bitstream/123456789/429/1/Exploring-Movie-Construction-and-Production-1499438054.pdf#page=61",
+      "version": "2017",
+      "kind": "document",
+      "score": 0.01312255859375,
+      "provenance": {
+        "source_type": "pdf",
+        "scope": "film_education",
+        "author": "John Reich / Open SUNY Textbooks",
+        "license": "CC BY-NC-SA 4.0; except where otherwise noted; research/noncommercial use",
+        "language": "en",
+        "checksum": "789d951902d630beafbb81ec77253cfb2c52111595066eae97715c9e6983a258",
+        "extraction": "pypdf-6.21.4-page-text-v1",
+        "page_start": 61,
+        "page_end": 61,
+        "section": "",
+        "block_index": 54,
+        "character_start": 0,
+        "character_end": 1200,
+        "chunking": "characters-1200-v1"
+      },
+      "document_id": 2,
+      "source_id": "open-suny-film-construction"
+    },
+    {
+      "id": "doc:19",
+      "title": "Exploring Movie Construction and Production",
+      "text": "The third movie is Cyrano de Bergerac, released in 1950, starring Jose Ferrer, Mala Powers, and\nWilliam Prince, and directed by Michael Gordon. Stanley Kramer Productions, Inc. was the\nproduction company, and the movie was distributed by United Artists Corporation. This movie is\npresented on YouTube by Charles Ewing Smith.\nhttps://www.youtube.com/watch?v=K_r0Vcf4IVQ\nAfter watching the movies, extended hypothetical examples that contain fictitious characters and\nsituations are used to demonstrate a specific term or detail. The extended hypothetical examples can\nbe altered, as needed, and used as assignments. No matter whether an assignment is given or not,\nthe extended hypothetical examples can be used, discussed, and modified in the classroom by you\nand/or the instructor to demonstrate and help you better understand a particular aspect of the film.\nWe will initiate the explanations of the extended hypothetical examples in their simplest form: a\nboy and a girl, named Jack and Suzie, respectively. They are nondescript at this time, so their\npersonalities and actions can be adjusted as we discuss the different terms, concepts, and ideas in\neach of the chapters presented in this book.\n",
+      "url": "https://openlibrary-repo.ecampusontario.ca/jspui/bitstream/123456789/429/1/Exploring-Movie-Construction-and-Production-1499438054.pdf#page=13",
+      "version": "2017",
+      "kind": "document",
+      "score": 0.005260467529296875,
+      "provenance": {
+        "source_type": "pdf",
+        "scope": "film_education",
+        "author": "John Reich / Open SUNY Textbooks",
+        "license": "CC BY-NC-SA 4.0; except where otherwise noted; research/noncommercial use",
+        "language": "en",
+        "checksum": "789d951902d630beafbb81ec77253cfb2c52111595066eae97715c9e6983a258",
+        "extraction": "pypdf-6.21.4-page-text-v1",
+        "page_start": 13,
+        "page_end": 13,
+        "section": "",
+        "block_index": 8,
+        "character_start": 0,
+        "character_end": 1200,
+        "chunking": "characters-1200-v1"
+      },
+      "document_id": 2,
+      "source_id": "open-suny-film-construction"
+    },
+    {
+      "id": "doc:9",
+      "title": "Exploring Movie Construction and Production",
+      "text": "© 2017 John Reich\nISBN: 978-1-942341-46-8 ebook\nThis publication was made possible by a SUNY Innovative Instruction Technology Grant (IITG).\nIITG is a competitive grants program open to SUNY faculty and support staff across all disciplines.\nIITG encourages development of innovations that meet the Power of SUNY’s transformative vision.\nPublished by Open SUNY Textbooks\nMilne Library\nState University of New York at Geneseo\nGeneseo, NY 14454\nThis book was produced using Pressbooks.com, and PDF rendering was done by PrinceXML.\nExploring Movie Construction and Production by John Reich is licensed under a Creative\nCommons Attribution-NonCommercial-ShareAlike 4.0 International License, except where\notherwise noted.",
+      "url": "https://openlibrary-repo.ecampusontario.ca/jspui/bitstream/123456789/429/1/Exploring-Movie-Construction-and-Production-1499438054.pdf#page=4",
+      "version": "2017",
+      "kind": "document",
+      "score": 0.0039005279541015625,
+      "provenance": {
+        "source_type": "pdf",
+        "scope": "film_education",
+        "author": "John Reich / Open SUNY Textbooks",
+        "license": "CC BY-NC-SA 4.0; except where otherwise noted; research/noncommercial use",
+        "language": "en",
+        "checksum": "789d951902d630beafbb81ec77253cfb2c52111595066eae97715c9e6983a258",
+        "extraction": "pypdf-6.21.4-page-text-v1",
+        "page_start": 4,
+        "page_end": 4,
+        "section": "",
+        "block_index": 2,
+        "character_start": 0,
+        "character_end": 716,
+        "chunking": "characters-1200-v1"
+      },
+      "document_id": 2,
+      "source_id": "open-suny-film-construction"
+    }
+  ],
+  "answer": "",
+  "generation_trace": {
+    "grounding_validation": {
+      "accepted": false,
+      "reason": "requested_specific_fact_absent_from_evidence",
+      "model_called": false
+    }
+  },
+  "retrieval_ms": 1009.0977999934694,
+  "retrieval_metrics_development": {
+    "recall_at_k": null,
+    "mrr_at_k": null,
+    "ndcg_at_k": null,
+    "returned_any": true,
+    "relevant_retrieved": 0
+  },
+  "citation_ids_validated": false,
+  "abstained": true,
+  "elapsed_ms": 1009.3807999946875
+}

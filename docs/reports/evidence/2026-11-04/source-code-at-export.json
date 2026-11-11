@@ -1,0 +1,13 @@
+{
+  "observed_at": "2026-11-04T09:44:41.126935+00:00",
+  "stage": "post-run-export-check-not-a-pre-run-capture",
+  "normalization": "Source spans use NFC whitespace normalization; PDF layout lines are joined and incomplete character-chunk boundary fragments are excluded.",
+  "sha256": {
+    "services/ai-service/src/ai_service/llm.py": "73b3baf66bedf983c6f0c4d63a6adb72d34ebb60c5e078b048b69cdaf22f33cb",
+    "services/ai-service/src/ai_service/grounding.py": "cdbf1e89a06f8e7c94ce2afed84bac9c099051d4f826f29069175dd6b79b0cbb",
+    "services/ai-service/src/ai_service/rag.py": "f132b7c1d341bba565f3ddf2b987ecc0b19a43e17e832ed2661e20e8468ba238",
+    "services/ai-service/src/ai_service/schemas.py": "b04cdd8163dcfdbde8b950878fe26f50fde671fb359b7fa2b8e29eaca2eff915",
+    "scripts/ai/benchmark_rag_answers.py": "1cc7b6e49a819ebde5f8a2ca9cc34be386e8c0f2222959d8a93efbdabe5726fd",
+    "pipelines/ml/train_sentiment.py": "c981072c948c001bd646efb92130fadf2d4a25a94b5f71cfcf40cc2a3b9e168c"
+  }
+}

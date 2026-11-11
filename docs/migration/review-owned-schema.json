@@ -28,7 +28,32 @@
       "updated_at",
       "analysis_generation",
       "lease_token",
-      "lease_until"
+      "lease_until",
+      "predicted_label",
+      "decision_source",
+      "confirmed_by_user_id",
+      "confirmed_at",
+      "confirmation_note"
+    ],
+    "foreign_keys": [
+      "review_id -> reviews.id"
+    ]
+  },
+  {
+    "table": "sentiment_decisions",
+    "columns": [
+      "id",
+      "review_id",
+      "actor_user_id",
+      "request_id",
+      "content_version",
+      "analysis_generation",
+      "previous_label",
+      "label",
+      "reason",
+      "request_digest",
+      "response",
+      "created_at"
     ],
     "foreign_keys": [
       "review_id -> reviews.id"

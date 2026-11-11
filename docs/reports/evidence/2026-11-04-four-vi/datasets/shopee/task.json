@@ -1,0 +1,10 @@
+{
+  "labels": [
+    "negative",
+    "positive"
+  ],
+  "task": "binary-sentiment",
+  "language": "vi",
+  "supervision": "publisher-labels",
+  "scope": "Original review file only; no unaccented augmentation, artificial neutral, or rating-to-label mapping."
+}

@@ -1,0 +1,47 @@
+{
+  "stage": "validation",
+  "results": [
+    {
+      "dataset": "uts2017-bank",
+      "model": "lr",
+      "seeds_completed": 3,
+      "macro_f1_mean": 0.6332788456118595,
+      "macro_f1_std": 0.0
+    },
+    {
+      "dataset": "uts2017-bank",
+      "model": "mbert",
+      "seeds_completed": 3,
+      "macro_f1_mean": 0.6410026125002779,
+      "macro_f1_std": 0.0029678229248034115
+    },
+    {
+      "dataset": "uts2017-bank",
+      "model": "phobert",
+      "seeds_completed": 3,
+      "macro_f1_mean": 0.6433067570634335,
+      "macro_f1_std": 0.0030616154165052974
+    },
+    {
+      "dataset": "uts2017-bank",
+      "model": "videberta",
+      "seeds_completed": 3,
+      "macro_f1_mean": 0.5925256435091703,
+      "macro_f1_std": 0.006187121491249256
+    },
+    {
+      "dataset": "uts2017-bank",
+      "model": "visobert",
+      "seeds_completed": 3,
+      "macro_f1_mean": 0.6579336684201608,
+      "macro_f1_std": 0.001497686334449075
+    },
+    {
+      "dataset": "uts2017-bank",
+      "model": "xlmr",
+      "seeds_completed": 3,
+      "macro_f1_mean": 0.6510557286258221,
+      "macro_f1_std": 0.002948612249897017
+    }
+  ]
+}

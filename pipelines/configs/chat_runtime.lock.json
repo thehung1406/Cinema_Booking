@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "ollama_image": "ollama/ollama:0.40.14@sha256:ebaef4f4c5d93660e1f25f8ad085a112f51ccfb0e8458073e71793959dba91c9",
+  "model": "qwen3:4b",
+  "digest": "359d7dd4bcdab3d86b87d73ac27966f4dbb9f5efdfcc75d34a8764a09474fae7",
+  "context_length": 4096,
+  "default_device": "cpu",
+  "sources": ["https://docs.ollama.com/docker", "https://github.com/ollama/ollama/releases/tag/v0.40.14", "https://ollama.com/library/qwen3:4b"],
+  "note": "Chat model, distinct from offline sentiment training artifacts. Never silently accept a changed model tag digest."
+}

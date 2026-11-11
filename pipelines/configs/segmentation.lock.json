@@ -1,0 +1,27 @@
+{
+  "revision": "62bbc58fe5d113c898eae112656be97dcf50b3a0",
+  "files": {
+    "VnCoreNLP-1.2.jar": {
+      "sha256": "9e2811cdbc2ddfc71d04be5dc36e185c88dcd1ad4d5d69e4ff2e1369dccf7793",
+      "url": "https://raw.githubusercontent.com/vncorenlp/VnCoreNLP/62bbc58fe5d113c898eae112656be97dcf50b3a0/VnCoreNLP-1.2.jar"
+    },
+    "models/wordsegmenter/vi-vocab": {
+      "sha256": "0a47c5b55bbce163029d37730a67b9479740388695c29c106c112b815613eaa5",
+      "url": "https://raw.githubusercontent.com/vncorenlp/VnCoreNLP/62bbc58fe5d113c898eae112656be97dcf50b3a0/models/wordsegmenter/vi-vocab"
+    },
+    "models/wordsegmenter/wordsegmenter.rdr": {
+      "sha256": "9e62f96bd93e37a24f364238e8d8ae986fa5dad6dbc9f4eae622ab3651b7fa06",
+      "url": "https://raw.githubusercontent.com/vncorenlp/VnCoreNLP/62bbc58fe5d113c898eae112656be97dcf50b3a0/models/wordsegmenter/wordsegmenter.rdr"
+    }
+  },
+  "java": {
+    "checksum": "fe4656bd78fb09812dc38c49da777f79cc33e7ee435a254be82f9e7f40d9d117",
+    "checksum_link": "https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.21%2B9/OpenJDK17U-jre_x64_windows_hotspot_17.0.21_9.zip.sha256.txt",
+    "download_count": 3908,
+    "link": "https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.21%2B9/OpenJDK17U-jre_x64_windows_hotspot_17.0.21_9.zip",
+    "metadata_link": "https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.21%2B9/OpenJDK17U-jre_x64_windows_hotspot_17.0.21_9.zip.json",
+    "name": "OpenJDK17U-jre_x64_windows_hotspot_17.0.21_9.zip",
+    "signature_link": "https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.21%2B9/OpenJDK17U-jre_x64_windows_hotspot_17.0.21_9.zip.sig",
+    "size": 43860024
+  }
+}

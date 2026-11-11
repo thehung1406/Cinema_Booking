@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "stage": "four-vietnamese-corpora-progress-comparison",
+  "scope": "Four independent source corpora, publisher/human/AI-silver supervision explicitly distinguished. Binary and three-class tasks are reported per dataset; not ranked as one pooled task. This is a one-seed progress comparison, not completion of the original all-human three-class 72-run protocol.",
+  "seeds": [42],
+  "models": [
+    {"id":"phobert","checkpoint":"vinai/phobert-base","revision":"01daacda68afe13d83023d16ec647239e344a1e6","preprocessing":"vncorenlp"},
+    {"id":"visobert","checkpoint":"uitnlp/visobert","revision":"196a62afad9cbe4f52a54aabad828b13f0eec59a","preprocessing":"normalize"},
+    {"id":"videberta","checkpoint":"Fsoft-AIC/videberta-xsmall","revision":"029b6b1b1d7636221bd2d1a98b46a2fdba3af34e","preprocessing":"normalize"},
+    {"id":"mbert","checkpoint":"google-bert/bert-base-multilingual-cased","revision":"3f076fdb1ab68d5b2880cb87a0886f315b8146f8","preprocessing":"normalize"},
+    {"id":"xlmr","checkpoint":"FacebookAI/xlm-roberta-base","revision":"e73636d4f797dec63c3081bb6ed5c7b0bb3f2089","preprocessing":"normalize"},
+    {"id":"lr","backend":"sklearn","preprocessing":"normalize"}
+  ],
+  "datasets": [
+    {"id":"uts2017-bank","path":"pipelines/ml/data/reviewed/uts2017-bank","labels":["negative","neutral","positive"],"supervision":"publisher-or-human-reviewed"},
+    {"id":"uit-visfd-general","path":".local/datasets/four-vi-v1/uit-visfd-general","labels":["negative","neutral","positive"],"supervision":"publisher-or-human-reviewed"},
+    {"id":"shopee","path":".local/datasets/four-vi-v1/shopee","labels":["negative","positive"],"supervision":"publisher-or-human-reviewed"},
+    {"id":"cinema-silver","path":".local/datasets/four-vi-v1/cinema-silver","labels":["negative","neutral","positive"],"supervision":"AI-silver-train-human-development-evaluation"}
+  ],
+  "training":{"epochs":3,"learning_rate":0.00002,"weight_decay":0.0,"class_weight":"none","max_length":256,"batch_size":4,"gradient_accumulation_steps":2},
+  "oom_fallback_batch_sizes":[2,1],
+  "selection":"LR C and transformer best epoch selected by validation Macro-F1 only. No test-based prompt/hyperparameter selection.",
+  "evaluation":"Validation comparison for all four datasets; additional already-consumed 100-case film development evaluation reported separately. Other test partitions remain locked.",
+  "production_promotion":false
+}

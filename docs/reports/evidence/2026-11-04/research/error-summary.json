@@ -1,0 +1,154 @@
+{
+  "stage": "validation-error-counts-not-human-adjudication",
+  "observation_count": 237,
+  "note": "The same sample can occur once per seed/model. No private review text exported.",
+  "confusions": [
+    {
+      "dataset": "uts2017-bank",
+      "model": "lr",
+      "expected": "negative",
+      "predicted": "neutral",
+      "count": 3
+    },
+    {
+      "dataset": "uts2017-bank",
+      "model": "lr",
+      "expected": "negative",
+      "predicted": "positive",
+      "count": 9
+    },
+    {
+      "dataset": "uts2017-bank",
+      "model": "lr",
+      "expected": "neutral",
+      "predicted": "negative",
+      "count": 6
+    },
+    {
+      "dataset": "uts2017-bank",
+      "model": "lr",
+      "expected": "neutral",
+      "predicted": "positive",
+      "count": 3
+    },
+    {
+      "dataset": "uts2017-bank",
+      "model": "lr",
+      "expected": "positive",
+      "predicted": "negative",
+      "count": 24
+    },
+    {
+      "dataset": "uts2017-bank",
+      "model": "mbert",
+      "expected": "negative",
+      "predicted": "positive",
+      "count": 12
+    },
+    {
+      "dataset": "uts2017-bank",
+      "model": "mbert",
+      "expected": "neutral",
+      "predicted": "negative",
+      "count": 9
+    },
+    {
+      "dataset": "uts2017-bank",
+      "model": "mbert",
+      "expected": "positive",
+      "predicted": "negative",
+      "count": 13
+    },
+    {
+      "dataset": "uts2017-bank",
+      "model": "phobert",
+      "expected": "negative",
+      "predicted": "positive",
+      "count": 18
+    },
+    {
+      "dataset": "uts2017-bank",
+      "model": "phobert",
+      "expected": "neutral",
+      "predicted": "negative",
+      "count": 9
+    },
+    {
+      "dataset": "uts2017-bank",
+      "model": "phobert",
+      "expected": "positive",
+      "predicted": "negative",
+      "count": 4
+    },
+    {
+      "dataset": "uts2017-bank",
+      "model": "videberta",
+      "expected": "negative",
+      "predicted": "positive",
+      "count": 46
+    },
+    {
+      "dataset": "uts2017-bank",
+      "model": "videberta",
+      "expected": "neutral",
+      "predicted": "negative",
+      "count": 7
+    },
+    {
+      "dataset": "uts2017-bank",
+      "model": "videberta",
+      "expected": "neutral",
+      "predicted": "positive",
+      "count": 2
+    },
+    {
+      "dataset": "uts2017-bank",
+      "model": "videberta",
+      "expected": "positive",
+      "predicted": "negative",
+      "count": 36
+    },
+    {
+      "dataset": "uts2017-bank",
+      "model": "visobert",
+      "expected": "negative",
+      "predicted": "positive",
+      "count": 3
+    },
+    {
+      "dataset": "uts2017-bank",
+      "model": "visobert",
+      "expected": "neutral",
+      "predicted": "negative",
+      "count": 9
+    },
+    {
+      "dataset": "uts2017-bank",
+      "model": "visobert",
+      "expected": "positive",
+      "predicted": "negative",
+      "count": 2
+    },
+    {
+      "dataset": "uts2017-bank",
+      "model": "xlmr",
+      "expected": "negative",
+      "predicted": "positive",
+      "count": 11
+    },
+    {
+      "dataset": "uts2017-bank",
+      "model": "xlmr",
+      "expected": "neutral",
+      "predicted": "negative",
+      "count": 9
+    },
+    {
+      "dataset": "uts2017-bank",
+      "model": "xlmr",
+      "expected": "positive",
+      "predicted": "negative",
+      "count": 2
+    }
+  ]
+}

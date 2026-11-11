@@ -1,6 +1,6 @@
 # Runtime cuối — 9 owner
 
-Root `compose.yml` thay bộ overlay chuyển đổi. Compose project name `backend` cố định để giữ volume/network local hiện có. Không đổi project name khi dùng dữ liệu đã cutover. `.env.microservices` và broker definitions là private; không in `docker compose config` chứa secret vào log chia sẻ. `python scripts/dev/audit_runtime.py` chỉ xuất kết quả audit đã lược giá trị.
+Root `compose.yml` thay bộ overlay chuyển đổi. Project mặc định vẫn là `backend`, giữ nguyên tên volume/network `backend_*` hiện có. Volume/network theo project của Compose, cho phép một bản thử mới dùng project riêng mà không đụng dữ liệu cũ. Không đổi project name khi dùng dữ liệu đã cutover. `.env.microservices` và broker definitions là private; không in `docker compose config` chứa secret vào log chia sẻ. `python scripts/dev/audit_runtime.py` chỉ xuất kết quả audit đã lược giá trị. Profile AI cho máy mới ở [AI_PORTABLE_SETUP.md](../AI_PORTABLE_SETUP.md).
 
 Ứng dụng monolith và 10 overlay chuyển tiếp đã xóa khỏi working tree. Schema nguồn dùng kiểm thử nằm ở `tests/fixtures/source-schema`, không thuộc runtime. [Chi tiết](../migration/backend-removal.md).
 

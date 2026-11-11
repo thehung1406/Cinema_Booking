@@ -224,6 +224,12 @@ def create_router(app, engine, settings, logger):
         query = select(Film).where(Film.deleted_at.is_(None))
         if body.q:
             query = query.where(Film.title.icontains(body.q, autoescape=True))
+        if body.genre:
+            query = query.where(Film.genre_items.any(Genre.name.icontains(body.genre, autoescape=True)))
+        if body.language:
+            query = query.where(Film.language.icontains(body.language, autoescape=True))
+        if body.duration_max:
+            query = query.where(Film.duration_minutes <= body.duration_max)
         if body.now_showing:
             today = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh")).date()
             query = query.where(Film.release_date <= today, Film.end_date >= today)
@@ -240,16 +246,12 @@ def create_router(app, engine, settings, logger):
         include_in_schema=False,
     )
     def matches(body: FilmMatch, db=Depends(database)):
-        def folded(value):
-            value = unicodedata.normalize("NFD", value.lower().replace("đ", "d"))
-            return "".join(c for c in value if unicodedata.category(c) != "Mn")
-
-        content = folded(body.message)
+        from ..matching import title_mentioned
         rows = db.execute(select(Film.id, Film.title).where(Film.deleted_at.is_(None)))
         return [
             dict(id=i, name=name)
             for i, name in rows
-            if len(folded(name)) > 2 and folded(name) in content
+            if title_mentioned(body.message, name)
         ]
 
     @router.post(

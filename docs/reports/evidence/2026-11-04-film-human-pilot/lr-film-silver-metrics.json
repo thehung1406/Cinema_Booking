@@ -1,0 +1,130 @@
+{
+  "model": "lr-film-silver",
+  "stage": "single-reviewer-human-film-development-pilot",
+  "count": 100,
+  "correct": 53,
+  "accuracy_vs_single_reviewer": 0.53,
+  "macro_f1": 0.5149665858852904,
+  "coverage": 1.0,
+  "covered_accuracy": 0.53,
+  "abstentions": 0,
+  "per_class": {
+    "negative": {
+      "precision": 0.717948717948718,
+      "recall": 0.56,
+      "f1": 0.6292134831460674,
+      "support": 50
+    },
+    "neutral": {
+      "precision": 0.3333333333333333,
+      "recall": 0.4074074074074074,
+      "f1": 0.36666666666666664,
+      "support": 27
+    },
+    "positive": {
+      "precision": 0.5,
+      "recall": 0.6086956521739131,
+      "f1": 0.5490196078431373,
+      "support": 23
+    }
+  },
+  "confusion_matrix": [
+    [
+      28,
+      16,
+      6,
+      0
+    ],
+    [
+      8,
+      11,
+      8,
+      0
+    ],
+    [
+      3,
+      6,
+      14,
+      0
+    ]
+  ],
+  "gold_order": [
+    "negative",
+    "neutral",
+    "positive"
+  ],
+  "prediction_order": [
+    "negative",
+    "neutral",
+    "positive",
+    "abstain"
+  ],
+  "bootstrap_95": {
+    "method": "text-family bootstrap, percentile 95%, seed 42",
+    "repetitions": 1000,
+    "family_count": 99,
+    "accuracy": [
+      0.43,
+      0.6262626262626263
+    ],
+    "macro_f1": [
+      0.4147888391021062,
+      0.6077014507127622
+    ],
+    "note": "Conditional descriptive interval on an enriched pilot and one reviewer; not population accuracy."
+  },
+  "training_label_origin": "AI silver, unreviewed; not human gold",
+  "primary_matrix_credit": false,
+  "training_metadata_sha256": "1b12d78cbe6992602e67a46e91c7f7aa031db86ab520f334793420dedb25142c",
+  "disagreement_ids": [
+    "vimovie:2ceae3b15ece:row:10389",
+    "vimovie:2ceae3b15ece:row:10443",
+    "vimovie:2ceae3b15ece:row:10372",
+    "vimovie:2ceae3b15ece:row:2710",
+    "vimovie:2ceae3b15ece:row:7507",
+    "vimovie:2ceae3b15ece:row:252",
+    "vimovie:2ceae3b15ece:row:797",
+    "vimovie:2ceae3b15ece:row:1174",
+    "vimovie:2ceae3b15ece:row:9316",
+    "vimovie:2ceae3b15ece:row:10159",
+    "vimovie:2ceae3b15ece:row:9076",
+    "vimovie:2ceae3b15ece:row:3950",
+    "vimovie:2ceae3b15ece:row:8980",
+    "vimovie:2ceae3b15ece:row:6723",
+    "vimovie:2ceae3b15ece:row:10732",
+    "vimovie:2ceae3b15ece:row:7971",
+    "vimovie:2ceae3b15ece:row:8171",
+    "vimovie:2ceae3b15ece:row:214",
+    "vimovie:2ceae3b15ece:row:2577",
+    "vimovie:2ceae3b15ece:row:10296",
+    "vimovie:2ceae3b15ece:row:6084",
+    "vimovie:2ceae3b15ece:row:8053",
+    "vimovie:2ceae3b15ece:row:1275",
+    "vimovie:2ceae3b15ece:row:9898",
+    "vimovie:2ceae3b15ece:row:9115",
+    "vimovie:2ceae3b15ece:row:9915",
+    "vimovie:2ceae3b15ece:row:288",
+    "vimovie:2ceae3b15ece:row:8708",
+    "vimovie:2ceae3b15ece:row:7960",
+    "vimovie:2ceae3b15ece:row:1388",
+    "vimovie:2ceae3b15ece:row:10758",
+    "vimovie:2ceae3b15ece:row:10751",
+    "vimovie:2ceae3b15ece:row:1306",
+    "vimovie:2ceae3b15ece:row:4280",
+    "vimovie:2ceae3b15ece:row:7386",
+    "vimovie:2ceae3b15ece:row:9625",
+    "vimovie:2ceae3b15ece:row:10184",
+    "vimovie:2ceae3b15ece:row:7891",
+    "vimovie:2ceae3b15ece:row:4472",
+    "vimovie:2ceae3b15ece:row:4509",
+    "vimovie:2ceae3b15ece:row:9053",
+    "vimovie:2ceae3b15ece:row:9559",
+    "vimovie:2ceae3b15ece:row:8559",
+    "vimovie:2ceae3b15ece:row:10340",
+    "vimovie:2ceae3b15ece:row:2279",
+    "vimovie:2ceae3b15ece:row:8598",
+    "vimovie:2ceae3b15ece:row:8499"
+  ],
+  "human_error_categories_reviewed": false,
+  "production_promoted": false
+}

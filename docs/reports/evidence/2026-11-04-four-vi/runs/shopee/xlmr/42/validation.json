@@ -1,0 +1,439 @@
+{
+  "macro_f1": 0.9520784193660528,
+  "per_class": {
+    "negative": {
+      "precision": 0.9652466367713004,
+      "recall": 0.9620111731843576,
+      "f1-score": 0.9636261891438165,
+      "support": 895.0
+    },
+    "positive": {
+      "precision": 0.9379562043795621,
+      "recall": 0.9431192660550459,
+      "f1-score": 0.9405306495882891,
+      "support": 545.0
+    },
+    "accuracy": 0.9548611111111112,
+    "macro avg": {
+      "precision": 0.9516014205754313,
+      "recall": 0.9525652196197018,
+      "f1-score": 0.9520784193660528,
+      "support": 1440.0
+    },
+    "weighted avg": {
+      "precision": 0.9549179661785939,
+      "recall": 0.9548611111111112,
+      "f1-score": 0.9548851689648147,
+      "support": 1440.0
+    }
+  },
+  "confusion_matrix": [
+    [
+      861,
+      34
+    ],
+    [
+      31,
+      514
+    ]
+  ],
+  "label_order": [
+    "negative",
+    "positive"
+  ],
+  "trainable_parameters": 278045186,
+  "peak_vram_bytes": 5612454912,
+  "errors": [
+    {
+      "id": "shopee:v1:2605",
+      "expected": "positive",
+      "predicted": "negative",
+      "tags": []
+    },
+    {
+      "id": "shopee:v1:511",
+      "expected": "negative",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "shopee:v1:9004",
+      "expected": "negative",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "shopee:v1:1365",
+      "expected": "negative",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "shopee:v1:3237",
+      "expected": "positive",
+      "predicted": "negative",
+      "tags": []
+    },
+    {
+      "id": "shopee:v1:4196",
+      "expected": "positive",
+      "predicted": "negative",
+      "tags": []
+    },
+    {
+      "id": "shopee:v1:7815",
+      "expected": "positive",
+      "predicted": "negative",
+      "tags": []
+    },
+    {
+      "id": "shopee:v1:8634",
+      "expected": "positive",
+      "predicted": "negative",
+      "tags": []
+    },
+    {
+      "id": "shopee:v1:7324",
+      "expected": "negative",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "shopee:v1:2368",
+      "expected": "positive",
+      "predicted": "negative",
+      "tags": []
+    },
+    {
+      "id": "shopee:v1:4291",
+      "expected": "negative",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "shopee:v1:8463",
+      "expected": "negative",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "shopee:v1:6585",
+      "expected": "positive",
+      "predicted": "negative",
+      "tags": []
+    },
+    {
+      "id": "shopee:v1:4688",
+      "expected": "positive",
+      "predicted": "negative",
+      "tags": []
+    },
+    {
+      "id": "shopee:v1:567",
+      "expected": "negative",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "shopee:v1:8293",
+      "expected": "negative",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "shopee:v1:1597",
+      "expected": "positive",
+      "predicted": "negative",
+      "tags": []
+    },
+    {
+      "id": "shopee:v1:94",
+      "expected": "negative",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "shopee:v1:1823",
+      "expected": "positive",
+      "predicted": "negative",
+      "tags": []
+    },
+    {
+      "id": "shopee:v1:863",
+      "expected": "negative",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "shopee:v1:2220",
+      "expected": "negative",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "shopee:v1:6479",
+      "expected": "positive",
+      "predicted": "negative",
+      "tags": []
+    },
+    {
+      "id": "shopee:v1:8537",
+      "expected": "negative",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "shopee:v1:7208",
+      "expected": "positive",
+      "predicted": "negative",
+      "tags": []
+    },
+    {
+      "id": "shopee:v1:7695",
+      "expected": "negative",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "shopee:v1:8473",
+      "expected": "positive",
+      "predicted": "negative",
+      "tags": []
+    },
+    {
+      "id": "shopee:v1:1440",
+      "expected": "negative",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "shopee:v1:6891",
+      "expected": "positive",
+      "predicted": "negative",
+      "tags": []
+    },
+    {
+      "id": "shopee:v1:4759",
+      "expected": "positive",
+      "predicted": "negative",
+      "tags": []
+    },
+    {
+      "id": "shopee:v1:8236",
+      "expected": "positive",
+      "predicted": "negative",
+      "tags": []
+    },
+    {
+      "id": "shopee:v1:4995",
+      "expected": "negative",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "shopee:v1:7534",
+      "expected": "negative",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "shopee:v1:4877",
+      "expected": "negative",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "shopee:v1:8989",
+      "expected": "negative",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "shopee:v1:2522",
+      "expected": "negative",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "shopee:v1:4175",
+      "expected": "positive",
+      "predicted": "negative",
+      "tags": []
+    },
+    {
+      "id": "shopee:v1:4414",
+      "expected": "positive",
+      "predicted": "negative",
+      "tags": []
+    },
+    {
+      "id": "shopee:v1:1500",
+      "expected": "negative",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "shopee:v1:9147",
+      "expected": "negative",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "shopee:v1:3680",
+      "expected": "positive",
+      "predicted": "negative",
+      "tags": []
+    },
+    {
+      "id": "shopee:v1:8013",
+      "expected": "negative",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "shopee:v1:1712",
+      "expected": "positive",
+      "predicted": "negative",
+      "tags": []
+    },
+    {
+      "id": "shopee:v1:9280",
+      "expected": "positive",
+      "predicted": "negative",
+      "tags": []
+    },
+    {
+      "id": "shopee:v1:7638",
+      "expected": "positive",
+      "predicted": "negative",
+      "tags": []
+    },
+    {
+      "id": "shopee:v1:9550",
+      "expected": "positive",
+      "predicted": "negative",
+      "tags": []
+    },
+    {
+      "id": "shopee:v1:8123",
+      "expected": "negative",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "shopee:v1:647",
+      "expected": "negative",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "shopee:v1:1397",
+      "expected": "positive",
+      "predicted": "negative",
+      "tags": []
+    },
+    {
+      "id": "shopee:v1:4515",
+      "expected": "negative",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "shopee:v1:3039",
+      "expected": "positive",
+      "predicted": "negative",
+      "tags": []
+    },
+    {
+      "id": "shopee:v1:3605",
+      "expected": "positive",
+      "predicted": "negative",
+      "tags": []
+    },
+    {
+      "id": "shopee:v1:706",
+      "expected": "negative",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "shopee:v1:2578",
+      "expected": "negative",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "shopee:v1:8616",
+      "expected": "negative",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "shopee:v1:6343",
+      "expected": "negative",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "shopee:v1:4754",
+      "expected": "negative",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "shopee:v1:126",
+      "expected": "positive",
+      "predicted": "negative",
+      "tags": []
+    },
+    {
+      "id": "shopee:v1:2132",
+      "expected": "negative",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "shopee:v1:6204",
+      "expected": "positive",
+      "predicted": "negative",
+      "tags": []
+    },
+    {
+      "id": "shopee:v1:8364",
+      "expected": "negative",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "shopee:v1:8134",
+      "expected": "positive",
+      "predicted": "negative",
+      "tags": []
+    },
+    {
+      "id": "shopee:v1:7673",
+      "expected": "negative",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "shopee:v1:4510",
+      "expected": "negative",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "shopee:v1:722",
+      "expected": "positive",
+      "predicted": "negative",
+      "tags": []
+    },
+    {
+      "id": "shopee:v1:7613",
+      "expected": "positive",
+      "predicted": "negative",
+      "tags": []
+    }
+  ],
+  "elapsed_seconds": 615.5148173000052
+}

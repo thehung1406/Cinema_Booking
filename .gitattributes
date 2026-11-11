@@ -1,0 +1,7 @@
+# Preserve measured artifact bytes and their SHA256SUMS across Windows/Linux.
+# These rules do not renormalize unrelated application source files.
+docs/reports/evidence/** -text
+docs/reports/*.docx binary
+pipelines/configs/cinema_four_vi_labels.v1.json -text
+pipelines/configs/ai_research.four-vi.v1.json -text
+pipelines/configs/four_vi_semantic_inputs.v1.json -text

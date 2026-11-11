@@ -1,7 +1,8 @@
-from datetime import date, datetime
+from datetime import date, datetime, time
+from decimal import Decimal
 from typing import Literal
 from uuid import UUID
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 class ToolContext(BaseModel):
     model_config = ConfigDict(extra="forbid")
@@ -9,6 +10,19 @@ class ToolContext(BaseModel):
     theater_id: int | None = Field(default=None, gt=0)
     show_date: date | None = None
     showtime_id: int | None = Field(default=None, gt=0)
+    film_name: str = Field(default="", max_length=200)
+    theater_name: str = Field(default="", max_length=200)
+    genre: str = Field(default="", max_length=100)
+    language: str = Field(default="", max_length=100)
+    city: str = Field(default="", max_length=100)
+    format: str = Field(default="", max_length=50)
+    duration_max: int | None = Field(default=None, ge=1, le=600)
+    start_after: time | None = None
+    start_before: time | None = None
+    party_size: int = Field(default=1, ge=1, le=20)
+    budget_amount: Decimal | None = Field(default=None, gt=0, le=100000000)
+    budget_scope: Literal["unknown", "total", "per_ticket"] = "unknown"
+    knowledge_scope: Literal["policy", "film_education", "reference"] = "policy"
 
 
 class ChatRequest(BaseModel):
@@ -52,8 +66,54 @@ class ToolCall(BaseModel):
     name: Literal["search_films", "get_showtimes", "get_ticket_prices", "get_seat_availability", "get_positive_films"]
     context: ToolContext = Field(default_factory=ToolContext)
     query: str = Field(default="", max_length=200)
+
+
+class PlannerContext(ToolContext):
+    # VND is integral here. A plain JSON integer also gives small local models a
+    # stricter generation grammar than Pydantic Decimal's number-or-string union.
+    budget_amount: int | None = Field(default=None, gt=0, le=100000000)
+
+
+class AssistantPlan(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    intent: Literal["knowledge", "recommend", "search_films", "get_showtimes", "get_ticket_prices", "get_seat_availability", "get_positive_films", "out_of_scope"]
+    context: PlannerContext = Field(default_factory=PlannerContext)
+
+
+class GroundedSentence(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    source_id: str = Field(min_length=1, max_length=100)
+    text: str = Field(min_length=1, max_length=900)
+
+
+class GroundedAnswer(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    sentences: list[GroundedSentence] = Field(max_length=2)
 class AdminInput(BaseModel):
     model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+
+class KnowledgeProvenance(AdminInput):
+    source_type: Literal["internal", "web", "pdf", "text"] = "internal"
+    scope: Literal["policy", "film_education", "reference"] = "policy"
+    author: str = Field(default="", max_length=300)
+    license: str = Field(default="", max_length=300)
+    language: str = Field(default="vi", max_length=20)
+    checksum: str = Field(default="", pattern=r"^(?:[a-f0-9]{64})?$")
+    extraction: str = Field(default="manual-text-v1", max_length=100)
+
+
+class KnowledgeBlock(AdminInput):
+    text: str = Field(min_length=1, max_length=100000)
+    page_start: int | None = Field(default=None, gt=0)
+    page_end: int | None = Field(default=None, gt=0)
+    section: str = Field(default="", max_length=300)
+
+    @model_validator(mode="after")
+    def pages(self):
+        if self.page_end is not None and (self.page_start is None or self.page_end < self.page_start):
+            raise ValueError("Invalid PDF page range")
+        return self
 
 
 class DocumentWrite(AdminInput):
@@ -62,9 +122,22 @@ class DocumentWrite(AdminInput):
     version: str = Field(min_length=1, max_length=50)
     source_url: str = Field(min_length=1, max_length=500)
     effective_at: datetime
-    content: str = Field(min_length=1, max_length=200000)
+    content: str = Field(default="", max_length=2000000)
+    provenance: KnowledgeProvenance = Field(default_factory=KnowledgeProvenance)
+    blocks: list[KnowledgeBlock] = Field(default_factory=list, max_length=2000)
     # Required on replacement; returned by the review screen. Never approve stale content.
     expected_updated_at: datetime | None = None
+
+    @model_validator(mode="after")
+    def has_content(self):
+        if bool(self.content.strip()) == bool(self.blocks):
+            raise ValueError("Provide either content or page blocks, not both")
+        if sum(len(block.text) for block in self.blocks) > 2000000:
+            raise ValueError("Knowledge document too large")
+        if self.provenance.source_type == "pdf" and (not self.provenance.license or
+                not self.provenance.checksum or not self.blocks or any(block.page_start is None for block in self.blocks)):
+            raise ValueError("PDF requires license, checksum and page provenance")
+        return self
 
     @field_validator("source_url")
     @classmethod

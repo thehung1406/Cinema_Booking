@@ -18,7 +18,7 @@ from ..models import Review, ReviewSentiment, utcnow
 
 from ..read_client import ReadClient
 
-from ..schemas import ReviewWrite, ReviewEdit, ReviewRead, ModerationWrite
+from ..schemas import ReviewWrite, ReviewEdit, ReviewRead, ModerationWrite, SentimentDecisionWrite, SentimentRetryWrite
 
 from datetime import date, datetime, time, timedelta
 
@@ -305,6 +305,37 @@ def create_router(app, engine, settings, logger):
         ).all()
         return present(db, rows, user.user_id)
 
+    @router.get("/reviews/sentiment/pending")
+    def sentiment_pending(
+        status: str = Query("needs_review", pattern="^(needs_review|succeeded|failed|pending)$"),
+        film_id: int | None = Query(None, gt=0),
+        offset: int = Query(0, ge=0), limit: int = Query(20, ge=1, le=100),
+        user=Depends(staff_user), db=Depends(db_session),
+    ):
+        query = select(Review, ReviewSentiment).join(ReviewSentiment, Review.id == ReviewSentiment.review_id).where(
+            Review.is_deleted == False, Review.moderation_status == "approved",
+            Review.content_version == ReviewSentiment.content_version, ReviewSentiment.status == status)
+        if film_id:
+            query = query.where(Review.film_id == film_id)
+        total = db.exec(select(func.count()).select_from(query.subquery())).one()
+        rows = db.exec(query.order_by(ReviewSentiment.updated_at, Review.id).offset(offset).limit(limit)).all()
+        return dict(items=[service.sentiment_item(review, result) for review, result in rows], total=total)
+
+    @router.post("/reviews/{review_id}/sentiment-decision", dependencies=[Depends(writes)])
+    def sentiment_decision(review_id: int, body: SentimentDecisionWrite,
+                           user=Depends(staff_user), db=Depends(db_session)):
+        return service.decide_sentiment(db, review_id, user.user_id, body)
+
+    @router.get("/reviews/{review_id}/sentiment-decisions")
+    def sentiment_decisions(review_id: int, limit: int = Query(50, ge=1, le=100),
+                            user=Depends(staff_user), db=Depends(db_session)):
+        from ..models import SentimentDecision
+        rows = db.exec(select(SentimentDecision).where(SentimentDecision.review_id == review_id)
+                       .order_by(SentimentDecision.id.desc()).limit(limit)).all()
+        return [dict(id=row.id, actor_user_id=row.actor_user_id, content_version=row.content_version,
+                     label=row.label, previous_label=row.previous_label, reason=row.reason,
+                     created_at=row.created_at) for row in rows]
+
     @router.patch(
         "/reviews/{review_id}/moderation",
         response_model=ReviewRead,
@@ -325,10 +356,20 @@ def create_router(app, engine, settings, logger):
         response_model=ReviewRead,
         dependencies=[Depends(writes)],
     )
-    def retry(review_id: int, user=Depends(staff_user), db=Depends(db_session)):
+    def retry(review_id: int, body: SentimentRetryWrite | None = None, user=Depends(staff_user), db=Depends(db_session)):
         review = service.locked_review(db, review_id)
         if review.moderation_status != "approved":
             raise HTTPException(409, "Cần duyệt đánh giá trước khi phân tích lại")
+        current = db.get(ReviewSentiment, review_id, with_for_update=True)
+        if current and current.decision_source == "staff":
+            if body is None:
+                raise HTTPException(422, "Cần lý do để phân tích lại nhãn nhân viên đã xác nhận")
+            from ..models import SentimentDecision
+            from uuid import uuid4
+            db.add(SentimentDecision(review_id=review_id, actor_user_id=user.user_id, request_id=str(uuid4()),
+                content_version=review.content_version, analysis_generation=current.analysis_generation,
+                previous_label=current.label, label="retry", reason=body.reason, request_digest="retry",
+                response={"action": "retry"}))
         service.invalidate(db, review)
         db.commit()
         return present(db, [review], user.user_id)[0]

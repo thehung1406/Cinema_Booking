@@ -52,6 +52,7 @@ wheels/
 .installed.cfg
 *.egg
 .venv/
+.venv-ai-research/
 venv/
 ENV/
 env/

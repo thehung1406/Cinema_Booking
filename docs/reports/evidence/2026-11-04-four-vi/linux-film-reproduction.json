@@ -1,0 +1,8 @@
+{
+  "result": {
+    "output": "/tmp/cinema-silver",
+    "semantic_inputs_verified": true
+  },
+  "log_sha256": "b6ba821b9d392d4cea208573e294f0278702c6bccad87d157076f95f1e566e1b",
+  "method": "Fresh ephemeral Linux CPU container, repository read-only, raw source fetched by pinned URL/SHA, no private annotation files or host model cache used."
+}

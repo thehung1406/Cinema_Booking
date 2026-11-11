@@ -1,0 +1,22 @@
+{
+  "protocol_sha256": "c3e6a323fbc82386153c6c527df74dd15fbb908fc218b5a4138ba699734ae0e5",
+  "config_sha256": "e1741000ab35486620ceeb0cd8384d9dbf8063217fbdd7adedbcc66a0771cba0",
+  "command": [
+    "C:\\code\\Cinema_Booking\\.local\\research-cuda\\Scripts\\python.exe",
+    "-m",
+    "ml.train_four_dataset",
+    "--config",
+    "C:\\code\\Cinema_Booking\\pipelines\\configs\\ai_research.four-vi.v1.json",
+    "--dataset",
+    "uts2017-bank",
+    "--model",
+    "lr",
+    "--output",
+    "C:\\code\\Cinema_Booking\\.local\\research\\four-vi-v1\\runs\\uts2017-bank\\lr\\42",
+    "--seed",
+    "42"
+  ],
+  "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "batch_size": null,
+  "completed_at": "2026-11-04T13:00:52.476989+00:00"
+}

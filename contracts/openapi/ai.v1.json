@@ -390,6 +390,54 @@
         }
       }
     },
+    "/admin/knowledge/search": {
+      "post": {
+        "summary": "Knowledge Search",
+        "operationId": "knowledge_search_admin_knowledge_search_post",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/KnowledgeSearch"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/admin/documents/{document_id}": {
       "get": {
         "summary": "Document",
@@ -563,7 +611,7 @@
             "title": "Conversation Id"
           },
           "context": {
-            "$ref": "#/components/schemas/ToolContext"
+            "$ref": "#/components/schemas/ToolContext-Input"
           }
         },
         "additionalProperties": false,
@@ -595,7 +643,7 @@
             "title": "Updated At"
           },
           "context": {
-            "$ref": "#/components/schemas/ToolContext"
+            "$ref": "#/components/schemas/ToolContext-Output"
           },
           "messages": {
             "items": {
@@ -718,9 +766,20 @@
           },
           "content": {
             "type": "string",
-            "maxLength": 200000,
-            "minLength": 1,
-            "title": "Content"
+            "maxLength": 2000000,
+            "title": "Content",
+            "default": ""
+          },
+          "provenance": {
+            "$ref": "#/components/schemas/KnowledgeProvenance"
+          },
+          "blocks": {
+            "items": {
+              "$ref": "#/components/schemas/KnowledgeBlock"
+            },
+            "type": "array",
+            "maxItems": 2000,
+            "title": "Blocks"
           },
           "expected_updated_at": {
             "anyOf": [
@@ -742,8 +801,7 @@
           "title",
           "version",
           "source_url",
-          "effective_at",
-          "content"
+          "effective_at"
         ],
         "title": "DocumentWrite"
       },
@@ -759,6 +817,154 @@
         },
         "type": "object",
         "title": "HTTPValidationError"
+      },
+      "KnowledgeBlock": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "maxLength": 100000,
+            "minLength": 1,
+            "title": "Text"
+          },
+          "page_start": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Page Start"
+          },
+          "page_end": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Page End"
+          },
+          "section": {
+            "type": "string",
+            "maxLength": 300,
+            "title": "Section",
+            "default": ""
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "text"
+        ],
+        "title": "KnowledgeBlock"
+      },
+      "KnowledgeProvenance": {
+        "properties": {
+          "source_type": {
+            "type": "string",
+            "enum": [
+              "internal",
+              "web",
+              "pdf",
+              "text"
+            ],
+            "title": "Source Type",
+            "default": "internal"
+          },
+          "scope": {
+            "type": "string",
+            "enum": [
+              "policy",
+              "film_education",
+              "reference"
+            ],
+            "title": "Scope",
+            "default": "policy"
+          },
+          "author": {
+            "type": "string",
+            "maxLength": 300,
+            "title": "Author",
+            "default": ""
+          },
+          "license": {
+            "type": "string",
+            "maxLength": 300,
+            "title": "License",
+            "default": ""
+          },
+          "language": {
+            "type": "string",
+            "maxLength": 20,
+            "title": "Language",
+            "default": "vi"
+          },
+          "checksum": {
+            "type": "string",
+            "pattern": "^(?:[a-f0-9]{64})?$",
+            "title": "Checksum",
+            "default": ""
+          },
+          "extraction": {
+            "type": "string",
+            "maxLength": 100,
+            "title": "Extraction",
+            "default": "manual-text-v1"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "KnowledgeProvenance"
+      },
+      "KnowledgeSearch": {
+        "properties": {
+          "question": {
+            "type": "string",
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Question"
+          },
+          "scope": {
+            "type": "string",
+            "enum": [
+              "policy",
+              "film_education",
+              "reference"
+            ],
+            "title": "Scope",
+            "default": "policy"
+          },
+          "strategy": {
+            "type": "string",
+            "enum": [
+              "lexical",
+              "bm25",
+              "dense",
+              "hybrid",
+              "rerank"
+            ],
+            "title": "Strategy",
+            "default": "bm25"
+          },
+          "limit": {
+            "type": "integer",
+            "maximum": 20.0,
+            "minimum": 1.0,
+            "title": "Limit",
+            "default": 5
+          }
+        },
+        "type": "object",
+        "required": [
+          "question"
+        ],
+        "title": "KnowledgeSearch"
       },
       "MessageRead": {
         "properties": {
@@ -799,7 +1005,7 @@
         ],
         "title": "MessageRead"
       },
-      "ToolContext": {
+      "ToolContext-Input": {
         "properties": {
           "film_id": {
             "anyOf": [
@@ -848,6 +1054,290 @@
               }
             ],
             "title": "Showtime Id"
+          },
+          "film_name": {
+            "type": "string",
+            "maxLength": 200,
+            "title": "Film Name",
+            "default": ""
+          },
+          "theater_name": {
+            "type": "string",
+            "maxLength": 200,
+            "title": "Theater Name",
+            "default": ""
+          },
+          "genre": {
+            "type": "string",
+            "maxLength": 100,
+            "title": "Genre",
+            "default": ""
+          },
+          "language": {
+            "type": "string",
+            "maxLength": 100,
+            "title": "Language",
+            "default": ""
+          },
+          "city": {
+            "type": "string",
+            "maxLength": 100,
+            "title": "City",
+            "default": ""
+          },
+          "format": {
+            "type": "string",
+            "maxLength": 50,
+            "title": "Format",
+            "default": ""
+          },
+          "duration_max": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 600.0,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duration Max"
+          },
+          "start_after": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start After"
+          },
+          "start_before": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start Before"
+          },
+          "party_size": {
+            "type": "integer",
+            "maximum": 20.0,
+            "minimum": 1.0,
+            "title": "Party Size",
+            "default": 1
+          },
+          "budget_amount": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 100000000.0,
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Budget Amount"
+          },
+          "budget_scope": {
+            "type": "string",
+            "enum": [
+              "unknown",
+              "total",
+              "per_ticket"
+            ],
+            "title": "Budget Scope",
+            "default": "unknown"
+          },
+          "knowledge_scope": {
+            "type": "string",
+            "enum": [
+              "policy",
+              "film_education",
+              "reference"
+            ],
+            "title": "Knowledge Scope",
+            "default": "policy"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "ToolContext"
+      },
+      "ToolContext-Output": {
+        "properties": {
+          "film_id": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Film Id"
+          },
+          "theater_id": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Theater Id"
+          },
+          "show_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Show Date"
+          },
+          "showtime_id": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Showtime Id"
+          },
+          "film_name": {
+            "type": "string",
+            "maxLength": 200,
+            "title": "Film Name",
+            "default": ""
+          },
+          "theater_name": {
+            "type": "string",
+            "maxLength": 200,
+            "title": "Theater Name",
+            "default": ""
+          },
+          "genre": {
+            "type": "string",
+            "maxLength": 100,
+            "title": "Genre",
+            "default": ""
+          },
+          "language": {
+            "type": "string",
+            "maxLength": 100,
+            "title": "Language",
+            "default": ""
+          },
+          "city": {
+            "type": "string",
+            "maxLength": 100,
+            "title": "City",
+            "default": ""
+          },
+          "format": {
+            "type": "string",
+            "maxLength": 50,
+            "title": "Format",
+            "default": ""
+          },
+          "duration_max": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 600.0,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duration Max"
+          },
+          "start_after": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start After"
+          },
+          "start_before": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start Before"
+          },
+          "party_size": {
+            "type": "integer",
+            "maximum": 20.0,
+            "minimum": 1.0,
+            "title": "Party Size",
+            "default": 1
+          },
+          "budget_amount": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Budget Amount"
+          },
+          "budget_scope": {
+            "type": "string",
+            "enum": [
+              "unknown",
+              "total",
+              "per_ticket"
+            ],
+            "title": "Budget Scope",
+            "default": "unknown"
+          },
+          "knowledge_scope": {
+            "type": "string",
+            "enum": [
+              "policy",
+              "film_education",
+              "reference"
+            ],
+            "title": "Knowledge Scope",
+            "default": "policy"
           }
         },
         "additionalProperties": false,

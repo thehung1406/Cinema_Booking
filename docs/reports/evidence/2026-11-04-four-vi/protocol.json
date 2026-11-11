@@ -1,0 +1,130 @@
+{
+  "created_at": "2026-11-04T12:32:08.277298+00:00",
+  "identity": {
+    "config_sha256": "e1741000ab35486620ceeb0cd8384d9dbf8063217fbdd7adedbcc66a0771cba0",
+    "data_sha256": {
+      "uts2017-bank": {
+        "train": "6a5b8ed85c5488a8199c5a1a5ed11a4c2424437237b3a6f011c2def789d97154",
+        "validation": "0bdc2051c848852d8280598615eb67cceaa99288dba4b3c7c415ea3d12e0d763",
+        "test": "dad5d4f9aa24cad417a1b8dd59a23cc2112d2459937be2f8920d347b406789f7"
+      },
+      "uit-visfd-general": {
+        "train": "db4d163eb6156eae4176e52d924308b9d4aa665c6e4bdd39c54f0b42a343c764",
+        "validation": "9ccac0524c7ab3b1d7313b1c13b1212e70397bfe6e0a435d133c4cde95a545ef",
+        "test": "6953b039731b0265245b3e540955779749dea02bf45498a0798f669b6578560c"
+      },
+      "shopee": {
+        "train": "3f8e38541c5f7e486e72430d928f452fdb62d26a8f0c22032f41828055d335ad",
+        "validation": "bb82dceadeee99cdf7659ff0ab3d11a44daea5e851a84ac64f83bafbf15b9fdc",
+        "test": "9be3190924249b70233d0fb6f3d6c0f2aca1b33f2d26cdfb330ec127b1a67046"
+      },
+      "cinema-silver": {
+        "train": "70c1e91b846e42bb24a7d736a7e0eb5ca9098898d6feff27d734f9dd1528bf09",
+        "validation": "1c16082ce53e4fe37b14fcdf82df2ba3a224f1be0a3e81cc0a8fcfe98cd1a71d",
+        "test": "408c11dcb0b365de867642901da7b326e3a53855ed81e217bd4aa15e640cfcdf"
+      }
+    }
+  },
+  "config": {
+    "version": 1,
+    "stage": "four-vietnamese-corpora-progress-comparison",
+    "scope": "Four independent source corpora, publisher/human/AI-silver supervision explicitly distinguished. Binary and three-class tasks are reported per dataset; not ranked as one pooled task. This is a one-seed progress comparison, not completion of the original all-human three-class 72-run protocol.",
+    "seeds": [
+      42
+    ],
+    "models": [
+      {
+        "id": "phobert",
+        "checkpoint": "vinai/phobert-base",
+        "revision": "01daacda68afe13d83023d16ec647239e344a1e6",
+        "preprocessing": "vncorenlp"
+      },
+      {
+        "id": "visobert",
+        "checkpoint": "uitnlp/visobert",
+        "revision": "196a62afad9cbe4f52a54aabad828b13f0eec59a",
+        "preprocessing": "normalize"
+      },
+      {
+        "id": "videberta",
+        "checkpoint": "Fsoft-AIC/videberta-xsmall",
+        "revision": "029b6b1b1d7636221bd2d1a98b46a2fdba3af34e",
+        "preprocessing": "normalize"
+      },
+      {
+        "id": "mbert",
+        "checkpoint": "google-bert/bert-base-multilingual-cased",
+        "revision": "3f076fdb1ab68d5b2880cb87a0886f315b8146f8",
+        "preprocessing": "normalize"
+      },
+      {
+        "id": "xlmr",
+        "checkpoint": "FacebookAI/xlm-roberta-base",
+        "revision": "e73636d4f797dec63c3081bb6ed5c7b0bb3f2089",
+        "preprocessing": "normalize"
+      },
+      {
+        "id": "lr",
+        "backend": "sklearn",
+        "preprocessing": "normalize"
+      }
+    ],
+    "datasets": [
+      {
+        "id": "uts2017-bank",
+        "path": "pipelines/ml/data/reviewed/uts2017-bank",
+        "labels": [
+          "negative",
+          "neutral",
+          "positive"
+        ],
+        "supervision": "publisher-or-human-reviewed"
+      },
+      {
+        "id": "uit-visfd-general",
+        "path": ".local/datasets/four-vi-v1/uit-visfd-general",
+        "labels": [
+          "negative",
+          "neutral",
+          "positive"
+        ],
+        "supervision": "publisher-or-human-reviewed"
+      },
+      {
+        "id": "shopee",
+        "path": ".local/datasets/four-vi-v1/shopee",
+        "labels": [
+          "negative",
+          "positive"
+        ],
+        "supervision": "publisher-or-human-reviewed"
+      },
+      {
+        "id": "cinema-silver",
+        "path": ".local/datasets/four-vi-v1/cinema-silver",
+        "labels": [
+          "negative",
+          "neutral",
+          "positive"
+        ],
+        "supervision": "AI-silver-train-human-development-evaluation"
+      }
+    ],
+    "training": {
+      "epochs": 3,
+      "learning_rate": 2e-05,
+      "weight_decay": 0.0,
+      "class_weight": "none",
+      "max_length": 256,
+      "batch_size": 4,
+      "gradient_accumulation_steps": 2
+    },
+    "oom_fallback_batch_sizes": [
+      2,
+      1
+    ],
+    "selection": "LR C and transformer best epoch selected by validation Macro-F1 only. No test-based prompt/hyperparameter selection.",
+    "evaluation": "Validation comparison for all four datasets; additional already-consumed 100-case film development evaluation reported separately. Other test partitions remain locked.",
+    "production_promotion": false
+  }
+}

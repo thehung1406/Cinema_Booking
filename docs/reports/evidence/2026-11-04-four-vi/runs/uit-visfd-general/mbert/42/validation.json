@@ -1,0 +1,357 @@
+{
+  "macro_f1": 0.8099610383514059,
+  "per_class": {
+    "negative": {
+      "precision": 0.8382352941176471,
+      "recall": 0.8976377952755905,
+      "f1-score": 0.8669201520912547,
+      "support": 127.0
+    },
+    "neutral": {
+      "precision": 0.6923076923076923,
+      "recall": 0.5294117647058824,
+      "f1-score": 0.6,
+      "support": 34.0
+    },
+    "positive": {
+      "precision": 0.9638783269961977,
+      "recall": 0.9620493358633776,
+      "f1-score": 0.9629629629629629,
+      "support": 527.0
+    },
+    "accuracy": 0.9287790697674418,
+    "macro avg": {
+      "precision": 0.8314737711405122,
+      "recall": 0.7963662986149501,
+      "f1-score": 0.8099610383514059,
+      "support": 688.0
+    },
+    "weighted avg": {
+      "precision": 0.9272648578755798,
+      "recall": 0.9287790697674418,
+      "f1-score": 0.9272970069724866,
+      "support": 688.0
+    }
+  },
+  "confusion_matrix": [
+    [
+      114,
+      3,
+      10
+    ],
+    [
+      7,
+      18,
+      9
+    ],
+    [
+      15,
+      5,
+      507
+    ]
+  ],
+  "label_order": [
+    "negative",
+    "neutral",
+    "positive"
+  ],
+  "trainable_parameters": 177855747,
+  "peak_vram_bytes": 3607972864,
+  "errors": [
+    {
+      "id": "uit-visfd:Dev.csv:15",
+      "expected": "positive",
+      "predicted": "negative",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:23",
+      "expected": "positive",
+      "predicted": "neutral",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:34",
+      "expected": "positive",
+      "predicted": "negative",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:100",
+      "expected": "positive",
+      "predicted": "neutral",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:105",
+      "expected": "neutral",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:127",
+      "expected": "negative",
+      "predicted": "neutral",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:146",
+      "expected": "negative",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:150",
+      "expected": "positive",
+      "predicted": "negative",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:161",
+      "expected": "negative",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:163",
+      "expected": "negative",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:269",
+      "expected": "neutral",
+      "predicted": "negative",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:284",
+      "expected": "neutral",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:335",
+      "expected": "negative",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:413",
+      "expected": "positive",
+      "predicted": "negative",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:437",
+      "expected": "positive",
+      "predicted": "negative",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:449",
+      "expected": "negative",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:472",
+      "expected": "positive",
+      "predicted": "neutral",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:501",
+      "expected": "negative",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:508",
+      "expected": "positive",
+      "predicted": "neutral",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:515",
+      "expected": "neutral",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:574",
+      "expected": "positive",
+      "predicted": "negative",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:580",
+      "expected": "positive",
+      "predicted": "negative",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:586",
+      "expected": "negative",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:590",
+      "expected": "negative",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:596",
+      "expected": "positive",
+      "predicted": "negative",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:611",
+      "expected": "negative",
+      "predicted": "neutral",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:655",
+      "expected": "positive",
+      "predicted": "negative",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:676",
+      "expected": "neutral",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:692",
+      "expected": "negative",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:698",
+      "expected": "positive",
+      "predicted": "negative",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:699",
+      "expected": "neutral",
+      "predicted": "negative",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:700",
+      "expected": "neutral",
+      "predicted": "negative",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:724",
+      "expected": "neutral",
+      "predicted": "negative",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:738",
+      "expected": "negative",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:749",
+      "expected": "neutral",
+      "predicted": "negative",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:777",
+      "expected": "positive",
+      "predicted": "negative",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:779",
+      "expected": "negative",
+      "predicted": "neutral",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:790",
+      "expected": "positive",
+      "predicted": "negative",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:844",
+      "expected": "neutral",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:845",
+      "expected": "neutral",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:876",
+      "expected": "positive",
+      "predicted": "neutral",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:891",
+      "expected": "neutral",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:929",
+      "expected": "positive",
+      "predicted": "negative",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:965",
+      "expected": "positive",
+      "predicted": "negative",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:970",
+      "expected": "neutral",
+      "predicted": "negative",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:989",
+      "expected": "neutral",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:1021",
+      "expected": "neutral",
+      "predicted": "negative",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:1080",
+      "expected": "neutral",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "uit-visfd:Dev.csv:1093",
+      "expected": "positive",
+      "predicted": "negative",
+      "tags": []
+    }
+  ],
+  "elapsed_seconds": 346.38017209999816
+}
