@@ -12,7 +12,7 @@ def test_trace_contains_the_actual_serialized_context_and_output(monkeypatch):
     def respond(request):
         requests.append(json.loads(request.content))
         return httpx.Response(200, json={"model": "qwen3:4b", "done": True,
-            "message": {"content": json.dumps({"sentences": [{"text": "Genre groups films.", "source_id": "doc:7:span:0"}]})}})
+            "message": {"content": json.dumps({"sentences": [{"text": "Genres were invented in 2026.", "source_id": "doc:7:span:0"}]})}})
     monkeypatch.setattr(httpx, "Client", lambda **kwargs: original(transport=httpx.MockTransport(respond), **kwargs))
     trace = {}
     sources = [{"id": "doc:7", "text": "Genre groups films by recurring conventions."}]
@@ -22,4 +22,4 @@ def test_trace_contains_the_actual_serialized_context_and_output(monkeypatch):
     assert json.loads(trace["request_body"]["messages"][1]["content"])["evidence"] == [dict(id='doc:7:span:0',text=sources[0]['text'])]
     assert trace['supporting_spans'][0]['support_quote']==sources[0]['text']
     assert trace["validated_output"]["sentences"][0]["source_id"] == "doc:7:span:0"
-    assert answer == "Genre groups films. [doc:7]"
+    assert answer == "Genre groups films by recurring conventions. [doc:7]"

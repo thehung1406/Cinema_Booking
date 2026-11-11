@@ -1,6 +1,7 @@
 """Versioned lexical vector baseline. Do not ingest prices, seats or user reviews."""
 import hashlib
 import math
+from time import monotonic
 import re
 import unicodedata
 from collections import Counter
@@ -11,6 +12,8 @@ from .models import KnowledgeDocument, KnowledgeChunk
 from .models import utcnow
 
 EMBEDDING_VERSION = "lexical-hash-256-v2"
+# Chunks are at most 4,000 characters; 500 fit both inference request limits.
+DENSE_BATCH_SIZE = 500
 STOPWORDS = {"toi", "ban", "la", "va", "co", "khong", "cua", "cho", "mot", "nhung", "cac", "duoc", "the", "nao", "gi", "ve", "muon", "hoi"}
 
 
@@ -78,7 +81,7 @@ def upsert_document(db, data, *, chunk_size=1200, chunk_overlap=0):
     return doc
 
 
-def retrieve(db, question, limit=3, *, strategy="lexical", scope=None, embedding_url="", reranker_url=""):
+def retrieve(db, question, limit=3, *, strategy="lexical", scope=None, embedding_url="", reranker_url="", deadline=None):
     query_tokens, query_vector = tokens(question), embed(question)
     rows = db.exec(select(KnowledgeChunk, KnowledgeDocument).join(KnowledgeDocument).where(
         KnowledgeDocument.approved == True, KnowledgeDocument.effective_at <= utcnow(),
@@ -91,7 +94,9 @@ def retrieve(db, question, limit=3, *, strategy="lexical", scope=None, embedding
         raise ValueError("Unsupported retrieval strategy")
     ranked = []
     bm25 = bm25_scores(question, [doc.title + " " + chunk.content for chunk, doc in rows]) if strategy != "lexical" else []
-    semantic = dense_scores(question, [chunk.content for chunk, _ in rows], embedding_url) if strategy in {"dense", "hybrid", "rerank"} and rows else []
+    semantic = []
+    if strategy in {"dense", "hybrid", "rerank"} and rows:
+        semantic = dense_scores(question, [chunk.content for chunk, _ in rows], embedding_url, deadline=deadline)
     lexical_order = sorted(range(len(rows)), key=lambda i: (-bm25[i], rows[i][0].id)) if bm25 else []
     dense_order = sorted(range(len(rows)), key=lambda i: (-semantic[i], rows[i][0].id)) if semantic else []
     fusion = {}
@@ -115,7 +120,8 @@ def retrieve(db, question, limit=3, *, strategy="lexical", scope=None, embedding
     ranked.sort(key=lambda item: (-item[0], item[1].id))
     if strategy == "rerank" and ranked:
         candidates = ranked[:20]
-        scores = remote_scores(reranker_url, "/rerank", {"query": question, "texts": [c.content for _, c, _ in candidates]}, len(candidates))
+        scores = remote_scores(reranker_url, "/rerank",
+            {"query": question, "texts": [c.content for _, c, _ in candidates]}, len(candidates), deadline=deadline)
         ranked = sorted([(scores[i], c, d) for i, (_, c, d) in enumerate(candidates)], key=lambda row: (-row[0], row[1].id))
     result = []
     for score, chunk, doc in ranked[:limit]:
@@ -146,11 +152,14 @@ def bm25_scores(question, documents, k1=1.5, b=.75):
     return scores
 
 
-def remote_scores(origin, path, payload, expected):
+def remote_scores(origin, path, payload, expected, *, deadline=None):
     import httpx
     if not origin:
         raise RuntimeError("Inference service is not configured")
-    with httpx.Client(timeout=8, trust_env=False, follow_redirects=False) as client:
+    timeout = 8 if deadline is None else min(8, deadline - monotonic())
+    if timeout <= 0:
+        raise TimeoutError("Retrieval inference budget exhausted")
+    with httpx.Client(timeout=timeout, trust_env=False, follow_redirects=False) as client:
         response = client.post(origin.rstrip("/") + path, json=payload)
         response.raise_for_status()
         scores = response.json()["scores"]
@@ -160,5 +169,10 @@ def remote_scores(origin, path, payload, expected):
     return scores
 
 
-def dense_scores(question, documents, origin):
-    return remote_scores(origin, "/similarity", {"query": question, "texts": documents}, len(documents))
+def dense_scores(question, documents, origin, *, deadline=None):
+    scores = []
+    for offset in range(0, len(documents), DENSE_BATCH_SIZE):
+        batch = documents[offset:offset + DENSE_BATCH_SIZE]
+        scores.extend(remote_scores(origin, "/similarity", {"query": question, "texts": batch},
+                                    len(batch), deadline=deadline))
+    return scores

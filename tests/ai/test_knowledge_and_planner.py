@@ -67,3 +67,24 @@ def test_short_film_title_does_not_capture_relative_date():
     assert title_mentioned('Suất chiếu của "Mai"', "Mai")
     assert title_mentioned("Mai", "Mai")
     assert title_mentioned("Ngày mai xem Kung Fu Panda 4", "Kung Fu Panda 4")
+
+
+def test_dense_scores_batches_large_scopes_without_changing_score_order(monkeypatch):
+    import json
+    from ai_service.rag import dense_scores
+
+    original = httpx.Client
+    batch_sizes = []
+
+    def respond(request):
+        texts = json.loads(request.content)["texts"]
+        assert len(texts) <= 1000
+        assert sum(map(len, texts)) <= 2_000_000
+        batch_sizes.append(len(texts))
+        return httpx.Response(200, json={"scores": [int(text[:4]) for text in texts]})
+
+    monkeypatch.setattr(httpx, "Client", lambda **kwargs:
+        original(transport=httpx.MockTransport(respond), **kwargs))
+    documents = [f"{index:04d}" + "x" * 3996 for index in range(1001)]
+    assert dense_scores("film genre", documents, "http://inference") == list(range(1001))
+    assert sum(batch_sizes) == len(documents) and len(batch_sizes) > 1

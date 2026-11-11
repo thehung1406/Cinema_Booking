@@ -8,6 +8,7 @@ import json
 import re
 from datetime import datetime, timedelta, time
 from decimal import Decimal
+from time import monotonic
 from uuid import UUID, uuid4
 from zoneinfo import ZoneInfo
 from fastapi import HTTPException
@@ -23,6 +24,10 @@ from .history import owned_conversation
 
 LABELS = {"film_id": "phim", "theater_id": "rạp", "show_date": "ngày xem", "showtime_id": "mã suất chiếu"}
 SHOWTIME_PATTERN = r"(?:ma suat|suat chieu so)\s*(\d+)"
+# Owner reads have a 20-second deadline and the browser waits 25 seconds.
+PLANNER_TIMEOUT = 5
+CHAT_INFERENCE_BUDGET = 16
+RECOMMENDATION_FILTERS = ("show_date", "genre", "party_size", "budget_amount", "budget_scope", "start_after")
 RATE_SCRIPT = """
 local n = redis.call('INCR', KEYS[1])
 if n == 1 then redis.call('EXPIRE', KEYS[1], 60) end
@@ -155,12 +160,17 @@ def resolve_intent(reader, message, context, pending_tool=None):
     return intent
 
 
-def select_evidence(question, evidence, config):
+def select_evidence(question, evidence, config, *, deadline=None):
     if not config.model_url or not evidence:
         return evidence, "retrieval_only"
     import httpx
     try:
-        with httpx.Client(timeout=config.model_timeout_seconds, trust_env=False) as client:
+        timeout = config.model_timeout_seconds
+        if deadline is not None:
+            timeout = min(timeout, deadline - monotonic())
+            if timeout <= 0:
+                return evidence, "model_unavailable"
+        with httpx.Client(timeout=timeout, trust_env=False) as client:
             response = client.post(config.model_url.rstrip("/") + "/select", json={"question": question, "evidence": evidence})
             response.raise_for_status()
             payload = response.json()
@@ -174,6 +184,7 @@ def select_evidence(question, evidence, config):
 
 
 def chat(db, user_id, request, redis, reader, config):
+    inference_deadline = monotonic() + CHAT_INFERENCE_BUDGET
     try:
         count = redis.eval(RATE_SCRIPT, 1, f"ai:rate:{user_id}")
         if count > config.requests_per_minute:
@@ -193,11 +204,32 @@ def chat(db, user_id, request, redis, reader, config):
     previous_context = ToolContext.model_validate(previous.get("context", {}))
     values = previous.get("context", {}) | request.context.model_dump(mode="json", exclude_unset=True)
     context = infer_preferences(request.message, ToolContext.model_validate(values))
+    message_text = folded(request.message)
+    deterministic = detect_intent(request.message)
+    pending_tool = previous.get("pending_tool")
+    explicit_knowledge = any(word in message_text for word in (
+        "cach ", "chinh sach", "huong dan", "hoan tien", "doi ve", "huy ve", "thanh toan",
+        "giu ghe bao lau", "la gi",
+    ))
+    refining_recommendation = (
+        previous.get("active_recommendation") and not explicit_knowledge
+        and (deterministic == "knowledge"
+             or deterministic == "get_showtimes" and not any(
+                 word in message_text for word in ("lich chieu", "suat chieu", "may gio")))
+        and any(getattr(context, field) != getattr(previous_context, field)
+                for field in RECOMMENDATION_FILTERS)
+    )
     proposed_intent, planner_mode = None, "retrieval_only"
-    if config.llm_provider != "disabled":
+    if refining_recommendation:
+        proposed_intent = "recommend"
+    elif config.llm_provider != "disabled":
         try:
             from .llm import plan
-            proposed = plan(config, request.message, context, datetime.now(ZoneInfo("Asia/Ho_Chi_Minh")).date())
+            timeout = min(config.llm_timeout_seconds, PLANNER_TIMEOUT, inference_deadline - monotonic())
+            if timeout <= 0:
+                raise TimeoutError("Chat inference budget exhausted")
+            planner_settings = config.model_copy(update={"llm_timeout_seconds": timeout})
+            proposed = plan(planner_settings, request.message, context, datetime.now(ZoneInfo("Asia/Ho_Chi_Minh")).date())
             patch = proposed.context.model_dump(mode="json", exclude_unset=True, exclude_none=True,
                 exclude={"film_id", "theater_id", "showtime_id"})
             patch = {key: value for key, value in patch.items() if value != ""}
@@ -209,15 +241,13 @@ def chat(db, user_id, request, redis, reader, config):
             proposed_intent, planner_mode = proposed.intent, "model_planned"
         except Exception:
             planner_mode = "model_unavailable"
-    preliminary = proposed_intent or detect_intent(request.message)
-    deterministic = detect_intent(request.message)
+    preliminary = proposed_intent or deterministic
     if deterministic in {"out_of_scope", "get_seat_availability", "get_ticket_prices", "get_positive_films"} or (
-            deterministic == "recommend" and preliminary == "search_films"):
+            deterministic == "recommend" and preliminary == "search_films") or (
+            deterministic == "knowledge" and explicit_knowledge):
         preliminary = proposed_intent = deterministic
-    explicit_policy = any(word in folded(request.message) for word in
-        ("cach ", "chinh sach", "huong dan", "hoan tien", "huy ve", "thanh toan", "giu ghe bao lau"))
     read_context = preliminary not in {"knowledge", "out_of_scope"} or (
-        bool(previous.get("pending_tool")) and preliminary == "knowledge" and not explicit_policy)
+        bool(pending_tool) and preliminary == "knowledge" and not explicit_knowledge)
     # FAQ needs only the AI-owned approved KB; do not call Catalog/Cinema unnecessarily.
     if read_context:
         context = infer_context(reader, request.message, context)
@@ -240,13 +270,16 @@ def chat(db, user_id, request, redis, reader, config):
         context.showtime_id = None
     if read_context:
         validate_context(reader, context)
-    intent = proposed_intent or (preliminary if preliminary in {"knowledge", "out_of_scope", "recommend"}
-        and not previous.get("pending_tool") else resolve_intent(reader, request.message, context, previous.get("pending_tool")))
+    intent = proposed_intent or (preliminary if not read_context or preliminary == "recommend" and not pending_tool
+        else resolve_intent(reader, request.message, context, pending_tool))
     # A known booking context remains relevant to short answers such as "hai vé".
-    if previous.get("pending_tool") == "recommend" and intent in {"knowledge", "recommend", "get_showtimes"} and len(folded(request.message).split()) <= 8 and not any(
-            word in folded(request.message) for word in ("chinh sach", "cach ", "huong dan", "hoan tien", "thanh toan", "la gi", "lich chieu", "suat chieu")):
+    if (pending_tool == "recommend" and intent in {"knowledge", "recommend", "get_showtimes"}
+            and not explicit_knowledge and len(message_text.split()) <= 8
+            and not any(word in message_text for word in ("lich chieu", "suat chieu"))):
         intent = "recommend"
-    evening = "toi nay" in folded(request.message) or (previous.get("evening", False) and intent == previous.get("pending_tool"))
+    evening = "toi nay" in message_text or (
+        previous.get("evening", False) and (intent == pending_tool or refining_recommendation)
+    )
     sources, missing = [], []
     status, mode = "ok", planner_mode
     cards, has_more = [], False
@@ -256,21 +289,26 @@ def chat(db, user_id, request, redis, reader, config):
     elif intent == "knowledge":
         try:
             sources = retrieve(db, request.message, strategy=config.retrieval_strategy,
-                scope=context.knowledge_scope, embedding_url=config.embedding_url, reranker_url=config.reranker_url)
+                scope=context.knowledge_scope, embedding_url=config.embedding_url, reranker_url=config.reranker_url,
+                deadline=inference_deadline)
         except Exception:
             sources = retrieve(db, request.message, scope=context.knowledge_scope)
             mode = "retrieval_unavailable"
         db.rollback()  # Do not occupy a database connection while waiting for the model.
         from .grounding import covers_specifics
         sources = [s for s in sources if covers_specifics(request.message,s['text'])]
-        sources, selection_mode = select_evidence(request.message, sources, config)
+        sources, selection_mode = select_evidence(request.message, sources, config, deadline=inference_deadline)
         if selection_mode != "retrieval_only":
             mode = selection_mode
         answer = "\n\n".join(s["text"] for s in sources) if sources else "Chưa có tài liệu đã duyệt đủ căn cứ cho câu hỏi này. Bạn có thể xem hướng dẫn trên giao diện hoặc liên hệ rạp."
         if sources and context.knowledge_scope != "policy" and config.llm_provider != "disabled":
             try:
                 from .llm import grounded_answer
-                generated = grounded_answer(config, request.message, sources)
+                timeout = min(config.llm_timeout_seconds, inference_deadline - monotonic())
+                if timeout <= 0:
+                    raise TimeoutError("Chat inference budget exhausted")
+                answer_settings = config.model_copy(update={"llm_timeout_seconds": timeout})
+                generated = grounded_answer(answer_settings, request.message, sources)
                 if generated:
                     answer, mode = generated, "grounded_generation"
                 else:
@@ -309,8 +347,9 @@ def chat(db, user_id, request, redis, reader, config):
                 answer = "Không thể tra cứu dữ liệu lúc này. Bạn có thể tiếp tục đặt vé trực tiếp hoặc thử lại sau."
                 status = "tool_unavailable"
     links = [dict(title=s["title"], url=s["url"]) for s in sources if s["kind"] != "document"]
-    state = dict(context=context.model_dump(mode="json"), pending_tool=intent if missing else None, evening=evening,
-                 options=cards or ([] if selection_changed else previous.get("options", [])))
+    state = dict(context=context.model_dump(mode="json"), pending_tool=intent if missing else None,
+                 active_recommendation=intent == "recommend", evening=evening,
+                 options=cards if intent == "recommend" or selection_changed else previous.get("options", []))
     result = dict(conversation_id=conversation_id, answer=answer, sources=sources, links=links, cards=cards, has_more=has_more,
                 status=status, mode=mode, missing_fields=missing, context=context.model_dump(mode="json"),
                 as_of=utcnow(), tool=intent if intent.startswith(("get_", "search_")) else None)

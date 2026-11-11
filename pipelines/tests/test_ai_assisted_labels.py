@@ -84,3 +84,29 @@ def test_human_ai_assisted_correction_keeps_original_machine_label(tmp_path):
         assert saved['ai_label']=='positive' and saved['label']=='negative' and saved['confirmed_at']
     finally:
         server.shutdown();thread.join(timeout=3);server.server_close()
+
+
+def test_completed_annotation_resume_repairs_outputs_without_inference(tmp_path, monkeypatch):
+    import hashlib
+    from ml import auto_annotate
+
+    source = tmp_path / "source.jsonl"
+    output = tmp_path / "run"
+    batch_dir = output / "batches"
+    batch_dir.mkdir(parents=True)
+    row = dict(id="review-1", text="Một phim hay", annotation_mode="ai-assisted")
+    write_jsonl(source, [row])
+    identity = dict(input_sha256=hashlib.sha256(source.read_bytes()).hexdigest(),
+        code_sha256="old-code", model="qwen3:4b", model_digest="old-model", batch_size=4)
+    manifest = output / "manifest.json"
+    manifest.write_text(json.dumps({"identity": identity}), encoding="utf-8")
+    labeled = row | dict(label="positive", ai_decision="label")
+    batch = batch_dir / "batch-0001.json"
+    batch.write_text(json.dumps({"rows": [labeled], "state": "completed"}), encoding="utf-8")
+    (output / "summary.json").write_text('{"completed": 0}', encoding="utf-8")
+    monkeypatch.setattr(auto_annotate.httpx, "Client", lambda **kwargs: pytest.fail("Inference is unnecessary"))
+
+    assert auto_annotate.run(source, output, "http://127.0.0.1:11434", "qwen3:4b") == {"review-1": labeled}
+    assert read_jsonl(output / "ai-labels.jsonl") == [labeled]
+    assert json.loads((output / "summary.json").read_text(encoding="utf-8"))["completed"] == 1
+    assert json.loads(manifest.read_text(encoding="utf-8"))["identity"] == identity

@@ -70,6 +70,17 @@ def atomic_json(path,value):
     temporary.replace(path)
 
 
+def write_outputs(output, rows, done):
+    temporary=output/'ai-labels.jsonl.tmp'
+    write_jsonl(temporary,[done[r['id']] for r in rows if r['id'] in done])
+    temporary.replace(output/'ai-labels.jsonl')
+    summary=dict(completed=len(done),total=len(rows),decisions=dict(Counter(r['ai_decision'] for r in done.values())),
+        ai_label_counts=dict(Counter(r['label'] for r in done.values() if r['label'])),human_approved_count=0,
+        model_error_count=sum(r['ai_decision']=='model_error' for r in done.values()),stage='ai-silver-labeling-not-human-gold')
+    atomic_json(output/'summary.json',summary)
+    print(json.dumps(summary),flush=True)
+
+
 def run(source,output,origin,model,batch_size=4):
     source,output=Path(source),Path(output)
     rows=read_jsonl(source)
@@ -85,31 +96,45 @@ def run(source,output,origin,model,batch_size=4):
     manifest_path=output/'manifest.json'
     input_hash=hashlib.sha256(source.read_bytes()).hexdigest()
     code_hash=hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
+    source_ids = {row['id'] for row in rows}
+    previous = json.loads(manifest_path.read_text(encoding='utf-8')) if manifest_path.exists() else None
+    batch_paths = sorted((output/'batches').glob('batch-*.json'))
+    done = {}
+    for path in batch_paths:
+        record = json.loads(path.read_text(encoding='utf-8'))
+        for row in record.get('rows', []):
+            if row['id'] in done:
+                raise ValueError('Duplicate completed batch record')
+            done[row['id']] = row
+    if not set(done).issubset(source_ids):
+        raise ValueError('Saved batch IDs differ from source')
+    if batch_paths and previous is None:
+        raise ValueError('Saved batches require their original manifest')
+    if previous is not None and done.keys() == source_ids:
+        # Rebuild derived files without changing inference provenance or contacting the model.
+        identity = previous['identity']
+        if (identity['input_sha256'], identity['model'], identity['batch_size']) != (input_hash, model, batch_size):
+            raise ValueError('Inputs/model changed; choose a new output version')
+        write_outputs(output, rows, done)
+        return done
     with httpx.Client(base_url=str(url),trust_env=False,follow_redirects=False,timeout=180) as client:
         response=client.get('/api/tags');response.raise_for_status()
         selected=next(m for m in response.json()['models'] if m['name']==model)
         identity=dict(input_sha256=input_hash,code_sha256=code_hash,model=model,model_digest=selected['digest'],batch_size=batch_size)
-        if manifest_path.exists():
-            previous=json.loads(manifest_path.read_text(encoding='utf-8'))
+        if previous is not None:
             if previous['identity']!=identity:
                 raise ValueError('Inputs/code/model changed; choose a new output version')
         else:
             atomic_json(manifest_path,dict(created_at=datetime.now(timezone.utc).isoformat(),identity=identity,
                 stage='ai-silver-labeling-not-human-gold',system_prompt=SYSTEM,reviewer=None,human_approval_generated=False,
                 note='Confidence is model self-report, not calibrated accuracy. No test labels or publisher hints enter prompts.'))
-        done={}
-        for path in sorted((output/'batches').glob('batch-*.json')):
-            record=json.loads(path.read_text(encoding='utf-8'))
-            for row in record.get('rows',[]):
-                if row['id'] in done:
-                    raise ValueError('Duplicate completed batch record')
-                done[row['id']]=row
-        if not set(done).issubset({r['id'] for r in rows}):
-            raise ValueError('Saved batch IDs differ from source')
+        if not rows:
+            write_outputs(output, rows, done)
+            return done
         response=client.post('/api/chat',json={'model':model,'messages':[{'role':'user','content':'Ready'}],
             'stream':False,'think':False,'keep_alive':'5m','options':{'num_predict':1}})
         response.raise_for_status()
-        number=max([int(p.stem.split('-')[1]) for p in (output/'batches').glob('batch-*.json')],default=0)
+        number=max([int(p.stem.split('-')[1]) for p in batch_paths],default=0)
         queue=list(batches([r for r in rows if r['id'] not in done],batch_size))
         consecutive_single_errors=0
         while queue:
@@ -157,14 +182,7 @@ def run(source,output,origin,model,batch_size=4):
                 trace.update(rows=result,state='needs-human-after-model-error')
             atomic_json(output/'batches'/f'batch-{number:04d}.json',trace)
             done.update({r['id']:r for r in result})
-            temporary=output/'ai-labels.jsonl.tmp'
-            write_jsonl(temporary,[done[r['id']] for r in rows if r['id'] in done])
-            temporary.replace(output/'ai-labels.jsonl')
-            summary=dict(completed=len(done),total=len(rows),decisions=dict(Counter(r['ai_decision'] for r in done.values())),
-                ai_label_counts=dict(Counter(r['label'] for r in done.values() if r['label'])),human_approved_count=0,
-                model_error_count=sum(r['ai_decision']=='model_error' for r in done.values()),stage='ai-silver-labeling-not-human-gold')
-            atomic_json(output/'summary.json',summary)
-            print(json.dumps(summary),flush=True)
+            write_outputs(output, rows, done)
         return done
 
 
