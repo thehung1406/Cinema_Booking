@@ -1,0 +1,2628 @@
+{
+  "stage": "four-vietnamese-corpora-progress-comparison",
+  "completed": 24,
+  "required": 24,
+  "dataset_count": 4,
+  "all_cells_completed": true,
+  "missing": [],
+  "seed_count": 1,
+  "scope": "Four independent source corpora, publisher/human/AI-silver supervision explicitly distinguished. Binary and three-class tasks are reported per dataset; not ranked as one pooled task. This is a one-seed progress comparison, not completion of the original all-human three-class 72-run protocol.",
+  "evaluation_stage": "validation, not final test",
+  "primary_final_test_opened": false,
+  "production_promoted": false,
+  "protocol_sha256": "c3e6a323fbc82386153c6c527df74dd15fbb908fc218b5a4138ba699734ae0e5",
+  "results": [
+    {
+      "dataset": "uts2017-bank",
+      "model": "phobert",
+      "seed": 42,
+      "labels": [
+        "negative",
+        "neutral",
+        "positive"
+      ],
+      "supervision": "publisher-or-human-reviewed",
+      "accuracy": 0.9669117647058824,
+      "macro_f1": 0.6468420060331824,
+      "per_class": {
+        "negative": {
+          "precision": 0.954954954954955,
+          "recall": 0.9636363636363636,
+          "f1-score": 0.9592760180995475,
+          "support": 110.0
+        },
+        "neutral": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1-score": 0.0,
+          "support": 3.0
+        },
+        "positive": {
+          "precision": 0.9751552795031055,
+          "recall": 0.9874213836477987,
+          "f1-score": 0.98125,
+          "support": 159.0
+        },
+        "accuracy": 0.9669117647058824,
+        "macro avg": {
+          "precision": 0.6433700781526869,
+          "recall": 0.6503525824280542,
+          "f1-score": 0.6468420060331824,
+          "support": 272.0
+        },
+        "weighted avg": {
+          "precision": 0.9562306414927898,
+          "recall": 0.9669117647058824,
+          "f1-score": 0.9615408529079053,
+          "support": 272.0
+        }
+      },
+      "confusion_matrix": [
+        [
+          106,
+          0,
+          4
+        ],
+        [
+          3,
+          0,
+          0
+        ],
+        [
+          2,
+          0,
+          157
+        ]
+      ],
+      "label_order": [
+        "negative",
+        "neutral",
+        "positive"
+      ],
+      "architecture": {
+        "model_type": "roberta",
+        "implementation": "RobertaForSequenceClassification",
+        "encoder_layers": 12,
+        "hidden_size": 768,
+        "attention_heads": 12,
+        "num_labels": 3,
+        "total_parameters": 135000579,
+        "trainable_parameters": 135000579
+      },
+      "training": {
+        "learning_rate": 2e-05,
+        "epochs_requested": 3,
+        "epochs_completed": 3.0,
+        "global_step": 579,
+        "best_checkpoint": "C:\\code\\Cinema_Booking\\.local\\research\\four-vi-v1\\runs\\uts2017-bank\\phobert\\42\\checkpoints\\checkpoint-579",
+        "best_validation_macro_f1": 0.6468420060331824,
+        "batch_size": 4,
+        "effective_batch_size": 8,
+        "gradient_accumulation_steps": 2,
+        "world_size": 1,
+        "max_length": 256,
+        "optimizer": "adamw_torch",
+        "weight_decay": 0.0,
+        "scheduler": "linear",
+        "warmup_steps": 0,
+        "fp16": true,
+        "device": "cuda:0",
+        "selection_split": "validation",
+        "class_weight_policy": "none",
+        "class_weights": {
+          "negative": 1.0,
+          "neutral": 1.0,
+          "positive": 1.0
+        },
+        "class_weight_fit_split": "train",
+        "loss_objective": "cross_entropy"
+      },
+      "model_version": "phobert-base:01daacda68af:s42:d1bc8dbf3b22c:t5ca357b950a5",
+      "train_count": 1543,
+      "validation_count": 272,
+      "elapsed_seconds": 105.08649239999795,
+      "metadata_sha256": "3b2e19a463402f9d194b80ac93e97137dad4018b9837e9d53d07ab21755bf8c7",
+      "validation_sha256": "d09a9c914dc5a6dbef9985ad98d725d17c99b793867d1e6791b34ff7d16e71d4",
+      "checkpoint_revision": "01daacda68afe13d83023d16ec647239e344a1e6"
+    },
+    {
+      "dataset": "uts2017-bank",
+      "model": "visobert",
+      "seed": 42,
+      "labels": [
+        "negative",
+        "neutral",
+        "positive"
+      ],
+      "supervision": "publisher-or-human-reviewed",
+      "accuracy": 0.9816176470588235,
+      "macro_f1": 0.657149554617909,
+      "per_class": {
+        "negative": {
+          "precision": 0.9565217391304348,
+          "recall": 1.0,
+          "f1-score": 0.9777777777777777,
+          "support": 110.0
+        },
+        "neutral": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1-score": 0.0,
+          "support": 3.0
+        },
+        "positive": {
+          "precision": 1.0,
+          "recall": 0.9874213836477987,
+          "f1-score": 0.9936708860759493,
+          "support": 159.0
+        },
+        "accuracy": 0.9816176470588235,
+        "macro avg": {
+          "precision": 0.6521739130434783,
+          "recall": 0.6624737945492662,
+          "f1-score": 0.657149554617909,
+          "support": 272.0
+        },
+        "weighted avg": {
+          "precision": 0.9713874680306905,
+          "recall": 0.9816176470588235,
+          "f1-score": 0.9762839207412923,
+          "support": 272.0
+        }
+      },
+      "confusion_matrix": [
+        [
+          110,
+          0,
+          0
+        ],
+        [
+          3,
+          0,
+          0
+        ],
+        [
+          2,
+          0,
+          157
+        ]
+      ],
+      "label_order": [
+        "negative",
+        "neutral",
+        "positive"
+      ],
+      "architecture": {
+        "model_type": "xlm-roberta",
+        "implementation": "XLMRobertaForSequenceClassification",
+        "encoder_layers": 12,
+        "hidden_size": 768,
+        "attention_heads": 12,
+        "num_labels": 3,
+        "total_parameters": 97568259,
+        "trainable_parameters": 97568259
+      },
+      "training": {
+        "learning_rate": 2e-05,
+        "epochs_requested": 3,
+        "epochs_completed": 3.0,
+        "global_step": 579,
+        "best_checkpoint": "C:\\code\\Cinema_Booking\\.local\\research\\four-vi-v1\\runs\\uts2017-bank\\visobert\\42\\checkpoints\\checkpoint-579",
+        "best_validation_macro_f1": 0.657149554617909,
+        "batch_size": 4,
+        "effective_batch_size": 8,
+        "gradient_accumulation_steps": 2,
+        "world_size": 1,
+        "max_length": 256,
+        "optimizer": "adamw_torch",
+        "weight_decay": 0.0,
+        "scheduler": "linear",
+        "warmup_steps": 0,
+        "fp16": true,
+        "device": "cuda:0",
+        "selection_split": "validation",
+        "class_weight_policy": "none",
+        "class_weights": {
+          "negative": 1.0,
+          "neutral": 1.0,
+          "positive": 1.0
+        },
+        "class_weight_fit_split": "train",
+        "loss_objective": "cross_entropy"
+      },
+      "model_version": "visobert:196a62afad9c:s42:d1bc8dbf3b22c:tb3666c0fc7e7",
+      "train_count": 1543,
+      "validation_count": 272,
+      "elapsed_seconds": 90.61972909999895,
+      "metadata_sha256": "b7dc6fe0f95f4289838690af30aa6fb00d6e1b0a0be2988a4a2eacfc86d87827",
+      "validation_sha256": "4eaf3e007e50c4d952b5b32b6b182a709095f543fbb23f2d21e10311aa78c602",
+      "checkpoint_revision": "196a62afad9cbe4f52a54aabad828b13f0eec59a"
+    },
+    {
+      "dataset": "uts2017-bank",
+      "model": "videberta",
+      "seed": 42,
+      "labels": [
+        "negative",
+        "neutral",
+        "positive"
+      ],
+      "supervision": "publisher-or-human-reviewed",
+      "accuracy": 0.8529411764705882,
+      "macro_f1": 0.5670742818779072,
+      "per_class": {
+        "negative": {
+          "precision": 0.86,
+          "recall": 0.7818181818181819,
+          "f1-score": 0.819047619047619,
+          "support": 110.0
+        },
+        "neutral": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1-score": 0.0,
+          "support": 3.0
+        },
+        "positive": {
+          "precision": 0.8488372093023255,
+          "recall": 0.9182389937106918,
+          "f1-score": 0.8821752265861027,
+          "support": 159.0
+        },
+        "accuracy": 0.8529411764705882,
+        "macro avg": {
+          "precision": 0.5696124031007752,
+          "recall": 0.5666857251762912,
+          "f1-score": 0.5670742818779072,
+          "support": 272.0
+        },
+        "weighted avg": {
+          "precision": 0.8439893980848152,
+          "recall": 0.8529411764705882,
+          "f1-score": 0.8469158055971633,
+          "support": 272.0
+        }
+      },
+      "confusion_matrix": [
+        [
+          86,
+          0,
+          24
+        ],
+        [
+          1,
+          0,
+          2
+        ],
+        [
+          13,
+          0,
+          146
+        ]
+      ],
+      "label_order": [
+        "negative",
+        "neutral",
+        "positive"
+      ],
+      "architecture": {
+        "model_type": "deberta-v2",
+        "implementation": "DebertaV2ForSequenceClassification",
+        "encoder_layers": 12,
+        "hidden_size": 384,
+        "attention_heads": 6,
+        "num_labels": 3,
+        "total_parameters": 70792707,
+        "trainable_parameters": 70792707
+      },
+      "training": {
+        "learning_rate": 2e-05,
+        "epochs_requested": 3,
+        "epochs_completed": 3.0,
+        "global_step": 579,
+        "best_checkpoint": "C:\\code\\Cinema_Booking\\.local\\research\\four-vi-v1\\runs\\uts2017-bank\\videberta\\42\\checkpoints\\checkpoint-579",
+        "best_validation_macro_f1": 0.5670742818779072,
+        "batch_size": 4,
+        "effective_batch_size": 8,
+        "gradient_accumulation_steps": 2,
+        "world_size": 1,
+        "max_length": 256,
+        "optimizer": "adamw_torch",
+        "weight_decay": 0.0,
+        "scheduler": "linear",
+        "warmup_steps": 0,
+        "fp16": true,
+        "device": "cuda:0",
+        "selection_split": "validation",
+        "class_weight_policy": "none",
+        "class_weights": {
+          "negative": 1.0,
+          "neutral": 1.0,
+          "positive": 1.0
+        },
+        "class_weight_fit_split": "train",
+        "loss_objective": "cross_entropy"
+      },
+      "model_version": "videberta-xsmall:029b6b1b1d76:s42:d1bc8dbf3b22c:tb3666c0fc7e7",
+      "train_count": 1543,
+      "validation_count": 272,
+      "elapsed_seconds": 111.21798169999965,
+      "metadata_sha256": "7c8b70f968e7a9512aab459b838130e7891bca44d31df2e8d08689840440d639",
+      "validation_sha256": "1e5e8200d91d99e7a79b6784b7ffa7bb4743865ad2c7b4fe579d6f4c4aaa197d",
+      "checkpoint_revision": "029b6b1b1d7636221bd2d1a98b46a2fdba3af34e"
+    },
+    {
+      "dataset": "uts2017-bank",
+      "model": "mbert",
+      "seed": 42,
+      "labels": [
+        "negative",
+        "neutral",
+        "positive"
+      ],
+      "supervision": "publisher-or-human-reviewed",
+      "accuracy": 0.9632352941176471,
+      "macro_f1": 0.6443371270957478,
+      "per_class": {
+        "negative": {
+          "precision": 0.9464285714285714,
+          "recall": 0.9636363636363636,
+          "f1-score": 0.954954954954955,
+          "support": 110.0
+        },
+        "neutral": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1-score": 0.0,
+          "support": 3.0
+        },
+        "positive": {
+          "precision": 0.975,
+          "recall": 0.9811320754716981,
+          "f1-score": 0.9780564263322884,
+          "support": 159.0
+        },
+        "accuracy": 0.9632352941176471,
+        "macro avg": {
+          "precision": 0.6404761904761904,
+          "recall": 0.6482561463693539,
+          "f1-score": 0.6443371270957478,
+          "support": 272.0
+        },
+        "weighted avg": {
+          "precision": 0.9526917016806723,
+          "recall": 0.9632352941176471,
+          "f1-score": 0.9579265324701429,
+          "support": 272.0
+        }
+      },
+      "confusion_matrix": [
+        [
+          106,
+          0,
+          4
+        ],
+        [
+          3,
+          0,
+          0
+        ],
+        [
+          3,
+          0,
+          156
+        ]
+      ],
+      "label_order": [
+        "negative",
+        "neutral",
+        "positive"
+      ],
+      "architecture": {
+        "model_type": "bert",
+        "implementation": "BertForSequenceClassification",
+        "encoder_layers": 12,
+        "hidden_size": 768,
+        "attention_heads": 12,
+        "num_labels": 3,
+        "total_parameters": 177855747,
+        "trainable_parameters": 177855747
+      },
+      "training": {
+        "learning_rate": 2e-05,
+        "epochs_requested": 3,
+        "epochs_completed": 3.0,
+        "global_step": 579,
+        "best_checkpoint": "C:\\code\\Cinema_Booking\\.local\\research\\four-vi-v1\\runs\\uts2017-bank\\mbert\\42\\checkpoints\\checkpoint-579",
+        "best_validation_macro_f1": 0.6443371270957478,
+        "batch_size": 4,
+        "effective_batch_size": 8,
+        "gradient_accumulation_steps": 2,
+        "world_size": 1,
+        "max_length": 256,
+        "optimizer": "adamw_torch",
+        "weight_decay": 0.0,
+        "scheduler": "linear",
+        "warmup_steps": 0,
+        "fp16": true,
+        "device": "cuda:0",
+        "selection_split": "validation",
+        "class_weight_policy": "none",
+        "class_weights": {
+          "negative": 1.0,
+          "neutral": 1.0,
+          "positive": 1.0
+        },
+        "class_weight_fit_split": "train",
+        "loss_objective": "cross_entropy"
+      },
+      "model_version": "bert-base-multilingual-cased:3f076fdb1ab6:s42:d1bc8dbf3b22c:tb3666c0fc7e7",
+      "train_count": 1543,
+      "validation_count": 272,
+      "elapsed_seconds": 124.15770090000296,
+      "metadata_sha256": "6329a82e0b8f579619dbf49c640bf0ad81313ae508e21c49c7e339fb38a11ae6",
+      "validation_sha256": "391664c4ec923d149025d88e7b0f4e956e09e0aa5e8c928e6ee1337fac58032b",
+      "checkpoint_revision": "3f076fdb1ab68d5b2880cb87a0886f315b8146f8"
+    },
+    {
+      "dataset": "uts2017-bank",
+      "model": "xlmr",
+      "seed": 42,
+      "labels": [
+        "negative",
+        "neutral",
+        "positive"
+      ],
+      "supervision": "publisher-or-human-reviewed",
+      "accuracy": 0.9779411764705882,
+      "macro_f1": 0.6545228614194132,
+      "per_class": {
+        "negative": {
+          "precision": 0.9642857142857143,
+          "recall": 0.9818181818181818,
+          "f1-score": 0.972972972972973,
+          "support": 110.0
+        },
+        "neutral": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1-score": 0.0,
+          "support": 3.0
+        },
+        "positive": {
+          "precision": 0.9875,
+          "recall": 0.9937106918238994,
+          "f1-score": 0.9905956112852664,
+          "support": 159.0
+        },
+        "accuracy": 0.9779411764705882,
+        "macro avg": {
+          "precision": 0.6505952380952381,
+          "recall": 0.6585096245473604,
+          "f1-score": 0.6545228614194132,
+          "support": 272.0
+        },
+        "weighted avg": {
+          "precision": 0.9672203256302522,
+          "recall": 0.9779411764705882,
+          "f1-score": 0.9725431221374424,
+          "support": 272.0
+        }
+      },
+      "confusion_matrix": [
+        [
+          108,
+          0,
+          2
+        ],
+        [
+          3,
+          0,
+          0
+        ],
+        [
+          1,
+          0,
+          158
+        ]
+      ],
+      "label_order": [
+        "negative",
+        "neutral",
+        "positive"
+      ],
+      "architecture": {
+        "model_type": "xlm-roberta",
+        "implementation": "XLMRobertaForSequenceClassification",
+        "encoder_layers": 12,
+        "hidden_size": 768,
+        "attention_heads": 12,
+        "num_labels": 3,
+        "total_parameters": 278045955,
+        "trainable_parameters": 278045955
+      },
+      "training": {
+        "learning_rate": 2e-05,
+        "epochs_requested": 3,
+        "epochs_completed": 3.0,
+        "global_step": 579,
+        "best_checkpoint": "C:\\code\\Cinema_Booking\\.local\\research\\four-vi-v1\\runs\\uts2017-bank\\xlmr\\42\\checkpoints\\checkpoint-386",
+        "best_validation_macro_f1": 0.6545228614194132,
+        "batch_size": 4,
+        "effective_batch_size": 8,
+        "gradient_accumulation_steps": 2,
+        "world_size": 1,
+        "max_length": 256,
+        "optimizer": "adamw_torch",
+        "weight_decay": 0.0,
+        "scheduler": "linear",
+        "warmup_steps": 0,
+        "fp16": true,
+        "device": "cuda:0",
+        "selection_split": "validation",
+        "class_weight_policy": "none",
+        "class_weights": {
+          "negative": 1.0,
+          "neutral": 1.0,
+          "positive": 1.0
+        },
+        "class_weight_fit_split": "train",
+        "loss_objective": "cross_entropy"
+      },
+      "model_version": "xlm-roberta-base:e73636d4f797:s42:d1bc8dbf3b22c:tb3666c0fc7e7",
+      "train_count": 1543,
+      "validation_count": 272,
+      "elapsed_seconds": 190.48796479999874,
+      "metadata_sha256": "d8d244c030e5aaa5e678772044efdee6214a8d7cebae25f214d65b4796d4ef34",
+      "validation_sha256": "d9a42ec7ba88df262520fdae35d426abfdcf9ee1812009e89289d9e51e1fcafe",
+      "checkpoint_revision": "e73636d4f797dec63c3081bb6ed5c7b0bb3f2089"
+    },
+    {
+      "dataset": "uts2017-bank",
+      "model": "lr",
+      "seed": 42,
+      "labels": [
+        "negative",
+        "neutral",
+        "positive"
+      ],
+      "supervision": "publisher-or-human-reviewed",
+      "accuracy": 0.9448529411764706,
+      "macro_f1": 0.6332788456118595,
+      "per_class": {
+        "negative": {
+          "precision": 0.9137931034482759,
+          "recall": 0.9636363636363636,
+          "f1-score": 0.9380530973451328,
+          "support": 110.0
+        },
+        "neutral": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1-score": 0.0,
+          "support": 3.0
+        },
+        "positive": {
+          "precision": 0.9741935483870968,
+          "recall": 0.949685534591195,
+          "f1-score": 0.9617834394904459,
+          "support": 159.0
+        },
+        "accuracy": 0.9448529411764706,
+        "macro avg": {
+          "precision": 0.6293288839451242,
+          "recall": 0.6377739660758529,
+          "f1-score": 0.6332788456118595,
+          "support": 272.0
+        },
+        "weighted avg": {
+          "precision": 0.9390221160766865,
+          "recall": 0.9448529411764706,
+          "f1-score": 0.9415787043637702,
+          "support": 272.0
+        }
+      },
+      "confusion_matrix": [
+        [
+          106,
+          1,
+          3
+        ],
+        [
+          2,
+          0,
+          1
+        ],
+        [
+          8,
+          0,
+          151
+        ]
+      ],
+      "label_order": [
+        "negative",
+        "neutral",
+        "positive"
+      ],
+      "architecture": {
+        "model_type": "tfidf-logistic-regression",
+        "implementation": "LogisticRegression",
+        "encoder_layers": null,
+        "total_parameters": 235008,
+        "trainable_parameters": 235008,
+        "input_features": 78335,
+        "analyzer": "char",
+        "ngram_range": [
+          2,
+          5
+        ]
+      },
+      "training": {
+        "learning_rate": null,
+        "epochs_requested": null,
+        "epochs_completed": null,
+        "batch_size": null,
+        "effective_batch_size": null,
+        "max_length": null,
+        "optimizer": "lbfgs",
+        "selected_C": 4,
+        "C_candidates": [
+          0.25,
+          1,
+          4
+        ],
+        "max_iter": 1000,
+        "iterations_completed": [
+          31
+        ],
+        "class_weight": "balanced",
+        "selection_split": "validation"
+      },
+      "model_version": "tfidf-lr:local:s42:d1bc8dbf3b22c:tfb17251c2982",
+      "train_count": 1543,
+      "validation_count": 272,
+      "elapsed_seconds": 6.42941140000039,
+      "metadata_sha256": "855c9da1b1dcb75ac09321d444c7f7fab8b6e10acdac2719594b33328134a3e6",
+      "validation_sha256": "37fb92c1a492e6d26593e4325ecd682bb424fb1902832abb3262b54ad1df5538",
+      "checkpoint_revision": null
+    },
+    {
+      "dataset": "uit-visfd-general",
+      "model": "phobert",
+      "seed": 42,
+      "labels": [
+        "negative",
+        "neutral",
+        "positive"
+      ],
+      "supervision": "publisher-or-human-reviewed",
+      "accuracy": 0.9491279069767442,
+      "macro_f1": 0.8485637626262627,
+      "per_class": {
+        "negative": {
+          "precision": 0.9069767441860465,
+          "recall": 0.9212598425196851,
+          "f1-score": 0.9140625,
+          "support": 127.0
+        },
+        "neutral": {
+          "precision": 0.7,
+          "recall": 0.6176470588235294,
+          "f1-score": 0.65625,
+          "support": 34.0
+        },
+        "positive": {
+          "precision": 0.9735349716446124,
+          "recall": 0.9772296015180265,
+          "f1-score": 0.9753787878787878,
+          "support": 527.0
+        },
+        "accuracy": 0.9491279069767442,
+        "macro avg": {
+          "precision": 0.8601705719435531,
+          "recall": 0.8387121676204137,
+          "f1-score": 0.8485637626262627,
+          "support": 688.0
+        },
+        "weighted avg": {
+          "precision": 0.9477310705935156,
+          "recall": 0.9491279069767442,
+          "f1-score": 0.948289329523432,
+          "support": 688.0
+        }
+      },
+      "confusion_matrix": [
+        [
+          117,
+          5,
+          5
+        ],
+        [
+          4,
+          21,
+          9
+        ],
+        [
+          8,
+          4,
+          515
+        ]
+      ],
+      "label_order": [
+        "negative",
+        "neutral",
+        "positive"
+      ],
+      "architecture": {
+        "model_type": "roberta",
+        "implementation": "RobertaForSequenceClassification",
+        "encoder_layers": 12,
+        "hidden_size": 768,
+        "attention_heads": 12,
+        "num_labels": 3,
+        "total_parameters": 135000579,
+        "trainable_parameters": 135000579
+      },
+      "training": {
+        "learning_rate": 2e-05,
+        "epochs_requested": 3,
+        "epochs_completed": 3.0,
+        "global_step": 1821,
+        "best_checkpoint": "C:\\code\\Cinema_Booking\\.local\\research\\four-vi-v1\\runs\\uit-visfd-general\\phobert\\42\\checkpoints\\checkpoint-1821",
+        "best_validation_macro_f1": 0.8485637626262627,
+        "batch_size": 4,
+        "effective_batch_size": 8,
+        "gradient_accumulation_steps": 2,
+        "world_size": 1,
+        "max_length": 256,
+        "optimizer": "adamw_torch",
+        "weight_decay": 0.0,
+        "scheduler": "linear",
+        "warmup_steps": 0,
+        "fp16": true,
+        "device": "cuda:0",
+        "selection_split": "validation",
+        "class_weight_policy": "none",
+        "class_weights": {
+          "negative": 1.0,
+          "neutral": 1.0,
+          "positive": 1.0
+        },
+        "class_weight_fit_split": "train",
+        "loss_objective": "cross_entropy"
+      },
+      "model_version": "phobert-base:01daacda68af:s42:d13bd9fd707c7:t5ca357b950a5",
+      "train_count": 4852,
+      "validation_count": 688,
+      "elapsed_seconds": 286.77032809999946,
+      "metadata_sha256": "924eb3c11d89f4f168d76a091b3baabbd8f9dcad718570e5aaa9ae159aa739ca",
+      "validation_sha256": "934de004015a64f5ae77d861fd4f8ae7d7dfabda3f8eb6a5f91577c643308497",
+      "checkpoint_revision": "01daacda68afe13d83023d16ec647239e344a1e6"
+    },
+    {
+      "dataset": "uit-visfd-general",
+      "model": "visobert",
+      "seed": 42,
+      "labels": [
+        "negative",
+        "neutral",
+        "positive"
+      ],
+      "supervision": "publisher-or-human-reviewed",
+      "accuracy": 0.9549418604651163,
+      "macro_f1": 0.8580625195935604,
+      "per_class": {
+        "negative": {
+          "precision": 0.9307692307692308,
+          "recall": 0.952755905511811,
+          "f1-score": 0.9416342412451362,
+          "support": 127.0
+        },
+        "neutral": {
+          "precision": 0.7,
+          "recall": 0.6176470588235294,
+          "f1-score": 0.65625,
+          "support": 34.0
+        },
+        "positive": {
+          "precision": 0.9753787878787878,
+          "recall": 0.9772296015180265,
+          "f1-score": 0.976303317535545,
+          "support": 527.0
+        },
+        "accuracy": 0.9549418604651163,
+        "macro avg": {
+          "precision": 0.8687160062160061,
+          "recall": 0.8492108552844556,
+          "f1-score": 0.8580625195935604,
+          "support": 688.0
+        },
+        "weighted avg": {
+          "precision": 0.9535353394183337,
+          "recall": 0.9549418604651163,
+          "f1-score": 0.9540870595630296,
+          "support": 688.0
+        }
+      },
+      "confusion_matrix": [
+        [
+          121,
+          3,
+          3
+        ],
+        [
+          3,
+          21,
+          10
+        ],
+        [
+          6,
+          6,
+          515
+        ]
+      ],
+      "label_order": [
+        "negative",
+        "neutral",
+        "positive"
+      ],
+      "architecture": {
+        "model_type": "xlm-roberta",
+        "implementation": "XLMRobertaForSequenceClassification",
+        "encoder_layers": 12,
+        "hidden_size": 768,
+        "attention_heads": 12,
+        "num_labels": 3,
+        "total_parameters": 97568259,
+        "trainable_parameters": 97568259
+      },
+      "training": {
+        "learning_rate": 2e-05,
+        "epochs_requested": 3,
+        "epochs_completed": 3.0,
+        "global_step": 1821,
+        "best_checkpoint": "C:\\code\\Cinema_Booking\\.local\\research\\four-vi-v1\\runs\\uit-visfd-general\\visobert\\42\\checkpoints\\checkpoint-1214",
+        "best_validation_macro_f1": 0.8580625195935604,
+        "batch_size": 4,
+        "effective_batch_size": 8,
+        "gradient_accumulation_steps": 2,
+        "world_size": 1,
+        "max_length": 256,
+        "optimizer": "adamw_torch",
+        "weight_decay": 0.0,
+        "scheduler": "linear",
+        "warmup_steps": 0,
+        "fp16": true,
+        "device": "cuda:0",
+        "selection_split": "validation",
+        "class_weight_policy": "none",
+        "class_weights": {
+          "negative": 1.0,
+          "neutral": 1.0,
+          "positive": 1.0
+        },
+        "class_weight_fit_split": "train",
+        "loss_objective": "cross_entropy"
+      },
+      "model_version": "visobert:196a62afad9c:s42:d13bd9fd707c7:tb3666c0fc7e7",
+      "train_count": 4852,
+      "validation_count": 688,
+      "elapsed_seconds": 246.7704029000015,
+      "metadata_sha256": "6a03f0ef0c497b068144dfa2390938fe25d50a198f2005926db1899a4f50fcf3",
+      "validation_sha256": "0f5cca9faf696d2186a42ccb52d6e1f31809995124abe8d76e19ab2bcfc3f3fe",
+      "checkpoint_revision": "196a62afad9cbe4f52a54aabad828b13f0eec59a"
+    },
+    {
+      "dataset": "uit-visfd-general",
+      "model": "videberta",
+      "seed": 42,
+      "labels": [
+        "negative",
+        "neutral",
+        "positive"
+      ],
+      "supervision": "publisher-or-human-reviewed",
+      "accuracy": 0.8895348837209303,
+      "macro_f1": 0.5799350893865768,
+      "per_class": {
+        "negative": {
+          "precision": 0.7923076923076923,
+          "recall": 0.8110236220472441,
+          "f1-score": 0.8015564202334631,
+          "support": 127.0
+        },
+        "neutral": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1-score": 0.0,
+          "support": 34.0
+        },
+        "positive": {
+          "precision": 0.9121863799283154,
+          "recall": 0.9658444022770398,
+          "f1-score": 0.9382488479262673,
+          "support": 527.0
+        },
+        "accuracy": 0.8895348837209303,
+        "macro avg": {
+          "precision": 0.5681646907453359,
+          "recall": 0.592289341441428,
+          "f1-score": 0.5799350893865768,
+          "support": 688.0
+        },
+        "weighted avg": {
+          "precision": 0.8449786324786325,
+          "recall": 0.8895348837209303,
+          "f1-score": 0.8666494305621986,
+          "support": 688.0
+        }
+      },
+      "confusion_matrix": [
+        [
+          103,
+          0,
+          24
+        ],
+        [
+          9,
+          0,
+          25
+        ],
+        [
+          18,
+          0,
+          509
+        ]
+      ],
+      "label_order": [
+        "negative",
+        "neutral",
+        "positive"
+      ],
+      "architecture": {
+        "model_type": "deberta-v2",
+        "implementation": "DebertaV2ForSequenceClassification",
+        "encoder_layers": 12,
+        "hidden_size": 384,
+        "attention_heads": 6,
+        "num_labels": 3,
+        "total_parameters": 70792707,
+        "trainable_parameters": 70792707
+      },
+      "training": {
+        "learning_rate": 2e-05,
+        "epochs_requested": 3,
+        "epochs_completed": 3.0,
+        "global_step": 1821,
+        "best_checkpoint": "C:\\code\\Cinema_Booking\\.local\\research\\four-vi-v1\\runs\\uit-visfd-general\\videberta\\42\\checkpoints\\checkpoint-1821",
+        "best_validation_macro_f1": 0.5799350893865768,
+        "batch_size": 4,
+        "effective_batch_size": 8,
+        "gradient_accumulation_steps": 2,
+        "world_size": 1,
+        "max_length": 256,
+        "optimizer": "adamw_torch",
+        "weight_decay": 0.0,
+        "scheduler": "linear",
+        "warmup_steps": 0,
+        "fp16": true,
+        "device": "cuda:0",
+        "selection_split": "validation",
+        "class_weight_policy": "none",
+        "class_weights": {
+          "negative": 1.0,
+          "neutral": 1.0,
+          "positive": 1.0
+        },
+        "class_weight_fit_split": "train",
+        "loss_objective": "cross_entropy"
+      },
+      "model_version": "videberta-xsmall:029b6b1b1d76:s42:d13bd9fd707c7:tb3666c0fc7e7",
+      "train_count": 4852,
+      "validation_count": 688,
+      "elapsed_seconds": 306.0481079999954,
+      "metadata_sha256": "e75d0f1f06123ced8601d706dd627e73005ea8d1e2c9fa113a7e0508950ead32",
+      "validation_sha256": "78e8210e035965ed90e6da5c8375552b8f3e130e31c2796a57bba5f3cc521baf",
+      "checkpoint_revision": "029b6b1b1d7636221bd2d1a98b46a2fdba3af34e"
+    },
+    {
+      "dataset": "uit-visfd-general",
+      "model": "mbert",
+      "seed": 42,
+      "labels": [
+        "negative",
+        "neutral",
+        "positive"
+      ],
+      "supervision": "publisher-or-human-reviewed",
+      "accuracy": 0.9287790697674418,
+      "macro_f1": 0.8099610383514059,
+      "per_class": {
+        "negative": {
+          "precision": 0.8382352941176471,
+          "recall": 0.8976377952755905,
+          "f1-score": 0.8669201520912547,
+          "support": 127.0
+        },
+        "neutral": {
+          "precision": 0.6923076923076923,
+          "recall": 0.5294117647058824,
+          "f1-score": 0.6,
+          "support": 34.0
+        },
+        "positive": {
+          "precision": 0.9638783269961977,
+          "recall": 0.9620493358633776,
+          "f1-score": 0.9629629629629629,
+          "support": 527.0
+        },
+        "accuracy": 0.9287790697674418,
+        "macro avg": {
+          "precision": 0.8314737711405122,
+          "recall": 0.7963662986149501,
+          "f1-score": 0.8099610383514059,
+          "support": 688.0
+        },
+        "weighted avg": {
+          "precision": 0.9272648578755798,
+          "recall": 0.9287790697674418,
+          "f1-score": 0.9272970069724866,
+          "support": 688.0
+        }
+      },
+      "confusion_matrix": [
+        [
+          114,
+          3,
+          10
+        ],
+        [
+          7,
+          18,
+          9
+        ],
+        [
+          15,
+          5,
+          507
+        ]
+      ],
+      "label_order": [
+        "negative",
+        "neutral",
+        "positive"
+      ],
+      "architecture": {
+        "model_type": "bert",
+        "implementation": "BertForSequenceClassification",
+        "encoder_layers": 12,
+        "hidden_size": 768,
+        "attention_heads": 12,
+        "num_labels": 3,
+        "total_parameters": 177855747,
+        "trainable_parameters": 177855747
+      },
+      "training": {
+        "learning_rate": 2e-05,
+        "epochs_requested": 3,
+        "epochs_completed": 3.0,
+        "global_step": 1821,
+        "best_checkpoint": "C:\\code\\Cinema_Booking\\.local\\research\\four-vi-v1\\runs\\uit-visfd-general\\mbert\\42\\checkpoints\\checkpoint-1821",
+        "best_validation_macro_f1": 0.8099610383514059,
+        "batch_size": 4,
+        "effective_batch_size": 8,
+        "gradient_accumulation_steps": 2,
+        "world_size": 1,
+        "max_length": 256,
+        "optimizer": "adamw_torch",
+        "weight_decay": 0.0,
+        "scheduler": "linear",
+        "warmup_steps": 0,
+        "fp16": true,
+        "device": "cuda:0",
+        "selection_split": "validation",
+        "class_weight_policy": "none",
+        "class_weights": {
+          "negative": 1.0,
+          "neutral": 1.0,
+          "positive": 1.0
+        },
+        "class_weight_fit_split": "train",
+        "loss_objective": "cross_entropy"
+      },
+      "model_version": "bert-base-multilingual-cased:3f076fdb1ab6:s42:d13bd9fd707c7:tb3666c0fc7e7",
+      "train_count": 4852,
+      "validation_count": 688,
+      "elapsed_seconds": 346.38017209999816,
+      "metadata_sha256": "79f6f56c976c8e2c36223e702ee519fd14e9db72f5ef46814d194af85ea13691",
+      "validation_sha256": "ac7d6a997ae6f3fa7188491ed2489a08204379380860163b2fba405b5e86f30e",
+      "checkpoint_revision": "3f076fdb1ab68d5b2880cb87a0886f315b8146f8"
+    },
+    {
+      "dataset": "uit-visfd-general",
+      "model": "xlmr",
+      "seed": 42,
+      "labels": [
+        "negative",
+        "neutral",
+        "positive"
+      ],
+      "supervision": "publisher-or-human-reviewed",
+      "accuracy": 0.9476744186046512,
+      "macro_f1": 0.8377845315894663,
+      "per_class": {
+        "negative": {
+          "precision": 0.8897058823529411,
+          "recall": 0.952755905511811,
+          "f1-score": 0.9201520912547528,
+          "support": 127.0
+        },
+        "neutral": {
+          "precision": 0.75,
+          "recall": 0.5294117647058824,
+          "f1-score": 0.6206896551724138,
+          "support": 34.0
+        },
+        "positive": {
+          "precision": 0.9715909090909091,
+          "recall": 0.9734345351043643,
+          "f1-score": 0.9725118483412323,
+          "support": 527.0
+        },
+        "accuracy": 0.9476744186046512,
+        "macro avg": {
+          "precision": 0.8704322638146168,
+          "recall": 0.818534068440686,
+          "f1-score": 0.8377845315894663,
+          "support": 688.0
+        },
+        "weighted avg": {
+          "precision": 0.945524790915309,
+          "recall": 0.9476744186046512,
+          "f1-score": 0.9454600406119842,
+          "support": 688.0
+        }
+      },
+      "confusion_matrix": [
+        [
+          121,
+          2,
+          4
+        ],
+        [
+          5,
+          18,
+          11
+        ],
+        [
+          10,
+          4,
+          513
+        ]
+      ],
+      "label_order": [
+        "negative",
+        "neutral",
+        "positive"
+      ],
+      "architecture": {
+        "model_type": "xlm-roberta",
+        "implementation": "XLMRobertaForSequenceClassification",
+        "encoder_layers": 12,
+        "hidden_size": 768,
+        "attention_heads": 12,
+        "num_labels": 3,
+        "total_parameters": 278045955,
+        "trainable_parameters": 278045955
+      },
+      "training": {
+        "learning_rate": 2e-05,
+        "epochs_requested": 3,
+        "epochs_completed": 3.0,
+        "global_step": 1821,
+        "best_checkpoint": "C:\\code\\Cinema_Booking\\.local\\research\\four-vi-v1\\runs\\uit-visfd-general\\xlmr\\42\\checkpoints\\checkpoint-1821",
+        "best_validation_macro_f1": 0.8377845315894663,
+        "batch_size": 4,
+        "effective_batch_size": 8,
+        "gradient_accumulation_steps": 2,
+        "world_size": 1,
+        "max_length": 256,
+        "optimizer": "adamw_torch",
+        "weight_decay": 0.0,
+        "scheduler": "linear",
+        "warmup_steps": 0,
+        "fp16": true,
+        "device": "cuda:0",
+        "selection_split": "validation",
+        "class_weight_policy": "none",
+        "class_weights": {
+          "negative": 1.0,
+          "neutral": 1.0,
+          "positive": 1.0
+        },
+        "class_weight_fit_split": "train",
+        "loss_objective": "cross_entropy"
+      },
+      "model_version": "xlm-roberta-base:e73636d4f797:s42:d13bd9fd707c7:tb3666c0fc7e7",
+      "train_count": 4852,
+      "validation_count": 688,
+      "elapsed_seconds": 446.39444640000147,
+      "metadata_sha256": "2a6fa8bdf1136dab0da88cc3799318b0d4ef4453b855fb78bf8a876599a3f1b1",
+      "validation_sha256": "dc9ffce29ae220880f5454771420fb172c03d3b4883ac5ba75b853735d04b695",
+      "checkpoint_revision": "e73636d4f797dec63c3081bb6ed5c7b0bb3f2089"
+    },
+    {
+      "dataset": "uit-visfd-general",
+      "model": "lr",
+      "seed": 42,
+      "labels": [
+        "negative",
+        "neutral",
+        "positive"
+      ],
+      "supervision": "publisher-or-human-reviewed",
+      "accuracy": 0.9098837209302325,
+      "macro_f1": 0.7597744360902254,
+      "per_class": {
+        "negative": {
+          "precision": 0.8345323741007195,
+          "recall": 0.9133858267716536,
+          "f1-score": 0.8721804511278195,
+          "support": 127.0
+        },
+        "neutral": {
+          "precision": 0.4444444444444444,
+          "recall": 0.47058823529411764,
+          "f1-score": 0.45714285714285713,
+          "support": 34.0
+        },
+        "positive": {
+          "precision": 0.9629629629629629,
+          "recall": 0.937381404174573,
+          "f1-score": 0.95,
+          "support": 527.0
+        },
+        "accuracy": 0.9098837209302325,
+        "macro avg": {
+          "precision": 0.7473132605027089,
+          "recall": 0.7737851554134481,
+          "f1-score": 0.7597744360902254,
+          "support": 688.0
+        },
+        "weighted avg": {
+          "precision": 0.9136311106153837,
+          "recall": 0.9098837209302325,
+          "f1-score": 0.9112787419129219,
+          "support": 688.0
+        }
+      },
+      "confusion_matrix": [
+        [
+          116,
+          3,
+          8
+        ],
+        [
+          7,
+          16,
+          11
+        ],
+        [
+          16,
+          17,
+          494
+        ]
+      ],
+      "label_order": [
+        "negative",
+        "neutral",
+        "positive"
+      ],
+      "architecture": {
+        "model_type": "tfidf-logistic-regression",
+        "implementation": "LogisticRegression",
+        "encoder_layers": null,
+        "total_parameters": 538386,
+        "trainable_parameters": 538386,
+        "input_features": 179461,
+        "analyzer": "char",
+        "ngram_range": [
+          2,
+          5
+        ]
+      },
+      "training": {
+        "learning_rate": null,
+        "epochs_requested": null,
+        "epochs_completed": null,
+        "batch_size": null,
+        "effective_batch_size": null,
+        "max_length": null,
+        "optimizer": "lbfgs",
+        "selected_C": 4,
+        "C_candidates": [
+          0.25,
+          1,
+          4
+        ],
+        "max_iter": 1000,
+        "iterations_completed": [
+          27
+        ],
+        "class_weight": "balanced",
+        "selection_split": "validation"
+      },
+      "model_version": "tfidf-lr:local:s42:d13bd9fd707c7:tfb17251c2982",
+      "train_count": 4852,
+      "validation_count": 688,
+      "elapsed_seconds": 15.962363200000254,
+      "metadata_sha256": "bc674356c5db75c06ab7c3e5bb35d6350e64882178af49620913356e0b4f3aa8",
+      "validation_sha256": "c27829ccc2b437effe7dbe156f9e8efcda51d601ce87e2bea6c6164723888375",
+      "checkpoint_revision": null
+    },
+    {
+      "dataset": "shopee",
+      "model": "phobert",
+      "seed": 42,
+      "labels": [
+        "negative",
+        "positive"
+      ],
+      "supervision": "publisher-or-human-reviewed",
+      "accuracy": 0.9548611111111112,
+      "macro_f1": 0.9520784193660528,
+      "per_class": {
+        "negative": {
+          "precision": 0.9652466367713004,
+          "recall": 0.9620111731843576,
+          "f1-score": 0.9636261891438165,
+          "support": 895.0
+        },
+        "positive": {
+          "precision": 0.9379562043795621,
+          "recall": 0.9431192660550459,
+          "f1-score": 0.9405306495882891,
+          "support": 545.0
+        },
+        "accuracy": 0.9548611111111112,
+        "macro avg": {
+          "precision": 0.9516014205754313,
+          "recall": 0.9525652196197018,
+          "f1-score": 0.9520784193660528,
+          "support": 1440.0
+        },
+        "weighted avg": {
+          "precision": 0.9549179661785939,
+          "recall": 0.9548611111111112,
+          "f1-score": 0.9548851689648147,
+          "support": 1440.0
+        }
+      },
+      "confusion_matrix": [
+        [
+          861,
+          34
+        ],
+        [
+          31,
+          514
+        ]
+      ],
+      "label_order": [
+        "negative",
+        "positive"
+      ],
+      "architecture": {
+        "model_type": "roberta",
+        "implementation": "RobertaForSequenceClassification",
+        "encoder_layers": 12,
+        "hidden_size": 768,
+        "attention_heads": 12,
+        "num_labels": 2,
+        "total_parameters": 134999810,
+        "trainable_parameters": 134999810
+      },
+      "training": {
+        "learning_rate": 2e-05,
+        "epochs_requested": 3,
+        "epochs_completed": 3.0,
+        "global_step": 2520,
+        "best_checkpoint": "C:\\code\\Cinema_Booking\\.local\\research\\four-vi-v1\\runs\\shopee\\phobert\\42\\checkpoints\\checkpoint-2520",
+        "best_validation_macro_f1": 0.9520784193660528,
+        "batch_size": 4,
+        "effective_batch_size": 8,
+        "gradient_accumulation_steps": 2,
+        "world_size": 1,
+        "max_length": 256,
+        "optimizer": "adamw_torch",
+        "weight_decay": 0.0,
+        "scheduler": "linear",
+        "warmup_steps": 0,
+        "fp16": true,
+        "device": "cuda:0",
+        "selection_split": "validation",
+        "class_weight_policy": "none",
+        "class_weights": {
+          "negative": 1.0,
+          "positive": 1.0
+        },
+        "class_weight_fit_split": "train",
+        "loss_objective": "cross_entropy"
+      },
+      "model_version": "phobert-base:01daacda68af:s42:d1b7eaf092470:t5ca357b950a5",
+      "train_count": 6719,
+      "validation_count": 1440,
+      "elapsed_seconds": 395.14438430000155,
+      "metadata_sha256": "ef5e5fca665ce598e5f8699d65079df33c79da86b6018335efdc278d02753a14",
+      "validation_sha256": "a430382855fb05d01562f3e8ba50c06f70c2f98b8b44489a6f01666c5f06b1d1",
+      "checkpoint_revision": "01daacda68afe13d83023d16ec647239e344a1e6"
+    },
+    {
+      "dataset": "shopee",
+      "model": "visobert",
+      "seed": 42,
+      "labels": [
+        "negative",
+        "positive"
+      ],
+      "supervision": "publisher-or-human-reviewed",
+      "accuracy": 0.9638888888888889,
+      "macro_f1": 0.9614528487209635,
+      "per_class": {
+        "negative": {
+          "precision": 0.9647188533627343,
+          "recall": 0.9776536312849162,
+          "f1-score": 0.9711431742508324,
+          "support": 895.0
+        },
+        "positive": {
+          "precision": 0.9624765478424016,
+          "recall": 0.9412844036697248,
+          "f1-score": 0.9517625231910947,
+          "support": 545.0
+        },
+        "accuracy": 0.9638888888888889,
+        "macro avg": {
+          "precision": 0.963597700602568,
+          "recall": 0.9594690174773205,
+          "f1-score": 0.9614528487209635,
+          "support": 1440.0
+        },
+        "weighted avg": {
+          "precision": 0.9638702030095528,
+          "recall": 0.9638888888888889,
+          "f1-score": 0.96380813617614,
+          "support": 1440.0
+        }
+      },
+      "confusion_matrix": [
+        [
+          875,
+          20
+        ],
+        [
+          32,
+          513
+        ]
+      ],
+      "label_order": [
+        "negative",
+        "positive"
+      ],
+      "architecture": {
+        "model_type": "xlm-roberta",
+        "implementation": "XLMRobertaForSequenceClassification",
+        "encoder_layers": 12,
+        "hidden_size": 768,
+        "attention_heads": 12,
+        "num_labels": 2,
+        "total_parameters": 97567490,
+        "trainable_parameters": 97567490
+      },
+      "training": {
+        "learning_rate": 2e-05,
+        "epochs_requested": 3,
+        "epochs_completed": 3.0,
+        "global_step": 2520,
+        "best_checkpoint": "C:\\code\\Cinema_Booking\\.local\\research\\four-vi-v1\\runs\\shopee\\visobert\\42\\checkpoints\\checkpoint-1680",
+        "best_validation_macro_f1": 0.9614528487209635,
+        "batch_size": 4,
+        "effective_batch_size": 8,
+        "gradient_accumulation_steps": 2,
+        "world_size": 1,
+        "max_length": 256,
+        "optimizer": "adamw_torch",
+        "weight_decay": 0.0,
+        "scheduler": "linear",
+        "warmup_steps": 0,
+        "fp16": true,
+        "device": "cuda:0",
+        "selection_split": "validation",
+        "class_weight_policy": "none",
+        "class_weights": {
+          "negative": 1.0,
+          "positive": 1.0
+        },
+        "class_weight_fit_split": "train",
+        "loss_objective": "cross_entropy"
+      },
+      "model_version": "visobert:196a62afad9c:s42:d1b7eaf092470:tb3666c0fc7e7",
+      "train_count": 6719,
+      "validation_count": 1440,
+      "elapsed_seconds": 335.59926769999583,
+      "metadata_sha256": "42350e40b0f989199806596e0773c1f639a0ecda7e06ab014071a92ca77040d6",
+      "validation_sha256": "35fa291f8cf46e182dcf2a43ba95fb414302792e67ea22f8438df6f6f7c9a67d",
+      "checkpoint_revision": "196a62afad9cbe4f52a54aabad828b13f0eec59a"
+    },
+    {
+      "dataset": "shopee",
+      "model": "videberta",
+      "seed": 42,
+      "labels": [
+        "negative",
+        "positive"
+      ],
+      "supervision": "publisher-or-human-reviewed",
+      "accuracy": 0.8909722222222223,
+      "macro_f1": 0.8844950669768188,
+      "per_class": {
+        "negative": {
+          "precision": 0.9164785553047404,
+          "recall": 0.9072625698324023,
+          "f1-score": 0.9118472768107805,
+          "support": 895.0
+        },
+        "positive": {
+          "precision": 0.8501805054151624,
+          "recall": 0.8642201834862385,
+          "f1-score": 0.8571428571428571,
+          "support": 545.0
+        },
+        "accuracy": 0.8909722222222223,
+        "macro avg": {
+          "precision": 0.8833295303599514,
+          "recall": 0.8857413766593204,
+          "f1-score": 0.8844950669768188,
+          "support": 1440.0
+        },
+        "weighted avg": {
+          "precision": 0.8913865850340321,
+          "recall": 0.8909722222222223,
+          "f1-score": 0.8911431735336844,
+          "support": 1440.0
+        }
+      },
+      "confusion_matrix": [
+        [
+          812,
+          83
+        ],
+        [
+          74,
+          471
+        ]
+      ],
+      "label_order": [
+        "negative",
+        "positive"
+      ],
+      "architecture": {
+        "model_type": "deberta-v2",
+        "implementation": "DebertaV2ForSequenceClassification",
+        "encoder_layers": 12,
+        "hidden_size": 384,
+        "attention_heads": 6,
+        "num_labels": 2,
+        "total_parameters": 70792322,
+        "trainable_parameters": 70792322
+      },
+      "training": {
+        "learning_rate": 2e-05,
+        "epochs_requested": 3,
+        "epochs_completed": 3.0,
+        "global_step": 2520,
+        "best_checkpoint": "C:\\code\\Cinema_Booking\\.local\\research\\four-vi-v1\\runs\\shopee\\videberta\\42\\checkpoints\\checkpoint-2520",
+        "best_validation_macro_f1": 0.8844950669768188,
+        "batch_size": 4,
+        "effective_batch_size": 8,
+        "gradient_accumulation_steps": 2,
+        "world_size": 1,
+        "max_length": 256,
+        "optimizer": "adamw_torch",
+        "weight_decay": 0.0,
+        "scheduler": "linear",
+        "warmup_steps": 0,
+        "fp16": true,
+        "device": "cuda:0",
+        "selection_split": "validation",
+        "class_weight_policy": "none",
+        "class_weights": {
+          "negative": 1.0,
+          "positive": 1.0
+        },
+        "class_weight_fit_split": "train",
+        "loss_objective": "cross_entropy"
+      },
+      "model_version": "videberta-xsmall:029b6b1b1d76:s42:d1b7eaf092470:tb3666c0fc7e7",
+      "train_count": 6719,
+      "validation_count": 1440,
+      "elapsed_seconds": 481.11203450000176,
+      "metadata_sha256": "c35072382ef1cb029ec341b4a9d8d20dc0c1afc0424088640047baed1f181359",
+      "validation_sha256": "6a5c2f44b9dc4694f60b18b073d06a706329e35fb9b1c9921c8804fc3e290c63",
+      "checkpoint_revision": "029b6b1b1d7636221bd2d1a98b46a2fdba3af34e"
+    },
+    {
+      "dataset": "shopee",
+      "model": "mbert",
+      "seed": 42,
+      "labels": [
+        "negative",
+        "positive"
+      ],
+      "supervision": "publisher-or-human-reviewed",
+      "accuracy": 0.9326388888888889,
+      "macro_f1": 0.9283321472495255,
+      "per_class": {
+        "negative": {
+          "precision": 0.9443207126948775,
+          "recall": 0.9474860335195531,
+          "f1-score": 0.9459007250418293,
+          "support": 895.0
+        },
+        "positive": {
+          "precision": 0.9132841328413284,
+          "recall": 0.908256880733945,
+          "f1-score": 0.9107635694572217,
+          "support": 545.0
+        },
+        "accuracy": 0.9326388888888889,
+        "macro avg": {
+          "precision": 0.9288024227681029,
+          "recall": 0.927871457126749,
+          "f1-score": 0.9283321472495255,
+          "support": 1440.0
+        },
+        "weighted avg": {
+          "precision": 0.9325742293475272,
+          "recall": 0.9326388888888889,
+          "f1-score": 0.9326022876851549,
+          "support": 1440.0
+        }
+      },
+      "confusion_matrix": [
+        [
+          848,
+          47
+        ],
+        [
+          50,
+          495
+        ]
+      ],
+      "label_order": [
+        "negative",
+        "positive"
+      ],
+      "architecture": {
+        "model_type": "bert",
+        "implementation": "BertForSequenceClassification",
+        "encoder_layers": 12,
+        "hidden_size": 768,
+        "attention_heads": 12,
+        "num_labels": 2,
+        "total_parameters": 177854978,
+        "trainable_parameters": 177854978
+      },
+      "training": {
+        "learning_rate": 2e-05,
+        "epochs_requested": 3,
+        "epochs_completed": 3.0,
+        "global_step": 2520,
+        "best_checkpoint": "C:\\code\\Cinema_Booking\\.local\\research\\four-vi-v1\\runs\\shopee\\mbert\\42\\checkpoints\\checkpoint-2520",
+        "best_validation_macro_f1": 0.9283321472495255,
+        "batch_size": 4,
+        "effective_batch_size": 8,
+        "gradient_accumulation_steps": 2,
+        "world_size": 1,
+        "max_length": 256,
+        "optimizer": "adamw_torch",
+        "weight_decay": 0.0,
+        "scheduler": "linear",
+        "warmup_steps": 0,
+        "fp16": true,
+        "device": "cuda:0",
+        "selection_split": "validation",
+        "class_weight_policy": "none",
+        "class_weights": {
+          "negative": 1.0,
+          "positive": 1.0
+        },
+        "class_weight_fit_split": "train",
+        "loss_objective": "cross_entropy"
+      },
+      "model_version": "bert-base-multilingual-cased:3f076fdb1ab6:s42:d1b7eaf092470:tb3666c0fc7e7",
+      "train_count": 6719,
+      "validation_count": 1440,
+      "elapsed_seconds": 470.14256110000133,
+      "metadata_sha256": "f91554030b46499a96e21a29ec854a10d03ec51385817a3f7894a9abf468edcf",
+      "validation_sha256": "72281f086e0189f993f49d719df30462baa4c8353b8c14775bfa27bd958ee817",
+      "checkpoint_revision": "3f076fdb1ab68d5b2880cb87a0886f315b8146f8"
+    },
+    {
+      "dataset": "shopee",
+      "model": "xlmr",
+      "seed": 42,
+      "labels": [
+        "negative",
+        "positive"
+      ],
+      "supervision": "publisher-or-human-reviewed",
+      "accuracy": 0.9548611111111112,
+      "macro_f1": 0.9520784193660528,
+      "per_class": {
+        "negative": {
+          "precision": 0.9652466367713004,
+          "recall": 0.9620111731843576,
+          "f1-score": 0.9636261891438165,
+          "support": 895.0
+        },
+        "positive": {
+          "precision": 0.9379562043795621,
+          "recall": 0.9431192660550459,
+          "f1-score": 0.9405306495882891,
+          "support": 545.0
+        },
+        "accuracy": 0.9548611111111112,
+        "macro avg": {
+          "precision": 0.9516014205754313,
+          "recall": 0.9525652196197018,
+          "f1-score": 0.9520784193660528,
+          "support": 1440.0
+        },
+        "weighted avg": {
+          "precision": 0.9549179661785939,
+          "recall": 0.9548611111111112,
+          "f1-score": 0.9548851689648147,
+          "support": 1440.0
+        }
+      },
+      "confusion_matrix": [
+        [
+          861,
+          34
+        ],
+        [
+          31,
+          514
+        ]
+      ],
+      "label_order": [
+        "negative",
+        "positive"
+      ],
+      "architecture": {
+        "model_type": "xlm-roberta",
+        "implementation": "XLMRobertaForSequenceClassification",
+        "encoder_layers": 12,
+        "hidden_size": 768,
+        "attention_heads": 12,
+        "num_labels": 2,
+        "total_parameters": 278045186,
+        "trainable_parameters": 278045186
+      },
+      "training": {
+        "learning_rate": 2e-05,
+        "epochs_requested": 3,
+        "epochs_completed": 3.0,
+        "global_step": 2520,
+        "best_checkpoint": "C:\\code\\Cinema_Booking\\.local\\research\\four-vi-v1\\runs\\shopee\\xlmr\\42\\checkpoints\\checkpoint-2520",
+        "best_validation_macro_f1": 0.9520784193660528,
+        "batch_size": 4,
+        "effective_batch_size": 8,
+        "gradient_accumulation_steps": 2,
+        "world_size": 1,
+        "max_length": 256,
+        "optimizer": "adamw_torch",
+        "weight_decay": 0.0,
+        "scheduler": "linear",
+        "warmup_steps": 0,
+        "fp16": true,
+        "device": "cuda:0",
+        "selection_split": "validation",
+        "class_weight_policy": "none",
+        "class_weights": {
+          "negative": 1.0,
+          "positive": 1.0
+        },
+        "class_weight_fit_split": "train",
+        "loss_objective": "cross_entropy"
+      },
+      "model_version": "xlm-roberta-base:e73636d4f797:s42:d1b7eaf092470:tb3666c0fc7e7",
+      "train_count": 6719,
+      "validation_count": 1440,
+      "elapsed_seconds": 615.5148173000052,
+      "metadata_sha256": "8128a03560abbcde87e07edff8aa6192ea42772c0efa452547c6a1008980f4d5",
+      "validation_sha256": "532f12446953408d512a8d784875c33975bf41cfa0ad2fe30431f4442fd5458d",
+      "checkpoint_revision": "e73636d4f797dec63c3081bb6ed5c7b0bb3f2089"
+    },
+    {
+      "dataset": "shopee",
+      "model": "lr",
+      "seed": 42,
+      "labels": [
+        "negative",
+        "positive"
+      ],
+      "supervision": "publisher-or-human-reviewed",
+      "accuracy": 0.9256944444444445,
+      "macro_f1": 0.9219101206166302,
+      "per_class": {
+        "negative": {
+          "precision": 0.95707656612529,
+          "recall": 0.9217877094972067,
+          "f1-score": 0.9391007398975526,
+          "support": 895.0
+        },
+        "positive": {
+          "precision": 0.8788927335640139,
+          "recall": 0.9321100917431193,
+          "f1-score": 0.9047195013357079,
+          "support": 545.0
+        },
+        "accuracy": 0.9256944444444445,
+        "macro avg": {
+          "precision": 0.917984649844652,
+          "recall": 0.926948900620163,
+          "f1-score": 0.9219101206166302,
+          "support": 1440.0
+        },
+        "weighted avg": {
+          "precision": 0.9274861572739737,
+          "recall": 0.9256944444444445,
+          "f1-score": 0.9260883961362989,
+          "support": 1440.0
+        }
+      },
+      "confusion_matrix": [
+        [
+          825,
+          70
+        ],
+        [
+          37,
+          508
+        ]
+      ],
+      "label_order": [
+        "negative",
+        "positive"
+      ],
+      "architecture": {
+        "model_type": "tfidf-logistic-regression",
+        "implementation": "LogisticRegression",
+        "encoder_layers": null,
+        "total_parameters": 203091,
+        "trainable_parameters": 203091,
+        "input_features": 203090,
+        "analyzer": "char",
+        "ngram_range": [
+          2,
+          5
+        ]
+      },
+      "training": {
+        "learning_rate": null,
+        "epochs_requested": null,
+        "epochs_completed": null,
+        "batch_size": null,
+        "effective_batch_size": null,
+        "max_length": null,
+        "optimizer": "lbfgs",
+        "selected_C": 4,
+        "C_candidates": [
+          0.25,
+          1,
+          4
+        ],
+        "max_iter": 1000,
+        "iterations_completed": [
+          18
+        ],
+        "class_weight": "balanced",
+        "selection_split": "validation"
+      },
+      "model_version": "tfidf-lr:local:s42:d1b7eaf092470:tfb17251c2982",
+      "train_count": 6719,
+      "validation_count": 1440,
+      "elapsed_seconds": 14.860550199999125,
+      "metadata_sha256": "60cb948b1b8cece3892bf684f32cb68616990a063452d14a98da0dfb03a55e04",
+      "validation_sha256": "27df54858db813e26a3c25807172b54c16ec1d2e418b10978190841335c3ab6b",
+      "checkpoint_revision": null
+    },
+    {
+      "dataset": "cinema-silver",
+      "model": "phobert",
+      "seed": 42,
+      "labels": [
+        "negative",
+        "neutral",
+        "positive"
+      ],
+      "supervision": "AI-silver-train-human-development-evaluation",
+      "accuracy": 0.5833333333333334,
+      "macro_f1": 0.5852173913043478,
+      "per_class": {
+        "negative": {
+          "precision": 0.875,
+          "recall": 0.4117647058823529,
+          "f1-score": 0.56,
+          "support": 17.0
+        },
+        "neutral": {
+          "precision": 0.35294117647058826,
+          "recall": 0.8571428571428571,
+          "f1-score": 0.5,
+          "support": 7.0
+        },
+        "positive": {
+          "precision": 0.7272727272727273,
+          "recall": 0.6666666666666666,
+          "f1-score": 0.6956521739130435,
+          "support": 12.0
+        },
+        "accuracy": 0.5833333333333334,
+        "macro avg": {
+          "precision": 0.6517379679144385,
+          "recall": 0.6451914098972922,
+          "f1-score": 0.5852173913043478,
+          "support": 36.0
+        },
+        "weighted avg": {
+          "precision": 0.724246137849079,
+          "recall": 0.5833333333333334,
+          "f1-score": 0.5935507246376812,
+          "support": 36.0
+        }
+      },
+      "confusion_matrix": [
+        [
+          7,
+          7,
+          3
+        ],
+        [
+          1,
+          6,
+          0
+        ],
+        [
+          0,
+          4,
+          8
+        ]
+      ],
+      "label_order": [
+        "negative",
+        "neutral",
+        "positive"
+      ],
+      "architecture": {
+        "model_type": "roberta",
+        "implementation": "RobertaForSequenceClassification",
+        "encoder_layers": 12,
+        "hidden_size": 768,
+        "attention_heads": 12,
+        "num_labels": 3,
+        "total_parameters": 135000579,
+        "trainable_parameters": 135000579
+      },
+      "training": {
+        "learning_rate": 2e-05,
+        "epochs_requested": 3,
+        "epochs_completed": 3.0,
+        "global_step": 162,
+        "best_checkpoint": "C:\\code\\Cinema_Booking\\.local\\research\\four-vi-v1\\runs\\cinema-silver\\phobert\\42\\checkpoints\\checkpoint-162",
+        "best_validation_macro_f1": 0.5852173913043478,
+        "batch_size": 4,
+        "effective_batch_size": 8,
+        "gradient_accumulation_steps": 2,
+        "world_size": 1,
+        "max_length": 256,
+        "optimizer": "adamw_torch",
+        "weight_decay": 0.0,
+        "scheduler": "linear",
+        "warmup_steps": 0,
+        "fp16": true,
+        "device": "cuda:0",
+        "selection_split": "validation",
+        "class_weight_policy": "none",
+        "class_weights": {
+          "negative": 1.0,
+          "neutral": 1.0,
+          "positive": 1.0
+        },
+        "class_weight_fit_split": "train",
+        "loss_objective": "cross_entropy"
+      },
+      "model_version": "phobert-base:01daacda68af:s42:d0581b85b9eaa:t5ca357b950a5",
+      "train_count": 426,
+      "validation_count": 36,
+      "elapsed_seconds": 49.45554719999927,
+      "metadata_sha256": "b48073d841995ff9aacffe2a9a334f50c8291b1cd443b2d288c3019344b0a43b",
+      "validation_sha256": "9e213fd461be5ae3546ffee9bf2e2c6c3ff517d1ca88b684ea1c0ddc8bca74da",
+      "checkpoint_revision": "01daacda68afe13d83023d16ec647239e344a1e6"
+    },
+    {
+      "dataset": "cinema-silver",
+      "model": "visobert",
+      "seed": 42,
+      "labels": [
+        "negative",
+        "neutral",
+        "positive"
+      ],
+      "supervision": "AI-silver-train-human-development-evaluation",
+      "accuracy": 0.6111111111111112,
+      "macro_f1": 0.6010101010101009,
+      "per_class": {
+        "negative": {
+          "precision": 0.7692307692307693,
+          "recall": 0.5882352941176471,
+          "f1-score": 0.6666666666666666,
+          "support": 17.0
+        },
+        "neutral": {
+          "precision": 0.38461538461538464,
+          "recall": 0.7142857142857143,
+          "f1-score": 0.5,
+          "support": 7.0
+        },
+        "positive": {
+          "precision": 0.7,
+          "recall": 0.5833333333333334,
+          "f1-score": 0.6363636363636364,
+          "support": 12.0
+        },
+        "accuracy": 0.6111111111111112,
+        "macro avg": {
+          "precision": 0.617948717948718,
+          "recall": 0.6286181139122315,
+          "f1-score": 0.6010101010101009,
+          "support": 36.0
+        },
+        "weighted avg": {
+          "precision": 0.6713675213675213,
+          "recall": 0.6111111111111112,
+          "f1-score": 0.6241582491582491,
+          "support": 36.0
+        }
+      },
+      "confusion_matrix": [
+        [
+          10,
+          5,
+          2
+        ],
+        [
+          1,
+          5,
+          1
+        ],
+        [
+          2,
+          3,
+          7
+        ]
+      ],
+      "label_order": [
+        "negative",
+        "neutral",
+        "positive"
+      ],
+      "architecture": {
+        "model_type": "xlm-roberta",
+        "implementation": "XLMRobertaForSequenceClassification",
+        "encoder_layers": 12,
+        "hidden_size": 768,
+        "attention_heads": 12,
+        "num_labels": 3,
+        "total_parameters": 97568259,
+        "trainable_parameters": 97568259
+      },
+      "training": {
+        "learning_rate": 2e-05,
+        "epochs_requested": 3,
+        "epochs_completed": 3.0,
+        "global_step": 162,
+        "best_checkpoint": "C:\\code\\Cinema_Booking\\.local\\research\\four-vi-v1\\runs\\cinema-silver\\visobert\\42\\checkpoints\\checkpoint-162",
+        "best_validation_macro_f1": 0.6010101010101009,
+        "batch_size": 4,
+        "effective_batch_size": 8,
+        "gradient_accumulation_steps": 2,
+        "world_size": 1,
+        "max_length": 256,
+        "optimizer": "adamw_torch",
+        "weight_decay": 0.0,
+        "scheduler": "linear",
+        "warmup_steps": 0,
+        "fp16": true,
+        "device": "cuda:0",
+        "selection_split": "validation",
+        "class_weight_policy": "none",
+        "class_weights": {
+          "negative": 1.0,
+          "neutral": 1.0,
+          "positive": 1.0
+        },
+        "class_weight_fit_split": "train",
+        "loss_objective": "cross_entropy"
+      },
+      "model_version": "visobert:196a62afad9c:s42:d0581b85b9eaa:tb3666c0fc7e7",
+      "train_count": 426,
+      "validation_count": 36,
+      "elapsed_seconds": 55.152577900000324,
+      "metadata_sha256": "d1e4e34f75e2ad1ae51a6ba8ca63e6fcdc3b44488a2fa9195e5d3c86a7adf9a0",
+      "validation_sha256": "f03b1f07264b26a0571850cc56227fe529cd83b4c463a4bc541ae52841c65d5f",
+      "checkpoint_revision": "196a62afad9cbe4f52a54aabad828b13f0eec59a"
+    },
+    {
+      "dataset": "cinema-silver",
+      "model": "videberta",
+      "seed": 42,
+      "labels": [
+        "negative",
+        "neutral",
+        "positive"
+      ],
+      "supervision": "AI-silver-train-human-development-evaluation",
+      "accuracy": 0.4444444444444444,
+      "macro_f1": 0.3317384370015949,
+      "per_class": {
+        "negative": {
+          "precision": 0.5714285714285714,
+          "recall": 0.7058823529411765,
+          "f1-score": 0.631578947368421,
+          "support": 17.0
+        },
+        "neutral": {
+          "precision": 0.26666666666666666,
+          "recall": 0.5714285714285714,
+          "f1-score": 0.36363636363636365,
+          "support": 7.0
+        },
+        "positive": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1-score": 0.0,
+          "support": 12.0
+        },
+        "accuracy": 0.4444444444444444,
+        "macro avg": {
+          "precision": 0.2793650793650793,
+          "recall": 0.4257703081232493,
+          "f1-score": 0.3317384370015949,
+          "support": 36.0
+        },
+        "weighted avg": {
+          "precision": 0.3216931216931217,
+          "recall": 0.4444444444444444,
+          "f1-score": 0.3689526847421584,
+          "support": 36.0
+        }
+      },
+      "confusion_matrix": [
+        [
+          12,
+          5,
+          0
+        ],
+        [
+          3,
+          4,
+          0
+        ],
+        [
+          6,
+          6,
+          0
+        ]
+      ],
+      "label_order": [
+        "negative",
+        "neutral",
+        "positive"
+      ],
+      "architecture": {
+        "model_type": "deberta-v2",
+        "implementation": "DebertaV2ForSequenceClassification",
+        "encoder_layers": 12,
+        "hidden_size": 384,
+        "attention_heads": 6,
+        "num_labels": 3,
+        "total_parameters": 70792707,
+        "trainable_parameters": 70792707
+      },
+      "training": {
+        "learning_rate": 2e-05,
+        "epochs_requested": 3,
+        "epochs_completed": 3.0,
+        "global_step": 162,
+        "best_checkpoint": "C:\\code\\Cinema_Booking\\.local\\research\\four-vi-v1\\runs\\cinema-silver\\videberta\\42\\checkpoints\\checkpoint-108",
+        "best_validation_macro_f1": 0.3317384370015949,
+        "batch_size": 4,
+        "effective_batch_size": 8,
+        "gradient_accumulation_steps": 2,
+        "world_size": 1,
+        "max_length": 256,
+        "optimizer": "adamw_torch",
+        "weight_decay": 0.0,
+        "scheduler": "linear",
+        "warmup_steps": 0,
+        "fp16": true,
+        "device": "cuda:0",
+        "selection_split": "validation",
+        "class_weight_policy": "none",
+        "class_weights": {
+          "negative": 1.0,
+          "neutral": 1.0,
+          "positive": 1.0
+        },
+        "class_weight_fit_split": "train",
+        "loss_objective": "cross_entropy"
+      },
+      "model_version": "videberta-xsmall:029b6b1b1d76:s42:d0581b85b9eaa:tb3666c0fc7e7",
+      "train_count": 426,
+      "validation_count": 36,
+      "elapsed_seconds": 47.01483250000456,
+      "metadata_sha256": "ed307688f57424d82049258c7f267f509fb089aec1429af81b35ad0cf07516b9",
+      "validation_sha256": "472a49bb0d0cf61ce85c920891a6f89f89665754e01bea6a54c1b52d899d4ce2",
+      "checkpoint_revision": "029b6b1b1d7636221bd2d1a98b46a2fdba3af34e"
+    },
+    {
+      "dataset": "cinema-silver",
+      "model": "mbert",
+      "seed": 42,
+      "labels": [
+        "negative",
+        "neutral",
+        "positive"
+      ],
+      "supervision": "AI-silver-train-human-development-evaluation",
+      "accuracy": 0.4722222222222222,
+      "macro_f1": 0.45959595959595956,
+      "per_class": {
+        "negative": {
+          "precision": 0.5333333333333333,
+          "recall": 0.47058823529411764,
+          "f1-score": 0.5,
+          "support": 17.0
+        },
+        "neutral": {
+          "precision": 0.4,
+          "recall": 0.8571428571428571,
+          "f1-score": 0.5454545454545454,
+          "support": 7.0
+        },
+        "positive": {
+          "precision": 0.5,
+          "recall": 0.25,
+          "f1-score": 0.3333333333333333,
+          "support": 12.0
+        },
+        "accuracy": 0.4722222222222222,
+        "macro avg": {
+          "precision": 0.4777777777777778,
+          "recall": 0.5259103641456583,
+          "f1-score": 0.45959595959595956,
+          "support": 36.0
+        },
+        "weighted avg": {
+          "precision": 0.4962962962962963,
+          "recall": 0.4722222222222222,
+          "f1-score": 0.45328282828282834,
+          "support": 36.0
+        }
+      },
+      "confusion_matrix": [
+        [
+          8,
+          6,
+          3
+        ],
+        [
+          1,
+          6,
+          0
+        ],
+        [
+          6,
+          3,
+          3
+        ]
+      ],
+      "label_order": [
+        "negative",
+        "neutral",
+        "positive"
+      ],
+      "architecture": {
+        "model_type": "bert",
+        "implementation": "BertForSequenceClassification",
+        "encoder_layers": 12,
+        "hidden_size": 768,
+        "attention_heads": 12,
+        "num_labels": 3,
+        "total_parameters": 177855747,
+        "trainable_parameters": 177855747
+      },
+      "training": {
+        "learning_rate": 2e-05,
+        "epochs_requested": 3,
+        "epochs_completed": 3.0,
+        "global_step": 162,
+        "best_checkpoint": "C:\\code\\Cinema_Booking\\.local\\research\\four-vi-v1\\runs\\cinema-silver\\mbert\\42\\checkpoints\\checkpoint-162",
+        "best_validation_macro_f1": 0.45959595959595956,
+        "batch_size": 4,
+        "effective_batch_size": 8,
+        "gradient_accumulation_steps": 2,
+        "world_size": 1,
+        "max_length": 256,
+        "optimizer": "adamw_torch",
+        "weight_decay": 0.0,
+        "scheduler": "linear",
+        "warmup_steps": 0,
+        "fp16": true,
+        "device": "cuda:0",
+        "selection_split": "validation",
+        "class_weight_policy": "none",
+        "class_weights": {
+          "negative": 1.0,
+          "neutral": 1.0,
+          "positive": 1.0
+        },
+        "class_weight_fit_split": "train",
+        "loss_objective": "cross_entropy"
+      },
+      "model_version": "bert-base-multilingual-cased:3f076fdb1ab6:s42:d0581b85b9eaa:tb3666c0fc7e7",
+      "train_count": 426,
+      "validation_count": 36,
+      "elapsed_seconds": 53.436183199999505,
+      "metadata_sha256": "5825e9ce7fb47b386d34a2d4d758166b3dcfcdde60d5b7b7a6fd86b140a6ec9f",
+      "validation_sha256": "cd50c19e5158c2df373a168fbc33b20286d4b2e2ab6695a40f594dc26163f5cb",
+      "checkpoint_revision": "3f076fdb1ab68d5b2880cb87a0886f315b8146f8"
+    },
+    {
+      "dataset": "cinema-silver",
+      "model": "xlmr",
+      "seed": 42,
+      "labels": [
+        "negative",
+        "neutral",
+        "positive"
+      ],
+      "supervision": "AI-silver-train-human-development-evaluation",
+      "accuracy": 0.5,
+      "macro_f1": 0.3961904761904762,
+      "per_class": {
+        "negative": {
+          "precision": 0.6111111111111112,
+          "recall": 0.6470588235294118,
+          "f1-score": 0.6285714285714286,
+          "support": 17.0
+        },
+        "neutral": {
+          "precision": 0.3888888888888889,
+          "recall": 1.0,
+          "f1-score": 0.56,
+          "support": 7.0
+        },
+        "positive": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1-score": 0.0,
+          "support": 12.0
+        },
+        "accuracy": 0.5,
+        "macro avg": {
+          "precision": 0.3333333333333333,
+          "recall": 0.5490196078431372,
+          "f1-score": 0.3961904761904762,
+          "support": 36.0
+        },
+        "weighted avg": {
+          "precision": 0.36419753086419754,
+          "recall": 0.5,
+          "f1-score": 0.4057142857142857,
+          "support": 36.0
+        }
+      },
+      "confusion_matrix": [
+        [
+          11,
+          6,
+          0
+        ],
+        [
+          0,
+          7,
+          0
+        ],
+        [
+          7,
+          5,
+          0
+        ]
+      ],
+      "label_order": [
+        "negative",
+        "neutral",
+        "positive"
+      ],
+      "architecture": {
+        "model_type": "xlm-roberta",
+        "implementation": "XLMRobertaForSequenceClassification",
+        "encoder_layers": 12,
+        "hidden_size": 768,
+        "attention_heads": 12,
+        "num_labels": 3,
+        "total_parameters": 278045955,
+        "trainable_parameters": 278045955
+      },
+      "training": {
+        "learning_rate": 2e-05,
+        "epochs_requested": 3,
+        "epochs_completed": 3.0,
+        "global_step": 162,
+        "best_checkpoint": "C:\\code\\Cinema_Booking\\.local\\research\\four-vi-v1\\runs\\cinema-silver\\xlmr\\42\\checkpoints\\checkpoint-108",
+        "best_validation_macro_f1": 0.3961904761904762,
+        "batch_size": 4,
+        "effective_batch_size": 8,
+        "gradient_accumulation_steps": 2,
+        "world_size": 1,
+        "max_length": 256,
+        "optimizer": "adamw_torch",
+        "weight_decay": 0.0,
+        "scheduler": "linear",
+        "warmup_steps": 0,
+        "fp16": true,
+        "device": "cuda:0",
+        "selection_split": "validation",
+        "class_weight_policy": "none",
+        "class_weights": {
+          "negative": 1.0,
+          "neutral": 1.0,
+          "positive": 1.0
+        },
+        "class_weight_fit_split": "train",
+        "loss_objective": "cross_entropy"
+      },
+      "model_version": "xlm-roberta-base:e73636d4f797:s42:d0581b85b9eaa:tb3666c0fc7e7",
+      "train_count": 426,
+      "validation_count": 36,
+      "elapsed_seconds": 71.86736360000214,
+      "metadata_sha256": "52adfa49a90ca1c1ca67687dbf2f8a22c1e5ce4805f0194c3daa1d841b473226",
+      "validation_sha256": "b84997c7cca5e8cadfc1435fe3ac7b4685578da2d60cb4e01af55b1d0b8209c4",
+      "checkpoint_revision": "e73636d4f797dec63c3081bb6ed5c7b0bb3f2089"
+    },
+    {
+      "dataset": "cinema-silver",
+      "model": "lr",
+      "seed": 42,
+      "labels": [
+        "negative",
+        "neutral",
+        "positive"
+      ],
+      "supervision": "AI-silver-train-human-development-evaluation",
+      "accuracy": 0.6111111111111112,
+      "macro_f1": 0.6054150702426565,
+      "per_class": {
+        "negative": {
+          "precision": 0.75,
+          "recall": 0.5294117647058824,
+          "f1-score": 0.6206896551724138,
+          "support": 17.0
+        },
+        "neutral": {
+          "precision": 0.45454545454545453,
+          "recall": 0.7142857142857143,
+          "f1-score": 0.5555555555555556,
+          "support": 7.0
+        },
+        "positive": {
+          "precision": 0.6153846153846154,
+          "recall": 0.6666666666666666,
+          "f1-score": 0.64,
+          "support": 12.0
+        },
+        "accuracy": 0.6111111111111112,
+        "macro avg": {
+          "precision": 0.6066433566433567,
+          "recall": 0.6367880485527544,
+          "f1-score": 0.6054150702426565,
+          "support": 36.0
+        },
+        "weighted avg": {
+          "precision": 0.6476787101787101,
+          "recall": 0.6111111111111112,
+          "f1-score": 0.6144614729672201,
+          "support": 36.0
+        }
+      },
+      "confusion_matrix": [
+        [
+          9,
+          3,
+          5
+        ],
+        [
+          2,
+          5,
+          0
+        ],
+        [
+          1,
+          3,
+          8
+        ]
+      ],
+      "label_order": [
+        "negative",
+        "neutral",
+        "positive"
+      ],
+      "architecture": {
+        "model_type": "tfidf-logistic-regression",
+        "implementation": "LogisticRegression",
+        "encoder_layers": null,
+        "total_parameters": 149916,
+        "trainable_parameters": 149916,
+        "input_features": 49971,
+        "analyzer": "char",
+        "ngram_range": [
+          2,
+          5
+        ]
+      },
+      "training": {
+        "learning_rate": null,
+        "epochs_requested": null,
+        "epochs_completed": null,
+        "batch_size": null,
+        "effective_batch_size": null,
+        "max_length": null,
+        "optimizer": "lbfgs",
+        "selected_C": 0.25,
+        "C_candidates": [
+          0.25,
+          1,
+          4
+        ],
+        "max_iter": 1000,
+        "iterations_completed": [
+          8
+        ],
+        "class_weight": "balanced",
+        "selection_split": "validation"
+      },
+      "model_version": "tfidf-lr:local:s42:d0581b85b9eaa:tfb17251c2982",
+      "train_count": 426,
+      "validation_count": 36,
+      "elapsed_seconds": 3.285843300000124,
+      "metadata_sha256": "47fcbfe9067e9bd3189cb8431fdc2130d4939843eb3ff9ea09a2dd80691b12fb",
+      "validation_sha256": "52c151728ff0d42497ac7c1fd8132b761ee9d80e9b00ebfc23c7d34d757149ff",
+      "checkpoint_revision": null
+    }
+  ],
+  "validation_metrics_recomputed_from_confusion": true,
+  "all_data_and_config_fingerprints_verified": true,
+  "limitations": [
+    "Single seed; no across-seed variance or significance claim.",
+    "Four distinct corpora do not mean four all-human three-class gold datasets.",
+    "Shopee is binary; Macro-F1 uses its two original labels.",
+    "ViSFD uses only explicitly human-labeled GENERAL aspect, not the full ABSA benchmark.",
+    "Cinema trains on AI silver and selects on 36 earlier human development labels; its 100-case film pilot was already consumed.",
+    "Best epochs and LR C are selected by these validation sets; results are exploratory and optimistic compared with untouched test.",
+    "Original three-seed all-gold research protocol is retained separately; this progress comparison does not retroactively complete it."
+  ]
+}

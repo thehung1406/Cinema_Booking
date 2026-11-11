@@ -6,6 +6,10 @@ import random
 from difflib import SequenceMatcher
 from pathlib import Path
 from ml.text import normalize_text
+try:
+    from rapidfuzz.fuzz import ratio as lcs_ratio
+except ImportError:  # The lightweight annotation image does not need this accelerator.
+    lcs_ratio = None
 
 
 def read_jsonl(path):
@@ -30,6 +34,20 @@ def text_of(row):
     return normalize_text(row.get("text", row.get("question", ""))).lower()
 
 
+def near_duplicate(left, right):
+    """Safe upper bounds skip expensive alignment, without changing the .88 rule."""
+    if 2*min(len(left), len(right)) / max(1, len(left)+len(right)) < .88:
+        return False
+    # SequenceMatcher's nonoverlapping matching blocks are a common subsequence.
+    # Optimal LCS similarity is therefore an upper bound, never a replacement
+    # for the original .88 SequenceMatcher rule. A small cutoff margin avoids
+    # discarding a boundary match due to floating-point rounding.
+    if lcs_ratio is not None and lcs_ratio(left, right, score_cutoff=87.999999) < 87.999999:
+        return False
+    matcher = SequenceMatcher(None, left, right)
+    return matcher.quick_ratio() >= .88 and matcher.ratio() >= .88
+
+
 def grouped_split(rows, seed=42):
     """Merge both curator groups and near duplicates before assigning whole groups."""
     reviewed(rows)
@@ -42,7 +60,7 @@ def grouped_split(rows, seed=42):
     normalized = [text_of(r) for r in rows]
     for i in range(len(rows)):
         for j in range(i):
-            if rows[i]["group_id"] == rows[j]["group_id"] or SequenceMatcher(None, normalized[i], normalized[j]).ratio() >= 0.88:
+            if rows[i]["group_id"] == rows[j]["group_id"] or near_duplicate(normalized[i], normalized[j]):
                 parent[root(i)] = root(j)
     groups = {}
     for i, row in enumerate(rows):
@@ -60,11 +78,12 @@ def grouped_split(rows, seed=42):
 
 def load_splits(directory):
     splits = {name: reviewed(read_jsonl(Path(directory) / f"{name}.jsonl")) for name in ("train", "validation", "test")}
+    normalized = {name: [text_of(row) for row in rows] for name, rows in splits.items()}
     for left, right in (("train", "validation"), ("train", "test"), ("validation", "test")):
         if {r["group_id"] for r in splits[left]} & {r["group_id"] for r in splits[right]}:
             raise ValueError("Leaking group across splits")
-        for a in splits[left]:
-            if any(SequenceMatcher(None, text_of(a), text_of(b)).ratio() >= .88 for b in splits[right]):
+        for a in normalized[left]:
+            if any(near_duplicate(a, b) for b in normalized[right]):
                 raise ValueError("Near-duplicate leakage across splits")
     if not all(splits.values()):
         raise ValueError("Every split must be nonempty")

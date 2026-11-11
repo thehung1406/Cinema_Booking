@@ -1,0 +1,12 @@
+{
+  "stage": "real-portable-runtime-ui-smoke",
+  "chat_mode": "model_planned",
+  "showtime_id": 1,
+  "minimum_total": "160000.00",
+  "party_size": 2,
+  "seat_page_opened": true,
+  "holds_created": false,
+  "orders_created": false,
+  "payment_called": false,
+  "browser_errors": []
+}

@@ -1,0 +1,27 @@
+{
+  "embedding": {
+    "status": "ready",
+    "embedding_model": "intfloat/multilingual-e5-small",
+    "revision": "614241f622f53c4eeff9890bdc4f31cfecc418b3",
+    "reranker": "BAAI/bge-reranker-v2-m3",
+    "reranker_revision": "953dc6f6f85a1b2dbfca4c34a2796e7dde08d41e",
+    "device": "cuda:0",
+    "reranker_fp16": true,
+    "reranker_batch_size": 4,
+    "reranker_max_length": 512
+  },
+  "reranker_source": {
+    "model": "BAAI/bge-reranker-v2-m3",
+    "revision": "953dc6f6f85a1b2dbfca4c34a2796e7dde08d41e",
+    "declared_license": "apache-2.0",
+    "source": "https://huggingface.co/BAAI/bge-reranker-v2-m3"
+  },
+  "generation": {
+    "name": "qwen3:4b",
+    "digest": "359d7dd4bcdab3d86b87d73ac27966f4dbb9f5efdfcc75d34a8764a09474fae7"
+  },
+  "chunking": "characters-1200-v1; no overlap",
+  "candidates_before_rerank": 20,
+  "final_k": 3,
+  "stage": "development-pilot; not production acceptance"
+}

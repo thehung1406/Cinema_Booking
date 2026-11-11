@@ -2,7 +2,7 @@ from datetime import date, datetime
 from typing import Literal
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, field_validator
 
 
 class ReviewWrite(BaseModel):
@@ -37,3 +37,17 @@ class ReviewRead(BaseModel):
     author: str
     is_owner: bool = False
     verified_purchase: bool = False
+
+
+class SentimentDecisionWrite(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+    request_id: UUID
+    content_version: int = Field(gt=0)
+    analysis_generation: int = Field(gt=0)
+    expected_updated_at: AwareDatetime
+    label: Literal["positive", "neutral", "negative"]
+    reason: str = Field(min_length=3, max_length=1000)
+
+
+class SentimentRetryWrite(BaseModel):
+    reason: str = Field(min_length=3, max_length=1000)

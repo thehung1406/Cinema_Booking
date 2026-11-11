@@ -1,0 +1,7 @@
+FROM python:3.11-slim
+WORKDIR /work
+RUN pip install --no-cache-dir httpx==0.28.1
+COPY pipelines/ml /app/ml
+COPY scripts/ai/prepare_public_movie_reviews.py /app/prepare_public_movie_reviews.py
+ENV PYTHONPATH=/app PYTHONUTF8=1
+CMD ["python", "-m", "ml.auto_annotate", "--help"]

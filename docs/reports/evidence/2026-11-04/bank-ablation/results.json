@@ -1,0 +1,523 @@
+{
+  "stage": "validation-only-adaptive-ablation",
+  "protocol_sha256": "f242dcc7aaf317f06ab6f245002c6afee99d3e81eb085ec5f9dd586b1914effa",
+  "final_test_evaluated": false,
+  "model_promoted": false,
+  "summary": [
+    {
+      "variant": "baseline",
+      "completed": 3,
+      "planned": 3,
+      "macro_f1_mean": 0.6579336684201608,
+      "macro_f1_std": 0.001497686334449075,
+      "paired_macro_f1_delta_mean": 0.0,
+      "neutral_f1_mean": 0.0
+    },
+    {
+      "variant": "lower-lr",
+      "completed": 3,
+      "planned": 3,
+      "macro_f1_mean": 0.655478188852596,
+      "macro_f1_std": 0.0014474452117766595,
+      "paired_macro_f1_delta_mean": -0.0024554795675647187,
+      "neutral_f1_mean": 0.0
+    },
+    {
+      "variant": "sqrt-balanced",
+      "completed": 3,
+      "planned": 3,
+      "macro_f1_mean": 0.6562942101138071,
+      "macro_f1_std": 0.001481500139079405,
+      "paired_macro_f1_delta_mean": -0.0016394583063537027,
+      "neutral_f1_mean": 0.0
+    }
+  ],
+  "runs": {
+    "baseline": [
+      {
+        "seed": 17,
+        "macro_f1": 0.6570963890534074,
+        "neutral": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1-score": 0.0,
+          "support": 3.0
+        },
+        "confusion_matrix": [
+          [
+            109,
+            0,
+            1
+          ],
+          [
+            3,
+            0,
+            0
+          ],
+          [
+            1,
+            0,
+            158
+          ]
+        ],
+        "training": {
+          "learning_rate": 2e-05,
+          "epochs_requested": 3,
+          "epochs_completed": 3.0,
+          "global_step": 579,
+          "best_checkpoint": "C:\\code\\Cinema_Booking\\pipelines\\ml\\runs\\advisor-v3\\uts2017-bank\\visobert\\17\\checkpoints\\checkpoint-579",
+          "best_validation_macro_f1": 0.6570963890534074,
+          "batch_size": 1,
+          "effective_batch_size": 8,
+          "gradient_accumulation_steps": 8,
+          "world_size": 1,
+          "max_length": 256,
+          "optimizer": "adamw_torch",
+          "weight_decay": 0.0,
+          "scheduler": "linear",
+          "warmup_steps": 0,
+          "fp16": true,
+          "device": "cuda:0",
+          "selection_split": "validation"
+        },
+        "elapsed_seconds": 162.08262979999563
+      },
+      {
+        "seed": 42,
+        "macro_f1": 0.659662761003455,
+        "neutral": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1-score": 0.0,
+          "support": 3.0
+        },
+        "confusion_matrix": [
+          [
+            110,
+            0,
+            0
+          ],
+          [
+            3,
+            0,
+            0
+          ],
+          [
+            1,
+            0,
+            158
+          ]
+        ],
+        "training": {
+          "learning_rate": 2e-05,
+          "epochs_requested": 3,
+          "epochs_completed": 3.0,
+          "global_step": 579,
+          "best_checkpoint": "C:\\code\\Cinema_Booking\\pipelines\\ml\\runs\\advisor-v3\\uts2017-bank\\visobert\\42\\checkpoints\\checkpoint-579",
+          "best_validation_macro_f1": 0.659662761003455,
+          "batch_size": 1,
+          "effective_batch_size": 8,
+          "gradient_accumulation_steps": 8,
+          "world_size": 1,
+          "max_length": 256,
+          "optimizer": "adamw_torch",
+          "weight_decay": 0.0,
+          "scheduler": "linear",
+          "warmup_steps": 0,
+          "fp16": true,
+          "device": "cuda:0",
+          "selection_split": "validation"
+        },
+        "elapsed_seconds": 156.21401059999334
+      },
+      {
+        "seed": 73,
+        "macro_f1": 0.6570418552036199,
+        "neutral": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1-score": 0.0,
+          "support": 3.0
+        },
+        "confusion_matrix": [
+          [
+            108,
+            0,
+            2
+          ],
+          [
+            3,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            159
+          ]
+        ],
+        "training": {
+          "learning_rate": 2e-05,
+          "epochs_requested": 3,
+          "epochs_completed": 3.0,
+          "global_step": 579,
+          "best_checkpoint": "C:\\code\\Cinema_Booking\\pipelines\\ml\\runs\\advisor-v3\\uts2017-bank\\visobert\\73\\checkpoints\\checkpoint-386",
+          "best_validation_macro_f1": 0.6570418552036199,
+          "batch_size": 1,
+          "effective_batch_size": 8,
+          "gradient_accumulation_steps": 8,
+          "world_size": 1,
+          "max_length": 256,
+          "optimizer": "adamw_torch",
+          "weight_decay": 0.0,
+          "scheduler": "linear",
+          "warmup_steps": 0,
+          "fp16": true,
+          "device": "cuda:0",
+          "selection_split": "validation"
+        },
+        "elapsed_seconds": 150.84846809999726
+      }
+    ],
+    "lower-lr": [
+      {
+        "seed": 17,
+        "macro_f1": 0.6546425059699396,
+        "neutral": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1-score": 0.0,
+          "support": 3.0
+        },
+        "confusion_matrix": [
+          [
+            110,
+            0,
+            0
+          ],
+          [
+            3,
+            0,
+            0
+          ],
+          [
+            3,
+            0,
+            156
+          ]
+        ],
+        "training": {
+          "learning_rate": 1e-05,
+          "epochs_requested": 3,
+          "epochs_completed": 3.0,
+          "global_step": 579,
+          "best_checkpoint": "C:\\code\\Cinema_Booking\\.local\\evidence\\advisor-v4\\bank-ablation\\runs\\lower-lr\\17\\checkpoints\\checkpoint-579",
+          "best_validation_macro_f1": 0.6546425059699396,
+          "batch_size": 1,
+          "effective_batch_size": 8,
+          "gradient_accumulation_steps": 8,
+          "world_size": 1,
+          "max_length": 256,
+          "optimizer": "adamw_torch",
+          "weight_decay": 0.0,
+          "scheduler": "linear",
+          "warmup_steps": 0,
+          "fp16": true,
+          "device": "cuda:0",
+          "selection_split": "validation",
+          "class_weight_policy": "none",
+          "class_weights": {
+            "negative": 1.0,
+            "neutral": 1.0,
+            "positive": 1.0
+          },
+          "class_weight_fit_split": "train",
+          "loss_objective": "cross_entropy"
+        },
+        "elapsed_seconds": 167.45930459999363
+      },
+      {
+        "seed": 42,
+        "macro_f1": 0.657149554617909,
+        "neutral": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1-score": 0.0,
+          "support": 3.0
+        },
+        "confusion_matrix": [
+          [
+            110,
+            0,
+            0
+          ],
+          [
+            3,
+            0,
+            0
+          ],
+          [
+            2,
+            0,
+            157
+          ]
+        ],
+        "training": {
+          "learning_rate": 1e-05,
+          "epochs_requested": 3,
+          "epochs_completed": 3.0,
+          "global_step": 579,
+          "best_checkpoint": "C:\\code\\Cinema_Booking\\.local\\evidence\\advisor-v4\\bank-ablation\\runs\\lower-lr\\42\\checkpoints\\checkpoint-386",
+          "best_validation_macro_f1": 0.657149554617909,
+          "batch_size": 1,
+          "effective_batch_size": 8,
+          "gradient_accumulation_steps": 8,
+          "world_size": 1,
+          "max_length": 256,
+          "optimizer": "adamw_torch",
+          "weight_decay": 0.0,
+          "scheduler": "linear",
+          "warmup_steps": 0,
+          "fp16": true,
+          "device": "cuda:0",
+          "selection_split": "validation",
+          "class_weight_policy": "none",
+          "class_weights": {
+            "negative": 1.0,
+            "neutral": 1.0,
+            "positive": 1.0
+          },
+          "class_weight_fit_split": "train",
+          "loss_objective": "cross_entropy"
+        },
+        "elapsed_seconds": 186.0873042000021
+      },
+      {
+        "seed": 73,
+        "macro_f1": 0.6546425059699396,
+        "neutral": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1-score": 0.0,
+          "support": 3.0
+        },
+        "confusion_matrix": [
+          [
+            110,
+            0,
+            0
+          ],
+          [
+            3,
+            0,
+            0
+          ],
+          [
+            3,
+            0,
+            156
+          ]
+        ],
+        "training": {
+          "learning_rate": 1e-05,
+          "epochs_requested": 3,
+          "epochs_completed": 3.0,
+          "global_step": 579,
+          "best_checkpoint": "C:\\code\\Cinema_Booking\\.local\\evidence\\advisor-v4\\bank-ablation\\runs\\lower-lr\\73\\checkpoints\\checkpoint-193",
+          "best_validation_macro_f1": 0.6546425059699396,
+          "batch_size": 1,
+          "effective_batch_size": 8,
+          "gradient_accumulation_steps": 8,
+          "world_size": 1,
+          "max_length": 256,
+          "optimizer": "adamw_torch",
+          "weight_decay": 0.0,
+          "scheduler": "linear",
+          "warmup_steps": 0,
+          "fp16": true,
+          "device": "cuda:0",
+          "selection_split": "validation",
+          "class_weight_policy": "none",
+          "class_weights": {
+            "negative": 1.0,
+            "neutral": 1.0,
+            "positive": 1.0
+          },
+          "class_weight_fit_split": "train",
+          "loss_objective": "cross_entropy"
+        },
+        "elapsed_seconds": 194.21623550000368
+      }
+    ],
+    "sqrt-balanced": [
+      {
+        "seed": 17,
+        "macro_f1": 0.657149554617909,
+        "neutral": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1-score": 0.0,
+          "support": 3.0
+        },
+        "confusion_matrix": [
+          [
+            110,
+            0,
+            0
+          ],
+          [
+            3,
+            0,
+            0
+          ],
+          [
+            2,
+            0,
+            157
+          ]
+        ],
+        "training": {
+          "learning_rate": 2e-05,
+          "epochs_requested": 3,
+          "epochs_completed": 3.0,
+          "global_step": 579,
+          "best_checkpoint": "C:\\code\\Cinema_Booking\\.local\\evidence\\advisor-v4\\bank-ablation\\runs\\sqrt-balanced\\17\\checkpoints\\checkpoint-579",
+          "best_validation_macro_f1": 0.657149554617909,
+          "batch_size": 1,
+          "effective_batch_size": 8,
+          "gradient_accumulation_steps": 8,
+          "world_size": 1,
+          "max_length": 256,
+          "optimizer": "adamw_torch",
+          "weight_decay": 0.0,
+          "scheduler": "linear",
+          "warmup_steps": 0,
+          "fp16": true,
+          "device": "cuda:0",
+          "selection_split": "validation",
+          "class_weight_policy": "sqrt-balanced",
+          "class_weights": {
+            "negative": 1.0383792493852009,
+            "neutral": 5.80471647012629,
+            "positive": 0.8662791088326544
+          },
+          "class_weight_fit_split": "train",
+          "loss_objective": "mean(weight_y * cross_entropy)"
+        },
+        "elapsed_seconds": 197.27032080000208
+      },
+      {
+        "seed": 42,
+        "macro_f1": 0.657149554617909,
+        "neutral": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1-score": 0.0,
+          "support": 3.0
+        },
+        "confusion_matrix": [
+          [
+            110,
+            0,
+            0
+          ],
+          [
+            3,
+            0,
+            0
+          ],
+          [
+            2,
+            0,
+            157
+          ]
+        ],
+        "training": {
+          "learning_rate": 2e-05,
+          "epochs_requested": 3,
+          "epochs_completed": 3.0,
+          "global_step": 579,
+          "best_checkpoint": "C:\\code\\Cinema_Booking\\.local\\evidence\\advisor-v4\\bank-ablation\\runs\\sqrt-balanced\\42\\checkpoints\\checkpoint-579",
+          "best_validation_macro_f1": 0.657149554617909,
+          "batch_size": 1,
+          "effective_batch_size": 8,
+          "gradient_accumulation_steps": 8,
+          "world_size": 1,
+          "max_length": 256,
+          "optimizer": "adamw_torch",
+          "weight_decay": 0.0,
+          "scheduler": "linear",
+          "warmup_steps": 0,
+          "fp16": true,
+          "device": "cuda:0",
+          "selection_split": "validation",
+          "class_weight_policy": "sqrt-balanced",
+          "class_weights": {
+            "negative": 1.0383792493852009,
+            "neutral": 5.80471647012629,
+            "positive": 0.8662791088326544
+          },
+          "class_weight_fit_split": "train",
+          "loss_objective": "mean(weight_y * cross_entropy)"
+        },
+        "elapsed_seconds": 160.0581411000021
+      },
+      {
+        "seed": 73,
+        "macro_f1": 0.6545835211056031,
+        "neutral": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1-score": 0.0,
+          "support": 3.0
+        },
+        "confusion_matrix": [
+          [
+            109,
+            0,
+            1
+          ],
+          [
+            3,
+            0,
+            0
+          ],
+          [
+            2,
+            0,
+            157
+          ]
+        ],
+        "training": {
+          "learning_rate": 2e-05,
+          "epochs_requested": 3,
+          "epochs_completed": 3.0,
+          "global_step": 579,
+          "best_checkpoint": "C:\\code\\Cinema_Booking\\.local\\evidence\\advisor-v4\\bank-ablation\\runs\\sqrt-balanced\\73\\checkpoints\\checkpoint-579",
+          "best_validation_macro_f1": 0.6545835211056031,
+          "batch_size": 1,
+          "effective_batch_size": 8,
+          "gradient_accumulation_steps": 8,
+          "world_size": 1,
+          "max_length": 256,
+          "optimizer": "adamw_torch",
+          "weight_decay": 0.0,
+          "scheduler": "linear",
+          "warmup_steps": 0,
+          "fp16": true,
+          "device": "cuda:0",
+          "selection_split": "validation",
+          "class_weight_policy": "sqrt-balanced",
+          "class_weights": {
+            "negative": 1.0383792493852009,
+            "neutral": 5.80471647012629,
+            "positive": 0.8662791088326544
+          },
+          "class_weight_fit_split": "train",
+          "loss_objective": "mean(weight_y * cross_entropy)"
+        },
+        "elapsed_seconds": 157.25951629999327
+      }
+    ]
+  }
+}

@@ -1,0 +1,25 @@
+# Optional offline annotation tools. Merge after compose.yml + compose.ai-local.yml.
+# No owner database credential is provided to either tool.
+services:
+  annotation-job:
+    image: cinema-ai-annotation:local
+    build:
+      context: .
+      dockerfile: pipelines/Dockerfile.annotation
+    profiles: [ai-tools]
+    volumes:
+      - ./.local/annotations:/work
+    depends_on:
+      ollama: {condition: service_healthy}
+    networks: [backend]
+  annotation-gold:
+    image: cinema-ai-annotation:local
+    build:
+      context: .
+      dockerfile: pipelines/Dockerfile.annotation
+    profiles: [ai-tools]
+    volumes:
+      - ./.local/annotations:/work
+    command: [python, -m, ml.annotation_app, /work/cinema-ai-assisted-v1/gold-pilot-pending.jsonl, --output, /work/cinema-ai-assisted-v1/gold-pilot-human.jsonl, --host, 0.0.0.0, --port, '8770']
+    ports: ['127.0.0.1:8770:8770']
+    networks: [backend]

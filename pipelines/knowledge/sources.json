@@ -1,0 +1,47 @@
+{
+  "version": 1,
+  "sources": [
+    {
+      "source_id": "cinema-booking-guide",
+      "title": "Hướng dẫn đặt vé Cinema Booking",
+      "version": "draft-1",
+      "source_type": "internal",
+      "scope": "policy",
+      "author": "Cinema Booking project",
+      "license": "Project-authored; policy review required",
+      "language": "vi",
+      "source_url": "/ticket-booking",
+      "input": "pipelines/knowledge/booking-guide.md",
+      "status": "draft-needs-policy-review"
+    },
+    {
+      "source_id": "open-suny-film-construction",
+      "title": "Exploring Movie Construction and Production",
+      "version": "2017",
+      "source_type": "pdf",
+      "scope": "film_education",
+      "author": "John Reich / Open SUNY Textbooks",
+      "license": "CC BY-NC-SA 4.0; except where otherwise noted; research/noncommercial use",
+      "language": "en",
+      "publisher_url": "https://milnepublishing.geneseo.edu/exploring-movie-construction-and-production/open/download?type=print_pdf",
+      "source_url": "https://openlibrary-repo.ecampusontario.ca/jspui/bitstream/123456789/429/1/Exploring-Movie-Construction-and-Production-1499438054.pdf",
+      "download_mirror": "https://openlibrary-repo.ecampusontario.ca/jspui/bitstream/123456789/429/1/Exploring-Movie-Construction-and-Production-1499438054.pdf",
+      "local_file": ".local/knowledge/raw/exploring-movie-construction.pdf",
+      "sha256": "789d951902d630beafbb81ec77253cfb2c52111595066eae97715c9e6983a258",
+      "status": "extract-and-review-before-approval"
+    },
+    {
+      "source_id": "wikibooks-cinematography-summary",
+      "title": "Cinematography — tóm tắt tiếng Việt từ Wikibooks",
+      "version": "oldid-3335736-summary-1",
+      "source_type": "web",
+      "scope": "film_education",
+      "author": "Wikibooks contributors; Vietnamese summary by Cinema Booking AI assistant",
+      "license": "CC BY-SA 4.0; translated and abridged; https://creativecommons.org/licenses/by-sa/4.0/",
+      "language": "vi",
+      "source_url": "https://en.wikibooks.org/w/index.php?title=Movie_Making_Manual/Cinematography&oldid=3335736",
+      "input": "pipelines/knowledge/cinematography-summary.md",
+      "status": "translated-summary-needs-content-review"
+    }
+  ]
+}

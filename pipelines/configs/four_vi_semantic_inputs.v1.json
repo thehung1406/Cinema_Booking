@@ -1,0 +1,22 @@
+{
+  "uts2017-bank": {
+    "train": "9a8398a48c953b8bde8823caa44066177a3d6e70b760947c4e93a055f3347d99",
+    "validation": "3c200f9b4f66ce6eac01d3e23ec967095cb377e0ae0687442a96794526108517",
+    "test": "a125bc2a3630cc8ec49f00f08ec5cd37598bf8403f91af4cee579affc4b05f47"
+  },
+  "uit-visfd-general": {
+    "train": "7c74eebade5a901293bb5def85e143aa4ce6b7e63de5f94d7f9457442c6a564b",
+    "validation": "1bd1d3ec250af0c1f73367b44c5d867f9bd1388a0f233dc6d4c57ef83bed21e6",
+    "test": "cb1ee987d59099e957a360e0b95d084f02b34fcd435b5fa06b3c0d9b38c44c12"
+  },
+  "shopee": {
+    "train": "7d95b60859fdad4532e87980637bf92dea9868ef2a0635156a1ba353579eb30b",
+    "validation": "4c041a9a34a48ad6fa3c1cfbb309f8851db47102dd5660fc343b3605aaaf7cd4",
+    "test": "f4d095618cbf9297b47f8f9e9cc810f84308c1be54cbc84bfeb83e585cae5469"
+  },
+  "cinema-silver": {
+    "train": "6b00a2290e8205b20c9f632245f38dbad34ab630e3507c0d69b70ee14db893d4",
+    "validation": "0512ec34637f5fad1d3f8751623a8fee20fb18a5687625498ce294d74a68f8f4",
+    "test": "f98708078bd56650df22115a2fa9d446b86ad3381c8762a4a531a3f333895ef5"
+  }
+}

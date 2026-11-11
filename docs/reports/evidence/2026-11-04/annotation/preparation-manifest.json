@@ -1,0 +1,50 @@
+{
+  "source_sha256": "acfc07e5f4ddab0db181cb03842a38fe519e1f31b7670fbe36295334506ddc36",
+  "sample_seed": 20261104,
+  "count": 600,
+  "per_suggested_label": 200,
+  "strata": [
+    {
+      "suggested_label": "negative",
+      "selected": 200,
+      "platforms": {
+        "facebook_new": 40,
+        "tiktok": 40,
+        "vnexpress": 40,
+        "youtube_facebook": 40,
+        "youtube_new": 40
+      }
+    },
+    {
+      "suggested_label": "neutral",
+      "selected": 200,
+      "platforms": {
+        "facebook_new": 45,
+        "tiktok": 42,
+        "vnexpress": 41,
+        "youtube_facebook": 28,
+        "youtube_new": 44
+      }
+    },
+    {
+      "suggested_label": "positive",
+      "selected": 200,
+      "platforms": {
+        "facebook_new": 40,
+        "tiktok": 40,
+        "vnexpress": 40,
+        "youtube_facebook": 40,
+        "youtube_new": 40
+      }
+    }
+  ],
+  "human_approved_count": 0,
+  "intended_use": "Double-annotation development batch, not a natural-distribution test set",
+  "sampling": "Round-robin platforms within publisher-suggested strata, exact casefolded text deduplicated",
+  "caveats": [
+    "Publisher labels used for sampling only, never accepted as gold",
+    "No author/film IDs in source: no film-disjoint claim",
+    "Near duplicates still require grouping before train/test",
+    "Same 600 texts in two orders; not two datasets"
+  ]
+}

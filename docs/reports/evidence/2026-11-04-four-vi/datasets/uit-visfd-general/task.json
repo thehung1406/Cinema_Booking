@@ -1,0 +1,11 @@
+{
+  "labels": [
+    "negative",
+    "neutral",
+    "positive"
+  ],
+  "task": "GENERAL-aspect-polarity",
+  "language": "vi",
+  "supervision": "publisher-human",
+  "scope": "Only explicitly annotated GENERAL aspect; other aspects are not collapsed; absent GENERAL is excluded, never neutral."
+}

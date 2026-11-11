@@ -1,0 +1,102 @@
+{
+  "version": 3,
+  "task": "document-sentiment-3class",
+  "labels": [
+    "negative",
+    "neutral",
+    "positive"
+  ],
+  "seeds": [
+    17,
+    42,
+    73
+  ],
+  "models": [
+    {
+      "id": "phobert",
+      "checkpoint": "vinai/phobert-base",
+      "revision": "01daacda68afe13d83023d16ec647239e344a1e6",
+      "preprocessing": "vncorenlp",
+      "declared_task": "fill-mask",
+      "declared_license": "mit"
+    },
+    {
+      "id": "visobert",
+      "checkpoint": "uitnlp/visobert",
+      "revision": "196a62afad9cbe4f52a54aabad828b13f0eec59a",
+      "preprocessing": "normalize",
+      "declared_task": "fill-mask",
+      "declared_license": "not-declared"
+    },
+    {
+      "id": "videberta",
+      "checkpoint": "Fsoft-AIC/videberta-xsmall",
+      "revision": "029b6b1b1d7636221bd2d1a98b46a2fdba3af34e",
+      "preprocessing": "normalize",
+      "declared_task": "token-classification",
+      "declared_license": "not-declared"
+    },
+    {
+      "id": "mbert",
+      "checkpoint": "google-bert/bert-base-multilingual-cased",
+      "revision": "3f076fdb1ab68d5b2880cb87a0886f315b8146f8",
+      "preprocessing": "normalize",
+      "declared_task": "fill-mask",
+      "declared_license": "apache-2.0"
+    },
+    {
+      "id": "xlmr",
+      "checkpoint": "FacebookAI/xlm-roberta-base",
+      "revision": "e73636d4f797dec63c3081bb6ed5c7b0bb3f2089",
+      "preprocessing": "normalize",
+      "declared_task": "fill-mask",
+      "declared_license": "mit"
+    },
+    {
+      "id": "lr",
+      "backend": "sklearn",
+      "preprocessing": "normalize"
+    }
+  ],
+  "datasets": [
+    {
+      "id": "cinema-vi",
+      "path": "ml/data/reviewed/cinema-vi",
+      "domain": "film",
+      "status": "needs-human-annotation",
+      "source": null
+    },
+    {
+      "id": "uit-vsfc",
+      "path": "ml/data/reviewed/uit-vsfc",
+      "domain": "student-feedback",
+      "status": "needs-license-confirmation",
+      "source": "https://huggingface.co/datasets/uitnlp/vietnamese_students_feedback"
+    },
+    {
+      "id": "open-sentiment",
+      "path": "ml/data/reviewed/open-sentiment",
+      "domain": "to-be-selected",
+      "status": "needs-verified-open-3class-source",
+      "source": null
+    },
+    {
+      "id": "uts2017-bank",
+      "path": "ml/data/reviewed/uts2017-bank",
+      "domain": "banking",
+      "status": "imported-and-audited",
+      "source": "https://huggingface.co/datasets/undertheseanlp/UTS2017_Bank"
+    }
+  ],
+  "training": {
+    "epochs": 3,
+    "max_length": 256,
+    "batch_size": 1,
+    "gradient_accumulation_steps": 8,
+    "learning_rate": 2e-05,
+    "weight_decay": 0.0
+  },
+  "test_policy": "Run final evaluation only with an explicit --final-test flag after validation selection is frozen.",
+  "supersedes": "ai_research.lock.json; original retained unchanged",
+  "scope_note": "Public-source replacement for VLSP2016 requested on 2026-11-04. Four independent 3-class Vietnamese datasets remain the target, not a completed result."
+}

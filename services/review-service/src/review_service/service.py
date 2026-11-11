@@ -1,5 +1,7 @@
 """Aggregates are read from current rows, so retries and edits cannot double count."""
-from datetime import timedelta
+from datetime import timedelta, timezone
+import hashlib
+import json
 from math import sqrt
 
 from fastapi import HTTPException
@@ -8,7 +10,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlmodel import select
 
 from .config import Settings
-from .models import Review, ReviewSentiment, utcnow
+from .models import Review, ReviewSentiment, SentimentDecision, utcnow
 from .events import changed
 
 
@@ -31,6 +33,11 @@ def invalidate(db, review):
     result.label = None
     result.scores = {}
     result.model_version = None
+    result.predicted_label = None
+    result.decision_source = None
+    result.confirmed_by_user_id = None
+    result.confirmed_at = None
+    result.confirmation_note = None
     result.attempts = 0
     result.updated_at = utcnow()
     db.add(result)
@@ -101,6 +108,61 @@ def moderate_review(db, review_id, body):
     db.commit()
     db.refresh(review)
     return review
+
+
+def sentiment_item(review, result):
+    stamp = result.updated_at
+    if stamp.tzinfo is None:
+        stamp = stamp.replace(tzinfo=timezone.utc)
+    return dict(review_id=review.id, film_id=review.film_id, content=review.content,
+                content_version=review.content_version, analysis_generation=result.analysis_generation,
+                analysis_status=result.status, label=result.label, predicted_label=result.predicted_label,
+                scores=result.scores, model_version=result.model_version, decision_source=result.decision_source,
+                updated_at=stamp.isoformat())
+
+
+def decide_sentiment(db, review_id, actor_user_id, body):
+    """Lock review -> result, CAS, invalidate inference, audit+event in one commit."""
+    digest = hashlib.sha256(json.dumps({"review_id": review_id, **body.model_dump(mode="json")},
+        sort_keys=True, separators=(",", ":")).encode()).hexdigest()
+    # Serialize repeated request IDs, including attempts against different reviews.
+    if db.bind.dialect.name == "postgresql":
+        from sqlalchemy import text
+        db.execute(text("SELECT pg_advisory_xact_lock(hashtextextended(:key,17))"),
+                   {"key": f"{actor_user_id}:{body.request_id}"})
+    replay = db.exec(select(SentimentDecision).where(SentimentDecision.actor_user_id == actor_user_id,
+        SentimentDecision.request_id == str(body.request_id))).first()
+    if replay:
+        if replay.request_digest != digest:
+            raise HTTPException(409, "Mã yêu cầu đã được dùng cho quyết định khác")
+        return replay.response
+    review = locked_review(db, review_id)
+    result = db.get(ReviewSentiment, review_id, with_for_update=True)
+    def utc(value):
+        return value.replace(tzinfo=timezone.utc) if value.tzinfo is None else value.astimezone(timezone.utc)
+    if (review.moderation_status != "approved" or not result or
+            review.content_version != body.content_version or result.content_version != body.content_version or
+            result.analysis_generation != body.analysis_generation or
+            utc(result.updated_at) != utc(body.expected_updated_at) or
+            result.status not in {"needs_review", "succeeded"}):
+        raise HTTPException(409, "Kết quả đã thay đổi hoặc chưa thể xác nhận; tải lại danh sách")
+    previous = result.label
+    result.predicted_label = result.predicted_label or (result.label if result.decision_source != "staff" else None)
+    result.label, result.status, result.decision_source = body.label, "succeeded", "staff"
+    result.confirmed_by_user_id, result.confirmed_at = actor_user_id, utcnow()
+    result.confirmation_note = body.reason
+    result.analysis_generation += 1
+    result.lease_token = result.lease_until = None
+    result.updated_at = result.confirmed_at
+    # Review.updated_at remains unchanged: confirming a label does not refresh the review window.
+    changed(db, review, result, "ReviewSentimentUpdated.v1")
+    response = {k: v for k, v in sentiment_item(review, result).items() if k != "content"}
+    db.add(SentimentDecision(review_id=review_id, actor_user_id=actor_user_id, request_id=str(body.request_id),
+        content_version=body.content_version, analysis_generation=body.analysis_generation,
+        previous_label=previous, label=body.label, reason=body.reason,
+        request_digest=digest, response=response))
+    db.commit()
+    return response
 
 
 def wilson_lower(positive, total, z=1.96):

@@ -115,7 +115,7 @@ Một người có thể đảm nhiệm nhiều vai trò. Chưa có phân công 
 
 **Nghiệm thu:** chatbot/lịch sử/duyệt tài liệu hoạt động với user đúng quyền; model timeout trả lỗi có kiểm soát; AI dừng không làm lỗi đặt vé.
 
-Bằng chứng M3: [báo cáo kiểm thử/cutover local](docs/migration/ai-phase.md), [runbook ownership/copy/rollback](docs/runbooks/ai.md). Bốn bảng nguồn local rỗng; chuyển dữ liệu không rỗng được kiểm chứng trên DB test riêng.
+Bằng chứng M3: [báo cáo kiểm thử/cutover local tại thời điểm chuyển đổi](docs/migration/ai-phase.md). [Runbook AI](docs/runbooks/ai.md) hiện hướng dẫn vận hành microservices. Tại mốc M3, bốn bảng nguồn local rỗng; chuyển dữ liệu không rỗng được kiểm chứng trên DB test riêng.
 
 ### M4 — Tách Review Service
 

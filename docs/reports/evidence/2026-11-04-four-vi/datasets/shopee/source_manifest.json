@@ -1,0 +1,41 @@
+{
+  "source": "https://www.kaggle.com/datasets/dduongdev/shopee-vietnamese-product-reviews-sentiment",
+  "version": 1,
+  "archive_sha256": "bf69db40a44798525b810c4d6e751508fadbc4e3886f1a75aa403bca65791fca",
+  "member": "shopee_reviews_dataset.jsonl",
+  "original_count": 9599,
+  "publisher_method": "Card says semantic-content labels; per-row human-vs-model status unspecified.",
+  "license_spdx": "Apache-2.0",
+  "seed": 42,
+  "split_policy": "70/15/15 approximate by whole exact/near text family",
+  "created_at": "2026-11-04T12:30:07.160140+00:00",
+  "near_duplicate_threshold": 0.88,
+  "split_sha256": {
+    "train": "3f8e38541c5f7e486e72430d928f452fdb62d26a8f0c22032f41828055d335ad",
+    "validation": "bb82dceadeee99cdf7659ff0ab3d11a44daea5e851a84ac64f83bafbf15b9fdc",
+    "test": "9be3190924249b70233d0fb6f3d6c0f2aca1b33f2d26cdfb330ec127b1a67046"
+  },
+  "splits": {
+    "train": {
+      "count": 6719,
+      "labels": {
+        "negative": 4175,
+        "positive": 2544
+      }
+    },
+    "validation": {
+      "count": 1440,
+      "labels": {
+        "negative": 895,
+        "positive": 545
+      }
+    },
+    "test": {
+      "count": 1440,
+      "labels": {
+        "negative": 895,
+        "positive": 545
+      }
+    }
+  }
+}

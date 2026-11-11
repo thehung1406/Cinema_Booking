@@ -1,0 +1,43 @@
+{
+  "frozen_at": "2026-11-04T11:36:12.470994+00:00",
+  "config": {
+    "stage": "supplementary-weak-supervision-development-pilot",
+    "models": [
+      {
+        "id": "lr-film-silver",
+        "backend": "sklearn",
+        "C_candidates": [
+          0.25,
+          1,
+          4
+        ],
+        "class_weight": "balanced"
+      },
+      {
+        "id": "visobert-film-silver",
+        "backend": "transformers",
+        "checkpoint": "uitnlp/visobert",
+        "revision": "196a62afad9cbe4f52a54aabad828b13f0eec59a",
+        "preprocessing": "normalize"
+      }
+    ],
+    "seed": 42,
+    "training": {
+      "epochs": 3,
+      "learning_rate": 2e-05,
+      "weight_decay": 0.0,
+      "batch_size": 1,
+      "gradient_accumulation_steps": 8,
+      "max_length": 256,
+      "class_weight": "none"
+    },
+    "training_labels": "AI silver candidates only; never presented as human-reviewed training labels",
+    "validation_labels": "36 human decisions collected before the new 100-case pilot; entire near-duplicate families excluded from AI training",
+    "evaluation": "The same frozen 100-case single-reviewer film development pilot; not a new untouched final test",
+    "selection_basis": "LR is the fixed classical baseline; ViSoBERT was the strongest mean Bank validation baseline before the 100 human film labels existed. No architecture or hyperparameter selection from the 100 pilot outcomes.",
+    "primary_matrix_credit": false,
+    "production_promotion": false
+  },
+  "config_sha256": "1de3640e7e3d03d2acd9cc99bcd3ea9f8d2dff90b26b000317dc5e1aaf96b570",
+  "note": "Frozen before the assistant examines any metrics/errors on the new 100-case film pilot. Inputs and trained code hashes will be recorded separately."
+}

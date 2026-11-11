@@ -54,6 +54,8 @@ class KnowledgeDocument(Base):
     def model_dump(self):
         return {column.name: getattr(self, column.name) for column in self.__table__.columns}
 
+    provenance: Mapped[dict] = mapped_column(JSON, default=dict)
+
 
 class KnowledgeChunk(Base):
     __tablename__ = "ai_chunks"
@@ -62,3 +64,4 @@ class KnowledgeChunk(Base):
     content: Mapped[str] = mapped_column(String(3000))
     embedding: Mapped[list] = mapped_column(JSON)
     embedding_version: Mapped[str] = mapped_column(String(100))
+    provenance: Mapped[dict] = mapped_column(JSON, default=dict)

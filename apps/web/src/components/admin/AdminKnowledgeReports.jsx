@@ -33,9 +33,22 @@ function DocumentReview({ documentId, onClose, onEdit, onSaved }) {
         <h3 className="admin-section-title">{doc.title}</h3>
         <p>Nguồn: <a href={doc.source_url} target="_blank" rel="noreferrer">{doc.source_id}</a> · Phiên bản: <strong>{doc.version}</strong></p>
         <p>Hiệu lực từ: {formatDate(utcStamp(doc.effective_at))} {formatTime(utcStamp(doc.effective_at))} · {doc.chunks.length} đoạn đã xử lý</p>
+        {doc.provenance?.source_type && <div className="text-sm space-y-1">
+          <p>Loại nguồn: {doc.provenance.source_type} · Phạm vi: {doc.provenance.scope} · Ngôn ngữ: {doc.provenance.language}</p>
+          <p>Tác giả: {doc.provenance.author || 'Chưa khai báo'} · Quyền sử dụng: {doc.provenance.license || 'Cần kiểm tra'}</p>
+          {doc.provenance.checksum && <p className="break-all">SHA-256: {doc.provenance.checksum}</p>}
+        </div>}
         <p><span className={`admin-badge ${doc.approved ? "success" : "pending"}`}>{doc.approved ? "Đã phê duyệt" : "Chờ phê duyệt"}</span></p>
         <div className="admin-doc-content">{doc.chunks.map((chunk) => chunk.content).join("\n\n") || "Chưa có nội dung đã xử lý."}</div>
-        <footer><button disabled={busy} onClick={() => onEdit(doc)}>Chỉnh sửa</button>
+        <details><summary>Xem từng đoạn và trang nguồn</summary>
+          {doc.chunks.map(chunk => <article key={chunk.id} className="border rounded p-3 my-2">
+            <strong>Đoạn #{chunk.id}{chunk.provenance?.page_start ? ` · trang PDF ${chunk.provenance.page_start}` : ''}</strong>
+            <p className="whitespace-pre-wrap">{chunk.content}</p>
+            {chunk.provenance?.page_start && <a href={`${doc.source_url.split('#')[0]}#page=${chunk.provenance.page_start}`} target="_blank" rel="noreferrer">Mở trang gốc</a>}
+          </article>)}
+        </details>
+        {doc.provenance?.source_type === 'pdf' && <p>Thay nội dung PDF bằng công cụ nhập nguồn để giữ đúng thông tin trang.</p>}
+        <footer><button disabled={busy || doc.provenance?.source_type === 'pdf'} onClick={() => onEdit(doc)}>Chỉnh sửa</button>
           <button className="admin-primary" disabled={busy || !doc.chunks.length} onClick={() => approve(!doc.approved)}>{busy ? "Đang xử lý…" : doc.approved ? "Thu hồi phê duyệt" : "Phê duyệt phiên bản này"}</button></footer>
       </>}
     </div>
@@ -49,12 +62,43 @@ export function DocumentsPage() {
   const [reviewId, setReviewId] = useState(null);
   const [deleting, setDeleting] = useState(null);
   const [notice, setNotice] = useState("");
+  const [searchQuestion, setSearchQuestion] = useState('');
+  const [searchScope, setSearchScope] = useState('policy');
+  const [searchStrategy, setSearchStrategy] = useState('bm25');
+  const [trace, setTrace] = useState(null);
+  const [traceBusy, setTraceBusy] = useState(false);
+  const [traceError, setTraceError] = useState('');
   const list = useAdminData("/admin/documents", { q: query, offset, limit: 20 });
   const refresh = (message) => { list.reload(); setNotice(message); };
   return <>
     <PageHeading title="Tài liệu chatbot" description="Nhập tài liệu văn bản, kiểm tra nội dung và phê duyệt từng phiên bản. Chatbot chỉ tra cứu tài liệu đã duyệt và đến thời điểm hiệu lực."
       createLabel="Nhập tài liệu" onCreate={() => setEditor({})} />
     {notice && <p className="admin-notice" role="status">{notice}</p>}
+    <section className="admin-panel mb-5">
+      <h2 className="font-bold mb-3">Kiểm tra truy xuất Knowledge Base</h2>
+      <form onSubmit={async event => {
+        event.preventDefault(); setTraceBusy(true); setTraceError(''); setTrace(null);
+        try { const response = await api.post('/admin/knowledge/search', { question: searchQuestion, scope: searchScope, strategy: searchStrategy }); setTrace(response.data); }
+        catch (err) { setTraceError(errorText(err)); } finally { setTraceBusy(false); }
+      }} className="space-y-2">
+        <label className="block">Câu hỏi kiểm tra<input className="border rounded p-2 w-full" value={searchQuestion} maxLength={2000} required onChange={e => setSearchQuestion(e.target.value)} /></label>
+        <label className="mr-4">Phạm vi <select value={searchScope} onChange={e => setSearchScope(e.target.value)}>
+          <option value="policy">Chính sách nội bộ</option><option value="film_education">Kiến thức điện ảnh</option><option value="reference">Tài liệu tham khảo</option>
+        </select></label>
+        <label>Cấu hình <select value={searchStrategy} onChange={e => setSearchStrategy(e.target.value)}>
+          {['lexical', 'bm25', 'dense', 'hybrid', 'rerank'].map(value => <option key={value}>{value}</option>)}
+        </select></label>
+        <button className="admin-primary ml-4" disabled={traceBusy}>{traceBusy ? 'Đang truy xuất…' : 'Xem nguồn tìm được'}</button>
+      </form>
+      {traceError && <p role="alert" className="admin-error">{traceError}</p>}
+      {trace && <div className="mt-3"><p>{trace.sources.length} đoạn · {trace.latency_ms} ms · {trace.strategy}</p>
+        {trace.sources.map(source => <article className="border rounded p-3 my-2" key={source.id}>
+          <a href={source.url} target="_blank" rel="noreferrer">{source.title} · {source.id} · phiên bản {source.version}</a>
+          <p className="text-sm">Điểm: {Number(source.score).toFixed(4)}{source.provenance?.page_start ? ` · Trang PDF ${source.provenance.page_start}` : ''}</p>
+          <p className="whitespace-pre-wrap">{source.text}</p>
+        </article>)}
+      </div>}
+    </section>
     <section className="admin-panel">
       <div className="admin-toolbar"><Field label="Tìm tài liệu" type="search" placeholder="Tiêu đề hoặc mã nguồn" value={query} onChange={(event) => { setQuery(event.target.value); setOffset(0); }} /></div>
       <DataTable columns={[
@@ -72,7 +116,7 @@ export function DocumentsPage() {
       initial={{ source_id: editor.source_id || "", title: editor.title || "", version: editor.version || "1.0", source_url: editor.source_url || "/about",
         effective_at: localDateTime(editor.effective_at), content: editor.chunks?.map((chunk) => chunk.content).join("\n\n") || "" }}
       onSave={async (value) => {
-        await api.post("/admin/documents", { ...value, effective_at: new Date(`${value.effective_at}:00+07:00`).toISOString(),
+        await api.post("/admin/documents", { ...value, provenance: editor.provenance || {}, effective_at: new Date(`${value.effective_at}:00+07:00`).toISOString(),
           ...(editor.id ? { expected_updated_at: utcStamp(editor.updated_at) } : {}) });
         refresh("Đã xử lý tài liệu. Phiên bản vừa lưu đang chờ phê duyệt.");
       }}>{(value, set, setValue) => <>

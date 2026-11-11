@@ -1,6 +1,7 @@
 """Typed, fixed-origin read-only allowlist. Never forwards SQL or model-generated calls."""
 
 import httpx
+import time
 from fastapi import HTTPException
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
@@ -34,11 +35,15 @@ class ReadSession:
     def __init__(self, http, settings):
         self.http, self.settings = http, settings
         self.context_cache = {}
+        self.deadline = time.monotonic() + 20
 
     def call(self,origin,method,path,**kwargs):
         if len(self.settings.service_key)<32:raise HTTPException(503,'AI read credential missing')
+        remaining = self.deadline - time.monotonic()
+        if remaining <= 0:
+            raise HTTPException(503, 'AI request deadline exceeded')
         try:
-            response=self.http.request(method,origin+path,headers={'X-Service-Key':self.settings.service_key},timeout=5,follow_redirects=False,**kwargs)
+            response=self.http.request(method,origin+path,headers={'X-Service-Key':self.settings.service_key},timeout=min(5,remaining),follow_redirects=False,**kwargs)
             if response.status_code in {404,422}:raise HTTPException(422,'Ngữ cảnh không hợp lệ')
             response.raise_for_status();return response.json()
         except (httpx.HTTPError,ValueError) as exc:raise HTTPException(503,'Không thể tra cứu dữ liệu owner') from exc

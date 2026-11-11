@@ -1,4 +1,5 @@
 import httpx
+from typing import Literal
 from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -19,11 +20,21 @@ class Settings(BaseSettings):
     model_timeout_seconds: float = Field(default=15, gt=0, le=60)
     requests_per_minute: int = Field(default=10, ge=1, le=1000)
     context_ttl_seconds: int = Field(default=1800, ge=60, le=86400)
+    llm_provider: Literal["disabled", "ollama"] = "disabled"
+    llm_base_url: str = "http://127.0.0.1:11434"
+    llm_model: str = "qwen3:4b"
+    llm_keep_alive: str = Field(default="5m", pattern=r"^[1-9][0-9]*(?:s|m|h)$")
+    llm_timeout_seconds: float = Field(default=8, gt=0, le=20)
+    retrieval_strategy: Literal["lexical", "bm25", "dense", "hybrid", "rerank"] = "lexical"
+    embedding_url: str = ""
+    reranker_url: str = ""
     model_config = SettingsConfigDict(env_prefix="AI_", extra="ignore", hide_input_in_errors=True)
 
-    @field_validator("read_origin", "identity_origin", "catalog_origin", "cinema_origin", "booking_origin", "review_origin")
+    @field_validator("read_origin", "identity_origin", "catalog_origin", "cinema_origin", "booking_origin", "review_origin", "llm_base_url", "embedding_url", "reranker_url")
     @classmethod
-    def origin(cls, value):
+    def origin(cls, value, info):
+        if not value and info.field_name in {"embedding_url", "reranker_url"}:
+            return value
         url = httpx.URL(value)
         if url.scheme not in {"http", "https"} or not url.host or url.userinfo or url.path != "/" or url.query or url.fragment:
             raise ValueError("Read/identity URL must be a fixed HTTP(S) origin")

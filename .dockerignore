@@ -15,3 +15,6 @@ infra/broker/.runtime
 model-store
 
 .local
+.venv-ai-research
+pipelines/ml/runs
+pipelines/ml/data/reviewed

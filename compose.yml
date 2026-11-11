@@ -159,6 +159,14 @@ services:
       AI_IDENTITY_ORIGIN: http://identity-service:8084
       AI_MODEL_TIMEOUT_SECONDS: ${AI_MODEL_TIMEOUT_SECONDS:-15}
       AI_MODEL_URL: ${AI_MODEL_URL:-}
+      AI_LLM_PROVIDER: ${AI_LLM_PROVIDER:-disabled}
+      AI_LLM_BASE_URL: ${AI_LLM_BASE_URL:-http://host.docker.internal:11434}
+      AI_LLM_MODEL: ${AI_LLM_MODEL:-qwen3:4b}
+      AI_LLM_KEEP_ALIVE: ${AI_LLM_KEEP_ALIVE:-5m}
+      AI_LLM_TIMEOUT_SECONDS: ${AI_LLM_TIMEOUT_SECONDS:-8}
+      AI_RETRIEVAL_STRATEGY: ${AI_RETRIEVAL_STRATEGY:-lexical}
+      AI_EMBEDDING_URL: ${AI_EMBEDDING_URL:-}
+      AI_RERANKER_URL: ${AI_RERANKER_URL:-}
       AI_REDIS_URL: redis://ai-redis:6379/0
       AI_REQUESTS_PER_MINUTE: ${AI_REQUESTS_PER_MINUTE:-10}
       AI_SERVICE_KEY: ${INTERNAL_SERVICE_KEY}
@@ -1200,25 +1208,14 @@ services:
 networks:
   backend:
     driver: bridge
-    name: backend_backend
 volumes:
   aidata:
-    name: backend_aidata
   bookingdata:
-    name: backend_bookingdata
   catalogdata:
-    name: backend_catalogdata
   cinemadata:
-    name: backend_cinemadata
   identitydata:
-    name: backend_identitydata
   notificationdata:
-    name: backend_notificationdata
   paymentdata:
-    name: backend_paymentdata
   rabbitdata:
-    name: backend_rabbitdata
   reviewdata:
-    name: backend_reviewdata
   reportingdata:
-    name: backend_reportingdata

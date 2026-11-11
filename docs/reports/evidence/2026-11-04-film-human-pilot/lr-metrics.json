@@ -1,0 +1,127 @@
+{
+  "model": "lr",
+  "stage": "single-reviewer-human-film-development-pilot",
+  "count": 100,
+  "correct": 59,
+  "accuracy_vs_single_reviewer": 0.59,
+  "macro_f1": 0.43109042178022294,
+  "coverage": 1.0,
+  "covered_accuracy": 0.59,
+  "abstentions": 0,
+  "per_class": {
+    "negative": {
+      "precision": 0.550561797752809,
+      "recall": 0.98,
+      "f1": 0.7050359712230216,
+      "support": 50
+    },
+    "neutral": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "support": 27
+    },
+    "positive": {
+      "precision": 0.9090909090909091,
+      "recall": 0.43478260869565216,
+      "f1": 0.5882352941176471,
+      "support": 23
+    }
+  },
+  "confusion_matrix": [
+    [
+      49,
+      0,
+      1,
+      0
+    ],
+    [
+      27,
+      0,
+      0,
+      0
+    ],
+    [
+      13,
+      0,
+      10,
+      0
+    ]
+  ],
+  "gold_order": [
+    "negative",
+    "neutral",
+    "positive"
+  ],
+  "prediction_order": [
+    "negative",
+    "neutral",
+    "positive",
+    "abstain"
+  ],
+  "bootstrap_95": {
+    "method": "text-family bootstrap, percentile 95%, seed 42",
+    "repetitions": 1000,
+    "family_count": 99,
+    "accuracy": [
+      0.49,
+      0.68
+    ],
+    "macro_f1": [
+      0.3428238428238428,
+      0.5028189392805468
+    ],
+    "note": "Conditional descriptive interval on an enriched pilot and one reviewer; not population accuracy."
+  },
+  "model_version": "tfidf-lr:local:s42:d1bc8dbf3b22c",
+  "trained_domain": "Bank",
+  "movie_fine_tuned": false,
+  "seed": 42,
+  "device": "cpu",
+  "elapsed_seconds": 4.484207299996342,
+  "disagreement_ids": [
+    "vimovie:2ceae3b15ece:row:1081",
+    "vimovie:2ceae3b15ece:row:10389",
+    "vimovie:2ceae3b15ece:row:10443",
+    "vimovie:2ceae3b15ece:row:9272",
+    "vimovie:2ceae3b15ece:row:8944",
+    "vimovie:2ceae3b15ece:row:9289",
+    "vimovie:2ceae3b15ece:row:252",
+    "vimovie:2ceae3b15ece:row:1174",
+    "vimovie:2ceae3b15ece:row:9316",
+    "vimovie:2ceae3b15ece:row:8072",
+    "vimovie:2ceae3b15ece:row:10159",
+    "vimovie:2ceae3b15ece:row:120",
+    "vimovie:2ceae3b15ece:row:8980",
+    "vimovie:2ceae3b15ece:row:6723",
+    "vimovie:2ceae3b15ece:row:5406",
+    "vimovie:2ceae3b15ece:row:214",
+    "vimovie:2ceae3b15ece:row:1132",
+    "vimovie:2ceae3b15ece:row:10576",
+    "vimovie:2ceae3b15ece:row:6084",
+    "vimovie:2ceae3b15ece:row:10511",
+    "vimovie:2ceae3b15ece:row:9115",
+    "vimovie:2ceae3b15ece:row:9915",
+    "vimovie:2ceae3b15ece:row:9455",
+    "vimovie:2ceae3b15ece:row:10131",
+    "vimovie:2ceae3b15ece:row:288",
+    "vimovie:2ceae3b15ece:row:4503",
+    "vimovie:2ceae3b15ece:row:1388",
+    "vimovie:2ceae3b15ece:row:10758",
+    "vimovie:2ceae3b15ece:row:10751",
+    "vimovie:2ceae3b15ece:row:1306",
+    "vimovie:2ceae3b15ece:row:9669",
+    "vimovie:2ceae3b15ece:row:9625",
+    "vimovie:2ceae3b15ece:row:68",
+    "vimovie:2ceae3b15ece:row:4509",
+    "vimovie:2ceae3b15ece:row:9559",
+    "vimovie:2ceae3b15ece:row:8559",
+    "vimovie:2ceae3b15ece:row:7571",
+    "vimovie:2ceae3b15ece:row:2279",
+    "vimovie:2ceae3b15ece:row:8598",
+    "vimovie:2ceae3b15ece:row:9383",
+    "vimovie:2ceae3b15ece:row:8499"
+  ],
+  "human_error_categories_reviewed": false,
+  "production_promoted": false
+}

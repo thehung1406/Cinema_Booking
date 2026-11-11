@@ -1,0 +1,7 @@
+﻿model_id,stage,checkpoint,features,preprocessing,architecture,encoder_layers,total_parameters,learning_rate,epochs,batch_size,gradient_accumulation_steps,max_length,optimizer
+phobert,planned-configuration-not-run-evidence,vinai/phobert-base,token IDs + attention mask,vncorenlp,RobertaForSequenceClassification,12,135000579,2e-05,3,1,8,256,adamw_torch
+visobert,planned-configuration-not-run-evidence,uitnlp/visobert,token IDs + attention mask,normalize,XLMRobertaForSequenceClassification,12,97568259,2e-05,3,1,8,256,adamw_torch
+videberta,planned-configuration-not-run-evidence,Fsoft-AIC/videberta-xsmall,token IDs + attention mask,normalize,DebertaV2ForSequenceClassification,12,70792707,2e-05,3,1,8,256,adamw_torch
+mbert,planned-configuration-not-run-evidence,google-bert/bert-base-multilingual-cased,token IDs + attention mask,normalize,BertForSequenceClassification,12,177855747,2e-05,3,1,8,256,adamw_torch
+xlmr,planned-configuration-not-run-evidence,FacebookAI/xlm-roberta-base,token IDs + attention mask,normalize,XLMRobertaForSequenceClassification,12,278045955,2e-05,3,1,8,256,adamw_torch
+lr,planned-configuration-not-run-evidence,,TF-IDF char 2–5 grams,normalize,TF-IDF + multinomial LogisticRegression,,,,,,,,lbfgs; C selected on validation

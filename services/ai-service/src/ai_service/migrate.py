@@ -30,12 +30,13 @@ def canonical(value):
     raise TypeError(type(value).__name__)
 
 
-def snapshot(connection, tables):
+def snapshot(connection, tables, columns=None):
     summary = {}
     for name in TABLES:
         table = tables[name]
         digest, count = hashlib.sha256(), 0
-        rows = connection.execution_options(stream_results=True).execute(select(table).order_by(table.c.id)).mappings()
+        selected = [table.c[name] for name in columns[name]] if columns else list(table.columns)
+        rows = connection.execution_options(stream_results=True).execute(select(*selected).order_by(table.c.id)).mappings()
         for row in rows:
             digest.update(json.dumps(dict(row), sort_keys=True, ensure_ascii=False, default=canonical, separators=(",", ":")).encode() + b"\n")
             count += 1
@@ -64,13 +65,14 @@ def transfer(source, target, *, apply=False, frozen=False):
     if source.url == target.url:
         raise ValueError("Source and target must be separate stores")
     reflected = {name: Table(name, MetaData(), autoload_with=source) for name in TABLES}
+    columns = {name: list(table.c.keys()) for name, table in reflected.items()}
     with source.connect().execution_options(isolation_level="REPEATABLE READ") as src, src.begin():
         src.execute(text("SET TRANSACTION READ ONLY"))
-        source_summary = snapshot(src, reflected)
+        source_summary = snapshot(src, reflected, columns)
         with target.begin() as dst:
             # Serialize copy jobs; runtime writers must also be disabled externally.
             dst.execute(text("SELECT pg_advisory_xact_lock(78433261)"))
-            target_summary = snapshot(dst, Base.metadata.tables)
+            target_summary = snapshot(dst, Base.metadata.tables, columns)
             if source_summary == target_summary:
                 if apply:
                     reseed(src, dst)
@@ -86,7 +88,7 @@ def transfer(source, target, *, apply=False, frozen=False):
                 rows.close()
                 src.execution_options(stream_results=False)
             reseed(src, dst)
-            copied_summary = snapshot(dst, Base.metadata.tables)
+            copied_summary = snapshot(dst, Base.metadata.tables, columns)
             if copied_summary != source_summary:
                 raise ValueError("Post-copy checksum mismatch; destination transaction rolled back")
     return {"verified": True, "copied": True, "tables": source_summary}

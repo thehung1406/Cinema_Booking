@@ -654,6 +654,23 @@ def create_router(app, engine, settings, logger):
     class MatchRequest(BaseModel):
         message: str = Field(max_length=2000)
 
+    class TheaterSearch(BaseModel):
+        q: str = Field(default="", max_length=200)
+        city: str = Field(default="", max_length=100)
+        offset: int = Field(default=0, ge=0)
+        limit: int = Field(default=20, ge=1, le=100)
+
+    @router.post("/internal/v1/theaters/search", dependencies=[Depends(private)], include_in_schema=False)
+    def theater_search(body: TheaterSearch, db=Depends(database)):
+        query = select(Theater).where(Theater.deleted_at.is_(None))
+        if body.q:
+            query = query.where(Theater.name.icontains(body.q, autoescape=True))
+        if body.city:
+            query = query.where(Theater.city.icontains(body.city, autoescape=True))
+        rows = list(db.scalars(query.order_by(Theater.id).offset(body.offset).limit(body.limit+1)))
+        return dict(items=[dict(id=t.id, name=t.name, city=t.city, address=t.address) for t in rows[:body.limit]],
+                    has_more=len(rows) > body.limit)
+
     @router.post(
         "/internal/v1/theaters/matches",
         dependencies=[Depends(private)],

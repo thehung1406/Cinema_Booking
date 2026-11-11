@@ -1,0 +1,167 @@
+{
+  "stage": "distribution-only-not-final-model-test",
+  "data_sha256": {
+    "train": "db4d163eb6156eae4176e52d924308b9d4aa665c6e4bdd39c54f0b42a343c764",
+    "validation": "9ccac0524c7ab3b1d7313b1c13b1212e70397bfe6e0a435d133c4cde95a545ef",
+    "test": "6953b039731b0265245b3e540955779749dea02bf45498a0798f669b6578560c"
+  },
+  "max_length_fixed": 256,
+  "note": "Special tokens included; no parameters selected from test statistics.",
+  "models": [
+    {
+      "model": "phobert",
+      "revision": "01daacda68afe13d83023d16ec647239e344a1e6",
+      "preprocessing": "vncorenlp",
+      "splits": {
+        "train": {
+          "count": 4852,
+          "median": 34.0,
+          "p95": 87,
+          "maximum": 200,
+          "over_max_length": 0,
+          "truncation_rate": 0.0
+        },
+        "validation": {
+          "count": 688,
+          "median": 32.0,
+          "p95": 88,
+          "maximum": 245,
+          "over_max_length": 0,
+          "truncation_rate": 0.0
+        },
+        "test": {
+          "count": 1381,
+          "median": 34,
+          "p95": 89,
+          "maximum": 209,
+          "over_max_length": 0,
+          "truncation_rate": 0.0
+        }
+      }
+    },
+    {
+      "model": "visobert",
+      "revision": "196a62afad9cbe4f52a54aabad828b13f0eec59a",
+      "preprocessing": "normalize",
+      "splits": {
+        "train": {
+          "count": 4852,
+          "median": 36.0,
+          "p95": 94,
+          "maximum": 219,
+          "over_max_length": 0,
+          "truncation_rate": 0.0
+        },
+        "validation": {
+          "count": 688,
+          "median": 35.0,
+          "p95": 92,
+          "maximum": 187,
+          "over_max_length": 0,
+          "truncation_rate": 0.0
+        },
+        "test": {
+          "count": 1381,
+          "median": 37,
+          "p95": 93,
+          "maximum": 231,
+          "over_max_length": 0,
+          "truncation_rate": 0.0
+        }
+      }
+    },
+    {
+      "model": "videberta",
+      "revision": "029b6b1b1d7636221bd2d1a98b46a2fdba3af34e",
+      "preprocessing": "normalize",
+      "splits": {
+        "train": {
+          "count": 4852,
+          "median": 39.0,
+          "p95": 101,
+          "maximum": 237,
+          "over_max_length": 0,
+          "truncation_rate": 0.0
+        },
+        "validation": {
+          "count": 688,
+          "median": 38.0,
+          "p95": 100,
+          "maximum": 195,
+          "over_max_length": 0,
+          "truncation_rate": 0.0
+        },
+        "test": {
+          "count": 1381,
+          "median": 39,
+          "p95": 103,
+          "maximum": 244,
+          "over_max_length": 0,
+          "truncation_rate": 0.0
+        }
+      }
+    },
+    {
+      "model": "mbert",
+      "revision": "3f076fdb1ab68d5b2880cb87a0886f315b8146f8",
+      "preprocessing": "normalize",
+      "splits": {
+        "train": {
+          "count": 4852,
+          "median": 44.0,
+          "p95": 111,
+          "maximum": 263,
+          "over_max_length": 1,
+          "truncation_rate": 0.00020610057708161583
+        },
+        "validation": {
+          "count": 688,
+          "median": 41.5,
+          "p95": 111,
+          "maximum": 259,
+          "over_max_length": 1,
+          "truncation_rate": 0.0014534883720930232
+        },
+        "test": {
+          "count": 1381,
+          "median": 44,
+          "p95": 115,
+          "maximum": 268,
+          "over_max_length": 1,
+          "truncation_rate": 0.000724112961622013
+        }
+      }
+    },
+    {
+      "model": "xlmr",
+      "revision": "e73636d4f797dec63c3081bb6ed5c7b0bb3f2089",
+      "preprocessing": "normalize",
+      "splits": {
+        "train": {
+          "count": 4852,
+          "median": 40.0,
+          "p95": 105,
+          "maximum": 231,
+          "over_max_length": 0,
+          "truncation_rate": 0.0
+        },
+        "validation": {
+          "count": 688,
+          "median": 40.0,
+          "p95": 104,
+          "maximum": 278,
+          "over_max_length": 1,
+          "truncation_rate": 0.0014534883720930232
+        },
+        "test": {
+          "count": 1381,
+          "median": 41,
+          "p95": 106,
+          "maximum": 249,
+          "over_max_length": 0,
+          "truncation_rate": 0.0
+        }
+      }
+    }
+  ]
+}

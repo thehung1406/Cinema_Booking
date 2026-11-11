@@ -1,0 +1,145 @@
+{
+  "model": "phobert",
+  "stage": "single-reviewer-human-film-development-pilot",
+  "count": 100,
+  "correct": 45,
+  "accuracy_vs_single_reviewer": 0.45,
+  "macro_f1": 0.44484869304518915,
+  "coverage": 1.0,
+  "covered_accuracy": 0.45,
+  "abstentions": 0,
+  "per_class": {
+    "negative": {
+      "precision": 0.9047619047619048,
+      "recall": 0.38,
+      "f1": 0.5352112676056339,
+      "support": 50
+    },
+    "neutral": {
+      "precision": 0.29508196721311475,
+      "recall": 0.6666666666666666,
+      "f1": 0.4090909090909091,
+      "support": 27
+    },
+    "positive": {
+      "precision": 0.4444444444444444,
+      "recall": 0.34782608695652173,
+      "f1": 0.3902439024390244,
+      "support": 23
+    }
+  },
+  "confusion_matrix": [
+    [
+      19,
+      28,
+      3,
+      0
+    ],
+    [
+      2,
+      18,
+      7,
+      0
+    ],
+    [
+      0,
+      15,
+      8,
+      0
+    ]
+  ],
+  "gold_order": [
+    "negative",
+    "neutral",
+    "positive"
+  ],
+  "prediction_order": [
+    "negative",
+    "neutral",
+    "positive",
+    "abstain"
+  ],
+  "bootstrap_95": {
+    "method": "text-family bootstrap, percentile 95%, seed 42",
+    "repetitions": 1000,
+    "family_count": 99,
+    "accuracy": [
+      0.35353535353535354,
+      0.5445544554455446
+    ],
+    "macro_f1": [
+      0.34400458978772225,
+      0.5391397849462365
+    ],
+    "note": "Conditional descriptive interval on an enriched pilot and one reviewer; not population accuracy."
+  },
+  "model_version": "phobert-base:01daacda68af:s42:d0581b85b9eaa:t5ca357b950a5",
+  "training_metadata_sha256": "b48073d841995ff9aacffe2a9a334f50c8291b1cd443b2d288c3019344b0a43b",
+  "supervision": "AI-silver-train-human-development-evaluation",
+  "human_count": 100,
+  "human_reviewer_count": 1,
+  "evaluation_stage": "previously-consumed-human-film-development-pilot",
+  "final_test": false,
+  "human_labels_used_for_training": false,
+  "selection_split": "36 old human validation labels",
+  "inference_device": "CPU",
+  "disagreement_ids": [
+    "vimovie:2ceae3b15ece:row:2710",
+    "vimovie:2ceae3b15ece:row:9289",
+    "vimovie:2ceae3b15ece:row:252",
+    "vimovie:2ceae3b15ece:row:797",
+    "vimovie:2ceae3b15ece:row:9316",
+    "vimovie:2ceae3b15ece:row:10393",
+    "vimovie:2ceae3b15ece:row:7498",
+    "vimovie:2ceae3b15ece:row:9076",
+    "vimovie:2ceae3b15ece:row:3950",
+    "vimovie:2ceae3b15ece:row:8980",
+    "vimovie:2ceae3b15ece:row:7971",
+    "vimovie:2ceae3b15ece:row:8171",
+    "vimovie:2ceae3b15ece:row:214",
+    "vimovie:2ceae3b15ece:row:2577",
+    "vimovie:2ceae3b15ece:row:8634",
+    "vimovie:2ceae3b15ece:row:1132",
+    "vimovie:2ceae3b15ece:row:10296",
+    "vimovie:2ceae3b15ece:row:10576",
+    "vimovie:2ceae3b15ece:row:6084",
+    "vimovie:2ceae3b15ece:row:8053",
+    "vimovie:2ceae3b15ece:row:10621",
+    "vimovie:2ceae3b15ece:row:10698",
+    "vimovie:2ceae3b15ece:row:1275",
+    "vimovie:2ceae3b15ece:row:9898",
+    "vimovie:2ceae3b15ece:row:7280",
+    "vimovie:2ceae3b15ece:row:9115",
+    "vimovie:2ceae3b15ece:row:9915",
+    "vimovie:2ceae3b15ece:row:288",
+    "vimovie:2ceae3b15ece:row:9999",
+    "vimovie:2ceae3b15ece:row:8951",
+    "vimovie:2ceae3b15ece:row:8708",
+    "vimovie:2ceae3b15ece:row:7960",
+    "vimovie:2ceae3b15ece:row:4503",
+    "vimovie:2ceae3b15ece:row:10758",
+    "vimovie:2ceae3b15ece:row:10751",
+    "vimovie:2ceae3b15ece:row:1306",
+    "vimovie:2ceae3b15ece:row:4280",
+    "vimovie:2ceae3b15ece:row:7386",
+    "vimovie:2ceae3b15ece:row:9669",
+    "vimovie:2ceae3b15ece:row:8056",
+    "vimovie:2ceae3b15ece:row:68",
+    "vimovie:2ceae3b15ece:row:10184",
+    "vimovie:2ceae3b15ece:row:7891",
+    "vimovie:2ceae3b15ece:row:10128",
+    "vimovie:2ceae3b15ece:row:9053",
+    "vimovie:2ceae3b15ece:row:9559",
+    "vimovie:2ceae3b15ece:row:8559",
+    "vimovie:2ceae3b15ece:row:10556",
+    "vimovie:2ceae3b15ece:row:10340",
+    "vimovie:2ceae3b15ece:row:2279",
+    "vimovie:2ceae3b15ece:row:10464",
+    "vimovie:2ceae3b15ece:row:7467",
+    "vimovie:2ceae3b15ece:row:8969",
+    "vimovie:2ceae3b15ece:row:3002",
+    "vimovie:2ceae3b15ece:row:10336"
+  ],
+  "human_error_categories_reviewed": false,
+  "production_promoted": false
+}

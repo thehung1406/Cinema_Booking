@@ -1,0 +1,66 @@
+{
+  "created_at": "2026-11-04T08:37:30.498501+00:00",
+  "stage": "validation-only-ablation",
+  "rationale": "All baseline models had zero neutral F1; validation neutral support is only three.",
+  "selection": "ViSoBERT had highest baseline mean validation Macro F1; this is adaptive development, not an independent benchmark.",
+  "seeds": [
+    17,
+    42,
+    73
+  ],
+  "model": {
+    "id": "visobert",
+    "checkpoint": "uitnlp/visobert",
+    "revision": "196a62afad9cbe4f52a54aabad828b13f0eec59a",
+    "preprocessing": "normalize",
+    "declared_task": "fill-mask",
+    "declared_license": "not-declared"
+  },
+  "variants": {
+    "lower-lr": {
+      "epochs": 3,
+      "max_length": 256,
+      "batch_size": 1,
+      "gradient_accumulation_steps": 8,
+      "learning_rate": 1e-05,
+      "weight_decay": 0.0,
+      "class_weight": "none"
+    },
+    "sqrt-balanced": {
+      "epochs": 3,
+      "max_length": 256,
+      "batch_size": 1,
+      "gradient_accumulation_steps": 8,
+      "learning_rate": 2e-05,
+      "weight_decay": 0.0,
+      "class_weight": "sqrt-balanced"
+    }
+  },
+  "baseline": {
+    "17": "e84ef2153bf263bb0170062bcc087d8a7e9d54767fc8c9da83585ca4779ea125",
+    "42": "a45ce58134416a60b78e24ed9d4f350346cdb546cb8dc81f29737a62bc5dc1cf",
+    "73": "2840c16f33d91d020e207bbf120214a87509f740ad979cdc3083de7dfc972901"
+  },
+  "data_sha256": {
+    "train": "6a5b8ed85c5488a8199c5a1a5ed11a4c2424437237b3a6f011c2def789d97154",
+    "validation": "0bdc2051c848852d8280598615eb67cceaa99288dba4b3c7c415ea3d12e0d763",
+    "test": "dad5d4f9aa24cad417a1b8dd59a23cc2112d2459937be2f8920d347b406789f7"
+  },
+  "code_sha256": {
+    "pipelines/ml/train_sentiment.py": "c981072c948c001bd646efb92130fadf2d4a25a94b5f71cfcf40cc2a3b9e168c",
+    "scripts/ai/run_bank_ablation.py": "aab9d18ac4a0cf2cb65c6bfece0fda4b8093a120c87a8c8936b63e25c222ddd4"
+  },
+  "objective": "sqrt(N/n_class), normalized to E_train[w_y]=1; mean(w_y * CE), fitted on train only.",
+  "primary_metric": "validation Macro F1; paired seed differences are descriptive, n=3.",
+  "secondary_metrics": [
+    "neutral precision/recall/F1",
+    "all-class confusion",
+    "actual runtime"
+  ],
+  "final_test": "Not evaluated; no final model promotion; final test is not used for ablation selection.",
+  "limitations": [
+    "Adaptive follow-up on the same validation set",
+    "Only one domain",
+    "Three neutral validation records cannot establish generalization"
+  ]
+}

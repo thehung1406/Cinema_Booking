@@ -1,0 +1,141 @@
+{
+  "model": "visobert",
+  "stage": "single-reviewer-human-film-development-pilot",
+  "count": 100,
+  "correct": 49,
+  "accuracy_vs_single_reviewer": 0.49,
+  "macro_f1": 0.4893310920297427,
+  "coverage": 1.0,
+  "covered_accuracy": 0.49,
+  "abstentions": 0,
+  "per_class": {
+    "negative": {
+      "precision": 0.6756756756756757,
+      "recall": 0.5,
+      "f1": 0.5747126436781609,
+      "support": 50
+    },
+    "neutral": {
+      "precision": 0.2857142857142857,
+      "recall": 0.4444444444444444,
+      "f1": 0.34782608695652173,
+      "support": 27
+    },
+    "positive": {
+      "precision": 0.5714285714285714,
+      "recall": 0.5217391304347826,
+      "f1": 0.5454545454545454,
+      "support": 23
+    }
+  },
+  "confusion_matrix": [
+    [
+      25,
+      22,
+      3,
+      0
+    ],
+    [
+      9,
+      12,
+      6,
+      0
+    ],
+    [
+      3,
+      8,
+      12,
+      0
+    ]
+  ],
+  "gold_order": [
+    "negative",
+    "neutral",
+    "positive"
+  ],
+  "prediction_order": [
+    "negative",
+    "neutral",
+    "positive",
+    "abstain"
+  ],
+  "bootstrap_95": {
+    "method": "text-family bootstrap, percentile 95%, seed 42",
+    "repetitions": 1000,
+    "family_count": 99,
+    "accuracy": [
+      0.39603960396039606,
+      0.5858585858585859
+    ],
+    "macro_f1": [
+      0.3940168952956677,
+      0.578968253968254
+    ],
+    "note": "Conditional descriptive interval on an enriched pilot and one reviewer; not population accuracy."
+  },
+  "model_version": "visobert:196a62afad9c:s42:d0581b85b9eaa:tb3666c0fc7e7",
+  "training_metadata_sha256": "d1e4e34f75e2ad1ae51a6ba8ca63e6fcdc3b44488a2fa9195e5d3c86a7adf9a0",
+  "supervision": "AI-silver-train-human-development-evaluation",
+  "human_count": 100,
+  "human_reviewer_count": 1,
+  "evaluation_stage": "previously-consumed-human-film-development-pilot",
+  "final_test": false,
+  "human_labels_used_for_training": false,
+  "selection_split": "36 old human validation labels",
+  "inference_device": "CPU",
+  "disagreement_ids": [
+    "vimovie:2ceae3b15ece:row:10389",
+    "vimovie:2ceae3b15ece:row:10443",
+    "vimovie:2ceae3b15ece:row:9272",
+    "vimovie:2ceae3b15ece:row:10372",
+    "vimovie:2ceae3b15ece:row:2710",
+    "vimovie:2ceae3b15ece:row:9289",
+    "vimovie:2ceae3b15ece:row:7507",
+    "vimovie:2ceae3b15ece:row:9316",
+    "vimovie:2ceae3b15ece:row:10393",
+    "vimovie:2ceae3b15ece:row:10159",
+    "vimovie:2ceae3b15ece:row:7498",
+    "vimovie:2ceae3b15ece:row:9076",
+    "vimovie:2ceae3b15ece:row:9163",
+    "vimovie:2ceae3b15ece:row:8980",
+    "vimovie:2ceae3b15ece:row:10732",
+    "vimovie:2ceae3b15ece:row:7971",
+    "vimovie:2ceae3b15ece:row:8171",
+    "vimovie:2ceae3b15ece:row:214",
+    "vimovie:2ceae3b15ece:row:2577",
+    "vimovie:2ceae3b15ece:row:1132",
+    "vimovie:2ceae3b15ece:row:10576",
+    "vimovie:2ceae3b15ece:row:6084",
+    "vimovie:2ceae3b15ece:row:8053",
+    "vimovie:2ceae3b15ece:row:10698",
+    "vimovie:2ceae3b15ece:row:9898",
+    "vimovie:2ceae3b15ece:row:9115",
+    "vimovie:2ceae3b15ece:row:9915",
+    "vimovie:2ceae3b15ece:row:9455",
+    "vimovie:2ceae3b15ece:row:288",
+    "vimovie:2ceae3b15ece:row:9999",
+    "vimovie:2ceae3b15ece:row:7960",
+    "vimovie:2ceae3b15ece:row:1388",
+    "vimovie:2ceae3b15ece:row:10758",
+    "vimovie:2ceae3b15ece:row:1306",
+    "vimovie:2ceae3b15ece:row:4280",
+    "vimovie:2ceae3b15ece:row:7386",
+    "vimovie:2ceae3b15ece:row:9625",
+    "vimovie:2ceae3b15ece:row:68",
+    "vimovie:2ceae3b15ece:row:10184",
+    "vimovie:2ceae3b15ece:row:7338",
+    "vimovie:2ceae3b15ece:row:9053",
+    "vimovie:2ceae3b15ece:row:9559",
+    "vimovie:2ceae3b15ece:row:8559",
+    "vimovie:2ceae3b15ece:row:2794",
+    "vimovie:2ceae3b15ece:row:10340",
+    "vimovie:2ceae3b15ece:row:2279",
+    "vimovie:2ceae3b15ece:row:8598",
+    "vimovie:2ceae3b15ece:row:7467",
+    "vimovie:2ceae3b15ece:row:10221",
+    "vimovie:2ceae3b15ece:row:8499",
+    "vimovie:2ceae3b15ece:row:3002"
+  ],
+  "human_error_categories_reviewed": false,
+  "production_promoted": false
+}

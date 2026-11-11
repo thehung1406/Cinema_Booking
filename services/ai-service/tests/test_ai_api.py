@@ -33,6 +33,47 @@ def client_for(store, settings, *, permissions=None, read=None, cache=None):
 HEADERS = {"Authorization": "Bearer test-token"}
 
 
+@pytest.mark.parametrize('message,intent', [('Mã suất 1 còn ghế nào?', 'get_seat_availability'), ('Giá vé mã suất 1?', 'get_ticket_prices')])
+def test_explicit_live_fact_request_overrides_wrong_model_tool(ai_store, ai_settings, monkeypatch, message, intent):
+    from ai_service.schemas import AssistantPlan
+    from ai_service import llm
+    ai_settings.llm_provider = 'ollama'
+    monkeypatch.setattr(llm, 'plan', lambda *args: AssistantPlan(intent='search_films'))
+    client, _ = client_for(ai_store, ai_settings)
+    with client:
+        response = client.post('/ai/chat', headers=HEADERS, json={'message': message})
+        assert response.status_code == 200
+        assert response.json()['tool'] == intent
+
+
+def test_recommendation_budget_followup_preserves_party_and_allows_topic_change(ai_store, ai_settings):
+    from datetime import datetime
+    from zoneinfo import ZoneInfo
+    import json
+    options = []
+    def reads(request):
+        if request.url.path.endswith('/options'):
+            options.append(json.loads(request.content))
+            return httpx.Response(200, json={"items": [], "has_more": False})
+        if request.url.path.endswith('/matches'):
+            return httpx.Response(200, json={"film_id": [], "theater_id": []})
+        return httpx.Response(200, json={"film_name": None, "theater_name": None})
+    client, _ = client_for(ai_store, ai_settings, read=reads)
+    with client:
+        question = {"message": "Ngày mai muốn xem phim hài, hai người, dưới 250k"}
+        first = client.post('/ai/chat', headers=HEADERS, json=question).json()
+        assert first['missing_fields'] == ['budget_scope'] and not options
+        second = client.post('/ai/chat', headers=HEADERS,
+            json={"conversation_id": first['conversation_id'], "message": "Tổng cả nhóm"})
+        assert second.status_code == 200 and second.json()['status'] == 'no_results'
+        assert options[-1]['party_size'] == 2 and options[-1]['budget_total'] == '250000'
+        assert options[-1]['show_date'] == (datetime.now(ZoneInfo('Asia/Ho_Chi_Minh')).date()+timedelta(days=1)).isoformat()
+        pending = client.post('/ai/chat', headers=HEADERS, json=question).json()
+        changed = client.post('/ai/chat', headers=HEADERS,
+            json={"conversation_id": pending['conversation_id'], "message": "Đặt hộ hai vé"}).json()
+        assert changed['status'] == 'out_of_scope' and len(options) == 1
+
+
 def test_history_context_pagination_owner_and_delete(ai_store, ai_settings):
     client, state = client_for(ai_store, ai_settings)
     with client:
@@ -90,7 +131,9 @@ def test_concurrent_turn_cannot_overwrite_or_recreate_chat(ai_store, ai_settings
                 if deleted:
                     db.execute(delete(AIConversation).where(AIConversation.id == UUID(cid)))
                 else:
-                    db.execute(update(AIConversation).where(AIConversation.id == UUID(cid)).values(updated_at=utcnow()))
+                    # Windows clocks can return the same instant for two quick writes.
+                    # Make the simulated competing revision unambiguously different.
+                    db.execute(update(AIConversation).where(AIConversation.id == UUID(cid)).values(updated_at=utcnow() + timedelta(seconds=1)))
                 db.commit()
             return [], "retrieval_only"
         monkeypatch.setattr(chat, "select_evidence", concurrent)

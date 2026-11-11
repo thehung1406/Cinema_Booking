@@ -1,5 +1,7 @@
 # Kết quả M3 — AI Service, 02/11/2026
 
+> Báo cáo lịch sử tại mốc M3; các phụ thuộc, số miền và giới hạn bên dưới phản ánh thời điểm đó. Vận hành hiện tại theo [runbook AI microservices](../runbooks/ai.md), [runtime chung](../runbooks/final-runtime.md) và [trạng thái AI](../AI_IMPLEMENTATION_STATUS.md).
+
 Nhánh `codex/microservices-foundation`, tiếp nối [Notification M1–M2](notification-phase.md). Đã chuyển local; chưa commit/push hoặc chạy CI trên GitHub.
 
 ## Kết quả
@@ -30,4 +32,4 @@ HTTP latency trong [smoke report](latency-smoke.json) là mẫu localhost tuần
 
 ## Phần tiếp theo
 
-Đã có **2/9 miền với writer/DB độc lập: Notification và AI**, cùng gateway/nền messaging/auth. Phần tiếp theo là **M4 Review** (review/moderation/sentiment/worker/store). Các mốc M4–M10, HA/TLS production, user-lifecycle purge và load/SLA chưa hoàn tất. [Runbook AI](../runbooks/ai.md) có lệnh chạy, freeze, copy, cutover và quy tắc quay lui sau khi writer mới nhận dữ liệu.
+Tại mốc M3 đã có **2/9 miền với writer/DB độc lập: Notification và AI**, cùng gateway/nền messaging/auth. Phần tiếp theo khi đó là **M4 Review** (review/moderation/sentiment/worker/store). Các mốc M4–M10, HA/TLS production, user-lifecycle purge và load/SLA chưa hoàn tất tại thời điểm báo cáo. [Runbook AI](../runbooks/ai.md) hiện hướng dẫn runtime microservices; không dùng báo cáo M3 làm quy trình khởi động hoặc chuyển dữ liệu lại.

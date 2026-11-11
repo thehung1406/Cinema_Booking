@@ -1,50 +1,37 @@
 # Review Service
 
-Owner của reviews, moderation và sentiment, có DB/Alembic/image riêng. User/film là ID ngoài miền; FK sentiment→review vẫn thuộc store này. API và worker không truy vấn DB monolith, AI hoặc Notification.
+Cập nhật 04/11/2026. Owner của reviews, moderation, sentiment và quyết định nhãn của nhân viên; có DB/Alembic/image riêng. User/film là ID ngoài miền; quan hệ sentiment–review nằm trong cùng store. Dữ liệu ngoài miền được đọc qua APIs của Identity, Catalog, Cinema và Booking.
+
+## Các tiến trình
 
 | Process | Nhiệm vụ |
 | --- | --- |
-| `review-service` | Review/mine/edit/delete, moderation/retry, summary và ranking; auth adapter kiểm tra token/quyền hiện hành |
-| `review-worker` | Poll job bền vững trong `review_sentiments`, claim lease, nhả connection khi inference, kiểm tra lại version/generation/token trước commit |
-| `review-relay` | Publish outbox với confirms lên public vhost bằng credential riêng; retry có giới hạn và audit |
-| `review-migrate` | Alembic `review_001`: hai bảng nghiệp vụ + ba bảng messaging |
-| `review-backfill` | Job đặc quyền profile migration, chỉ chép hai bảng allowlist từ nguồn; runtime không có credential nguồn |
+| `review-service` | Review/mine/edit/delete, moderation/retry, summary/ranking và quyết định nhãn; kiểm tra token/quyền hiện hành |
+| `review-worker` | Poll công việc bền vững trong `review_sentiments`, claim lease, nhả connection khi inference, kiểm tra version/generation/token trước commit |
+| `review-relay` | Phát outbox lên RabbitMQ bằng credential riêng, retry và publisher confirms |
+| `review-migrate` | Quản lý schema owner qua `review_001 → review_002 → review_003`; bản 003 bổ sung quyết định nhãn và audit |
+| `review-backfill` | Job đặc quyền profile migration, không nằm trong luồng vận hành thường xuyên |
 
-API giữ các route cũ qua `/api`: `/films/positive-trending`, `/films/{id}/reviews*`, `/films/{id}/sentiment-summary`, `/reviews/*`. Gateway chọn Review trước Catalog. Các thao tác kiểm duyệt/retry yêu cầu `reviews.moderate`, không suy quyền từ claim role. Public list chỉ thấy bản approved/chưa xóa; mỗi user–film có một row, khôi phục sau xóa tiếp tục tăng content version.
+Gateway chuyển `/api/films/positive-trending`, `/api/films/{id}/reviews*`, `/api/films/{id}/sentiment-summary`, `/api/reviews/*` tới Review trước Catalog. Public list chỉ thấy review được duyệt/chưa xóa; mỗi user–film có một row, khôi phục sau xóa tiếp tục tăng content version.
 
-Phim/lịch đang bán, tên tác giả và badge đã mua được lấy qua typed read-only APIs của Catalog/Booking/Identity. Badge giữ semantics cũ: có booking PAID cho user/phim; không thêm điều kiện mua vé để được viết review. Ranking Wilson chỉ dùng kết quả hiện hành, review approved/chưa xóa, trong cửa sổ và có lịch chiếu phù hợp.
+## Quyết định nhãn và thống kê
 
-## Chạy local
+Người có `reviews.moderate` dùng UI `/review-moderation` hoặc API:
 
-Chuẩn bị [runbook Review](../../docs/runbooks/review.md) trước lần cutover đầu. Từ root, giữ credential và cờ của máy đã chuyển:
+- `GET /api/reviews/sentiment/pending`: danh sách cần rà soát theo trạng thái.
+- `POST /api/reviews/{id}/sentiment-decision`: xác nhận/sửa nhãn với phiên bản và request ID.
+- `GET /api/reviews/{id}/sentiment-decisions`: lịch sử quyết định.
 
-```powershell
-python scripts/dev/prepare_messaging.py
-docker compose --env-file .env.microservices -f compose.yml up -d --build
-```
+Quyết định lưu người thực hiện, lý do và phiên bản; giữ điểm/model dự đoán ban đầu. API kiểm tra cập nhật đồng thời và gửi lại cùng request ID không tạo quyết định trùng. Sửa/xóa/retry làm kết quả cũ mất hiệu lực, inference đang chạy không được ghi đè quyết định mới.
 
-Health: `http://127.0.0.1:8083/health/ready`. Dùng root runtime và migrations thuộc Review; snapshot nguồn chỉ còn là fixture kiểm thử. Xem runbook runtime cho lần khởi tạo mới.
+Badge đã mua lấy bằng chứng booking PAID qua Booking API; không bắt buộc mua vé để viết review. Summary/ranking Wilson chỉ tính kết quả hợp lệ theo phiên bản, trạng thái duyệt, cửa sổ thời gian và lịch chiếu phù hợp. `ReviewChanged.v1`, `ReviewSentimentUpdated.v1` ghi cùng transaction với state; consumer xử lý trùng và thứ tự version.
 
-## Inference và lỗi
+## Chạy local và mô hình
 
-Worker có image stage `worker` với sklearn/joblib; API stage `api` không cài các thư viện ML. Compose giới hạn worker 1 CPU/1 GiB RAM, mount artifact chỉ đọc. Mặc định `disabled` giữ review pending, không tạo nhãn giả. Cài artifact operator đã duyệt tại `model-store/sentiment/` gồm `metadata.json` có `model_version` và `model.joblib`, đặt `REVIEW_SENTIMENT_BACKEND=sklearn`, rồi recreate worker. Backend transformers cần image có thêm dependencies/Java/segmenter và cấu hình artifact tương ứng; image mặc định này chỉ đóng gói sklearn. Không dùng model tổng hợp kiểm thử làm model ứng dụng.
+Theo [runtime chung](../../docs/runbooks/final-runtime.md) khi chạy đầy đủ API/worker/relay. Cấu hình private ở `.env.microservices`; health riêng tại `http://127.0.0.1:8083/health/ready`. Chỉ migrate bằng schema thuộc Review.
 
-Lease 5 phút phục hồi worker crash; retry tối đa 5 attempts, failed job chờ ít nhất 60 giây. Sau hết attempts, người có quyền dùng API retry để reset generation/attempts. Model lỗi/scores sai không làm mất review hoặc tăng counter thống kê. Edit/delete/moderation/retry vô hiệu lượt đang chạy, kể cả cùng content version; inference cũ không được ghi kết quả hoặc event.
+Worker có image stage riêng với sklearn/joblib; API image không chứa thư viện huấn luyện. Mặc định `REVIEW_SENTIMENT_BACKEND=disabled`, công việc giữ pending. Chỉ đưa artifact đáng tin cậy, được đánh giá trên review phim vào `model-store/sentiment/`, mount read-only rồi cấu hình worker. Image mặc định hỗ trợ sklearn; transformers cần image/dependencies/Java/segmenter phù hợp. Baseline chạy trên dữ liệu ngân hàng chưa được coi là model phim đã nghiệm thu.
 
-`ReviewChanged.v1` và `ReviewSentimentUpdated.v1` ghi cùng transaction với state. Hai event chứa facts phục vụ projection, không có nội dung review, user ID hoặc thông tin liên hệ. `aggregate_version` là thứ tự thay đổi riêng của review, tăng cả khi moderation/retry/inference; khác `content_version`. Relay là at-least-once, consumer tương lai phải dedup envelope/event ID và xử lý version. M4 chưa nhận event từ service khác, nên chưa có consumer inbox nghiệp vụ.
+Lease phục hồi worker crash; retry có giới hạn. Model lỗi không xóa review hoặc tạo nhãn giả. Train/evaluate ở `pipelines/ml`, ngoài API request.
 
-## Kiểm thử
-
-```powershell
-python scripts/dev/prepare_messaging.py --test
-docker compose -p cinema-migration-tests -f infra/compose/compose.migration-tests.yml run --build --rm service-tests
-docker compose -p cinema-migration-tests -f infra/compose/compose.migration-tests.yml --profile verification run --build --rm review-inference-smoke
-python scripts/dev/audit_runtime.py
-.venv/Scripts/python.exe scripts/migration/smoke_gateway.py --ai http://127.0.0.1:8082 --review http://127.0.0.1:8083
-```
-
-Test DB/broker/ML artifact độc lập dữ liệu ứng dụng. [Kết quả M4 và giới hạn kiểm chứng](../../docs/migration/review-phase.md).
-
-Sau M5 dùng đủ sáu overlay và `REVIEW_IDENTITY_ORIGIN` trỏ Identity. [Runbook Identity](../../docs/runbooks/identity.md).
-
-Sau M6 dùng bộ bảy overlay; facade phim/tác giả/lịch chỉ đọc Catalog/Identity/Cinema đúng owner, không JOIN Catalog archive. [Runbook Catalog](../../docs/runbooks/catalog.md).
+Công cụ gán nhãn, cấu hình nghiên cứu và kiểm thử: [AI_RUNBOOK.md](../../docs/AI_RUNBOOK.md). Kết quả hiện có và phần còn thiếu: [AI_IMPLEMENTATION_STATUS.md](../../docs/AI_IMPLEMENTATION_STATUS.md).

@@ -1,5 +1,7 @@
 # Cinema Booking
 
+Chạy phần AI trên máy mới sau khi pull: [hướng dẫn Docker CPU/GPU, tải model và dữ liệu](docs/AI_PORTABLE_SETUP.md). Các file cấu hình riêng, cache model và DB của tác giả không cần sao chép. Phần nhóm cần đọc/gán nhãn/chấm thật: [AI human review](docs/AI_HUMAN_REVIEW.md).
+
 Hệ thống đặt vé FastAPI/React đã chuyển sang **9 service có database riêng**: Identity, Catalog, Cinema, Booking, Payment, Review, AI, Notification và Reporting. Gateway cung cấp API chung; Booking giữ ghế/cấp vé, Payment xử lý VNPay và saga, Reporting đọc projection từ sự kiện. Runtime cuối không chạy monolith/Celery cũ.
 
 Source monolith đã được xóa; test/CI hiện chỉ dùng package service và fixture SQL độc lập. Xem [kết quả dọn source](docs/migration/backend-removal.md).

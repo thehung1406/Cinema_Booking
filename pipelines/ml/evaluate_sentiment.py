@@ -12,7 +12,10 @@ def main():
     p = argparse.ArgumentParser()
     p.add_argument("--data", required=True); p.add_argument("--models", nargs="+", required=True)
     p.add_argument("--output", required=True)
+    p.add_argument("--final-test", action="store_true", help="Explicitly unlock held-out test after validation selection")
     args = p.parse_args()
+    if not args.final_test:
+        p.error("Held-out test is locked; freeze validation selection before --final-test")
     from ml.predictor import load_predictor
     rows = load_splits(args.data)["test"]
     report = {"data_sha256": fingerprint(args.data), "test_count": len(rows), "runs": []}

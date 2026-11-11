@@ -1,6 +1,7 @@
 """Lazy-loaded, trusted local models; the application never invents a prediction."""
 import json
 import math
+import os
 from functools import lru_cache
 from pathlib import Path
 
@@ -16,7 +17,7 @@ LABELS = ("negative", "neutral", "positive")
 
 @lru_cache(maxsize=2)
 def load_predictor(backend, model_path):
-    path = Path(model_path)
+    path = Path(model_path).resolve()
     metadata = json.loads((path / "metadata.json").read_text(encoding="utf-8"))
     if backend == "sklearn":
         import joblib
@@ -26,12 +27,23 @@ def load_predictor(backend, model_path):
             return dict(zip(model.classes_, map(float, probabilities)))
     elif backend == "transformers":
         from transformers import pipeline
-        import py_vncorenlp
-        segmenter = py_vncorenlp.VnCoreNLP(save_dir=metadata["segmenter_path"], annotators=["wseg"])
+        segmenter = None
+        preprocessing = metadata.get("text_preprocessing", "vncorenlp" if metadata.get("segmenter_path") else "normalize")
+        if preprocessing not in {"normalize", "vncorenlp"}:
+            raise ValueError("Unsupported preprocessing")
+        if preprocessing == "vncorenlp":
+            import py_vncorenlp
+            original = Path.cwd()
+            try:
+                segmenter = py_vncorenlp.VnCoreNLP(save_dir=metadata["segmenter_path"], annotators=["wseg"])
+            finally:
+                os.chdir(original)
         classifier = pipeline("text-classification", model=str(path), tokenizer=str(path), device=-1)
         def predict(text):
-            segmented = " ".join(segmenter.word_segment(normalize_text(text)))
-            return {r["label"]: r["score"] for r in classifier(segmented, top_k=None, truncation=True, max_length=256)}
+            prepared = normalize_text(text)
+            if segmenter:
+                prepared = " ".join(segmenter.word_segment(prepared))
+            return {r["label"]: r["score"] for r in classifier(prepared, top_k=None, truncation=True, max_length=metadata.get("max_length", 256))}
     else:
         raise RuntimeError("Sentiment model is not configured")
     return predict, metadata["model_version"]

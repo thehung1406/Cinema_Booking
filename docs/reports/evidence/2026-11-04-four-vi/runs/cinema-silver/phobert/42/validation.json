@@ -1,0 +1,153 @@
+{
+  "macro_f1": 0.5852173913043478,
+  "per_class": {
+    "negative": {
+      "precision": 0.875,
+      "recall": 0.4117647058823529,
+      "f1-score": 0.56,
+      "support": 17.0
+    },
+    "neutral": {
+      "precision": 0.35294117647058826,
+      "recall": 0.8571428571428571,
+      "f1-score": 0.5,
+      "support": 7.0
+    },
+    "positive": {
+      "precision": 0.7272727272727273,
+      "recall": 0.6666666666666666,
+      "f1-score": 0.6956521739130435,
+      "support": 12.0
+    },
+    "accuracy": 0.5833333333333334,
+    "macro avg": {
+      "precision": 0.6517379679144385,
+      "recall": 0.6451914098972922,
+      "f1-score": 0.5852173913043478,
+      "support": 36.0
+    },
+    "weighted avg": {
+      "precision": 0.724246137849079,
+      "recall": 0.5833333333333334,
+      "f1-score": 0.5935507246376812,
+      "support": 36.0
+    }
+  },
+  "confusion_matrix": [
+    [
+      7,
+      7,
+      3
+    ],
+    [
+      1,
+      6,
+      0
+    ],
+    [
+      0,
+      4,
+      8
+    ]
+  ],
+  "label_order": [
+    "negative",
+    "neutral",
+    "positive"
+  ],
+  "trainable_parameters": 135000579,
+  "peak_vram_bytes": 2848983552,
+  "errors": [
+    {
+      "id": "vimovie:2ceae3b15ece:row:9533",
+      "expected": "negative",
+      "predicted": "neutral",
+      "tags": []
+    },
+    {
+      "id": "vimovie:2ceae3b15ece:row:7561",
+      "expected": "negative",
+      "predicted": "neutral",
+      "tags": []
+    },
+    {
+      "id": "vimovie:2ceae3b15ece:row:9747",
+      "expected": "negative",
+      "predicted": "neutral",
+      "tags": []
+    },
+    {
+      "id": "vimovie:2ceae3b15ece:row:7489",
+      "expected": "positive",
+      "predicted": "neutral",
+      "tags": []
+    },
+    {
+      "id": "vimovie:2ceae3b15ece:row:10503",
+      "expected": "negative",
+      "predicted": "neutral",
+      "tags": []
+    },
+    {
+      "id": "vimovie:2ceae3b15ece:row:10586",
+      "expected": "negative",
+      "predicted": "neutral",
+      "tags": []
+    },
+    {
+      "id": "vimovie:2ceae3b15ece:row:8503",
+      "expected": "positive",
+      "predicted": "neutral",
+      "tags": []
+    },
+    {
+      "id": "vimovie:2ceae3b15ece:row:10012",
+      "expected": "negative",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "vimovie:2ceae3b15ece:row:7733",
+      "expected": "negative",
+      "predicted": "positive",
+      "tags": []
+    },
+    {
+      "id": "vimovie:2ceae3b15ece:row:6731",
+      "expected": "neutral",
+      "predicted": "negative",
+      "tags": []
+    },
+    {
+      "id": "vimovie:2ceae3b15ece:row:9815",
+      "expected": "negative",
+      "predicted": "neutral",
+      "tags": []
+    },
+    {
+      "id": "vimovie:2ceae3b15ece:row:10571",
+      "expected": "positive",
+      "predicted": "neutral",
+      "tags": []
+    },
+    {
+      "id": "vimovie:2ceae3b15ece:row:2667",
+      "expected": "positive",
+      "predicted": "neutral",
+      "tags": []
+    },
+    {
+      "id": "vimovie:2ceae3b15ece:row:7704",
+      "expected": "negative",
+      "predicted": "neutral",
+      "tags": []
+    },
+    {
+      "id": "vimovie:2ceae3b15ece:row:8087",
+      "expected": "negative",
+      "predicted": "positive",
+      "tags": []
+    }
+  ],
+  "elapsed_seconds": 49.45554719999927
+}

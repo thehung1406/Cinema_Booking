@@ -1,0 +1,29 @@
+{
+  "observed_at": "2026-11-04T10:55:58.411336+00:00",
+  "stage": "supplementary-ai-labeling-pilot",
+  "source_count": 600,
+  "ai_processed": 462,
+  "ai_sentiment_labels": 426,
+  "ai_label_counts": {
+    "negative": 140,
+    "neutral": 161,
+    "positive": 125
+  },
+  "deferred_reasons": {
+    "needs_context": 25,
+    "not_film_review": 11
+  },
+  "prior_human_decisions_preserved": 36,
+  "prior_human_family_rows_reserved": 38,
+  "blind_pilot_reserved": 100,
+  "blind_pilot_sent_to_ai": false,
+  "ai_rows_human_approved": 0,
+  "accuracy_measured": false,
+  "primary_D1_admitted": false,
+  "failed_batch_calls_preserved": 1,
+  "model": "qwen3:4b",
+  "model_digest": "359d7dd4bcdab3d86b87d73ac27966f4dbb9f5efdfcc75d34a8764a09474fae7",
+  "partition_sha256": "2284e75a58e685ab63382416a94c4ecbb04eb3a5463b43544ad919f489b36761",
+  "output_sha256": "3df73e0b2a586863df96c86dbb5a2958aef1e6e0f3d81f90790839719538e253",
+  "note": "Real review text, AI silver labels. Confidence is self-report; a 100-case pilot does not automatically meet final evaluation requirements."
+}

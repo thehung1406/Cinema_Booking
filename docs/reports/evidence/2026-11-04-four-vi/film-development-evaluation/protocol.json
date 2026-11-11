@@ -1,0 +1,11 @@
+{
+  "training_protocol_sha256": "c3e6a323fbc82386153c6c527df74dd15fbb908fc218b5a4138ba699734ae0e5",
+  "data_sha256": {
+    "train": "70c1e91b846e42bb24a7d736a7e0eb5ca9098898d6feff27d734f9dd1528bf09",
+    "validation": "1c16082ce53e4fe37b14fcdf82df2ba3a224f1be0a3e81cc0a8fcfe98cd1a71d",
+    "test": "408c11dcb0b365de867642901da7b326e3a53855ed81e217bd4aa15e640cfcdf"
+  },
+  "human_pilot_count": 100,
+  "primary_final_test_opened": false,
+  "note": "Same 100 previously used human film development decisions; not an untouched final test."
+}

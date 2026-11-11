@@ -49,6 +49,9 @@ def process_one(engine, settings, predictor=None):
                 or result.analysis_generation != generation or result.lease_token != token):
             return "stale"
         result.status, result.scores, result.label, result.model_version = status, scores, label, model_version
+        result.predicted_label = label
+        result.decision_source = "model" if status in {"succeeded", "needs_review"} else None
+        result.confirmed_by_user_id = result.confirmed_at = result.confirmation_note = None
         result.lease_token = result.lease_until = None
         result.updated_at = utcnow()
         changed(db, review, result, "ReviewSentimentUpdated.v1")

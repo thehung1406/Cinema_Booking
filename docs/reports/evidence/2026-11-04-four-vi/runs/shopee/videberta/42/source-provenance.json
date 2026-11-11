@@ -1,0 +1,11 @@
+{
+  "recorded_pipeline_source_snapshot_id": "bcc5f0a951e44e1aac7d8978e7437a70f675ce65b799aaaff78d1d2954b68362",
+  "loaded_cli_source_snapshot_id": "54bf5ad0f2b5d757627cbe6429d398b9c3a6010169e80b2d74a4805096a858ef",
+  "recorded_cli_sha256": "7594fdc9270ec1134a4679d0e58a60ab7d9b2ebbcd5b5e7f5f2812e8091b6b6d",
+  "loaded_cli_sha256": "36256e22a0626375ea80bdef58d36474c2f2e13d22aec3f0da905a219c0aded9",
+  "inference_basis": "Recorded namespace segmenter_path distinguishes the two known CLI versions for nonsegmented models; both byte versions verified against actual run hashes.",
+  "source_hash_captured_at_completion_differs_from_loaded_cli": true,
+  "core_fitting_sha256": "402f559b67aeef6591366925144a2718bbda0b972557f50060b89215aabbdb05",
+  "numerical_results_or_metadata_rewritten": false,
+  "scope": "Only unused segmenter metadata argument changed for normalize models; no training/preprocessing/hyperparameter change."
+}

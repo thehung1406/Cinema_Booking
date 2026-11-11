@@ -1,0 +1,2826 @@
+{
+  "created_at": "2026-11-04T07:45:42.827533+00:00",
+  "config_sha256": "a9e71dbdd1ee56dc56e1de33d08c117d0039d5ab13624ca350a19e0ef2a55b5e",
+  "planned_models": [
+    {
+      "model_id": "phobert",
+      "stage": "planned-configuration-not-run-evidence",
+      "checkpoint": "vinai/phobert-base",
+      "revision": "01daacda68afe13d83023d16ec647239e344a1e6",
+      "preprocessing": "vncorenlp",
+      "declared_license": "mit",
+      "architecture": "RobertaForSequenceClassification",
+      "encoder_layers": 12,
+      "total_parameters": 135000579,
+      "features": "token IDs + attention mask",
+      "epochs": 3,
+      "max_length": 256,
+      "batch_size": 1,
+      "gradient_accumulation_steps": 8,
+      "learning_rate": 2e-05,
+      "weight_decay": 0.0,
+      "optimizer": "adamw_torch",
+      "hidden_size": 768,
+      "attention_heads": 12,
+      "parameter_count_basis": "configured 3-class classifier; meta tensors; not loaded/trained weights",
+      "config_sha256": "37ffc22f9abb442e416ec77787cf1ae15110c7fb7ac831f2d4b1c7c5bdc52637",
+      "checkpoint_config_sha256": "71df79a67a65b1ee472938d0dff77297c0d77e20fef1af41e0013b1d384efb0d",
+      "config_hash_note": "config_sha256 hashes the configured 3-class classifier; checkpoint_config_sha256 hashes publisher bytes",
+      "config_source": "https://huggingface.co/vinai/phobert-base/blob/01daacda68afe13d83023d16ec647239e344a1e6/config.json"
+    },
+    {
+      "model_id": "visobert",
+      "stage": "planned-configuration-not-run-evidence",
+      "checkpoint": "uitnlp/visobert",
+      "revision": "196a62afad9cbe4f52a54aabad828b13f0eec59a",
+      "preprocessing": "normalize",
+      "declared_license": "not-declared",
+      "architecture": "XLMRobertaForSequenceClassification",
+      "encoder_layers": 12,
+      "total_parameters": 97568259,
+      "features": "token IDs + attention mask",
+      "epochs": 3,
+      "max_length": 256,
+      "batch_size": 1,
+      "gradient_accumulation_steps": 8,
+      "learning_rate": 2e-05,
+      "weight_decay": 0.0,
+      "optimizer": "adamw_torch",
+      "hidden_size": 768,
+      "attention_heads": 12,
+      "parameter_count_basis": "configured 3-class classifier; meta tensors; not loaded/trained weights",
+      "config_sha256": "935585cbd4e24942dedbfd3f561c88a397e8d6b2f8d8c437f28838a36d241fe7",
+      "checkpoint_config_sha256": "99f4bc7d491384004a7b9798a7c37a3f8c8c33e566cbb70dd7241acd1211a4fe",
+      "config_hash_note": "config_sha256 hashes the configured 3-class classifier; checkpoint_config_sha256 hashes publisher bytes",
+      "config_source": "https://huggingface.co/uitnlp/visobert/blob/196a62afad9cbe4f52a54aabad828b13f0eec59a/config.json"
+    },
+    {
+      "model_id": "videberta",
+      "stage": "planned-configuration-not-run-evidence",
+      "checkpoint": "Fsoft-AIC/videberta-xsmall",
+      "revision": "029b6b1b1d7636221bd2d1a98b46a2fdba3af34e",
+      "preprocessing": "normalize",
+      "declared_license": "not-declared",
+      "architecture": "DebertaV2ForSequenceClassification",
+      "encoder_layers": 12,
+      "total_parameters": 70792707,
+      "features": "token IDs + attention mask",
+      "epochs": 3,
+      "max_length": 256,
+      "batch_size": 1,
+      "gradient_accumulation_steps": 8,
+      "learning_rate": 2e-05,
+      "weight_decay": 0.0,
+      "optimizer": "adamw_torch",
+      "hidden_size": 384,
+      "attention_heads": 6,
+      "parameter_count_basis": "configured 3-class classifier; meta tensors; not loaded/trained weights",
+      "config_sha256": "53c998a89d1f94e3b8d0b44e88e8514b0d634d79c5ca855697719f0cbaa9de9c",
+      "checkpoint_config_sha256": "3d6829293edc2395bdb45b7fe770a03d5f1720d9bfbf72d5eb7d17c537c40a99",
+      "config_hash_note": "config_sha256 hashes the configured 3-class classifier; checkpoint_config_sha256 hashes publisher bytes",
+      "config_source": "https://huggingface.co/Fsoft-AIC/videberta-xsmall/blob/029b6b1b1d7636221bd2d1a98b46a2fdba3af34e/config.json"
+    },
+    {
+      "model_id": "mbert",
+      "stage": "planned-configuration-not-run-evidence",
+      "checkpoint": "google-bert/bert-base-multilingual-cased",
+      "revision": "3f076fdb1ab68d5b2880cb87a0886f315b8146f8",
+      "preprocessing": "normalize",
+      "declared_license": "apache-2.0",
+      "architecture": "BertForSequenceClassification",
+      "encoder_layers": 12,
+      "total_parameters": 177855747,
+      "features": "token IDs + attention mask",
+      "epochs": 3,
+      "max_length": 256,
+      "batch_size": 1,
+      "gradient_accumulation_steps": 8,
+      "learning_rate": 2e-05,
+      "weight_decay": 0.0,
+      "optimizer": "adamw_torch",
+      "hidden_size": 768,
+      "attention_heads": 12,
+      "parameter_count_basis": "configured 3-class classifier; meta tensors; not loaded/trained weights",
+      "config_sha256": "b3573d013e6870db3589995128d8ca4f31a033605036291c35a3ab91e6f8daba",
+      "checkpoint_config_sha256": "4d10c2021c6b5fbe8b70698abc6ccc6691dc28d1bae9732f7fa1087782feba7e",
+      "config_hash_note": "config_sha256 hashes the configured 3-class classifier; checkpoint_config_sha256 hashes publisher bytes",
+      "config_source": "https://huggingface.co/google-bert/bert-base-multilingual-cased/blob/3f076fdb1ab68d5b2880cb87a0886f315b8146f8/config.json"
+    },
+    {
+      "model_id": "xlmr",
+      "stage": "planned-configuration-not-run-evidence",
+      "checkpoint": "FacebookAI/xlm-roberta-base",
+      "revision": "e73636d4f797dec63c3081bb6ed5c7b0bb3f2089",
+      "preprocessing": "normalize",
+      "declared_license": "mit",
+      "architecture": "XLMRobertaForSequenceClassification",
+      "encoder_layers": 12,
+      "total_parameters": 278045955,
+      "features": "token IDs + attention mask",
+      "epochs": 3,
+      "max_length": 256,
+      "batch_size": 1,
+      "gradient_accumulation_steps": 8,
+      "learning_rate": 2e-05,
+      "weight_decay": 0.0,
+      "optimizer": "adamw_torch",
+      "hidden_size": 768,
+      "attention_heads": 12,
+      "parameter_count_basis": "configured 3-class classifier; meta tensors; not loaded/trained weights",
+      "config_sha256": "22e47d0e373cb8ec15e78f2324240b992d90da55db74700d2f162d058714d126",
+      "checkpoint_config_sha256": "d66ed8cd4f2a93b358c245e50736fa389ed4f35c0bae7aad0b32abb20c62b579",
+      "config_hash_note": "config_sha256 hashes the configured 3-class classifier; checkpoint_config_sha256 hashes publisher bytes",
+      "config_source": "https://huggingface.co/FacebookAI/xlm-roberta-base/blob/e73636d4f797dec63c3081bb6ed5c7b0bb3f2089/config.json"
+    },
+    {
+      "model_id": "lr",
+      "stage": "planned-configuration-not-run-evidence",
+      "checkpoint": null,
+      "revision": null,
+      "preprocessing": "normalize",
+      "declared_license": null,
+      "architecture": "TF-IDF + multinomial LogisticRegression",
+      "encoder_layers": null,
+      "total_parameters": null,
+      "features": "TF-IDF char 2–5 grams",
+      "epochs": null,
+      "max_length": null,
+      "batch_size": null,
+      "gradient_accumulation_steps": null,
+      "learning_rate": null,
+      "weight_decay": null,
+      "optimizer": "lbfgs; C selected on validation",
+      "parameter_count_basis": "depends on fitted vocabulary"
+    }
+  ],
+  "completed_runs": [
+    {
+      "dataset": "uts2017-bank",
+      "model_id": "lr",
+      "seed": 17,
+      "stage": "completed-validation",
+      "evidence_path": "pipelines\\ml\\runs\\advisor-v3\\uts2017-bank\\lr\\17\\metadata.json",
+      "metadata_sha256": "26d59820eb35c40b54648f66d149595fabc16fd99ccbe1746ca6ff4ff4428ed1",
+      "architecture": {
+        "model_type": "tfidf-logistic-regression",
+        "implementation": "LogisticRegression",
+        "encoder_layers": null,
+        "total_parameters": 235008,
+        "trainable_parameters": 235008,
+        "input_features": 78335,
+        "analyzer": "char",
+        "ngram_range": [
+          2,
+          5
+        ]
+      },
+      "training": {
+        "learning_rate": null,
+        "epochs_requested": null,
+        "epochs_completed": null,
+        "batch_size": null,
+        "effective_batch_size": null,
+        "max_length": null,
+        "optimizer": "lbfgs",
+        "selected_C": 4,
+        "C_candidates": [
+          0.25,
+          1,
+          4
+        ],
+        "max_iter": 1000,
+        "iterations_completed": [
+          31
+        ],
+        "class_weight": "balanced",
+        "selection_split": "validation"
+      },
+      "metadata_schema": 2,
+      "macro_f1": 0.6332788456118595,
+      "accuracy": 0.9448529411764706,
+      "per_class": {
+        "negative": {
+          "precision": 0.9137931034482759,
+          "recall": 0.9636363636363636,
+          "f1-score": 0.9380530973451328,
+          "support": 110.0
+        },
+        "neutral": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1-score": 0.0,
+          "support": 3.0
+        },
+        "positive": {
+          "precision": 0.9741935483870968,
+          "recall": 0.949685534591195,
+          "f1-score": 0.9617834394904459,
+          "support": 159.0
+        },
+        "accuracy": 0.9448529411764706,
+        "macro avg": {
+          "precision": 0.6293288839451242,
+          "recall": 0.6377739660758529,
+          "f1-score": 0.6332788456118595,
+          "support": 272.0
+        },
+        "weighted avg": {
+          "precision": 0.9390221160766865,
+          "recall": 0.9448529411764706,
+          "f1-score": 0.9415787043637702,
+          "support": 272.0
+        }
+      },
+      "error_count": 15,
+      "errors_exported": true,
+      "elapsed_seconds": 10.914049500002875,
+      "data_sha256": {
+        "train": "6a5b8ed85c5488a8199c5a1a5ed11a4c2424437237b3a6f011c2def789d97154",
+        "validation": "0bdc2051c848852d8280598615eb67cceaa99288dba4b3c7c415ea3d12e0d763",
+        "test": "dad5d4f9aa24cad417a1b8dd59a23cc2112d2459937be2f8920d347b406789f7"
+      },
+      "code_commit": "7d9ca6f79b7b613b650b30e3b02946217cb8b871",
+      "pipeline_sha256": {
+        "__init__.py": "d17a050993fea52a53c5b4678291b2bdaacf4de3b5ee9ff6a6a471dc6f6c9623",
+        "annotation_app.py": "95feed813102442932099150d7cce44507e92a595af81e7d112d5f7eaf63c6cc",
+        "annotations.py": "456e9cb6d51c3c548dc5457d5d9b0aace512170f0845ec08914b39c35540cb74",
+        "benchmark.py": "816a6e58b3059f401fd5bc15cd3862375920e6c611e279089a3f13a761f3d4a3",
+        "chat_format.py": "a77f33c84aaab9afc6870035a23ebc470f634611eee07c423c0cb6bae8d3788f",
+        "data.py": "965db9c6df4291ccc83e99c32db69dcaa50846cea1bd291bb0a76b35165cb328",
+        "dataset_audit.py": "35eb104f5d56c75b9d4a923688687a28a9d43a5bc0fe95e08c85cdf0e52991fe",
+        "evaluate_chat.py": "b9557f103cf2f946c26ceb69aa934854befd1d6c3445cb966bbe8271a2fe18d6",
+        "evaluate_ranking.py": "d8fb6864c9ce6d43f95a24bb88908073f8abc58407e6c7a3f31e77b603381ad2",
+        "evaluate_sentiment.py": "67987791bbc0f19d3e88fbbcbb7b1c5f4332c794ca7957df9b28ca8bb834cea9",
+        "export_evidence.py": "a948c6f9f131468b1013af4184c6e958f46be07c64221ff22f3b561026ef2000",
+        "import_knowledge.py": "5e508495c342f31eca83e3652aa4b294d7dab24cb067da3026d4106541758160",
+        "predictor.py": "84181bf7ecc28c081d7507c70de1c9d61cfb9ba52d3631df753cfe26f72f4bf7",
+        "prepare_samples.py": "91a21b4bcb3a5c73f0ab5136ce41561053a9a61306778919c85a7b9c4a2ba7ba",
+        "research_figures.py": "507693a786390fc53c54c510df5228cb06affec63cd5bb67636674294c440b18",
+        "serve_chat.py": "21a42a4fb3d1051f49d88e0fabbd968ba16869c5b3f43c153872112fc7334592",
+        "serve_retrieval.py": "edc615a60660627a1a93720aaa2464d7a484aa282fc6b39ada685b8813ddbc97",
+        "suggest_annotations.py": "8e91490018373af938228fb56d82a036e03262c2afc56b85ad2d5b0d3c7147b4",
+        "text.py": "07563d55e9e1a72edc847379a4313e096470757051119d9e8c03c431b892e396",
+        "train_chat.py": "544b776cbf7f92434429f56853c786d59bca2d38871cb2507249eeacea779ffb",
+        "train_sentiment.py": "ece1444bf380354a22eb2535e5859c520df074ae22618b64d852b97f90881930"
+      }
+    },
+    {
+      "dataset": "uts2017-bank",
+      "model_id": "lr",
+      "seed": 42,
+      "stage": "completed-validation",
+      "evidence_path": "pipelines\\ml\\runs\\advisor-v3\\uts2017-bank\\lr\\42\\metadata.json",
+      "metadata_sha256": "d684b5fc94f40a6436d9f13f9540ccfcfcd101443f7cf424e46f05c2871df44f",
+      "architecture": {
+        "model_type": "tfidf-logistic-regression",
+        "implementation": "LogisticRegression",
+        "encoder_layers": null,
+        "total_parameters": 235008,
+        "trainable_parameters": 235008,
+        "input_features": 78335,
+        "analyzer": "char",
+        "ngram_range": [
+          2,
+          5
+        ]
+      },
+      "training": {
+        "learning_rate": null,
+        "epochs_requested": null,
+        "epochs_completed": null,
+        "batch_size": null,
+        "effective_batch_size": null,
+        "max_length": null,
+        "optimizer": "lbfgs",
+        "selected_C": 4,
+        "C_candidates": [
+          0.25,
+          1,
+          4
+        ],
+        "max_iter": 1000,
+        "iterations_completed": [
+          31
+        ],
+        "class_weight": "balanced",
+        "selection_split": "validation"
+      },
+      "metadata_schema": 2,
+      "macro_f1": 0.6332788456118595,
+      "accuracy": 0.9448529411764706,
+      "per_class": {
+        "negative": {
+          "precision": 0.9137931034482759,
+          "recall": 0.9636363636363636,
+          "f1-score": 0.9380530973451328,
+          "support": 110.0
+        },
+        "neutral": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1-score": 0.0,
+          "support": 3.0
+        },
+        "positive": {
+          "precision": 0.9741935483870968,
+          "recall": 0.949685534591195,
+          "f1-score": 0.9617834394904459,
+          "support": 159.0
+        },
+        "accuracy": 0.9448529411764706,
+        "macro avg": {
+          "precision": 0.6293288839451242,
+          "recall": 0.6377739660758529,
+          "f1-score": 0.6332788456118595,
+          "support": 272.0
+        },
+        "weighted avg": {
+          "precision": 0.9390221160766865,
+          "recall": 0.9448529411764706,
+          "f1-score": 0.9415787043637702,
+          "support": 272.0
+        }
+      },
+      "error_count": 15,
+      "errors_exported": true,
+      "elapsed_seconds": 8.03251530000125,
+      "data_sha256": {
+        "train": "6a5b8ed85c5488a8199c5a1a5ed11a4c2424437237b3a6f011c2def789d97154",
+        "validation": "0bdc2051c848852d8280598615eb67cceaa99288dba4b3c7c415ea3d12e0d763",
+        "test": "dad5d4f9aa24cad417a1b8dd59a23cc2112d2459937be2f8920d347b406789f7"
+      },
+      "code_commit": "7d9ca6f79b7b613b650b30e3b02946217cb8b871",
+      "pipeline_sha256": {
+        "__init__.py": "d17a050993fea52a53c5b4678291b2bdaacf4de3b5ee9ff6a6a471dc6f6c9623",
+        "annotation_app.py": "95feed813102442932099150d7cce44507e92a595af81e7d112d5f7eaf63c6cc",
+        "annotations.py": "456e9cb6d51c3c548dc5457d5d9b0aace512170f0845ec08914b39c35540cb74",
+        "benchmark.py": "816a6e58b3059f401fd5bc15cd3862375920e6c611e279089a3f13a761f3d4a3",
+        "chat_format.py": "a77f33c84aaab9afc6870035a23ebc470f634611eee07c423c0cb6bae8d3788f",
+        "data.py": "965db9c6df4291ccc83e99c32db69dcaa50846cea1bd291bb0a76b35165cb328",
+        "dataset_audit.py": "35eb104f5d56c75b9d4a923688687a28a9d43a5bc0fe95e08c85cdf0e52991fe",
+        "evaluate_chat.py": "b9557f103cf2f946c26ceb69aa934854befd1d6c3445cb966bbe8271a2fe18d6",
+        "evaluate_ranking.py": "d8fb6864c9ce6d43f95a24bb88908073f8abc58407e6c7a3f31e77b603381ad2",
+        "evaluate_sentiment.py": "67987791bbc0f19d3e88fbbcbb7b1c5f4332c794ca7957df9b28ca8bb834cea9",
+        "export_evidence.py": "a948c6f9f131468b1013af4184c6e958f46be07c64221ff22f3b561026ef2000",
+        "import_knowledge.py": "5e508495c342f31eca83e3652aa4b294d7dab24cb067da3026d4106541758160",
+        "predictor.py": "84181bf7ecc28c081d7507c70de1c9d61cfb9ba52d3631df753cfe26f72f4bf7",
+        "prepare_samples.py": "91a21b4bcb3a5c73f0ab5136ce41561053a9a61306778919c85a7b9c4a2ba7ba",
+        "research_figures.py": "507693a786390fc53c54c510df5228cb06affec63cd5bb67636674294c440b18",
+        "serve_chat.py": "21a42a4fb3d1051f49d88e0fabbd968ba16869c5b3f43c153872112fc7334592",
+        "serve_retrieval.py": "edc615a60660627a1a93720aaa2464d7a484aa282fc6b39ada685b8813ddbc97",
+        "suggest_annotations.py": "8e91490018373af938228fb56d82a036e03262c2afc56b85ad2d5b0d3c7147b4",
+        "text.py": "07563d55e9e1a72edc847379a4313e096470757051119d9e8c03c431b892e396",
+        "train_chat.py": "544b776cbf7f92434429f56853c786d59bca2d38871cb2507249eeacea779ffb",
+        "train_sentiment.py": "ece1444bf380354a22eb2535e5859c520df074ae22618b64d852b97f90881930"
+      }
+    },
+    {
+      "dataset": "uts2017-bank",
+      "model_id": "lr",
+      "seed": 73,
+      "stage": "completed-validation",
+      "evidence_path": "pipelines\\ml\\runs\\advisor-v3\\uts2017-bank\\lr\\73\\metadata.json",
+      "metadata_sha256": "69cf43b212cf47cd65211eb705d5ff7fbe400eb66687c4e63c3520b02884a9b7",
+      "architecture": {
+        "model_type": "tfidf-logistic-regression",
+        "implementation": "LogisticRegression",
+        "encoder_layers": null,
+        "total_parameters": 235008,
+        "trainable_parameters": 235008,
+        "input_features": 78335,
+        "analyzer": "char",
+        "ngram_range": [
+          2,
+          5
+        ]
+      },
+      "training": {
+        "learning_rate": null,
+        "epochs_requested": null,
+        "epochs_completed": null,
+        "batch_size": null,
+        "effective_batch_size": null,
+        "max_length": null,
+        "optimizer": "lbfgs",
+        "selected_C": 4,
+        "C_candidates": [
+          0.25,
+          1,
+          4
+        ],
+        "max_iter": 1000,
+        "iterations_completed": [
+          31
+        ],
+        "class_weight": "balanced",
+        "selection_split": "validation"
+      },
+      "metadata_schema": 2,
+      "macro_f1": 0.6332788456118595,
+      "accuracy": 0.9448529411764706,
+      "per_class": {
+        "negative": {
+          "precision": 0.9137931034482759,
+          "recall": 0.9636363636363636,
+          "f1-score": 0.9380530973451328,
+          "support": 110.0
+        },
+        "neutral": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1-score": 0.0,
+          "support": 3.0
+        },
+        "positive": {
+          "precision": 0.9741935483870968,
+          "recall": 0.949685534591195,
+          "f1-score": 0.9617834394904459,
+          "support": 159.0
+        },
+        "accuracy": 0.9448529411764706,
+        "macro avg": {
+          "precision": 0.6293288839451242,
+          "recall": 0.6377739660758529,
+          "f1-score": 0.6332788456118595,
+          "support": 272.0
+        },
+        "weighted avg": {
+          "precision": 0.9390221160766865,
+          "recall": 0.9448529411764706,
+          "f1-score": 0.9415787043637702,
+          "support": 272.0
+        }
+      },
+      "error_count": 15,
+      "errors_exported": true,
+      "elapsed_seconds": 8.072759799993946,
+      "data_sha256": {
+        "train": "6a5b8ed85c5488a8199c5a1a5ed11a4c2424437237b3a6f011c2def789d97154",
+        "validation": "0bdc2051c848852d8280598615eb67cceaa99288dba4b3c7c415ea3d12e0d763",
+        "test": "dad5d4f9aa24cad417a1b8dd59a23cc2112d2459937be2f8920d347b406789f7"
+      },
+      "code_commit": "7d9ca6f79b7b613b650b30e3b02946217cb8b871",
+      "pipeline_sha256": {
+        "__init__.py": "d17a050993fea52a53c5b4678291b2bdaacf4de3b5ee9ff6a6a471dc6f6c9623",
+        "annotation_app.py": "95feed813102442932099150d7cce44507e92a595af81e7d112d5f7eaf63c6cc",
+        "annotations.py": "456e9cb6d51c3c548dc5457d5d9b0aace512170f0845ec08914b39c35540cb74",
+        "benchmark.py": "816a6e58b3059f401fd5bc15cd3862375920e6c611e279089a3f13a761f3d4a3",
+        "chat_format.py": "a77f33c84aaab9afc6870035a23ebc470f634611eee07c423c0cb6bae8d3788f",
+        "data.py": "965db9c6df4291ccc83e99c32db69dcaa50846cea1bd291bb0a76b35165cb328",
+        "dataset_audit.py": "35eb104f5d56c75b9d4a923688687a28a9d43a5bc0fe95e08c85cdf0e52991fe",
+        "evaluate_chat.py": "b9557f103cf2f946c26ceb69aa934854befd1d6c3445cb966bbe8271a2fe18d6",
+        "evaluate_ranking.py": "d8fb6864c9ce6d43f95a24bb88908073f8abc58407e6c7a3f31e77b603381ad2",
+        "evaluate_sentiment.py": "67987791bbc0f19d3e88fbbcbb7b1c5f4332c794ca7957df9b28ca8bb834cea9",
+        "export_evidence.py": "a948c6f9f131468b1013af4184c6e958f46be07c64221ff22f3b561026ef2000",
+        "import_knowledge.py": "5e508495c342f31eca83e3652aa4b294d7dab24cb067da3026d4106541758160",
+        "predictor.py": "84181bf7ecc28c081d7507c70de1c9d61cfb9ba52d3631df753cfe26f72f4bf7",
+        "prepare_samples.py": "91a21b4bcb3a5c73f0ab5136ce41561053a9a61306778919c85a7b9c4a2ba7ba",
+        "research_figures.py": "507693a786390fc53c54c510df5228cb06affec63cd5bb67636674294c440b18",
+        "serve_chat.py": "21a42a4fb3d1051f49d88e0fabbd968ba16869c5b3f43c153872112fc7334592",
+        "serve_retrieval.py": "edc615a60660627a1a93720aaa2464d7a484aa282fc6b39ada685b8813ddbc97",
+        "suggest_annotations.py": "8e91490018373af938228fb56d82a036e03262c2afc56b85ad2d5b0d3c7147b4",
+        "text.py": "07563d55e9e1a72edc847379a4313e096470757051119d9e8c03c431b892e396",
+        "train_chat.py": "544b776cbf7f92434429f56853c786d59bca2d38871cb2507249eeacea779ffb",
+        "train_sentiment.py": "ece1444bf380354a22eb2535e5859c520df074ae22618b64d852b97f90881930"
+      }
+    },
+    {
+      "dataset": "uts2017-bank",
+      "model_id": "mbert",
+      "seed": 17,
+      "stage": "completed-validation",
+      "evidence_path": "pipelines\\ml\\runs\\advisor-v3\\uts2017-bank\\mbert\\17\\metadata.json",
+      "metadata_sha256": "fc80e9a1a35f1c3d2e7eacbe046acd83f1e3687f1bf46f2fca3df08e35b61e72",
+      "architecture": {
+        "model_type": "bert",
+        "implementation": "BertForSequenceClassification",
+        "encoder_layers": 12,
+        "hidden_size": 768,
+        "attention_heads": 12,
+        "num_labels": 3,
+        "total_parameters": 177855747,
+        "trainable_parameters": 177855747
+      },
+      "training": {
+        "learning_rate": 2e-05,
+        "epochs_requested": 3,
+        "epochs_completed": 3.0,
+        "global_step": 579,
+        "best_checkpoint": "C:\\code\\Cinema_Booking\\pipelines\\ml\\runs\\advisor-v3\\uts2017-bank\\mbert\\17\\checkpoints\\checkpoint-579",
+        "best_validation_macro_f1": 0.6391390540923251,
+        "batch_size": 1,
+        "effective_batch_size": 8,
+        "gradient_accumulation_steps": 8,
+        "world_size": 1,
+        "max_length": 256,
+        "optimizer": "adamw_torch",
+        "weight_decay": 0.0,
+        "scheduler": "linear",
+        "warmup_steps": 0,
+        "fp16": true,
+        "device": "cuda:0",
+        "selection_split": "validation"
+      },
+      "metadata_schema": 2,
+      "macro_f1": 0.6391390540923251,
+      "accuracy": 0.9558823529411765,
+      "per_class": {
+        "negative": {
+          "precision": 0.9454545454545454,
+          "recall": 0.9454545454545454,
+          "f1-score": 0.9454545454545454,
+          "support": 110.0
+        },
+        "neutral": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1-score": 0.0,
+          "support": 3.0
+        },
+        "positive": {
+          "precision": 0.9629629629629629,
+          "recall": 0.9811320754716981,
+          "f1-score": 0.9719626168224299,
+          "support": 159.0
+        },
+        "accuracy": 0.9558823529411765,
+        "macro avg": {
+          "precision": 0.6361391694725028,
+          "recall": 0.6421955403087479,
+          "f1-score": 0.6391390540923251,
+          "support": 272.0
+        },
+        "weighted avg": {
+          "precision": 0.9452614379084966,
+          "recall": 0.9558823529411765,
+          "f1-score": 0.9505222649807588,
+          "support": 272.0
+        }
+      },
+      "error_count": 12,
+      "errors_exported": true,
+      "elapsed_seconds": 233.41944050000166,
+      "data_sha256": {
+        "train": "6a5b8ed85c5488a8199c5a1a5ed11a4c2424437237b3a6f011c2def789d97154",
+        "validation": "0bdc2051c848852d8280598615eb67cceaa99288dba4b3c7c415ea3d12e0d763",
+        "test": "dad5d4f9aa24cad417a1b8dd59a23cc2112d2459937be2f8920d347b406789f7"
+      },
+      "code_commit": "7d9ca6f79b7b613b650b30e3b02946217cb8b871",
+      "pipeline_sha256": {
+        "__init__.py": "d17a050993fea52a53c5b4678291b2bdaacf4de3b5ee9ff6a6a471dc6f6c9623",
+        "annotation_app.py": "95feed813102442932099150d7cce44507e92a595af81e7d112d5f7eaf63c6cc",
+        "annotations.py": "456e9cb6d51c3c548dc5457d5d9b0aace512170f0845ec08914b39c35540cb74",
+        "benchmark.py": "816a6e58b3059f401fd5bc15cd3862375920e6c611e279089a3f13a761f3d4a3",
+        "chat_format.py": "a77f33c84aaab9afc6870035a23ebc470f634611eee07c423c0cb6bae8d3788f",
+        "data.py": "965db9c6df4291ccc83e99c32db69dcaa50846cea1bd291bb0a76b35165cb328",
+        "dataset_audit.py": "35eb104f5d56c75b9d4a923688687a28a9d43a5bc0fe95e08c85cdf0e52991fe",
+        "evaluate_chat.py": "b9557f103cf2f946c26ceb69aa934854befd1d6c3445cb966bbe8271a2fe18d6",
+        "evaluate_ranking.py": "d8fb6864c9ce6d43f95a24bb88908073f8abc58407e6c7a3f31e77b603381ad2",
+        "evaluate_sentiment.py": "67987791bbc0f19d3e88fbbcbb7b1c5f4332c794ca7957df9b28ca8bb834cea9",
+        "export_evidence.py": "a948c6f9f131468b1013af4184c6e958f46be07c64221ff22f3b561026ef2000",
+        "import_knowledge.py": "5e508495c342f31eca83e3652aa4b294d7dab24cb067da3026d4106541758160",
+        "predictor.py": "84181bf7ecc28c081d7507c70de1c9d61cfb9ba52d3631df753cfe26f72f4bf7",
+        "prepare_samples.py": "91a21b4bcb3a5c73f0ab5136ce41561053a9a61306778919c85a7b9c4a2ba7ba",
+        "research_figures.py": "507693a786390fc53c54c510df5228cb06affec63cd5bb67636674294c440b18",
+        "serve_chat.py": "21a42a4fb3d1051f49d88e0fabbd968ba16869c5b3f43c153872112fc7334592",
+        "serve_retrieval.py": "edc615a60660627a1a93720aaa2464d7a484aa282fc6b39ada685b8813ddbc97",
+        "suggest_annotations.py": "8e91490018373af938228fb56d82a036e03262c2afc56b85ad2d5b0d3c7147b4",
+        "text.py": "07563d55e9e1a72edc847379a4313e096470757051119d9e8c03c431b892e396",
+        "train_chat.py": "544b776cbf7f92434429f56853c786d59bca2d38871cb2507249eeacea779ffb",
+        "train_sentiment.py": "ece1444bf380354a22eb2535e5859c520df074ae22618b64d852b97f90881930"
+      }
+    },
+    {
+      "dataset": "uts2017-bank",
+      "model_id": "mbert",
+      "seed": 42,
+      "stage": "completed-validation",
+      "evidence_path": "pipelines\\ml\\runs\\advisor-v3\\uts2017-bank\\mbert\\42\\metadata.json",
+      "metadata_sha256": "13a1a8c42fd3d51f7c28d6a8b0ec4aba328ae24bc39543157d2e1d9094f0e0a6",
+      "architecture": {
+        "model_type": "bert",
+        "implementation": "BertForSequenceClassification",
+        "encoder_layers": 12,
+        "hidden_size": 768,
+        "attention_heads": 12,
+        "num_labels": 3,
+        "total_parameters": 177855747,
+        "trainable_parameters": 177855747
+      },
+      "training": {
+        "learning_rate": 2e-05,
+        "epochs_requested": 3,
+        "epochs_completed": 3.0,
+        "global_step": 579,
+        "best_checkpoint": "C:\\code\\Cinema_Booking\\pipelines\\ml\\runs\\advisor-v3\\uts2017-bank\\mbert\\42\\checkpoints\\checkpoint-579",
+        "best_validation_macro_f1": 0.6444250413098994,
+        "batch_size": 1,
+        "effective_batch_size": 8,
+        "gradient_accumulation_steps": 8,
+        "world_size": 1,
+        "max_length": 256,
+        "optimizer": "adamw_torch",
+        "weight_decay": 0.0,
+        "scheduler": "linear",
+        "warmup_steps": 0,
+        "fp16": true,
+        "device": "cuda:0",
+        "selection_split": "validation"
+      },
+      "metadata_schema": 2,
+      "macro_f1": 0.6444250413098994,
+      "accuracy": 0.9632352941176471,
+      "per_class": {
+        "negative": {
+          "precision": 0.9385964912280702,
+          "recall": 0.9727272727272728,
+          "f1-score": 0.9553571428571429,
+          "support": 110.0
+        },
+        "neutral": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1-score": 0.0,
+          "support": 3.0
+        },
+        "positive": {
+          "precision": 0.9810126582278481,
+          "recall": 0.9748427672955975,
+          "f1-score": 0.9779179810725552,
+          "support": 159.0
+        },
+        "accuracy": 0.9632352941176471,
+        "macro avg": {
+          "precision": 0.6398697164853061,
+          "recall": 0.6491900133409567,
+          "f1-score": 0.6444250413098994,
+          "support": 272.0
+        },
+        "weighted avg": {
+          "precision": 0.9530390687254249,
+          "recall": 0.9632352941176471,
+          "f1-score": 0.9580082525912573,
+          "support": 272.0
+        }
+      },
+      "error_count": 10,
+      "errors_exported": true,
+      "elapsed_seconds": 191.92336510000314,
+      "data_sha256": {
+        "train": "6a5b8ed85c5488a8199c5a1a5ed11a4c2424437237b3a6f011c2def789d97154",
+        "validation": "0bdc2051c848852d8280598615eb67cceaa99288dba4b3c7c415ea3d12e0d763",
+        "test": "dad5d4f9aa24cad417a1b8dd59a23cc2112d2459937be2f8920d347b406789f7"
+      },
+      "code_commit": "7d9ca6f79b7b613b650b30e3b02946217cb8b871",
+      "pipeline_sha256": {
+        "__init__.py": "d17a050993fea52a53c5b4678291b2bdaacf4de3b5ee9ff6a6a471dc6f6c9623",
+        "annotation_app.py": "95feed813102442932099150d7cce44507e92a595af81e7d112d5f7eaf63c6cc",
+        "annotations.py": "456e9cb6d51c3c548dc5457d5d9b0aace512170f0845ec08914b39c35540cb74",
+        "benchmark.py": "816a6e58b3059f401fd5bc15cd3862375920e6c611e279089a3f13a761f3d4a3",
+        "chat_format.py": "a77f33c84aaab9afc6870035a23ebc470f634611eee07c423c0cb6bae8d3788f",
+        "data.py": "965db9c6df4291ccc83e99c32db69dcaa50846cea1bd291bb0a76b35165cb328",
+        "dataset_audit.py": "35eb104f5d56c75b9d4a923688687a28a9d43a5bc0fe95e08c85cdf0e52991fe",
+        "evaluate_chat.py": "b9557f103cf2f946c26ceb69aa934854befd1d6c3445cb966bbe8271a2fe18d6",
+        "evaluate_ranking.py": "d8fb6864c9ce6d43f95a24bb88908073f8abc58407e6c7a3f31e77b603381ad2",
+        "evaluate_sentiment.py": "67987791bbc0f19d3e88fbbcbb7b1c5f4332c794ca7957df9b28ca8bb834cea9",
+        "export_evidence.py": "a948c6f9f131468b1013af4184c6e958f46be07c64221ff22f3b561026ef2000",
+        "import_knowledge.py": "5e508495c342f31eca83e3652aa4b294d7dab24cb067da3026d4106541758160",
+        "predictor.py": "84181bf7ecc28c081d7507c70de1c9d61cfb9ba52d3631df753cfe26f72f4bf7",
+        "prepare_samples.py": "91a21b4bcb3a5c73f0ab5136ce41561053a9a61306778919c85a7b9c4a2ba7ba",
+        "research_figures.py": "507693a786390fc53c54c510df5228cb06affec63cd5bb67636674294c440b18",
+        "serve_chat.py": "21a42a4fb3d1051f49d88e0fabbd968ba16869c5b3f43c153872112fc7334592",
+        "serve_retrieval.py": "edc615a60660627a1a93720aaa2464d7a484aa282fc6b39ada685b8813ddbc97",
+        "suggest_annotations.py": "8e91490018373af938228fb56d82a036e03262c2afc56b85ad2d5b0d3c7147b4",
+        "text.py": "07563d55e9e1a72edc847379a4313e096470757051119d9e8c03c431b892e396",
+        "train_chat.py": "544b776cbf7f92434429f56853c786d59bca2d38871cb2507249eeacea779ffb",
+        "train_sentiment.py": "ece1444bf380354a22eb2535e5859c520df074ae22618b64d852b97f90881930"
+      }
+    },
+    {
+      "dataset": "uts2017-bank",
+      "model_id": "mbert",
+      "seed": 73,
+      "stage": "completed-validation",
+      "evidence_path": "pipelines\\ml\\runs\\advisor-v3\\uts2017-bank\\mbert\\73\\metadata.json",
+      "metadata_sha256": "88bedf13322607c92f353faf6bdb06fd397bdd851cbc1f86a8907f55d528a72f",
+      "architecture": {
+        "model_type": "bert",
+        "implementation": "BertForSequenceClassification",
+        "encoder_layers": 12,
+        "hidden_size": 768,
+        "attention_heads": 12,
+        "num_labels": 3,
+        "total_parameters": 177855747,
+        "trainable_parameters": 177855747
+      },
+      "training": {
+        "learning_rate": 2e-05,
+        "epochs_requested": 3,
+        "epochs_completed": 3.0,
+        "global_step": 579,
+        "best_checkpoint": "C:\\code\\Cinema_Booking\\pipelines\\ml\\runs\\advisor-v3\\uts2017-bank\\mbert\\73\\checkpoints\\checkpoint-579",
+        "best_validation_macro_f1": 0.6394437420986093,
+        "batch_size": 1,
+        "effective_batch_size": 8,
+        "gradient_accumulation_steps": 8,
+        "world_size": 1,
+        "max_length": 256,
+        "optimizer": "adamw_torch",
+        "weight_decay": 0.0,
+        "scheduler": "linear",
+        "warmup_steps": 0,
+        "fp16": true,
+        "device": "cuda:0",
+        "selection_split": "validation"
+      },
+      "metadata_schema": 2,
+      "macro_f1": 0.6394437420986093,
+      "accuracy": 0.9558823529411765,
+      "per_class": {
+        "negative": {
+          "precision": 0.9224137931034483,
+          "recall": 0.9727272727272728,
+          "f1-score": 0.9469026548672567,
+          "support": 110.0
+        },
+        "neutral": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1-score": 0.0,
+          "support": 3.0
+        },
+        "positive": {
+          "precision": 0.9807692307692307,
+          "recall": 0.9622641509433962,
+          "f1-score": 0.9714285714285714,
+          "support": 159.0
+        },
+        "accuracy": 0.9558823529411765,
+        "macro avg": {
+          "precision": 0.634394341290893,
+          "recall": 0.6449971412235563,
+          "f1-score": 0.6394437420986093,
+          "support": 272.0
+        },
+        "weighted avg": {
+          "precision": 0.9463522975503198,
+          "recall": 0.9558823529411765,
+          "f1-score": 0.9507957165166951,
+          "support": 272.0
+        }
+      },
+      "error_count": 12,
+      "errors_exported": true,
+      "elapsed_seconds": 201.564898800003,
+      "data_sha256": {
+        "train": "6a5b8ed85c5488a8199c5a1a5ed11a4c2424437237b3a6f011c2def789d97154",
+        "validation": "0bdc2051c848852d8280598615eb67cceaa99288dba4b3c7c415ea3d12e0d763",
+        "test": "dad5d4f9aa24cad417a1b8dd59a23cc2112d2459937be2f8920d347b406789f7"
+      },
+      "code_commit": "7d9ca6f79b7b613b650b30e3b02946217cb8b871",
+      "pipeline_sha256": {
+        "__init__.py": "d17a050993fea52a53c5b4678291b2bdaacf4de3b5ee9ff6a6a471dc6f6c9623",
+        "annotation_app.py": "95feed813102442932099150d7cce44507e92a595af81e7d112d5f7eaf63c6cc",
+        "annotations.py": "456e9cb6d51c3c548dc5457d5d9b0aace512170f0845ec08914b39c35540cb74",
+        "benchmark.py": "816a6e58b3059f401fd5bc15cd3862375920e6c611e279089a3f13a761f3d4a3",
+        "chat_format.py": "a77f33c84aaab9afc6870035a23ebc470f634611eee07c423c0cb6bae8d3788f",
+        "data.py": "965db9c6df4291ccc83e99c32db69dcaa50846cea1bd291bb0a76b35165cb328",
+        "dataset_audit.py": "35eb104f5d56c75b9d4a923688687a28a9d43a5bc0fe95e08c85cdf0e52991fe",
+        "evaluate_chat.py": "b9557f103cf2f946c26ceb69aa934854befd1d6c3445cb966bbe8271a2fe18d6",
+        "evaluate_ranking.py": "d8fb6864c9ce6d43f95a24bb88908073f8abc58407e6c7a3f31e77b603381ad2",
+        "evaluate_sentiment.py": "67987791bbc0f19d3e88fbbcbb7b1c5f4332c794ca7957df9b28ca8bb834cea9",
+        "export_evidence.py": "a948c6f9f131468b1013af4184c6e958f46be07c64221ff22f3b561026ef2000",
+        "import_knowledge.py": "5e508495c342f31eca83e3652aa4b294d7dab24cb067da3026d4106541758160",
+        "predictor.py": "84181bf7ecc28c081d7507c70de1c9d61cfb9ba52d3631df753cfe26f72f4bf7",
+        "prepare_samples.py": "91a21b4bcb3a5c73f0ab5136ce41561053a9a61306778919c85a7b9c4a2ba7ba",
+        "research_figures.py": "f7cab472e4275936717a4d3253f38746bb947f732f1115028a6d327de3492650",
+        "serve_chat.py": "21a42a4fb3d1051f49d88e0fabbd968ba16869c5b3f43c153872112fc7334592",
+        "serve_retrieval.py": "edc615a60660627a1a93720aaa2464d7a484aa282fc6b39ada685b8813ddbc97",
+        "suggest_annotations.py": "8e91490018373af938228fb56d82a036e03262c2afc56b85ad2d5b0d3c7147b4",
+        "text.py": "07563d55e9e1a72edc847379a4313e096470757051119d9e8c03c431b892e396",
+        "train_chat.py": "544b776cbf7f92434429f56853c786d59bca2d38871cb2507249eeacea779ffb",
+        "train_sentiment.py": "ece1444bf380354a22eb2535e5859c520df074ae22618b64d852b97f90881930"
+      }
+    },
+    {
+      "dataset": "uts2017-bank",
+      "model_id": "phobert",
+      "seed": 17,
+      "stage": "completed-validation",
+      "evidence_path": "pipelines\\ml\\runs\\advisor-v3\\uts2017-bank\\phobert\\17\\metadata.json",
+      "metadata_sha256": "b3c87b1467fa959ae990cd88a457de9bae8cf7325f03788be2395a32df08b1ec",
+      "architecture": {
+        "model_type": "roberta",
+        "implementation": "RobertaForSequenceClassification",
+        "encoder_layers": 12,
+        "hidden_size": 768,
+        "attention_heads": 12,
+        "num_labels": 3,
+        "total_parameters": 135000579,
+        "trainable_parameters": 135000579
+      },
+      "training": {
+        "learning_rate": 2e-05,
+        "epochs_requested": 3,
+        "epochs_completed": 3.0,
+        "global_step": 579,
+        "best_checkpoint": "C:\\code\\Cinema_Booking\\pipelines\\ml\\runs\\advisor-v3\\uts2017-bank\\phobert\\17\\checkpoints\\checkpoint-579",
+        "best_validation_macro_f1": 0.6415391325785591,
+        "batch_size": 1,
+        "effective_batch_size": 8,
+        "gradient_accumulation_steps": 8,
+        "world_size": 1,
+        "max_length": 256,
+        "optimizer": "adamw_torch",
+        "weight_decay": 0.0,
+        "scheduler": "linear",
+        "warmup_steps": 0,
+        "fp16": true,
+        "device": "cuda:0",
+        "selection_split": "validation"
+      },
+      "metadata_schema": 2,
+      "macro_f1": 0.6415391325785591,
+      "accuracy": 0.9595588235294118,
+      "per_class": {
+        "negative": {
+          "precision": 0.9626168224299065,
+          "recall": 0.9363636363636364,
+          "f1-score": 0.9493087557603687,
+          "support": 110.0
+        },
+        "neutral": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1-score": 0.0,
+          "support": 3.0
+        },
+        "positive": {
+          "precision": 0.9575757575757575,
+          "recall": 0.9937106918238994,
+          "f1-score": 0.9753086419753086,
+          "support": 159.0
+        },
+        "accuracy": 0.9595588235294118,
+        "macro avg": {
+          "precision": 0.6400641933352214,
+          "recall": 0.6433581093958453,
+          "f1-score": 0.6415391325785591,
+          "support": 272.0
+        },
+        "weighted avg": {
+          "precision": 0.9490529261832175,
+          "recall": 0.9595588235294118,
+          "f1-score": 0.9540369014989508,
+          "support": 272.0
+        }
+      },
+      "error_count": 11,
+      "errors_exported": true,
+      "elapsed_seconds": 167.2044642000037,
+      "data_sha256": {
+        "train": "6a5b8ed85c5488a8199c5a1a5ed11a4c2424437237b3a6f011c2def789d97154",
+        "validation": "0bdc2051c848852d8280598615eb67cceaa99288dba4b3c7c415ea3d12e0d763",
+        "test": "dad5d4f9aa24cad417a1b8dd59a23cc2112d2459937be2f8920d347b406789f7"
+      },
+      "code_commit": "7d9ca6f79b7b613b650b30e3b02946217cb8b871",
+      "pipeline_sha256": {
+        "__init__.py": "d17a050993fea52a53c5b4678291b2bdaacf4de3b5ee9ff6a6a471dc6f6c9623",
+        "annotation_app.py": "95feed813102442932099150d7cce44507e92a595af81e7d112d5f7eaf63c6cc",
+        "annotations.py": "456e9cb6d51c3c548dc5457d5d9b0aace512170f0845ec08914b39c35540cb74",
+        "benchmark.py": "816a6e58b3059f401fd5bc15cd3862375920e6c611e279089a3f13a761f3d4a3",
+        "chat_format.py": "a77f33c84aaab9afc6870035a23ebc470f634611eee07c423c0cb6bae8d3788f",
+        "data.py": "965db9c6df4291ccc83e99c32db69dcaa50846cea1bd291bb0a76b35165cb328",
+        "dataset_audit.py": "35eb104f5d56c75b9d4a923688687a28a9d43a5bc0fe95e08c85cdf0e52991fe",
+        "evaluate_chat.py": "b9557f103cf2f946c26ceb69aa934854befd1d6c3445cb966bbe8271a2fe18d6",
+        "evaluate_ranking.py": "d8fb6864c9ce6d43f95a24bb88908073f8abc58407e6c7a3f31e77b603381ad2",
+        "evaluate_sentiment.py": "67987791bbc0f19d3e88fbbcbb7b1c5f4332c794ca7957df9b28ca8bb834cea9",
+        "export_evidence.py": "25eef5d6dc3fe1f72ccfd585c135bf6b692d7f44333d376f0b42d0c55d31ff71",
+        "import_knowledge.py": "5e508495c342f31eca83e3652aa4b294d7dab24cb067da3026d4106541758160",
+        "predictor.py": "84181bf7ecc28c081d7507c70de1c9d61cfb9ba52d3631df753cfe26f72f4bf7",
+        "prepare_samples.py": "91a21b4bcb3a5c73f0ab5136ce41561053a9a61306778919c85a7b9c4a2ba7ba",
+        "research_figures.py": "f7cab472e4275936717a4d3253f38746bb947f732f1115028a6d327de3492650",
+        "serve_chat.py": "21a42a4fb3d1051f49d88e0fabbd968ba16869c5b3f43c153872112fc7334592",
+        "serve_retrieval.py": "edc615a60660627a1a93720aaa2464d7a484aa282fc6b39ada685b8813ddbc97",
+        "suggest_annotations.py": "8e91490018373af938228fb56d82a036e03262c2afc56b85ad2d5b0d3c7147b4",
+        "text.py": "07563d55e9e1a72edc847379a4313e096470757051119d9e8c03c431b892e396",
+        "tokenization_audit.py": "278d1864628bd88cc47ae82e5c346037faef11224f85dc25e0b2c75a9eff30f5",
+        "train_chat.py": "544b776cbf7f92434429f56853c786d59bca2d38871cb2507249eeacea779ffb",
+        "train_sentiment.py": "c87154795063f1fbbe53ea132feb73dc36db05f50b174d88e1bffefe79bbbf0d"
+      }
+    },
+    {
+      "dataset": "uts2017-bank",
+      "model_id": "phobert",
+      "seed": 42,
+      "stage": "completed-validation",
+      "evidence_path": "pipelines\\ml\\runs\\advisor-v3\\uts2017-bank\\phobert\\42\\metadata.json",
+      "metadata_sha256": "7d8be34126f995b3c77f98fe5b354aa09a639f651140feaa28be6af290f721b3",
+      "architecture": {
+        "model_type": "roberta",
+        "implementation": "RobertaForSequenceClassification",
+        "encoder_layers": 12,
+        "hidden_size": 768,
+        "attention_heads": 12,
+        "num_labels": 3,
+        "total_parameters": 135000579,
+        "trainable_parameters": 135000579
+      },
+      "training": {
+        "learning_rate": 2e-05,
+        "epochs_requested": 3,
+        "epochs_completed": 3.0,
+        "global_step": 579,
+        "best_checkpoint": "C:\\code\\Cinema_Booking\\pipelines\\ml\\runs\\advisor-v3\\uts2017-bank\\phobert\\42\\checkpoints\\checkpoint-193",
+        "best_validation_macro_f1": 0.6415391325785591,
+        "batch_size": 1,
+        "effective_batch_size": 8,
+        "gradient_accumulation_steps": 8,
+        "world_size": 1,
+        "max_length": 256,
+        "optimizer": "adamw_torch",
+        "weight_decay": 0.0,
+        "scheduler": "linear",
+        "warmup_steps": 0,
+        "fp16": true,
+        "device": "cuda:0",
+        "selection_split": "validation"
+      },
+      "metadata_schema": 2,
+      "macro_f1": 0.6415391325785591,
+      "accuracy": 0.9595588235294118,
+      "per_class": {
+        "negative": {
+          "precision": 0.9626168224299065,
+          "recall": 0.9363636363636364,
+          "f1-score": 0.9493087557603687,
+          "support": 110.0
+        },
+        "neutral": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1-score": 0.0,
+          "support": 3.0
+        },
+        "positive": {
+          "precision": 0.9575757575757575,
+          "recall": 0.9937106918238994,
+          "f1-score": 0.9753086419753086,
+          "support": 159.0
+        },
+        "accuracy": 0.9595588235294118,
+        "macro avg": {
+          "precision": 0.6400641933352214,
+          "recall": 0.6433581093958453,
+          "f1-score": 0.6415391325785591,
+          "support": 272.0
+        },
+        "weighted avg": {
+          "precision": 0.9490529261832175,
+          "recall": 0.9595588235294118,
+          "f1-score": 0.9540369014989508,
+          "support": 272.0
+        }
+      },
+      "error_count": 11,
+      "errors_exported": true,
+      "elapsed_seconds": 164.31137650000164,
+      "data_sha256": {
+        "train": "6a5b8ed85c5488a8199c5a1a5ed11a4c2424437237b3a6f011c2def789d97154",
+        "validation": "0bdc2051c848852d8280598615eb67cceaa99288dba4b3c7c415ea3d12e0d763",
+        "test": "dad5d4f9aa24cad417a1b8dd59a23cc2112d2459937be2f8920d347b406789f7"
+      },
+      "code_commit": "7d9ca6f79b7b613b650b30e3b02946217cb8b871",
+      "pipeline_sha256": {
+        "__init__.py": "d17a050993fea52a53c5b4678291b2bdaacf4de3b5ee9ff6a6a471dc6f6c9623",
+        "annotation_app.py": "95feed813102442932099150d7cce44507e92a595af81e7d112d5f7eaf63c6cc",
+        "annotations.py": "456e9cb6d51c3c548dc5457d5d9b0aace512170f0845ec08914b39c35540cb74",
+        "benchmark.py": "816a6e58b3059f401fd5bc15cd3862375920e6c611e279089a3f13a761f3d4a3",
+        "chat_format.py": "a77f33c84aaab9afc6870035a23ebc470f634611eee07c423c0cb6bae8d3788f",
+        "data.py": "965db9c6df4291ccc83e99c32db69dcaa50846cea1bd291bb0a76b35165cb328",
+        "dataset_audit.py": "35eb104f5d56c75b9d4a923688687a28a9d43a5bc0fe95e08c85cdf0e52991fe",
+        "evaluate_chat.py": "b9557f103cf2f946c26ceb69aa934854befd1d6c3445cb966bbe8271a2fe18d6",
+        "evaluate_ranking.py": "d8fb6864c9ce6d43f95a24bb88908073f8abc58407e6c7a3f31e77b603381ad2",
+        "evaluate_sentiment.py": "67987791bbc0f19d3e88fbbcbb7b1c5f4332c794ca7957df9b28ca8bb834cea9",
+        "export_evidence.py": "25eef5d6dc3fe1f72ccfd585c135bf6b692d7f44333d376f0b42d0c55d31ff71",
+        "import_knowledge.py": "5e508495c342f31eca83e3652aa4b294d7dab24cb067da3026d4106541758160",
+        "predictor.py": "84181bf7ecc28c081d7507c70de1c9d61cfb9ba52d3631df753cfe26f72f4bf7",
+        "prepare_samples.py": "91a21b4bcb3a5c73f0ab5136ce41561053a9a61306778919c85a7b9c4a2ba7ba",
+        "research_figures.py": "f7cab472e4275936717a4d3253f38746bb947f732f1115028a6d327de3492650",
+        "serve_chat.py": "21a42a4fb3d1051f49d88e0fabbd968ba16869c5b3f43c153872112fc7334592",
+        "serve_retrieval.py": "edc615a60660627a1a93720aaa2464d7a484aa282fc6b39ada685b8813ddbc97",
+        "suggest_annotations.py": "8e91490018373af938228fb56d82a036e03262c2afc56b85ad2d5b0d3c7147b4",
+        "text.py": "07563d55e9e1a72edc847379a4313e096470757051119d9e8c03c431b892e396",
+        "tokenization_audit.py": "278d1864628bd88cc47ae82e5c346037faef11224f85dc25e0b2c75a9eff30f5",
+        "train_chat.py": "544b776cbf7f92434429f56853c786d59bca2d38871cb2507249eeacea779ffb",
+        "train_sentiment.py": "c87154795063f1fbbe53ea132feb73dc36db05f50b174d88e1bffefe79bbbf0d"
+      }
+    },
+    {
+      "dataset": "uts2017-bank",
+      "model_id": "phobert",
+      "seed": 73,
+      "stage": "completed-validation",
+      "evidence_path": "pipelines\\ml\\runs\\advisor-v3\\uts2017-bank\\phobert\\73\\metadata.json",
+      "metadata_sha256": "1ba398606ecc945f69046f1617d65c72b14385d383e214fe86c140cad576afc4",
+      "architecture": {
+        "model_type": "roberta",
+        "implementation": "RobertaForSequenceClassification",
+        "encoder_layers": 12,
+        "hidden_size": 768,
+        "attention_heads": 12,
+        "num_labels": 3,
+        "total_parameters": 135000579,
+        "trainable_parameters": 135000579
+      },
+      "training": {
+        "learning_rate": 2e-05,
+        "epochs_requested": 3,
+        "epochs_completed": 3.0,
+        "global_step": 579,
+        "best_checkpoint": "C:\\code\\Cinema_Booking\\pipelines\\ml\\runs\\advisor-v3\\uts2017-bank\\phobert\\73\\checkpoints\\checkpoint-386",
+        "best_validation_macro_f1": 0.6468420060331824,
+        "batch_size": 1,
+        "effective_batch_size": 8,
+        "gradient_accumulation_steps": 8,
+        "world_size": 1,
+        "max_length": 256,
+        "optimizer": "adamw_torch",
+        "weight_decay": 0.0,
+        "scheduler": "linear",
+        "warmup_steps": 0,
+        "fp16": true,
+        "device": "cuda:0",
+        "selection_split": "validation"
+      },
+      "metadata_schema": 2,
+      "macro_f1": 0.6468420060331824,
+      "accuracy": 0.9669117647058824,
+      "per_class": {
+        "negative": {
+          "precision": 0.954954954954955,
+          "recall": 0.9636363636363636,
+          "f1-score": 0.9592760180995475,
+          "support": 110.0
+        },
+        "neutral": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1-score": 0.0,
+          "support": 3.0
+        },
+        "positive": {
+          "precision": 0.9751552795031055,
+          "recall": 0.9874213836477987,
+          "f1-score": 0.98125,
+          "support": 159.0
+        },
+        "accuracy": 0.9669117647058824,
+        "macro avg": {
+          "precision": 0.6433700781526869,
+          "recall": 0.6503525824280542,
+          "f1-score": 0.6468420060331824,
+          "support": 272.0
+        },
+        "weighted avg": {
+          "precision": 0.9562306414927898,
+          "recall": 0.9669117647058824,
+          "f1-score": 0.9615408529079053,
+          "support": 272.0
+        }
+      },
+      "error_count": 9,
+      "errors_exported": true,
+      "elapsed_seconds": 169.00764979999803,
+      "data_sha256": {
+        "train": "6a5b8ed85c5488a8199c5a1a5ed11a4c2424437237b3a6f011c2def789d97154",
+        "validation": "0bdc2051c848852d8280598615eb67cceaa99288dba4b3c7c415ea3d12e0d763",
+        "test": "dad5d4f9aa24cad417a1b8dd59a23cc2112d2459937be2f8920d347b406789f7"
+      },
+      "code_commit": "7d9ca6f79b7b613b650b30e3b02946217cb8b871",
+      "pipeline_sha256": {
+        "__init__.py": "d17a050993fea52a53c5b4678291b2bdaacf4de3b5ee9ff6a6a471dc6f6c9623",
+        "annotation_app.py": "95feed813102442932099150d7cce44507e92a595af81e7d112d5f7eaf63c6cc",
+        "annotations.py": "456e9cb6d51c3c548dc5457d5d9b0aace512170f0845ec08914b39c35540cb74",
+        "benchmark.py": "816a6e58b3059f401fd5bc15cd3862375920e6c611e279089a3f13a761f3d4a3",
+        "chat_format.py": "a77f33c84aaab9afc6870035a23ebc470f634611eee07c423c0cb6bae8d3788f",
+        "data.py": "965db9c6df4291ccc83e99c32db69dcaa50846cea1bd291bb0a76b35165cb328",
+        "dataset_audit.py": "35eb104f5d56c75b9d4a923688687a28a9d43a5bc0fe95e08c85cdf0e52991fe",
+        "evaluate_chat.py": "b9557f103cf2f946c26ceb69aa934854befd1d6c3445cb966bbe8271a2fe18d6",
+        "evaluate_ranking.py": "d8fb6864c9ce6d43f95a24bb88908073f8abc58407e6c7a3f31e77b603381ad2",
+        "evaluate_sentiment.py": "67987791bbc0f19d3e88fbbcbb7b1c5f4332c794ca7957df9b28ca8bb834cea9",
+        "export_evidence.py": "e6eb92a8d5575c3943b184011a9d2afb7af90ae07b3cd99d910953b3b6b15bf6",
+        "import_knowledge.py": "5e508495c342f31eca83e3652aa4b294d7dab24cb067da3026d4106541758160",
+        "predictor.py": "84181bf7ecc28c081d7507c70de1c9d61cfb9ba52d3631df753cfe26f72f4bf7",
+        "prepare_samples.py": "91a21b4bcb3a5c73f0ab5136ce41561053a9a61306778919c85a7b9c4a2ba7ba",
+        "research_figures.py": "f7cab472e4275936717a4d3253f38746bb947f732f1115028a6d327de3492650",
+        "serve_chat.py": "21a42a4fb3d1051f49d88e0fabbd968ba16869c5b3f43c153872112fc7334592",
+        "serve_retrieval.py": "edc615a60660627a1a93720aaa2464d7a484aa282fc6b39ada685b8813ddbc97",
+        "suggest_annotations.py": "8e91490018373af938228fb56d82a036e03262c2afc56b85ad2d5b0d3c7147b4",
+        "text.py": "07563d55e9e1a72edc847379a4313e096470757051119d9e8c03c431b892e396",
+        "tokenization_audit.py": "278d1864628bd88cc47ae82e5c346037faef11224f85dc25e0b2c75a9eff30f5",
+        "train_chat.py": "544b776cbf7f92434429f56853c786d59bca2d38871cb2507249eeacea779ffb",
+        "train_sentiment.py": "c87154795063f1fbbe53ea132feb73dc36db05f50b174d88e1bffefe79bbbf0d"
+      }
+    },
+    {
+      "dataset": "uts2017-bank",
+      "model_id": "videberta",
+      "seed": 17,
+      "stage": "completed-validation",
+      "evidence_path": "pipelines\\ml\\runs\\advisor-v3\\uts2017-bank\\videberta\\17\\metadata.json",
+      "metadata_sha256": "03782990b09dcb1be54f46e1b448dfe9ca45a09a200a582c4893a613ef386ebb",
+      "architecture": {
+        "model_type": "deberta-v2",
+        "implementation": "DebertaV2ForSequenceClassification",
+        "encoder_layers": 12,
+        "hidden_size": 384,
+        "attention_heads": 6,
+        "num_labels": 3,
+        "total_parameters": 70792707,
+        "trainable_parameters": 70792707
+      },
+      "training": {
+        "learning_rate": 2e-05,
+        "epochs_requested": 3,
+        "epochs_completed": 3.0,
+        "global_step": 579,
+        "best_checkpoint": "C:\\code\\Cinema_Booking\\pipelines\\ml\\runs\\advisor-v3\\uts2017-bank\\videberta\\17\\checkpoints\\checkpoint-579",
+        "best_validation_macro_f1": 0.5962050410648542,
+        "batch_size": 1,
+        "effective_batch_size": 8,
+        "gradient_accumulation_steps": 8,
+        "world_size": 1,
+        "max_length": 256,
+        "optimizer": "adamw_torch",
+        "weight_decay": 0.0,
+        "scheduler": "linear",
+        "warmup_steps": 0,
+        "fp16": true,
+        "device": "cuda:0",
+        "selection_split": "validation"
+      },
+      "metadata_schema": 2,
+      "macro_f1": 0.5962050410648542,
+      "accuracy": 0.8933823529411765,
+      "per_class": {
+        "negative": {
+          "precision": 0.8727272727272727,
+          "recall": 0.8727272727272727,
+          "f1-score": 0.8727272727272727,
+          "support": 110.0
+        },
+        "neutral": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1-score": 0.0,
+          "support": 3.0
+        },
+        "positive": {
+          "precision": 0.9074074074074074,
+          "recall": 0.9245283018867925,
+          "f1-score": 0.9158878504672897,
+          "support": 159.0
+        },
+        "accuracy": 0.8933823529411765,
+        "macro avg": {
+          "precision": 0.59337822671156,
+          "recall": 0.5990851915380216,
+          "f1-score": 0.5962050410648542,
+          "support": 272.0
+        },
+        "weighted avg": {
+          "precision": 0.8833741830065359,
+          "recall": 0.8933823529411765,
+          "f1-score": 0.8883315008246289,
+          "support": 272.0
+        }
+      },
+      "error_count": 29,
+      "errors_exported": true,
+      "elapsed_seconds": 317.95622180000646,
+      "data_sha256": {
+        "train": "6a5b8ed85c5488a8199c5a1a5ed11a4c2424437237b3a6f011c2def789d97154",
+        "validation": "0bdc2051c848852d8280598615eb67cceaa99288dba4b3c7c415ea3d12e0d763",
+        "test": "dad5d4f9aa24cad417a1b8dd59a23cc2112d2459937be2f8920d347b406789f7"
+      },
+      "code_commit": "7d9ca6f79b7b613b650b30e3b02946217cb8b871",
+      "pipeline_sha256": {
+        "__init__.py": "d17a050993fea52a53c5b4678291b2bdaacf4de3b5ee9ff6a6a471dc6f6c9623",
+        "annotation_app.py": "95feed813102442932099150d7cce44507e92a595af81e7d112d5f7eaf63c6cc",
+        "annotations.py": "456e9cb6d51c3c548dc5457d5d9b0aace512170f0845ec08914b39c35540cb74",
+        "benchmark.py": "816a6e58b3059f401fd5bc15cd3862375920e6c611e279089a3f13a761f3d4a3",
+        "chat_format.py": "a77f33c84aaab9afc6870035a23ebc470f634611eee07c423c0cb6bae8d3788f",
+        "data.py": "965db9c6df4291ccc83e99c32db69dcaa50846cea1bd291bb0a76b35165cb328",
+        "dataset_audit.py": "35eb104f5d56c75b9d4a923688687a28a9d43a5bc0fe95e08c85cdf0e52991fe",
+        "evaluate_chat.py": "b9557f103cf2f946c26ceb69aa934854befd1d6c3445cb966bbe8271a2fe18d6",
+        "evaluate_ranking.py": "d8fb6864c9ce6d43f95a24bb88908073f8abc58407e6c7a3f31e77b603381ad2",
+        "evaluate_sentiment.py": "67987791bbc0f19d3e88fbbcbb7b1c5f4332c794ca7957df9b28ca8bb834cea9",
+        "export_evidence.py": "a948c6f9f131468b1013af4184c6e958f46be07c64221ff22f3b561026ef2000",
+        "import_knowledge.py": "5e508495c342f31eca83e3652aa4b294d7dab24cb067da3026d4106541758160",
+        "predictor.py": "84181bf7ecc28c081d7507c70de1c9d61cfb9ba52d3631df753cfe26f72f4bf7",
+        "prepare_samples.py": "91a21b4bcb3a5c73f0ab5136ce41561053a9a61306778919c85a7b9c4a2ba7ba",
+        "research_figures.py": "f7cab472e4275936717a4d3253f38746bb947f732f1115028a6d327de3492650",
+        "serve_chat.py": "21a42a4fb3d1051f49d88e0fabbd968ba16869c5b3f43c153872112fc7334592",
+        "serve_retrieval.py": "edc615a60660627a1a93720aaa2464d7a484aa282fc6b39ada685b8813ddbc97",
+        "suggest_annotations.py": "8e91490018373af938228fb56d82a036e03262c2afc56b85ad2d5b0d3c7147b4",
+        "text.py": "07563d55e9e1a72edc847379a4313e096470757051119d9e8c03c431b892e396",
+        "train_chat.py": "544b776cbf7f92434429f56853c786d59bca2d38871cb2507249eeacea779ffb",
+        "train_sentiment.py": "ece1444bf380354a22eb2535e5859c520df074ae22618b64d852b97f90881930"
+      }
+    },
+    {
+      "dataset": "uts2017-bank",
+      "model_id": "videberta",
+      "seed": 42,
+      "stage": "completed-validation",
+      "evidence_path": "pipelines\\ml\\runs\\advisor-v3\\uts2017-bank\\videberta\\42\\metadata.json",
+      "metadata_sha256": "8a49e2b70f5110750a480aff401d61ea20b2b542eedd10e4316ede1eb4078f0f",
+      "architecture": {
+        "model_type": "deberta-v2",
+        "implementation": "DebertaV2ForSequenceClassification",
+        "encoder_layers": 12,
+        "hidden_size": 384,
+        "attention_heads": 6,
+        "num_labels": 3,
+        "total_parameters": 70792707,
+        "trainable_parameters": 70792707
+      },
+      "training": {
+        "learning_rate": 2e-05,
+        "epochs_requested": 3,
+        "epochs_completed": 3.0,
+        "global_step": 579,
+        "best_checkpoint": "C:\\code\\Cinema_Booking\\pipelines\\ml\\runs\\advisor-v3\\uts2017-bank\\videberta\\42\\checkpoints\\checkpoint-579",
+        "best_validation_macro_f1": 0.5853824555432655,
+        "batch_size": 1,
+        "effective_batch_size": 8,
+        "gradient_accumulation_steps": 8,
+        "world_size": 1,
+        "max_length": 256,
+        "optimizer": "adamw_torch",
+        "weight_decay": 0.0,
+        "scheduler": "linear",
+        "warmup_steps": 0,
+        "fp16": true,
+        "device": "cuda:0",
+        "selection_split": "validation"
+      },
+      "metadata_schema": 2,
+      "macro_f1": 0.5853824555432655,
+      "accuracy": 0.8786764705882353,
+      "per_class": {
+        "negative": {
+          "precision": 0.8532110091743119,
+          "recall": 0.8454545454545455,
+          "f1-score": 0.8493150684931506,
+          "support": 110.0
+        },
+        "neutral": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1-score": 0.0,
+          "support": 3.0
+        },
+        "positive": {
+          "precision": 0.8957055214723927,
+          "recall": 0.9182389937106918,
+          "f1-score": 0.906832298136646,
+          "support": 159.0
+        },
+        "accuracy": 0.8786764705882353,
+        "macro avg": {
+          "precision": 0.5829721768822349,
+          "recall": 0.5878978463884125,
+          "f1-score": 0.5853824555432655,
+          "support": 272.0
+        },
+        "weighted avg": {
+          "precision": 0.8686411357473703,
+          "recall": 0.8786764705882353,
+          "f1-score": 0.8735698269778429,
+          "support": 272.0
+        }
+      },
+      "error_count": 33,
+      "errors_exported": true,
+      "elapsed_seconds": 357.71202240000275,
+      "data_sha256": {
+        "train": "6a5b8ed85c5488a8199c5a1a5ed11a4c2424437237b3a6f011c2def789d97154",
+        "validation": "0bdc2051c848852d8280598615eb67cceaa99288dba4b3c7c415ea3d12e0d763",
+        "test": "dad5d4f9aa24cad417a1b8dd59a23cc2112d2459937be2f8920d347b406789f7"
+      },
+      "code_commit": "7d9ca6f79b7b613b650b30e3b02946217cb8b871",
+      "pipeline_sha256": {
+        "__init__.py": "d17a050993fea52a53c5b4678291b2bdaacf4de3b5ee9ff6a6a471dc6f6c9623",
+        "annotation_app.py": "95feed813102442932099150d7cce44507e92a595af81e7d112d5f7eaf63c6cc",
+        "annotations.py": "456e9cb6d51c3c548dc5457d5d9b0aace512170f0845ec08914b39c35540cb74",
+        "benchmark.py": "816a6e58b3059f401fd5bc15cd3862375920e6c611e279089a3f13a761f3d4a3",
+        "chat_format.py": "a77f33c84aaab9afc6870035a23ebc470f634611eee07c423c0cb6bae8d3788f",
+        "data.py": "965db9c6df4291ccc83e99c32db69dcaa50846cea1bd291bb0a76b35165cb328",
+        "dataset_audit.py": "35eb104f5d56c75b9d4a923688687a28a9d43a5bc0fe95e08c85cdf0e52991fe",
+        "evaluate_chat.py": "b9557f103cf2f946c26ceb69aa934854befd1d6c3445cb966bbe8271a2fe18d6",
+        "evaluate_ranking.py": "d8fb6864c9ce6d43f95a24bb88908073f8abc58407e6c7a3f31e77b603381ad2",
+        "evaluate_sentiment.py": "67987791bbc0f19d3e88fbbcbb7b1c5f4332c794ca7957df9b28ca8bb834cea9",
+        "export_evidence.py": "a948c6f9f131468b1013af4184c6e958f46be07c64221ff22f3b561026ef2000",
+        "import_knowledge.py": "5e508495c342f31eca83e3652aa4b294d7dab24cb067da3026d4106541758160",
+        "predictor.py": "84181bf7ecc28c081d7507c70de1c9d61cfb9ba52d3631df753cfe26f72f4bf7",
+        "prepare_samples.py": "91a21b4bcb3a5c73f0ab5136ce41561053a9a61306778919c85a7b9c4a2ba7ba",
+        "research_figures.py": "f7cab472e4275936717a4d3253f38746bb947f732f1115028a6d327de3492650",
+        "serve_chat.py": "21a42a4fb3d1051f49d88e0fabbd968ba16869c5b3f43c153872112fc7334592",
+        "serve_retrieval.py": "edc615a60660627a1a93720aaa2464d7a484aa282fc6b39ada685b8813ddbc97",
+        "suggest_annotations.py": "8e91490018373af938228fb56d82a036e03262c2afc56b85ad2d5b0d3c7147b4",
+        "text.py": "07563d55e9e1a72edc847379a4313e096470757051119d9e8c03c431b892e396",
+        "train_chat.py": "544b776cbf7f92434429f56853c786d59bca2d38871cb2507249eeacea779ffb",
+        "train_sentiment.py": "ece1444bf380354a22eb2535e5859c520df074ae22618b64d852b97f90881930"
+      }
+    },
+    {
+      "dataset": "uts2017-bank",
+      "model_id": "videberta",
+      "seed": 73,
+      "stage": "completed-validation",
+      "evidence_path": "pipelines\\ml\\runs\\advisor-v3\\uts2017-bank\\videberta\\73\\metadata.json",
+      "metadata_sha256": "b1937cae113fdc8d470d9b836a724713d4ec299349b71cb2a98f3dc4a6022994",
+      "architecture": {
+        "model_type": "deberta-v2",
+        "implementation": "DebertaV2ForSequenceClassification",
+        "encoder_layers": 12,
+        "hidden_size": 384,
+        "attention_heads": 6,
+        "num_labels": 3,
+        "total_parameters": 70792707,
+        "trainable_parameters": 70792707
+      },
+      "training": {
+        "learning_rate": 2e-05,
+        "epochs_requested": 3,
+        "epochs_completed": 3.0,
+        "global_step": 579,
+        "best_checkpoint": "C:\\code\\Cinema_Booking\\pipelines\\ml\\runs\\advisor-v3\\uts2017-bank\\videberta\\73\\checkpoints\\checkpoint-579",
+        "best_validation_macro_f1": 0.5959894339193911,
+        "batch_size": 1,
+        "effective_batch_size": 8,
+        "gradient_accumulation_steps": 8,
+        "world_size": 1,
+        "max_length": 256,
+        "optimizer": "adamw_torch",
+        "weight_decay": 0.0,
+        "scheduler": "linear",
+        "warmup_steps": 0,
+        "fp16": true,
+        "device": "cuda:0",
+        "selection_split": "validation"
+      },
+      "metadata_schema": 2,
+      "macro_f1": 0.5959894339193911,
+      "accuracy": 0.8933823529411765,
+      "per_class": {
+        "negative": {
+          "precision": 0.8796296296296297,
+          "recall": 0.8636363636363636,
+          "f1-score": 0.8715596330275229,
+          "support": 110.0
+        },
+        "neutral": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1-score": 0.0,
+          "support": 3.0
+        },
+        "positive": {
+          "precision": 0.9024390243902439,
+          "recall": 0.9308176100628931,
+          "f1-score": 0.9164086687306502,
+          "support": 159.0
+        },
+        "accuracy": 0.8933823529411765,
+        "macro avg": {
+          "precision": 0.5940228846732912,
+          "recall": 0.5981513245664188,
+          "f1-score": 0.5959894339193911,
+          "support": 272.0
+        },
+        "weighted avg": {
+          "precision": 0.8832612652106914,
+          "recall": 0.8933823529411765,
+          "f1-score": 0.888163742504415,
+          "support": 272.0
+        }
+      },
+      "error_count": 29,
+      "errors_exported": true,
+      "elapsed_seconds": 265.4848218000043,
+      "data_sha256": {
+        "train": "6a5b8ed85c5488a8199c5a1a5ed11a4c2424437237b3a6f011c2def789d97154",
+        "validation": "0bdc2051c848852d8280598615eb67cceaa99288dba4b3c7c415ea3d12e0d763",
+        "test": "dad5d4f9aa24cad417a1b8dd59a23cc2112d2459937be2f8920d347b406789f7"
+      },
+      "code_commit": "7d9ca6f79b7b613b650b30e3b02946217cb8b871",
+      "pipeline_sha256": {
+        "__init__.py": "d17a050993fea52a53c5b4678291b2bdaacf4de3b5ee9ff6a6a471dc6f6c9623",
+        "annotation_app.py": "95feed813102442932099150d7cce44507e92a595af81e7d112d5f7eaf63c6cc",
+        "annotations.py": "456e9cb6d51c3c548dc5457d5d9b0aace512170f0845ec08914b39c35540cb74",
+        "benchmark.py": "816a6e58b3059f401fd5bc15cd3862375920e6c611e279089a3f13a761f3d4a3",
+        "chat_format.py": "a77f33c84aaab9afc6870035a23ebc470f634611eee07c423c0cb6bae8d3788f",
+        "data.py": "965db9c6df4291ccc83e99c32db69dcaa50846cea1bd291bb0a76b35165cb328",
+        "dataset_audit.py": "35eb104f5d56c75b9d4a923688687a28a9d43a5bc0fe95e08c85cdf0e52991fe",
+        "evaluate_chat.py": "b9557f103cf2f946c26ceb69aa934854befd1d6c3445cb966bbe8271a2fe18d6",
+        "evaluate_ranking.py": "d8fb6864c9ce6d43f95a24bb88908073f8abc58407e6c7a3f31e77b603381ad2",
+        "evaluate_sentiment.py": "67987791bbc0f19d3e88fbbcbb7b1c5f4332c794ca7957df9b28ca8bb834cea9",
+        "export_evidence.py": "a948c6f9f131468b1013af4184c6e958f46be07c64221ff22f3b561026ef2000",
+        "import_knowledge.py": "5e508495c342f31eca83e3652aa4b294d7dab24cb067da3026d4106541758160",
+        "predictor.py": "84181bf7ecc28c081d7507c70de1c9d61cfb9ba52d3631df753cfe26f72f4bf7",
+        "prepare_samples.py": "91a21b4bcb3a5c73f0ab5136ce41561053a9a61306778919c85a7b9c4a2ba7ba",
+        "research_figures.py": "f7cab472e4275936717a4d3253f38746bb947f732f1115028a6d327de3492650",
+        "serve_chat.py": "21a42a4fb3d1051f49d88e0fabbd968ba16869c5b3f43c153872112fc7334592",
+        "serve_retrieval.py": "edc615a60660627a1a93720aaa2464d7a484aa282fc6b39ada685b8813ddbc97",
+        "suggest_annotations.py": "8e91490018373af938228fb56d82a036e03262c2afc56b85ad2d5b0d3c7147b4",
+        "text.py": "07563d55e9e1a72edc847379a4313e096470757051119d9e8c03c431b892e396",
+        "train_chat.py": "544b776cbf7f92434429f56853c786d59bca2d38871cb2507249eeacea779ffb",
+        "train_sentiment.py": "ece1444bf380354a22eb2535e5859c520df074ae22618b64d852b97f90881930"
+      }
+    },
+    {
+      "dataset": "uts2017-bank",
+      "model_id": "visobert",
+      "seed": 17,
+      "stage": "completed-validation",
+      "evidence_path": "pipelines\\ml\\runs\\advisor-v3\\uts2017-bank\\visobert\\17\\metadata.json",
+      "metadata_sha256": "e84ef2153bf263bb0170062bcc087d8a7e9d54767fc8c9da83585ca4779ea125",
+      "architecture": {
+        "model_type": "xlm-roberta",
+        "implementation": "XLMRobertaForSequenceClassification",
+        "encoder_layers": 12,
+        "hidden_size": 768,
+        "attention_heads": 12,
+        "num_labels": 3,
+        "total_parameters": 97568259,
+        "trainable_parameters": 97568259
+      },
+      "training": {
+        "learning_rate": 2e-05,
+        "epochs_requested": 3,
+        "epochs_completed": 3.0,
+        "global_step": 579,
+        "best_checkpoint": "C:\\code\\Cinema_Booking\\pipelines\\ml\\runs\\advisor-v3\\uts2017-bank\\visobert\\17\\checkpoints\\checkpoint-579",
+        "best_validation_macro_f1": 0.6570963890534074,
+        "batch_size": 1,
+        "effective_batch_size": 8,
+        "gradient_accumulation_steps": 8,
+        "world_size": 1,
+        "max_length": 256,
+        "optimizer": "adamw_torch",
+        "weight_decay": 0.0,
+        "scheduler": "linear",
+        "warmup_steps": 0,
+        "fp16": true,
+        "device": "cuda:0",
+        "selection_split": "validation"
+      },
+      "metadata_schema": 2,
+      "macro_f1": 0.6570963890534074,
+      "accuracy": 0.9816176470588235,
+      "per_class": {
+        "negative": {
+          "precision": 0.9646017699115044,
+          "recall": 0.990909090909091,
+          "f1-score": 0.9775784753363229,
+          "support": 110.0
+        },
+        "neutral": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1-score": 0.0,
+          "support": 3.0
+        },
+        "positive": {
+          "precision": 0.9937106918238994,
+          "recall": 0.9937106918238994,
+          "f1-score": 0.9937106918238994,
+          "support": 159.0
+        },
+        "accuracy": 0.9816176470588235,
+        "macro avg": {
+          "precision": 0.6527708205784679,
+          "recall": 0.6615399275776634,
+          "f1-score": 0.6570963890534074,
+          "support": 272.0
+        },
+        "weighted avg": {
+          "precision": 0.9709786569495056,
+          "recall": 0.9816176470588235,
+          "f1-score": 0.9762265892904246,
+          "support": 272.0
+        }
+      },
+      "error_count": 5,
+      "errors_exported": true,
+      "elapsed_seconds": 162.08262979999563,
+      "data_sha256": {
+        "train": "6a5b8ed85c5488a8199c5a1a5ed11a4c2424437237b3a6f011c2def789d97154",
+        "validation": "0bdc2051c848852d8280598615eb67cceaa99288dba4b3c7c415ea3d12e0d763",
+        "test": "dad5d4f9aa24cad417a1b8dd59a23cc2112d2459937be2f8920d347b406789f7"
+      },
+      "code_commit": "7d9ca6f79b7b613b650b30e3b02946217cb8b871",
+      "pipeline_sha256": {
+        "__init__.py": "d17a050993fea52a53c5b4678291b2bdaacf4de3b5ee9ff6a6a471dc6f6c9623",
+        "annotation_app.py": "95feed813102442932099150d7cce44507e92a595af81e7d112d5f7eaf63c6cc",
+        "annotations.py": "456e9cb6d51c3c548dc5457d5d9b0aace512170f0845ec08914b39c35540cb74",
+        "benchmark.py": "816a6e58b3059f401fd5bc15cd3862375920e6c611e279089a3f13a761f3d4a3",
+        "chat_format.py": "a77f33c84aaab9afc6870035a23ebc470f634611eee07c423c0cb6bae8d3788f",
+        "data.py": "965db9c6df4291ccc83e99c32db69dcaa50846cea1bd291bb0a76b35165cb328",
+        "dataset_audit.py": "35eb104f5d56c75b9d4a923688687a28a9d43a5bc0fe95e08c85cdf0e52991fe",
+        "evaluate_chat.py": "b9557f103cf2f946c26ceb69aa934854befd1d6c3445cb966bbe8271a2fe18d6",
+        "evaluate_ranking.py": "d8fb6864c9ce6d43f95a24bb88908073f8abc58407e6c7a3f31e77b603381ad2",
+        "evaluate_sentiment.py": "67987791bbc0f19d3e88fbbcbb7b1c5f4332c794ca7957df9b28ca8bb834cea9",
+        "export_evidence.py": "e6eb92a8d5575c3943b184011a9d2afb7af90ae07b3cd99d910953b3b6b15bf6",
+        "import_knowledge.py": "5e508495c342f31eca83e3652aa4b294d7dab24cb067da3026d4106541758160",
+        "predictor.py": "84181bf7ecc28c081d7507c70de1c9d61cfb9ba52d3631df753cfe26f72f4bf7",
+        "prepare_samples.py": "91a21b4bcb3a5c73f0ab5136ce41561053a9a61306778919c85a7b9c4a2ba7ba",
+        "research_figures.py": "f7cab472e4275936717a4d3253f38746bb947f732f1115028a6d327de3492650",
+        "serve_chat.py": "21a42a4fb3d1051f49d88e0fabbd968ba16869c5b3f43c153872112fc7334592",
+        "serve_retrieval.py": "edc615a60660627a1a93720aaa2464d7a484aa282fc6b39ada685b8813ddbc97",
+        "suggest_annotations.py": "8e91490018373af938228fb56d82a036e03262c2afc56b85ad2d5b0d3c7147b4",
+        "text.py": "07563d55e9e1a72edc847379a4313e096470757051119d9e8c03c431b892e396",
+        "tokenization_audit.py": "976b2f6c757bb0ee95a52f704f8efeac96d760fd27b71653508d29d8e264db45",
+        "train_chat.py": "544b776cbf7f92434429f56853c786d59bca2d38871cb2507249eeacea779ffb",
+        "train_sentiment.py": "c87154795063f1fbbe53ea132feb73dc36db05f50b174d88e1bffefe79bbbf0d"
+      }
+    },
+    {
+      "dataset": "uts2017-bank",
+      "model_id": "visobert",
+      "seed": 42,
+      "stage": "completed-validation",
+      "evidence_path": "pipelines\\ml\\runs\\advisor-v3\\uts2017-bank\\visobert\\42\\metadata.json",
+      "metadata_sha256": "a45ce58134416a60b78e24ed9d4f350346cdb546cb8dc81f29737a62bc5dc1cf",
+      "architecture": {
+        "model_type": "xlm-roberta",
+        "implementation": "XLMRobertaForSequenceClassification",
+        "encoder_layers": 12,
+        "hidden_size": 768,
+        "attention_heads": 12,
+        "num_labels": 3,
+        "total_parameters": 97568259,
+        "trainable_parameters": 97568259
+      },
+      "training": {
+        "learning_rate": 2e-05,
+        "epochs_requested": 3,
+        "epochs_completed": 3.0,
+        "global_step": 579,
+        "best_checkpoint": "C:\\code\\Cinema_Booking\\pipelines\\ml\\runs\\advisor-v3\\uts2017-bank\\visobert\\42\\checkpoints\\checkpoint-579",
+        "best_validation_macro_f1": 0.659662761003455,
+        "batch_size": 1,
+        "effective_batch_size": 8,
+        "gradient_accumulation_steps": 8,
+        "world_size": 1,
+        "max_length": 256,
+        "optimizer": "adamw_torch",
+        "weight_decay": 0.0,
+        "scheduler": "linear",
+        "warmup_steps": 0,
+        "fp16": true,
+        "device": "cuda:0",
+        "selection_split": "validation"
+      },
+      "metadata_schema": 2,
+      "macro_f1": 0.659662761003455,
+      "accuracy": 0.9852941176470589,
+      "per_class": {
+        "negative": {
+          "precision": 0.9649122807017544,
+          "recall": 1.0,
+          "f1-score": 0.9821428571428571,
+          "support": 110.0
+        },
+        "neutral": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1-score": 0.0,
+          "support": 3.0
+        },
+        "positive": {
+          "precision": 1.0,
+          "recall": 0.9937106918238994,
+          "f1-score": 0.9968454258675079,
+          "support": 159.0
+        },
+        "accuracy": 0.9852941176470589,
+        "macro avg": {
+          "precision": 0.6549707602339181,
+          "recall": 0.6645702306079665,
+          "f1-score": 0.659662761003455,
+          "support": 272.0
+        },
+        "weighted avg": {
+          "precision": 0.974780701754386,
+          "recall": 0.9852941176470589,
+          "f1-score": 0.979904915436206,
+          "support": 272.0
+        }
+      },
+      "error_count": 4,
+      "errors_exported": true,
+      "elapsed_seconds": 156.21401059999334,
+      "data_sha256": {
+        "train": "6a5b8ed85c5488a8199c5a1a5ed11a4c2424437237b3a6f011c2def789d97154",
+        "validation": "0bdc2051c848852d8280598615eb67cceaa99288dba4b3c7c415ea3d12e0d763",
+        "test": "dad5d4f9aa24cad417a1b8dd59a23cc2112d2459937be2f8920d347b406789f7"
+      },
+      "code_commit": "7d9ca6f79b7b613b650b30e3b02946217cb8b871",
+      "pipeline_sha256": {
+        "__init__.py": "d17a050993fea52a53c5b4678291b2bdaacf4de3b5ee9ff6a6a471dc6f6c9623",
+        "annotation_app.py": "95feed813102442932099150d7cce44507e92a595af81e7d112d5f7eaf63c6cc",
+        "annotations.py": "456e9cb6d51c3c548dc5457d5d9b0aace512170f0845ec08914b39c35540cb74",
+        "benchmark.py": "816a6e58b3059f401fd5bc15cd3862375920e6c611e279089a3f13a761f3d4a3",
+        "chat_format.py": "a77f33c84aaab9afc6870035a23ebc470f634611eee07c423c0cb6bae8d3788f",
+        "data.py": "965db9c6df4291ccc83e99c32db69dcaa50846cea1bd291bb0a76b35165cb328",
+        "dataset_audit.py": "35eb104f5d56c75b9d4a923688687a28a9d43a5bc0fe95e08c85cdf0e52991fe",
+        "evaluate_chat.py": "b9557f103cf2f946c26ceb69aa934854befd1d6c3445cb966bbe8271a2fe18d6",
+        "evaluate_ranking.py": "d8fb6864c9ce6d43f95a24bb88908073f8abc58407e6c7a3f31e77b603381ad2",
+        "evaluate_sentiment.py": "67987791bbc0f19d3e88fbbcbb7b1c5f4332c794ca7957df9b28ca8bb834cea9",
+        "export_evidence.py": "e6eb92a8d5575c3943b184011a9d2afb7af90ae07b3cd99d910953b3b6b15bf6",
+        "import_knowledge.py": "5e508495c342f31eca83e3652aa4b294d7dab24cb067da3026d4106541758160",
+        "predictor.py": "84181bf7ecc28c081d7507c70de1c9d61cfb9ba52d3631df753cfe26f72f4bf7",
+        "prepare_samples.py": "91a21b4bcb3a5c73f0ab5136ce41561053a9a61306778919c85a7b9c4a2ba7ba",
+        "research_figures.py": "f7cab472e4275936717a4d3253f38746bb947f732f1115028a6d327de3492650",
+        "serve_chat.py": "21a42a4fb3d1051f49d88e0fabbd968ba16869c5b3f43c153872112fc7334592",
+        "serve_retrieval.py": "edc615a60660627a1a93720aaa2464d7a484aa282fc6b39ada685b8813ddbc97",
+        "suggest_annotations.py": "8e91490018373af938228fb56d82a036e03262c2afc56b85ad2d5b0d3c7147b4",
+        "text.py": "07563d55e9e1a72edc847379a4313e096470757051119d9e8c03c431b892e396",
+        "tokenization_audit.py": "976b2f6c757bb0ee95a52f704f8efeac96d760fd27b71653508d29d8e264db45",
+        "train_chat.py": "544b776cbf7f92434429f56853c786d59bca2d38871cb2507249eeacea779ffb",
+        "train_sentiment.py": "c87154795063f1fbbe53ea132feb73dc36db05f50b174d88e1bffefe79bbbf0d"
+      }
+    },
+    {
+      "dataset": "uts2017-bank",
+      "model_id": "visobert",
+      "seed": 73,
+      "stage": "completed-validation",
+      "evidence_path": "pipelines\\ml\\runs\\advisor-v3\\uts2017-bank\\visobert\\73\\metadata.json",
+      "metadata_sha256": "2840c16f33d91d020e207bbf120214a87509f740ad979cdc3083de7dfc972901",
+      "architecture": {
+        "model_type": "xlm-roberta",
+        "implementation": "XLMRobertaForSequenceClassification",
+        "encoder_layers": 12,
+        "hidden_size": 768,
+        "attention_heads": 12,
+        "num_labels": 3,
+        "total_parameters": 97568259,
+        "trainable_parameters": 97568259
+      },
+      "training": {
+        "learning_rate": 2e-05,
+        "epochs_requested": 3,
+        "epochs_completed": 3.0,
+        "global_step": 579,
+        "best_checkpoint": "C:\\code\\Cinema_Booking\\pipelines\\ml\\runs\\advisor-v3\\uts2017-bank\\visobert\\73\\checkpoints\\checkpoint-386",
+        "best_validation_macro_f1": 0.6570418552036199,
+        "batch_size": 1,
+        "effective_batch_size": 8,
+        "gradient_accumulation_steps": 8,
+        "world_size": 1,
+        "max_length": 256,
+        "optimizer": "adamw_torch",
+        "weight_decay": 0.0,
+        "scheduler": "linear",
+        "warmup_steps": 0,
+        "fp16": true,
+        "device": "cuda:0",
+        "selection_split": "validation"
+      },
+      "metadata_schema": 2,
+      "macro_f1": 0.6570418552036199,
+      "accuracy": 0.9816176470588235,
+      "per_class": {
+        "negative": {
+          "precision": 0.972972972972973,
+          "recall": 0.9818181818181818,
+          "f1-score": 0.9773755656108597,
+          "support": 110.0
+        },
+        "neutral": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1-score": 0.0,
+          "support": 3.0
+        },
+        "positive": {
+          "precision": 0.9875776397515528,
+          "recall": 1.0,
+          "f1-score": 0.99375,
+          "support": 159.0
+        },
+        "accuracy": 0.9816176470588235,
+        "macro avg": {
+          "precision": 0.6535168709081752,
+          "recall": 0.6606060606060606,
+          "f1-score": 0.6570418552036199,
+          "support": 272.0
+        },
+        "weighted avg": {
+          "precision": 0.9707789402482497,
+          "recall": 0.9816176470588235,
+          "f1-score": 0.9761675081514506,
+          "support": 272.0
+        }
+      },
+      "error_count": 5,
+      "errors_exported": true,
+      "elapsed_seconds": 150.84846809999726,
+      "data_sha256": {
+        "train": "6a5b8ed85c5488a8199c5a1a5ed11a4c2424437237b3a6f011c2def789d97154",
+        "validation": "0bdc2051c848852d8280598615eb67cceaa99288dba4b3c7c415ea3d12e0d763",
+        "test": "dad5d4f9aa24cad417a1b8dd59a23cc2112d2459937be2f8920d347b406789f7"
+      },
+      "code_commit": "7d9ca6f79b7b613b650b30e3b02946217cb8b871",
+      "pipeline_sha256": {
+        "__init__.py": "d17a050993fea52a53c5b4678291b2bdaacf4de3b5ee9ff6a6a471dc6f6c9623",
+        "annotation_app.py": "95feed813102442932099150d7cce44507e92a595af81e7d112d5f7eaf63c6cc",
+        "annotations.py": "456e9cb6d51c3c548dc5457d5d9b0aace512170f0845ec08914b39c35540cb74",
+        "benchmark.py": "816a6e58b3059f401fd5bc15cd3862375920e6c611e279089a3f13a761f3d4a3",
+        "chat_format.py": "a77f33c84aaab9afc6870035a23ebc470f634611eee07c423c0cb6bae8d3788f",
+        "data.py": "965db9c6df4291ccc83e99c32db69dcaa50846cea1bd291bb0a76b35165cb328",
+        "dataset_audit.py": "35eb104f5d56c75b9d4a923688687a28a9d43a5bc0fe95e08c85cdf0e52991fe",
+        "evaluate_chat.py": "b9557f103cf2f946c26ceb69aa934854befd1d6c3445cb966bbe8271a2fe18d6",
+        "evaluate_ranking.py": "d8fb6864c9ce6d43f95a24bb88908073f8abc58407e6c7a3f31e77b603381ad2",
+        "evaluate_sentiment.py": "67987791bbc0f19d3e88fbbcbb7b1c5f4332c794ca7957df9b28ca8bb834cea9",
+        "export_evidence.py": "e6eb92a8d5575c3943b184011a9d2afb7af90ae07b3cd99d910953b3b6b15bf6",
+        "import_knowledge.py": "5e508495c342f31eca83e3652aa4b294d7dab24cb067da3026d4106541758160",
+        "predictor.py": "84181bf7ecc28c081d7507c70de1c9d61cfb9ba52d3631df753cfe26f72f4bf7",
+        "prepare_samples.py": "91a21b4bcb3a5c73f0ab5136ce41561053a9a61306778919c85a7b9c4a2ba7ba",
+        "research_figures.py": "4f1a4b4e262784d6e04200dc8e1b96220a590569153fef589c2de8fa18e6ae06",
+        "serve_chat.py": "21a42a4fb3d1051f49d88e0fabbd968ba16869c5b3f43c153872112fc7334592",
+        "serve_retrieval.py": "edc615a60660627a1a93720aaa2464d7a484aa282fc6b39ada685b8813ddbc97",
+        "suggest_annotations.py": "8e91490018373af938228fb56d82a036e03262c2afc56b85ad2d5b0d3c7147b4",
+        "text.py": "07563d55e9e1a72edc847379a4313e096470757051119d9e8c03c431b892e396",
+        "tokenization_audit.py": "976b2f6c757bb0ee95a52f704f8efeac96d760fd27b71653508d29d8e264db45",
+        "train_chat.py": "544b776cbf7f92434429f56853c786d59bca2d38871cb2507249eeacea779ffb",
+        "train_sentiment.py": "c87154795063f1fbbe53ea132feb73dc36db05f50b174d88e1bffefe79bbbf0d"
+      }
+    },
+    {
+      "dataset": "uts2017-bank",
+      "model_id": "xlmr",
+      "seed": 17,
+      "stage": "completed-validation",
+      "evidence_path": "pipelines\\ml\\runs\\advisor-v3\\uts2017-bank\\xlmr\\17\\metadata.json",
+      "metadata_sha256": "81df64082b9ec63e6ecb71e727332a705c9ea4f699b9605df9b6f8864db85b33",
+      "architecture": {
+        "model_type": "xlm-roberta",
+        "implementation": "XLMRobertaForSequenceClassification",
+        "encoder_layers": 12,
+        "hidden_size": 768,
+        "attention_heads": 12,
+        "num_labels": 3,
+        "total_parameters": 278045955,
+        "trainable_parameters": 278045955
+      },
+      "training": {
+        "learning_rate": 2e-05,
+        "epochs_requested": 3,
+        "epochs_completed": 3.0,
+        "global_step": 579,
+        "best_checkpoint": "C:\\code\\Cinema_Booking\\pipelines\\ml\\runs\\advisor-v3\\uts2017-bank\\xlmr\\17\\checkpoints\\checkpoint-386",
+        "best_validation_macro_f1": 0.6544604927782498,
+        "batch_size": 1,
+        "effective_batch_size": 8,
+        "gradient_accumulation_steps": 8,
+        "world_size": 1,
+        "max_length": 256,
+        "optimizer": "adamw_torch",
+        "weight_decay": 0.0,
+        "scheduler": "linear",
+        "warmup_steps": 0,
+        "fp16": true,
+        "device": "cuda:0",
+        "selection_split": "validation"
+      },
+      "metadata_schema": 2,
+      "macro_f1": 0.6544604927782498,
+      "accuracy": 0.9779411764705882,
+      "per_class": {
+        "negative": {
+          "precision": 0.9727272727272728,
+          "recall": 0.9727272727272728,
+          "f1-score": 0.9727272727272728,
+          "support": 110.0
+        },
+        "neutral": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1-score": 0.0,
+          "support": 3.0
+        },
+        "positive": {
+          "precision": 0.9814814814814815,
+          "recall": 1.0,
+          "f1-score": 0.9906542056074766,
+          "support": 159.0
+        },
+        "accuracy": 0.9779411764705882,
+        "macro avg": {
+          "precision": 0.6514029180695847,
+          "recall": 0.6575757575757576,
+          "f1-score": 0.6544604927782498,
+          "support": 272.0
+        },
+        "weighted avg": {
+          "precision": 0.9671160130718954,
+          "recall": 0.9779411764705882,
+          "f1-score": 0.972478009895547,
+          "support": 272.0
+        }
+      },
+      "error_count": 6,
+      "errors_exported": true,
+      "elapsed_seconds": 240.67808299999888,
+      "data_sha256": {
+        "train": "6a5b8ed85c5488a8199c5a1a5ed11a4c2424437237b3a6f011c2def789d97154",
+        "validation": "0bdc2051c848852d8280598615eb67cceaa99288dba4b3c7c415ea3d12e0d763",
+        "test": "dad5d4f9aa24cad417a1b8dd59a23cc2112d2459937be2f8920d347b406789f7"
+      },
+      "code_commit": "7d9ca6f79b7b613b650b30e3b02946217cb8b871",
+      "pipeline_sha256": {
+        "__init__.py": "d17a050993fea52a53c5b4678291b2bdaacf4de3b5ee9ff6a6a471dc6f6c9623",
+        "annotation_app.py": "95feed813102442932099150d7cce44507e92a595af81e7d112d5f7eaf63c6cc",
+        "annotations.py": "456e9cb6d51c3c548dc5457d5d9b0aace512170f0845ec08914b39c35540cb74",
+        "benchmark.py": "816a6e58b3059f401fd5bc15cd3862375920e6c611e279089a3f13a761f3d4a3",
+        "chat_format.py": "a77f33c84aaab9afc6870035a23ebc470f634611eee07c423c0cb6bae8d3788f",
+        "data.py": "965db9c6df4291ccc83e99c32db69dcaa50846cea1bd291bb0a76b35165cb328",
+        "dataset_audit.py": "b00260c477b4941df57e2c5b40998a94e11ed79255f6a2fd4efbf9bc1eb8ce86",
+        "evaluate_chat.py": "b9557f103cf2f946c26ceb69aa934854befd1d6c3445cb966bbe8271a2fe18d6",
+        "evaluate_ranking.py": "d8fb6864c9ce6d43f95a24bb88908073f8abc58407e6c7a3f31e77b603381ad2",
+        "evaluate_sentiment.py": "67987791bbc0f19d3e88fbbcbb7b1c5f4332c794ca7957df9b28ca8bb834cea9",
+        "export_evidence.py": "e6eb92a8d5575c3943b184011a9d2afb7af90ae07b3cd99d910953b3b6b15bf6",
+        "import_knowledge.py": "5e508495c342f31eca83e3652aa4b294d7dab24cb067da3026d4106541758160",
+        "predictor.py": "84181bf7ecc28c081d7507c70de1c9d61cfb9ba52d3631df753cfe26f72f4bf7",
+        "prepare_samples.py": "91a21b4bcb3a5c73f0ab5136ce41561053a9a61306778919c85a7b9c4a2ba7ba",
+        "research_figures.py": "28b756f379235f9b9830de6d5c29bfd44c3255af458cfba0802ef18c282c6ed4",
+        "serve_chat.py": "21a42a4fb3d1051f49d88e0fabbd968ba16869c5b3f43c153872112fc7334592",
+        "serve_retrieval.py": "edc615a60660627a1a93720aaa2464d7a484aa282fc6b39ada685b8813ddbc97",
+        "suggest_annotations.py": "8e91490018373af938228fb56d82a036e03262c2afc56b85ad2d5b0d3c7147b4",
+        "text.py": "07563d55e9e1a72edc847379a4313e096470757051119d9e8c03c431b892e396",
+        "tokenization_audit.py": "ac76b0e458146b51c1bdea93daa958b0792f9378422bd38377cd3dd46426cc69",
+        "train_chat.py": "544b776cbf7f92434429f56853c786d59bca2d38871cb2507249eeacea779ffb",
+        "train_sentiment.py": "c87154795063f1fbbe53ea132feb73dc36db05f50b174d88e1bffefe79bbbf0d"
+      }
+    },
+    {
+      "dataset": "uts2017-bank",
+      "model_id": "xlmr",
+      "seed": 42,
+      "stage": "completed-validation",
+      "evidence_path": "pipelines\\ml\\runs\\advisor-v3\\uts2017-bank\\xlmr\\42\\metadata.json",
+      "metadata_sha256": "88cc1a4820fd7341d44eaf3c62ebf6c326a9bf064cc1dbfedc7a92d17af3729c",
+      "architecture": {
+        "model_type": "xlm-roberta",
+        "implementation": "XLMRobertaForSequenceClassification",
+        "encoder_layers": 12,
+        "hidden_size": 768,
+        "attention_heads": 12,
+        "num_labels": 3,
+        "total_parameters": 278045955,
+        "trainable_parameters": 278045955
+      },
+      "training": {
+        "learning_rate": 2e-05,
+        "epochs_requested": 3,
+        "epochs_completed": 3.0,
+        "global_step": 579,
+        "best_checkpoint": "C:\\code\\Cinema_Booking\\pipelines\\ml\\runs\\advisor-v3\\uts2017-bank\\xlmr\\42\\checkpoints\\checkpoint-579",
+        "best_validation_macro_f1": 0.6493533465496082,
+        "batch_size": 1,
+        "effective_batch_size": 8,
+        "gradient_accumulation_steps": 8,
+        "world_size": 1,
+        "max_length": 256,
+        "optimizer": "adamw_torch",
+        "weight_decay": 0.0,
+        "scheduler": "linear",
+        "warmup_steps": 0,
+        "fp16": true,
+        "device": "cuda:0",
+        "selection_split": "validation"
+      },
+      "metadata_schema": 2,
+      "macro_f1": 0.6493533465496082,
+      "accuracy": 0.9705882352941176,
+      "per_class": {
+        "negative": {
+          "precision": 0.9636363636363636,
+          "recall": 0.9636363636363636,
+          "f1-score": 0.9636363636363636,
+          "support": 110.0
+        },
+        "neutral": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1-score": 0.0,
+          "support": 3.0
+        },
+        "positive": {
+          "precision": 0.9753086419753086,
+          "recall": 0.9937106918238994,
+          "f1-score": 0.9844236760124611,
+          "support": 159.0
+        },
+        "accuracy": 0.9705882352941176,
+        "macro avg": {
+          "precision": 0.6463150018705575,
+          "recall": 0.6524490184867543,
+          "f1-score": 0.6493533465496082,
+          "support": 272.0
+        },
+        "weighted avg": {
+          "precision": 0.9598311546840959,
+          "recall": 0.9705882352941176,
+          "f1-score": 0.9651594282572844,
+          "support": 272.0
+        }
+      },
+      "error_count": 8,
+      "errors_exported": true,
+      "elapsed_seconds": 237.2856943000006,
+      "data_sha256": {
+        "train": "6a5b8ed85c5488a8199c5a1a5ed11a4c2424437237b3a6f011c2def789d97154",
+        "validation": "0bdc2051c848852d8280598615eb67cceaa99288dba4b3c7c415ea3d12e0d763",
+        "test": "dad5d4f9aa24cad417a1b8dd59a23cc2112d2459937be2f8920d347b406789f7"
+      },
+      "code_commit": "7d9ca6f79b7b613b650b30e3b02946217cb8b871",
+      "pipeline_sha256": {
+        "__init__.py": "d17a050993fea52a53c5b4678291b2bdaacf4de3b5ee9ff6a6a471dc6f6c9623",
+        "annotation_app.py": "95feed813102442932099150d7cce44507e92a595af81e7d112d5f7eaf63c6cc",
+        "annotations.py": "456e9cb6d51c3c548dc5457d5d9b0aace512170f0845ec08914b39c35540cb74",
+        "benchmark.py": "816a6e58b3059f401fd5bc15cd3862375920e6c611e279089a3f13a761f3d4a3",
+        "chat_format.py": "a77f33c84aaab9afc6870035a23ebc470f634611eee07c423c0cb6bae8d3788f",
+        "data.py": "965db9c6df4291ccc83e99c32db69dcaa50846cea1bd291bb0a76b35165cb328",
+        "dataset_audit.py": "b00260c477b4941df57e2c5b40998a94e11ed79255f6a2fd4efbf9bc1eb8ce86",
+        "evaluate_chat.py": "b9557f103cf2f946c26ceb69aa934854befd1d6c3445cb966bbe8271a2fe18d6",
+        "evaluate_ranking.py": "d8fb6864c9ce6d43f95a24bb88908073f8abc58407e6c7a3f31e77b603381ad2",
+        "evaluate_sentiment.py": "67987791bbc0f19d3e88fbbcbb7b1c5f4332c794ca7957df9b28ca8bb834cea9",
+        "export_evidence.py": "1762fe087a2fa5b0b0dcb69f2eec635313c65f3ddcb13611fc32f65810d13212",
+        "import_knowledge.py": "5e508495c342f31eca83e3652aa4b294d7dab24cb067da3026d4106541758160",
+        "predictor.py": "84181bf7ecc28c081d7507c70de1c9d61cfb9ba52d3631df753cfe26f72f4bf7",
+        "prepare_samples.py": "91a21b4bcb3a5c73f0ab5136ce41561053a9a61306778919c85a7b9c4a2ba7ba",
+        "research_figures.py": "28b756f379235f9b9830de6d5c29bfd44c3255af458cfba0802ef18c282c6ed4",
+        "serve_chat.py": "21a42a4fb3d1051f49d88e0fabbd968ba16869c5b3f43c153872112fc7334592",
+        "serve_retrieval.py": "edc615a60660627a1a93720aaa2464d7a484aa282fc6b39ada685b8813ddbc97",
+        "suggest_annotations.py": "8e91490018373af938228fb56d82a036e03262c2afc56b85ad2d5b0d3c7147b4",
+        "text.py": "07563d55e9e1a72edc847379a4313e096470757051119d9e8c03c431b892e396",
+        "tokenization_audit.py": "796af6418b0391305ca584675223ebe011d5e94ecee5138210ac4a0afea56a10",
+        "train_chat.py": "544b776cbf7f92434429f56853c786d59bca2d38871cb2507249eeacea779ffb",
+        "train_sentiment.py": "c87154795063f1fbbe53ea132feb73dc36db05f50b174d88e1bffefe79bbbf0d"
+      }
+    },
+    {
+      "dataset": "uts2017-bank",
+      "model_id": "xlmr",
+      "seed": 73,
+      "stage": "completed-validation",
+      "evidence_path": "pipelines\\ml\\runs\\advisor-v3\\uts2017-bank\\xlmr\\73\\metadata.json",
+      "metadata_sha256": "8a86f3716e6abeffe8922352837f13909fcd91f26372a759440534551430b2db",
+      "architecture": {
+        "model_type": "xlm-roberta",
+        "implementation": "XLMRobertaForSequenceClassification",
+        "encoder_layers": 12,
+        "hidden_size": 768,
+        "attention_heads": 12,
+        "num_labels": 3,
+        "total_parameters": 278045955,
+        "trainable_parameters": 278045955
+      },
+      "training": {
+        "learning_rate": 2e-05,
+        "epochs_requested": 3,
+        "epochs_completed": 3.0,
+        "global_step": 579,
+        "best_checkpoint": "C:\\code\\Cinema_Booking\\pipelines\\ml\\runs\\advisor-v3\\uts2017-bank\\xlmr\\73\\checkpoints\\checkpoint-579",
+        "best_validation_macro_f1": 0.6493533465496082,
+        "batch_size": 1,
+        "effective_batch_size": 8,
+        "gradient_accumulation_steps": 8,
+        "world_size": 1,
+        "max_length": 256,
+        "optimizer": "adamw_torch",
+        "weight_decay": 0.0,
+        "scheduler": "linear",
+        "warmup_steps": 0,
+        "fp16": true,
+        "device": "cuda:0",
+        "selection_split": "validation"
+      },
+      "metadata_schema": 2,
+      "macro_f1": 0.6493533465496082,
+      "accuracy": 0.9705882352941176,
+      "per_class": {
+        "negative": {
+          "precision": 0.9636363636363636,
+          "recall": 0.9636363636363636,
+          "f1-score": 0.9636363636363636,
+          "support": 110.0
+        },
+        "neutral": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1-score": 0.0,
+          "support": 3.0
+        },
+        "positive": {
+          "precision": 0.9753086419753086,
+          "recall": 0.9937106918238994,
+          "f1-score": 0.9844236760124611,
+          "support": 159.0
+        },
+        "accuracy": 0.9705882352941176,
+        "macro avg": {
+          "precision": 0.6463150018705575,
+          "recall": 0.6524490184867543,
+          "f1-score": 0.6493533465496082,
+          "support": 272.0
+        },
+        "weighted avg": {
+          "precision": 0.9598311546840959,
+          "recall": 0.9705882352941176,
+          "f1-score": 0.9651594282572844,
+          "support": 272.0
+        }
+      },
+      "error_count": 8,
+      "errors_exported": true,
+      "elapsed_seconds": 232.84870560000127,
+      "data_sha256": {
+        "train": "6a5b8ed85c5488a8199c5a1a5ed11a4c2424437237b3a6f011c2def789d97154",
+        "validation": "0bdc2051c848852d8280598615eb67cceaa99288dba4b3c7c415ea3d12e0d763",
+        "test": "dad5d4f9aa24cad417a1b8dd59a23cc2112d2459937be2f8920d347b406789f7"
+      },
+      "code_commit": "7d9ca6f79b7b613b650b30e3b02946217cb8b871",
+      "pipeline_sha256": {
+        "__init__.py": "d17a050993fea52a53c5b4678291b2bdaacf4de3b5ee9ff6a6a471dc6f6c9623",
+        "annotation_app.py": "95feed813102442932099150d7cce44507e92a595af81e7d112d5f7eaf63c6cc",
+        "annotations.py": "456e9cb6d51c3c548dc5457d5d9b0aace512170f0845ec08914b39c35540cb74",
+        "benchmark.py": "816a6e58b3059f401fd5bc15cd3862375920e6c611e279089a3f13a761f3d4a3",
+        "chat_format.py": "a77f33c84aaab9afc6870035a23ebc470f634611eee07c423c0cb6bae8d3788f",
+        "data.py": "965db9c6df4291ccc83e99c32db69dcaa50846cea1bd291bb0a76b35165cb328",
+        "dataset_audit.py": "b00260c477b4941df57e2c5b40998a94e11ed79255f6a2fd4efbf9bc1eb8ce86",
+        "evaluate_chat.py": "b9557f103cf2f946c26ceb69aa934854befd1d6c3445cb966bbe8271a2fe18d6",
+        "evaluate_ranking.py": "d8fb6864c9ce6d43f95a24bb88908073f8abc58407e6c7a3f31e77b603381ad2",
+        "evaluate_sentiment.py": "67987791bbc0f19d3e88fbbcbb7b1c5f4332c794ca7957df9b28ca8bb834cea9",
+        "export_evidence.py": "1762fe087a2fa5b0b0dcb69f2eec635313c65f3ddcb13611fc32f65810d13212",
+        "import_knowledge.py": "5e508495c342f31eca83e3652aa4b294d7dab24cb067da3026d4106541758160",
+        "predictor.py": "84181bf7ecc28c081d7507c70de1c9d61cfb9ba52d3631df753cfe26f72f4bf7",
+        "prepare_samples.py": "91a21b4bcb3a5c73f0ab5136ce41561053a9a61306778919c85a7b9c4a2ba7ba",
+        "research_figures.py": "28b756f379235f9b9830de6d5c29bfd44c3255af458cfba0802ef18c282c6ed4",
+        "serve_chat.py": "21a42a4fb3d1051f49d88e0fabbd968ba16869c5b3f43c153872112fc7334592",
+        "serve_retrieval.py": "edc615a60660627a1a93720aaa2464d7a484aa282fc6b39ada685b8813ddbc97",
+        "suggest_annotations.py": "8e91490018373af938228fb56d82a036e03262c2afc56b85ad2d5b0d3c7147b4",
+        "text.py": "07563d55e9e1a72edc847379a4313e096470757051119d9e8c03c431b892e396",
+        "tokenization_audit.py": "796af6418b0391305ca584675223ebe011d5e94ecee5138210ac4a0afea56a10",
+        "train_chat.py": "544b776cbf7f92434429f56853c786d59bca2d38871cb2507249eeacea779ffb",
+        "train_sentiment.py": "c87154795063f1fbbe53ea132feb73dc36db05f50b174d88e1bffefe79bbbf0d"
+      }
+    }
+  ],
+  "matrix": [
+    {
+      "dataset": "cinema-vi",
+      "model": "phobert",
+      "seed": 17,
+      "state": "blocked",
+      "issues": [
+        "needs-human-annotation"
+      ],
+      "evidence_state": "blocked"
+    },
+    {
+      "dataset": "cinema-vi",
+      "model": "phobert",
+      "seed": 42,
+      "state": "blocked",
+      "issues": [
+        "needs-human-annotation"
+      ],
+      "evidence_state": "blocked"
+    },
+    {
+      "dataset": "cinema-vi",
+      "model": "phobert",
+      "seed": 73,
+      "state": "blocked",
+      "issues": [
+        "needs-human-annotation"
+      ],
+      "evidence_state": "blocked"
+    },
+    {
+      "dataset": "cinema-vi",
+      "model": "visobert",
+      "seed": 17,
+      "state": "blocked",
+      "issues": [
+        "needs-human-annotation"
+      ],
+      "evidence_state": "blocked"
+    },
+    {
+      "dataset": "cinema-vi",
+      "model": "visobert",
+      "seed": 42,
+      "state": "blocked",
+      "issues": [
+        "needs-human-annotation"
+      ],
+      "evidence_state": "blocked"
+    },
+    {
+      "dataset": "cinema-vi",
+      "model": "visobert",
+      "seed": 73,
+      "state": "blocked",
+      "issues": [
+        "needs-human-annotation"
+      ],
+      "evidence_state": "blocked"
+    },
+    {
+      "dataset": "cinema-vi",
+      "model": "videberta",
+      "seed": 17,
+      "state": "blocked",
+      "issues": [
+        "needs-human-annotation"
+      ],
+      "evidence_state": "blocked"
+    },
+    {
+      "dataset": "cinema-vi",
+      "model": "videberta",
+      "seed": 42,
+      "state": "blocked",
+      "issues": [
+        "needs-human-annotation"
+      ],
+      "evidence_state": "blocked"
+    },
+    {
+      "dataset": "cinema-vi",
+      "model": "videberta",
+      "seed": 73,
+      "state": "blocked",
+      "issues": [
+        "needs-human-annotation"
+      ],
+      "evidence_state": "blocked"
+    },
+    {
+      "dataset": "cinema-vi",
+      "model": "mbert",
+      "seed": 17,
+      "state": "blocked",
+      "issues": [
+        "needs-human-annotation"
+      ],
+      "evidence_state": "blocked"
+    },
+    {
+      "dataset": "cinema-vi",
+      "model": "mbert",
+      "seed": 42,
+      "state": "blocked",
+      "issues": [
+        "needs-human-annotation"
+      ],
+      "evidence_state": "blocked"
+    },
+    {
+      "dataset": "cinema-vi",
+      "model": "mbert",
+      "seed": 73,
+      "state": "blocked",
+      "issues": [
+        "needs-human-annotation"
+      ],
+      "evidence_state": "blocked"
+    },
+    {
+      "dataset": "cinema-vi",
+      "model": "xlmr",
+      "seed": 17,
+      "state": "blocked",
+      "issues": [
+        "needs-human-annotation"
+      ],
+      "evidence_state": "blocked"
+    },
+    {
+      "dataset": "cinema-vi",
+      "model": "xlmr",
+      "seed": 42,
+      "state": "blocked",
+      "issues": [
+        "needs-human-annotation"
+      ],
+      "evidence_state": "blocked"
+    },
+    {
+      "dataset": "cinema-vi",
+      "model": "xlmr",
+      "seed": 73,
+      "state": "blocked",
+      "issues": [
+        "needs-human-annotation"
+      ],
+      "evidence_state": "blocked"
+    },
+    {
+      "dataset": "cinema-vi",
+      "model": "lr",
+      "seed": 17,
+      "state": "blocked",
+      "issues": [
+        "needs-human-annotation"
+      ],
+      "evidence_state": "blocked"
+    },
+    {
+      "dataset": "cinema-vi",
+      "model": "lr",
+      "seed": 42,
+      "state": "blocked",
+      "issues": [
+        "needs-human-annotation"
+      ],
+      "evidence_state": "blocked"
+    },
+    {
+      "dataset": "cinema-vi",
+      "model": "lr",
+      "seed": 73,
+      "state": "blocked",
+      "issues": [
+        "needs-human-annotation"
+      ],
+      "evidence_state": "blocked"
+    },
+    {
+      "dataset": "uit-vsfc",
+      "model": "phobert",
+      "seed": 17,
+      "state": "blocked",
+      "issues": [
+        "needs-license-confirmation"
+      ],
+      "evidence_state": "blocked"
+    },
+    {
+      "dataset": "uit-vsfc",
+      "model": "phobert",
+      "seed": 42,
+      "state": "blocked",
+      "issues": [
+        "needs-license-confirmation"
+      ],
+      "evidence_state": "blocked"
+    },
+    {
+      "dataset": "uit-vsfc",
+      "model": "phobert",
+      "seed": 73,
+      "state": "blocked",
+      "issues": [
+        "needs-license-confirmation"
+      ],
+      "evidence_state": "blocked"
+    },
+    {
+      "dataset": "uit-vsfc",
+      "model": "visobert",
+      "seed": 17,
+      "state": "blocked",
+      "issues": [
+        "needs-license-confirmation"
+      ],
+      "evidence_state": "blocked"
+    },
+    {
+      "dataset": "uit-vsfc",
+      "model": "visobert",
+      "seed": 42,
+      "state": "blocked",
+      "issues": [
+        "needs-license-confirmation"
+      ],
+      "evidence_state": "blocked"
+    },
+    {
+      "dataset": "uit-vsfc",
+      "model": "visobert",
+      "seed": 73,
+      "state": "blocked",
+      "issues": [
+        "needs-license-confirmation"
+      ],
+      "evidence_state": "blocked"
+    },
+    {
+      "dataset": "uit-vsfc",
+      "model": "videberta",
+      "seed": 17,
+      "state": "blocked",
+      "issues": [
+        "needs-license-confirmation"
+      ],
+      "evidence_state": "blocked"
+    },
+    {
+      "dataset": "uit-vsfc",
+      "model": "videberta",
+      "seed": 42,
+      "state": "blocked",
+      "issues": [
+        "needs-license-confirmation"
+      ],
+      "evidence_state": "blocked"
+    },
+    {
+      "dataset": "uit-vsfc",
+      "model": "videberta",
+      "seed": 73,
+      "state": "blocked",
+      "issues": [
+        "needs-license-confirmation"
+      ],
+      "evidence_state": "blocked"
+    },
+    {
+      "dataset": "uit-vsfc",
+      "model": "mbert",
+      "seed": 17,
+      "state": "blocked",
+      "issues": [
+        "needs-license-confirmation"
+      ],
+      "evidence_state": "blocked"
+    },
+    {
+      "dataset": "uit-vsfc",
+      "model": "mbert",
+      "seed": 42,
+      "state": "blocked",
+      "issues": [
+        "needs-license-confirmation"
+      ],
+      "evidence_state": "blocked"
+    },
+    {
+      "dataset": "uit-vsfc",
+      "model": "mbert",
+      "seed": 73,
+      "state": "blocked",
+      "issues": [
+        "needs-license-confirmation"
+      ],
+      "evidence_state": "blocked"
+    },
+    {
+      "dataset": "uit-vsfc",
+      "model": "xlmr",
+      "seed": 17,
+      "state": "blocked",
+      "issues": [
+        "needs-license-confirmation"
+      ],
+      "evidence_state": "blocked"
+    },
+    {
+      "dataset": "uit-vsfc",
+      "model": "xlmr",
+      "seed": 42,
+      "state": "blocked",
+      "issues": [
+        "needs-license-confirmation"
+      ],
+      "evidence_state": "blocked"
+    },
+    {
+      "dataset": "uit-vsfc",
+      "model": "xlmr",
+      "seed": 73,
+      "state": "blocked",
+      "issues": [
+        "needs-license-confirmation"
+      ],
+      "evidence_state": "blocked"
+    },
+    {
+      "dataset": "uit-vsfc",
+      "model": "lr",
+      "seed": 17,
+      "state": "blocked",
+      "issues": [
+        "needs-license-confirmation"
+      ],
+      "evidence_state": "blocked"
+    },
+    {
+      "dataset": "uit-vsfc",
+      "model": "lr",
+      "seed": 42,
+      "state": "blocked",
+      "issues": [
+        "needs-license-confirmation"
+      ],
+      "evidence_state": "blocked"
+    },
+    {
+      "dataset": "uit-vsfc",
+      "model": "lr",
+      "seed": 73,
+      "state": "blocked",
+      "issues": [
+        "needs-license-confirmation"
+      ],
+      "evidence_state": "blocked"
+    },
+    {
+      "dataset": "open-sentiment",
+      "model": "phobert",
+      "seed": 17,
+      "state": "blocked",
+      "issues": [
+        "needs-verified-open-3class-source"
+      ],
+      "evidence_state": "blocked"
+    },
+    {
+      "dataset": "open-sentiment",
+      "model": "phobert",
+      "seed": 42,
+      "state": "blocked",
+      "issues": [
+        "needs-verified-open-3class-source"
+      ],
+      "evidence_state": "blocked"
+    },
+    {
+      "dataset": "open-sentiment",
+      "model": "phobert",
+      "seed": 73,
+      "state": "blocked",
+      "issues": [
+        "needs-verified-open-3class-source"
+      ],
+      "evidence_state": "blocked"
+    },
+    {
+      "dataset": "open-sentiment",
+      "model": "visobert",
+      "seed": 17,
+      "state": "blocked",
+      "issues": [
+        "needs-verified-open-3class-source"
+      ],
+      "evidence_state": "blocked"
+    },
+    {
+      "dataset": "open-sentiment",
+      "model": "visobert",
+      "seed": 42,
+      "state": "blocked",
+      "issues": [
+        "needs-verified-open-3class-source"
+      ],
+      "evidence_state": "blocked"
+    },
+    {
+      "dataset": "open-sentiment",
+      "model": "visobert",
+      "seed": 73,
+      "state": "blocked",
+      "issues": [
+        "needs-verified-open-3class-source"
+      ],
+      "evidence_state": "blocked"
+    },
+    {
+      "dataset": "open-sentiment",
+      "model": "videberta",
+      "seed": 17,
+      "state": "blocked",
+      "issues": [
+        "needs-verified-open-3class-source"
+      ],
+      "evidence_state": "blocked"
+    },
+    {
+      "dataset": "open-sentiment",
+      "model": "videberta",
+      "seed": 42,
+      "state": "blocked",
+      "issues": [
+        "needs-verified-open-3class-source"
+      ],
+      "evidence_state": "blocked"
+    },
+    {
+      "dataset": "open-sentiment",
+      "model": "videberta",
+      "seed": 73,
+      "state": "blocked",
+      "issues": [
+        "needs-verified-open-3class-source"
+      ],
+      "evidence_state": "blocked"
+    },
+    {
+      "dataset": "open-sentiment",
+      "model": "mbert",
+      "seed": 17,
+      "state": "blocked",
+      "issues": [
+        "needs-verified-open-3class-source"
+      ],
+      "evidence_state": "blocked"
+    },
+    {
+      "dataset": "open-sentiment",
+      "model": "mbert",
+      "seed": 42,
+      "state": "blocked",
+      "issues": [
+        "needs-verified-open-3class-source"
+      ],
+      "evidence_state": "blocked"
+    },
+    {
+      "dataset": "open-sentiment",
+      "model": "mbert",
+      "seed": 73,
+      "state": "blocked",
+      "issues": [
+        "needs-verified-open-3class-source"
+      ],
+      "evidence_state": "blocked"
+    },
+    {
+      "dataset": "open-sentiment",
+      "model": "xlmr",
+      "seed": 17,
+      "state": "blocked",
+      "issues": [
+        "needs-verified-open-3class-source"
+      ],
+      "evidence_state": "blocked"
+    },
+    {
+      "dataset": "open-sentiment",
+      "model": "xlmr",
+      "seed": 42,
+      "state": "blocked",
+      "issues": [
+        "needs-verified-open-3class-source"
+      ],
+      "evidence_state": "blocked"
+    },
+    {
+      "dataset": "open-sentiment",
+      "model": "xlmr",
+      "seed": 73,
+      "state": "blocked",
+      "issues": [
+        "needs-verified-open-3class-source"
+      ],
+      "evidence_state": "blocked"
+    },
+    {
+      "dataset": "open-sentiment",
+      "model": "lr",
+      "seed": 17,
+      "state": "blocked",
+      "issues": [
+        "needs-verified-open-3class-source"
+      ],
+      "evidence_state": "blocked"
+    },
+    {
+      "dataset": "open-sentiment",
+      "model": "lr",
+      "seed": 42,
+      "state": "blocked",
+      "issues": [
+        "needs-verified-open-3class-source"
+      ],
+      "evidence_state": "blocked"
+    },
+    {
+      "dataset": "open-sentiment",
+      "model": "lr",
+      "seed": 73,
+      "state": "blocked",
+      "issues": [
+        "needs-verified-open-3class-source"
+      ],
+      "evidence_state": "blocked"
+    },
+    {
+      "dataset": "uts2017-bank",
+      "model": "phobert",
+      "seed": 17,
+      "state": "ready",
+      "issues": [],
+      "evidence_state": "completed-validation"
+    },
+    {
+      "dataset": "uts2017-bank",
+      "model": "phobert",
+      "seed": 42,
+      "state": "ready",
+      "issues": [],
+      "evidence_state": "completed-validation"
+    },
+    {
+      "dataset": "uts2017-bank",
+      "model": "phobert",
+      "seed": 73,
+      "state": "ready",
+      "issues": [],
+      "evidence_state": "completed-validation"
+    },
+    {
+      "dataset": "uts2017-bank",
+      "model": "visobert",
+      "seed": 17,
+      "state": "ready",
+      "issues": [],
+      "evidence_state": "completed-validation"
+    },
+    {
+      "dataset": "uts2017-bank",
+      "model": "visobert",
+      "seed": 42,
+      "state": "ready",
+      "issues": [],
+      "evidence_state": "completed-validation"
+    },
+    {
+      "dataset": "uts2017-bank",
+      "model": "visobert",
+      "seed": 73,
+      "state": "ready",
+      "issues": [],
+      "evidence_state": "completed-validation"
+    },
+    {
+      "dataset": "uts2017-bank",
+      "model": "videberta",
+      "seed": 17,
+      "state": "ready",
+      "issues": [],
+      "evidence_state": "completed-validation"
+    },
+    {
+      "dataset": "uts2017-bank",
+      "model": "videberta",
+      "seed": 42,
+      "state": "ready",
+      "issues": [],
+      "evidence_state": "completed-validation"
+    },
+    {
+      "dataset": "uts2017-bank",
+      "model": "videberta",
+      "seed": 73,
+      "state": "ready",
+      "issues": [],
+      "evidence_state": "completed-validation"
+    },
+    {
+      "dataset": "uts2017-bank",
+      "model": "mbert",
+      "seed": 17,
+      "state": "ready",
+      "issues": [],
+      "evidence_state": "completed-validation"
+    },
+    {
+      "dataset": "uts2017-bank",
+      "model": "mbert",
+      "seed": 42,
+      "state": "ready",
+      "issues": [],
+      "evidence_state": "completed-validation"
+    },
+    {
+      "dataset": "uts2017-bank",
+      "model": "mbert",
+      "seed": 73,
+      "state": "ready",
+      "issues": [],
+      "evidence_state": "completed-validation"
+    },
+    {
+      "dataset": "uts2017-bank",
+      "model": "xlmr",
+      "seed": 17,
+      "state": "ready",
+      "issues": [],
+      "evidence_state": "completed-validation"
+    },
+    {
+      "dataset": "uts2017-bank",
+      "model": "xlmr",
+      "seed": 42,
+      "state": "ready",
+      "issues": [],
+      "evidence_state": "completed-validation"
+    },
+    {
+      "dataset": "uts2017-bank",
+      "model": "xlmr",
+      "seed": 73,
+      "state": "ready",
+      "issues": [],
+      "evidence_state": "completed-validation"
+    },
+    {
+      "dataset": "uts2017-bank",
+      "model": "lr",
+      "seed": 17,
+      "state": "ready",
+      "issues": [],
+      "evidence_state": "completed-validation"
+    },
+    {
+      "dataset": "uts2017-bank",
+      "model": "lr",
+      "seed": 42,
+      "state": "ready",
+      "issues": [],
+      "evidence_state": "completed-validation"
+    },
+    {
+      "dataset": "uts2017-bank",
+      "model": "lr",
+      "seed": 73,
+      "state": "ready",
+      "issues": [],
+      "evidence_state": "completed-validation"
+    }
+  ],
+  "validation_summary": [
+    {
+      "dataset": "uts2017-bank",
+      "model": "lr",
+      "seeds_completed": 3,
+      "macro_f1_mean": 0.6332788456118595,
+      "macro_f1_std": 0.0
+    },
+    {
+      "dataset": "uts2017-bank",
+      "model": "mbert",
+      "seeds_completed": 3,
+      "macro_f1_mean": 0.6410026125002779,
+      "macro_f1_std": 0.0029678229248034115
+    },
+    {
+      "dataset": "uts2017-bank",
+      "model": "phobert",
+      "seeds_completed": 3,
+      "macro_f1_mean": 0.6433067570634335,
+      "macro_f1_std": 0.0030616154165052974
+    },
+    {
+      "dataset": "uts2017-bank",
+      "model": "videberta",
+      "seeds_completed": 3,
+      "macro_f1_mean": 0.5925256435091703,
+      "macro_f1_std": 0.006187121491249256
+    },
+    {
+      "dataset": "uts2017-bank",
+      "model": "visobert",
+      "seeds_completed": 3,
+      "macro_f1_mean": 0.6579336684201608,
+      "macro_f1_std": 0.001497686334449075
+    },
+    {
+      "dataset": "uts2017-bank",
+      "model": "xlmr",
+      "seeds_completed": 3,
+      "macro_f1_mean": 0.6510557286258221,
+      "macro_f1_std": 0.002948612249897017
+    }
+  ],
+  "final_test_opened": false,
+  "completion": {
+    "planned_runs": 72,
+    "completed_validation_runs": 18,
+    "completed_datasets": [
+      "uts2017-bank"
+    ],
+    "note": "Readiness is not completion; blocked/missing runs do not contribute a score."
+  }
+}

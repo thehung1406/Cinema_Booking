@@ -1,0 +1,13 @@
+{
+  "artifact": "docs/reports/AI_GVHD_4_DATASET_2026-11-04.docx",
+  "docx_sha256": "b301b6f73e774bb32f8415431c7be395b63a5f561cfea82ed773599ac3d575f7",
+  "rendered_pages": 21,
+  "landscape_pages": [
+    5
+  ],
+  "text_blocks_outside_page": [],
+  "rag_request_evidence_spans": 32,
+  "all_span_ids_and_full_text_present": true,
+  "all_trace_answer_paragraphs_present": true,
+  "visual_review": "Assistant inspected all pages in rendered draft and final revised pages; not human scientific approval."
+}

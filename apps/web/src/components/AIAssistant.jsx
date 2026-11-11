@@ -268,6 +268,15 @@ export default function AIAssistant() {
                 <p className="text-sm whitespace-pre-wrap break-words">
                   {m.answer}
                 </p>
+                {m.cards?.map(card => <section key={card.showtime_id} className="border border-red-100 rounded-lg p-3 mt-3 space-y-1">
+                  <h3 className="font-bold">{card.film_title}</h3>
+                  <p className="text-sm">{card.theater_name} · {card.room_name}</p>
+                  <p className="text-sm">{card.show_date} · {String(card.start_time).slice(0, 5)} · {card.format}</p>
+                  <p className="text-sm">Giá từ {Number(card.min_ticket_price).toLocaleString('vi-VN')} ₫/vé · {card.party_size} vé từ {Number(card.minimum_total).toLocaleString('vi-VN')} ₫</p>
+                  <p className="text-xs text-gray-500">{card.available_seats} ghế trống lúc tra cứu. Chưa giữ ghế và chưa bảo đảm ghế liền nhau.</p>
+                  <Link to={card.url} className="inline-block bg-red-700 text-white rounded px-3 py-2 mt-2 text-sm">Chọn ghế</Link>
+                </section>)}
+                {m.has_more && <p className="text-xs mt-2">Còn kết quả khác. Bạn có thể thêm rạp, giờ hoặc ngân sách để thu hẹp.</p>}
                 {m.sources?.length > 0 && (
                   <details className="text-xs mt-2">
                     <summary className="cursor-pointer">
@@ -282,6 +291,9 @@ export default function AIAssistant() {
                         <p className="whitespace-pre-wrap break-words">
                           {s.text}
                         </p>
+                        {s.kind === 'document' && <a href={s.url} target="_blank" rel="noreferrer" className="underline text-red-700">
+                          Mở nguồn{s.provenance?.page_start ? ` · trang PDF ${s.provenance.page_start}` : ''}
+                        </a>}
                       </div>
                     ))}
                   </details>

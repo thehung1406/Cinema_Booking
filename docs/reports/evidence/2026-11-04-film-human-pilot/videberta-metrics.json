@@ -1,0 +1,143 @@
+{
+  "model": "videberta",
+  "stage": "single-reviewer-human-film-development-pilot",
+  "count": 100,
+  "correct": 43,
+  "accuracy_vs_single_reviewer": 0.43,
+  "macro_f1": 0.2950733752620545,
+  "coverage": 1.0,
+  "covered_accuracy": 0.43,
+  "abstentions": 0,
+  "per_class": {
+    "negative": {
+      "precision": 0.5,
+      "recall": 0.7,
+      "f1": 0.5833333333333334,
+      "support": 50
+    },
+    "neutral": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "support": 27
+    },
+    "positive": {
+      "precision": 0.26666666666666666,
+      "recall": 0.34782608695652173,
+      "f1": 0.30188679245283023,
+      "support": 23
+    }
+  },
+  "confusion_matrix": [
+    [
+      35,
+      0,
+      15,
+      0
+    ],
+    [
+      20,
+      0,
+      7,
+      0
+    ],
+    [
+      15,
+      0,
+      8,
+      0
+    ]
+  ],
+  "gold_order": [
+    "negative",
+    "neutral",
+    "positive"
+  ],
+  "prediction_order": [
+    "negative",
+    "neutral",
+    "positive",
+    "abstain"
+  ],
+  "bootstrap_95": {
+    "method": "text-family bootstrap, percentile 95%, seed 42",
+    "repetitions": 1000,
+    "family_count": 99,
+    "accuracy": [
+      0.34,
+      0.5252525252525253
+    ],
+    "macro_f1": [
+      0.22234004948745142,
+      0.36074243579964405
+    ],
+    "note": "Conditional descriptive interval on an enriched pilot and one reviewer; not population accuracy."
+  },
+  "model_version": "videberta-xsmall:029b6b1b1d76:s42:d1bc8dbf3b22c",
+  "trained_domain": "Bank",
+  "movie_fine_tuned": false,
+  "seed": 42,
+  "device": "cpu",
+  "elapsed_seconds": 6.187582899998233,
+  "disagreement_ids": [
+    "vimovie:2ceae3b15ece:row:484",
+    "vimovie:2ceae3b15ece:row:1081",
+    "vimovie:2ceae3b15ece:row:10389",
+    "vimovie:2ceae3b15ece:row:10443",
+    "vimovie:2ceae3b15ece:row:9272",
+    "vimovie:2ceae3b15ece:row:10178",
+    "vimovie:2ceae3b15ece:row:8944",
+    "vimovie:2ceae3b15ece:row:9289",
+    "vimovie:2ceae3b15ece:row:10060",
+    "vimovie:2ceae3b15ece:row:252",
+    "vimovie:2ceae3b15ece:row:797",
+    "vimovie:2ceae3b15ece:row:1174",
+    "vimovie:2ceae3b15ece:row:8072",
+    "vimovie:2ceae3b15ece:row:10159",
+    "vimovie:2ceae3b15ece:row:120",
+    "vimovie:2ceae3b15ece:row:8980",
+    "vimovie:2ceae3b15ece:row:6723",
+    "vimovie:2ceae3b15ece:row:3475",
+    "vimovie:2ceae3b15ece:row:7971",
+    "vimovie:2ceae3b15ece:row:5406",
+    "vimovie:2ceae3b15ece:row:214",
+    "vimovie:2ceae3b15ece:row:2577",
+    "vimovie:2ceae3b15ece:row:1132",
+    "vimovie:2ceae3b15ece:row:10296",
+    "vimovie:2ceae3b15ece:row:10576",
+    "vimovie:2ceae3b15ece:row:6084",
+    "vimovie:2ceae3b15ece:row:10511",
+    "vimovie:2ceae3b15ece:row:1275",
+    "vimovie:2ceae3b15ece:row:7280",
+    "vimovie:2ceae3b15ece:row:9653",
+    "vimovie:2ceae3b15ece:row:9115",
+    "vimovie:2ceae3b15ece:row:9455",
+    "vimovie:2ceae3b15ece:row:10131",
+    "vimovie:2ceae3b15ece:row:288",
+    "vimovie:2ceae3b15ece:row:4503",
+    "vimovie:2ceae3b15ece:row:1388",
+    "vimovie:2ceae3b15ece:row:4906",
+    "vimovie:2ceae3b15ece:row:10751",
+    "vimovie:2ceae3b15ece:row:1306",
+    "vimovie:2ceae3b15ece:row:7386",
+    "vimovie:2ceae3b15ece:row:9669",
+    "vimovie:2ceae3b15ece:row:8056",
+    "vimovie:2ceae3b15ece:row:9625",
+    "vimovie:2ceae3b15ece:row:68",
+    "vimovie:2ceae3b15ece:row:9876",
+    "vimovie:2ceae3b15ece:row:10128",
+    "vimovie:2ceae3b15ece:row:4509",
+    "vimovie:2ceae3b15ece:row:8028",
+    "vimovie:2ceae3b15ece:row:9559",
+    "vimovie:2ceae3b15ece:row:7571",
+    "vimovie:2ceae3b15ece:row:10556",
+    "vimovie:2ceae3b15ece:row:2279",
+    "vimovie:2ceae3b15ece:row:8598",
+    "vimovie:2ceae3b15ece:row:10464",
+    "vimovie:2ceae3b15ece:row:9383",
+    "vimovie:2ceae3b15ece:row:10221",
+    "vimovie:2ceae3b15ece:row:8499"
+  ],
+  "human_error_categories_reviewed": false,
+  "production_promoted": false
+}

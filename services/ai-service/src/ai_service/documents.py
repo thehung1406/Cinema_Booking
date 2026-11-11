@@ -42,7 +42,7 @@ def document_detail(db, document_id):
     chunks = db.exec(select(KnowledgeChunk).where(KnowledgeChunk.document_id == doc.id)
         .order_by(KnowledgeChunk.id)).all()
     return {**doc.model_dump(), "chunks": [dict(id=c.id, content=c.content,
-        embedding_version=c.embedding_version) for c in chunks]}
+        embedding_version=c.embedding_version, provenance=c.provenance) for c in chunks]}
 
 
 def utc(value):

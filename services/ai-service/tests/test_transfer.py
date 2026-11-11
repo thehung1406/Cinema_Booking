@@ -27,10 +27,13 @@ def test_backfill_preserves_ids_metadata_embeddings_sequences_and_refuses_overwr
         with source.begin() as conn:
             conn.execute(users.insert().values(id=777))
         with Session(source) as db:
-            db.add(KnowledgeDocument(id=5, source_id="test-copy", title="Giữ ghế", version="old-version", source_url="/booking", approved=True, effective_at=utcnow()))
+            # Source is frozen legacy DDL: do not insert newer provenance columns via current ORM.
+            db.execute(legacy.tables["ai_documents"].insert().values(id=5, source_id="test-copy", title="Giữ ghế",
+                version="old-version", source_url="/booking", approved=True, effective_at=utcnow(), updated_at=utcnow()))
             db.add(AIConversation(id=cid, user_id=777, title="Hội thoại cũ", context={"context": {"showtime_id": 1}}))
             db.flush()
-            db.add(KnowledgeChunk(id=11, document_id=5, content="Nội dung gốc", embedding=[0.25] * 256, embedding_version="legacy-preserved"))
+            db.execute(legacy.tables["ai_chunks"].insert().values(id=11, document_id=5, content="Nội dung gốc",
+                embedding=[0.25] * 256, embedding_version="legacy-preserved"))
             db.add(AIMessage(id=1002, conversation_id=cid, role="assistant", content="Giá vé đã tra", details={"sources": [{"id": "source:old", "version": "1"}]}))
             db.commit()
         with source.begin() as conn:

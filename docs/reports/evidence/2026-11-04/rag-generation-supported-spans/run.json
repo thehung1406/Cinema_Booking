@@ -1,0 +1,277 @@
+{
+  "stage": "ai-authored-development-not-independent-gold",
+  "created_at": "2026-11-04T09:16:03.569546+00:00",
+  "approval": "Draft sources temporarily enabled only in SQLite RAM",
+  "strategy": "rerank",
+  "k": 3,
+  "runtime": {
+    "embedding": {
+      "status": "ready",
+      "embedding_model": "intfloat/multilingual-e5-small",
+      "revision": "614241f622f53c4eeff9890bdc4f31cfecc418b3",
+      "reranker": "BAAI/bge-reranker-v2-m3",
+      "reranker_revision": "953dc6f6f85a1b2dbfca4c34a2796e7dde08d41e",
+      "device": "cuda:0",
+      "reranker_fp16": true,
+      "reranker_batch_size": 4,
+      "reranker_max_length": 512
+    },
+    "reranker": {
+      "status": "ready",
+      "embedding_model": "intfloat/multilingual-e5-small",
+      "revision": "614241f622f53c4eeff9890bdc4f31cfecc418b3",
+      "reranker": "BAAI/bge-reranker-v2-m3",
+      "reranker_revision": "953dc6f6f85a1b2dbfca4c34a2796e7dde08d41e",
+      "device": "cuda:0",
+      "reranker_fp16": true,
+      "reranker_batch_size": 4,
+      "reranker_max_length": 512
+    },
+    "model": {
+      "name": "qwen3:4b",
+      "digest": "359d7dd4bcdab3d86b87d73ac27966f4dbb9f5efdfcc75d34a8764a09474fae7"
+    },
+    "llm_warmup_ms": 289.3043000003672
+  },
+  "input_sha256": {
+    ".local/knowledge/booking-guide.json": "741b41d05d5c8bd798e4e71249a8cd291bca78da99e606b5ce18f138225b501a",
+    ".local/knowledge/film-book.json": "1a727bce433cde6724a32a36a149429429af0f3b6c293e2a1b4999c2b77512e8",
+    ".local/knowledge/cinematography-summary.json": "6a36d0f279b21719b78c0da968127ce776f5834fba1f2f54b44e4a9d6f7b3743",
+    "pipelines/knowledge/rag-development-v2.jsonl": "82be582726e637383edd0b2f2efa36ab0af3bf3d05c26b872c86fda412212b19"
+  },
+  "code_sha256": {
+    "C:\\code\\Cinema_Booking\\scripts\\ai\\benchmark_rag_answers.py": "d3254ea8a19e64afa5e2766946a789603690d428a16a996461169b6c1afdfb9a",
+    "services\\ai-service\\src\\ai_service\\llm.py": "73b3baf66bedf983c6f0c4d63a6adb72d34ebb60c5e078b048b69cdaf22f33cb",
+    "services\\ai-service\\src\\ai_service\\rag.py": "f132b7c1d341bba565f3ddf2b987ecc0b19a43e17e832ed2661e20e8468ba238"
+  },
+  "human_evaluated": false,
+  "planned": 24,
+  "cases": [
+    {
+      "id": "booking-steps",
+      "state": "completed",
+      "trace_file": "traces/booking-steps.json",
+      "trace_sha256": "3c870069e52171b342cf596476302af0c2e7e49f3bd001be5a24065f367c1d53",
+      "elapsed_ms": 4012.28390000324,
+      "expected_answerable_development": true,
+      "abstained": false
+    },
+    {
+      "id": "chat-hold",
+      "state": "completed",
+      "trace_file": "traces/chat-hold.json",
+      "trace_sha256": "e1b57a06c6196f8de562c86189f712aa60729ac9201b3306164bfa57eaed0ac3",
+      "elapsed_ms": 2474.7472000017297,
+      "expected_answerable_development": true,
+      "abstained": false
+    },
+    {
+      "id": "login-seats",
+      "state": "completed",
+      "trace_file": "traces/login-seats.json",
+      "trace_sha256": "f804de0baf903432d5c94e3e7a09b21d073848ec437718b939b6148397d470b8",
+      "elapsed_ms": 4183.895399997709,
+      "expected_answerable_development": true,
+      "abstained": false
+    },
+    {
+      "id": "seat-changed",
+      "state": "completed",
+      "trace_file": "traces/seat-changed.json",
+      "trace_sha256": "0c4094735d477cc2901b0a9987609f85fe6d6750a83cc706c88315419f331bc5",
+      "elapsed_ms": 4131.563800001459,
+      "expected_answerable_development": true,
+      "abstained": false
+    },
+    {
+      "id": "final-price",
+      "state": "completed",
+      "trace_file": "traces/final-price.json",
+      "trace_sha256": "8b1f9bce5800e7c6e7da51c5a7e3e3b347783a2ec42017c9e653f19dbac62314",
+      "elapsed_ms": 2655.5616999976337,
+      "expected_answerable_development": true,
+      "abstained": false
+    },
+    {
+      "id": "payment-permission",
+      "state": "completed",
+      "trace_file": "traces/payment-permission.json",
+      "trace_sha256": "0d7594ca9e51a1134fac0c0775f4ac6f62b4854e402a4e8a3448cce59bfefbdc",
+      "elapsed_ms": 2789.454799996747,
+      "expected_answerable_development": true,
+      "abstained": false
+    },
+    {
+      "id": "history",
+      "state": "completed",
+      "trace_file": "traces/history.json",
+      "trace_sha256": "c6a7c82f0c36f19495d25d1464e2a27379d310b752ef0657193088b2e877bf23",
+      "elapsed_ms": 2630.1736000023084,
+      "expected_answerable_development": true,
+      "abstained": false
+    },
+    {
+      "id": "delete-history",
+      "state": "completed",
+      "trace_file": "traces/delete-history.json",
+      "trace_sha256": "5424a017824fc9a3eb84a17f7b6f0bad4065d4af3c47e3c78419f2ddaf53f13b",
+      "elapsed_ms": 4206.65839999856,
+      "expected_answerable_development": true,
+      "abstained": false
+    },
+    {
+      "id": "genre-vi",
+      "state": "completed",
+      "trace_file": "traces/genre-vi.json",
+      "trace_sha256": "12347464470331792275c16619adc05b3b206f630e643beef84f34206cd86fbf",
+      "elapsed_ms": 6680.643400002737,
+      "expected_answerable_development": true,
+      "abstained": false
+    },
+    {
+      "id": "genre-en",
+      "state": "completed",
+      "trace_file": "traces/genre-en.json",
+      "trace_sha256": "429a268735a262b5d66956052e86d7b292ec5765beae567ea9c2dd2dbec560b4",
+      "elapsed_ms": 6269.946400003391,
+      "expected_answerable_development": true,
+      "abstained": false
+    },
+    {
+      "id": "cinematography-definition",
+      "state": "completed",
+      "trace_file": "traces/cinematography-definition.json",
+      "trace_sha256": "f94d80d61f9a28fc542008cd33b5648429b3fcc1e4cfc17721da0788c303d08f",
+      "elapsed_ms": 5168.864400002349,
+      "expected_answerable_development": true,
+      "abstained": false
+    },
+    {
+      "id": "camera-techniques",
+      "state": "completed",
+      "trace_file": "traces/camera-techniques.json",
+      "trace_sha256": "b17b87c4b1de5dca28bddb11a3a5bd4c79dcdf7c247b8bbe384d1a1cd08d3ec8",
+      "elapsed_ms": 3747.278800001368,
+      "expected_answerable_development": true,
+      "abstained": false
+    },
+    {
+      "id": "moving-image",
+      "state": "completed",
+      "trace_file": "traces/moving-image.json",
+      "trace_sha256": "c45c8bd3d28c6c963c37cd3e86997c505eb547f01af613fc71ddb51d1e778d3e",
+      "elapsed_ms": 5477.398800001538,
+      "expected_answerable_development": true,
+      "abstained": false
+    },
+    {
+      "id": "camera-emotion",
+      "state": "completed",
+      "trace_file": "traces/camera-emotion.json",
+      "trace_sha256": "aaf37f0a1e1e02b76436df19d1227333911942ed4742640852b1a4cc1e3e35b5",
+      "elapsed_ms": 3902.4289999942994,
+      "expected_answerable_development": true,
+      "abstained": false
+    },
+    {
+      "id": "refund-percent",
+      "state": "completed",
+      "trace_file": "traces/refund-percent.json",
+      "trace_sha256": "4fae777663e30582335bab3bc5e1be06b65ca71e86fcbde831bc2e909b53a7e6",
+      "elapsed_ms": 751.4455999989877,
+      "expected_answerable_development": false,
+      "abstained": true
+    },
+    {
+      "id": "hold-minutes",
+      "state": "completed",
+      "trace_file": "traces/hold-minutes.json",
+      "trace_sha256": "abad637730f13de9f4512994204f78bde69ab3fbd2a7dacd39a3a0ebdc3b8a47",
+      "elapsed_ms": 750.1236000025528,
+      "expected_answerable_development": false,
+      "abstained": true
+    },
+    {
+      "id": "child-discount",
+      "state": "completed",
+      "trace_file": "traces/child-discount.json",
+      "trace_sha256": "be48f3248672ac4f66f0789929999857d394a677a1f3bcb6d7734ae01f69d803",
+      "elapsed_ms": 719.7025999994366,
+      "expected_answerable_development": false,
+      "abstained": true
+    },
+    {
+      "id": "student-discount",
+      "state": "completed",
+      "trace_file": "traces/student-discount.json",
+      "trace_sha256": "9a2127540f5ad76fd75c2717a899a75161429661a8e90bb79efb2b9d7b53a4ea",
+      "elapsed_ms": 715.1030000022729,
+      "expected_answerable_development": false,
+      "abstained": true
+    },
+    {
+      "id": "refund-days",
+      "state": "completed",
+      "trace_file": "traces/refund-days.json",
+      "trace_sha256": "adc3faee6c892fb38a115b4122b4a9c971c8798c943d0cc7d33cfeb3a2e50244",
+      "elapsed_ms": 778.5385000024689,
+      "expected_answerable_development": false,
+      "abstained": true
+    },
+    {
+      "id": "support-phone",
+      "state": "completed",
+      "trace_file": "traces/support-phone.json",
+      "trace_sha256": "6424155ac95828865e3cd3829ed25a116e1b2dc70a7cdb4262f999a2183d12a4",
+      "elapsed_ms": 757.9222000058508,
+      "expected_answerable_development": false,
+      "abstained": true
+    },
+    {
+      "id": "ticket-vat",
+      "state": "completed",
+      "trace_file": "traces/ticket-vat.json",
+      "trace_sha256": "88a03005ebe0a54f373cfb34ec3b449545906354c1270c5faf6f435ad78061d8",
+      "elapsed_ms": 4054.0036000020336,
+      "expected_answerable_development": false,
+      "abstained": false
+    },
+    {
+      "id": "age-policy",
+      "state": "completed",
+      "trace_file": "traces/age-policy.json",
+      "trace_sha256": "75e93da2f8154224160583bfd773147da4002e1de269c1ca4a30f20f8fbd9c1d",
+      "elapsed_ms": 755.6917000038084,
+      "expected_answerable_development": false,
+      "abstained": true
+    },
+    {
+      "id": "fictional-director",
+      "state": "completed",
+      "trace_file": "traces/fictional-director.json",
+      "trace_sha256": "f36b5bce097b4293af2c27913dcb314fe78f09b6c371742e7a1c5d158977cff9",
+      "elapsed_ms": 1009.3807999946875,
+      "expected_answerable_development": false,
+      "abstained": true
+    },
+    {
+      "id": "not-in-book-awards",
+      "state": "completed",
+      "trace_file": "traces/not-in-book-awards.json",
+      "trace_sha256": "567870b228bb74cb383f390e39f9ffb5a51f23a7301a50770974f3d908d4d146",
+      "elapsed_ms": 884.949700004654,
+      "expected_answerable_development": false,
+      "abstained": true
+    }
+  ],
+  "retrieval_warmup_ms": 669.1573000061908,
+  "summary": {
+    "completed": 24,
+    "failed": 0,
+    "latency_ms_median": 2722.5082499971904,
+    "latency_ms_p95": 6269.946400003391,
+    "unanswerable_development_abstention_rate": 0.9,
+    "answerable_development_answer_rate": 1.0,
+    "note": "Rates use AI-authored expectations only; answer presence and valid citation IDs do not establish factual correctness."
+  }
+}

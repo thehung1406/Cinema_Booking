@@ -2,7 +2,9 @@ FROM python:3.11-slim
 WORKDIR /workspace
 COPY packages/python-platform /opt/python-platform
 COPY services /opt/services
-RUN pip install --no-cache-dir pytest==9.0.3 redis==7.1.0 \
+# Research loss regressions run in the test image only; API images stay small.
+RUN pip install --no-cache-dir torch==2.10.0 --index-url https://download.pytorch.org/whl/cpu
+RUN pip install --no-cache-dir pytest==9.0.3 redis==7.1.0 rapidfuzz==3.14.3 scikit-learn==1.9.0 \
     /opt/python-platform /opt/services/notification-service /opt/services/ai-service \
     /opt/services/review-service /opt/services/identity-service /opt/services/catalog-service \
     /opt/services/cinema-service /opt/services/booking-service /opt/services/payment-service \

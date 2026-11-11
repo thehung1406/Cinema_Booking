@@ -1,0 +1,6 @@
+{
+  "scope": "pipelines/tests",
+  "result": "36 passed in 8.64s",
+  "log_sha256": "78b3d9c677b51248e7d0eaf849e4100225c731e7614da1a8f35484851811b95e",
+  "note": "Focused research/annotation regression; does not claim a fresh complete microservice test run."
+}
