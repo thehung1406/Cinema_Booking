@@ -1,14 +1,116 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { MessageCircle, X } from 'lucide-react';
-import { formatTime } from '../utils/formatters';
+import { ArrowRight, ArrowUpRight, BookOpen, CalendarDays, ChevronDown, Film, History, MapPin, MessageCircle, Send, SlidersHorizontal, SquarePen, Ticket, X } from 'lucide-react';
+import { formatCurrency, formatDate, formatTime } from '../utils/formatters';
 import api from '../config/api';
 import { getAccessToken, AUTH_SESSION_CHANGED_EVENT } from '../services/authStorage';
+import './AIAssistant.css';
+
+const SUGGESTIONS = [
+  { icon: <Film size={19} aria-hidden="true" />, label: 'Gợi ý phim tối nay', question: 'Tối nay có phim hài nào còn suất chiếu cho hai người?' },
+  { icon: <Ticket size={19} aria-hidden="true" />, label: 'Cách đặt vé', question: 'Tôi đặt vé trên website như thế nào?' },
+  { icon: <BookOpen size={19} aria-hidden="true" />, label: 'Hỏi về điện ảnh', question: 'Cinematography là gì?' },
+];
+
+function ShowtimeCard({ card, onNavigate }) {
+  return (
+    <section className="assistant-showtime">
+      <div className="assistant-showtime-info">
+        <h3>{card.film_title}</h3>
+        <p><MapPin size={15} aria-hidden="true" /> <span>{[card.theater_name, card.room_name].filter(Boolean).join(' · ')}</span></p>
+        <p><CalendarDays size={15} aria-hidden="true" /> <span>{formatTime(card.start_time)} · {formatDate(card.show_date)}{card.format && ` · ${card.format}`}</span></p>
+      </div>
+      <div className="assistant-showtime-price">
+        <span>{card.party_size} vé từ</span>
+        <strong>{formatCurrency(card.minimum_total)}</strong>
+        <span>{formatCurrency(card.min_ticket_price)}/vé</span>
+      </div>
+      <div className="assistant-showtime-footer">
+        <p><strong>{card.available_seats} ghế trống lúc tra cứu.</strong> Chưa giữ ghế hoặc xác nhận ghế liền nhau.</p>
+        <Link to={card.url} className="assistant-primary" onClick={onNavigate}>Chọn ghế <ArrowRight size={16} aria-hidden="true" /></Link>
+      </div>
+    </section>
+  );
+}
+
+function AssistantMessage({ message, onNavigate }) {
+  const sourcesPanel = useRef(null);
+  const cards = message.cards || [];
+  const documents = (message.sources || []).filter(source => source.kind === 'document');
+  const links = (message.links || []).filter(link => !cards.some(card => card.url === link.url));
+  const segments = message.answer?.split(/(\[doc:[^\]\r\n]+\])/g) || [];
+  const documentsByReference = new Map(documents.map(source => [`[${source.id}]`, source]));
+  const citedDocuments = segments.map(segment => documentsByReference.get(segment)).filter(Boolean);
+  const groups = new Map();
+  const citationNumbers = new Map();
+  for (const source of citedDocuments.length ? citedDocuments : documents) {
+    const key = JSON.stringify([source.source_id || source.title, source.version, source.url, source.provenance?.page_start]);
+    if (!groups.has(key)) groups.set(key, { source, number: groups.size + 1, excerpts: new Set() });
+    const group = groups.get(key);
+    citationNumbers.set(`[${source.id}]`, group.number);
+    if (source.text) group.excerpts.add(source.text);
+  }
+
+  function showSource(number) {
+    sourcesPanel.current.open = true;
+    sourcesPanel.current.querySelector(`[data-source-number="${number}"]`)?.focus();
+  }
+
+  return (
+    <article className="assistant-message">
+      <h3 className="assistant-message-author"><MessageCircle size={15} aria-hidden="true" /> Trợ lý Cinema</h3>
+      <p className="assistant-answer">{segments.map((segment, index) => {
+        const reference = citationNumbers.get(segment);
+        return reference ? <button type="button" className="assistant-citation" key={index}
+          aria-label={`Xem nguồn ${reference}`} onClick={() => showSource(reference)}>{reference}</button> : segment;
+      })}</p>
+      {cards.length > 0 && <div className="assistant-showtimes">
+        {cards.map(card => <ShowtimeCard key={card.showtime_id} card={card} onNavigate={onNavigate} />)}
+      </div>}
+      {message.has_more && <p className="assistant-note">Còn suất khác. Thêm rạp, giờ hoặc ngân sách để thu hẹp kết quả.</p>}
+      {links.length > 0 && <div className="assistant-message-links">
+        {links.map(link => <Link key={link.url + link.title} to={link.url} onClick={onNavigate}>
+          {link.title} <ArrowUpRight size={15} aria-hidden="true" />
+        </Link>)}
+      </div>}
+      {groups.size > 0 && (
+        <details className="assistant-sources" ref={sourcesPanel}>
+          <summary><BookOpen size={17} aria-hidden="true" /> <span>Nguồn tham chiếu ({groups.size})</span><ChevronDown size={16} aria-hidden="true" /></summary>
+          <ol>
+            {Array.from(groups.values(), ({ source, number, excerpts }) => (
+              <li key={source.id}>
+                <span className="assistant-source-number" aria-hidden="true">{number}</span>
+                <div className="assistant-source-body">
+                  <h4 tabIndex={-1} data-source-number={number}>{source.title}</h4>
+                  {source.version && <p className="assistant-note">Phiên bản {source.version}</p>}
+                  {excerpts.size > 0 && <details className="assistant-source-excerpt">
+                    <summary>Xem trích đoạn</summary>
+                    {Array.from(excerpts, excerpt => <p key={excerpt}>{excerpt}</p>)}
+                  </details>}
+                  <a href={source.url} target="_blank" rel="noreferrer">
+                    Mở nguồn{source.provenance?.page_start ? ` · trang PDF ${source.provenance.page_start}` : ''}
+                    <ArrowUpRight size={14} aria-hidden="true" />
+                  </a>
+                </div>
+              </li>
+            ))}
+          </ol>
+        </details>
+      )}
+      <div className="assistant-message-meta">
+        {message.as_of && <span>Tra cứu lúc {formatTime(message.as_of)}</span>}
+        {message.mode === 'model_unavailable' && message.sources?.length > 0 && <span>Mô hình đang bận. Đang hiển thị dữ liệu truy xuất trực tiếp.</span>}
+      </div>
+    </article>
+  );
+}
 
 export default function AIAssistant() {
   const [open, setOpen] = useState(false);
+  const [tool, setTool] = useState(null);
   const [messages, setMessages] = useState([]);
   const [question, setQuestion] = useState('');
+  const [pendingQuestion, setPendingQuestion] = useState('');
   const [conversationId, setConversationId] = useState(null);
   const [context, setContext] = useState({});
   const [conversations, setConversations] = useState([]);
@@ -21,7 +123,7 @@ export default function AIAssistant() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [loggedIn, setLoggedIn] = useState(Boolean(getAccessToken()));
-  const bottom = useRef(null);
+  const composer = useRef(null);
   const messageViewport = useRef(null);
   const historyScroll = useRef(null);
   const activeRequest = useRef(null);
@@ -35,13 +137,20 @@ export default function AIAssistant() {
   );
   useEffect(() => {
     setOpen(false);
+    setTool(null);
   }, [location.pathname]);
-  useEffect(() => {
-    if (open) panel.current?.querySelector("button")?.focus();
+  useLayoutEffect(() => {
+    if (!open || !panel.current) return;
+    if (!panel.current.open) panel.current.showModal();
+    if (messageViewport.current) messageViewport.current.scrollTop = messageViewport.current.scrollHeight;
   }, [open]);
-  function close() {
+  function dismiss() {
     setOpen(false);
-    launcher.current?.focus();
+    setTool(null);
+  }
+  function close() {
+    dismiss();
+    requestAnimationFrame(() => launcher.current?.focus({ preventScroll: true }));
   }
   useLayoutEffect(() => {
     if (!busy && !conversationId && restoreHistoryFocus.current) {
@@ -49,7 +158,7 @@ export default function AIAssistant() {
       restoreHistoryFocus.current = false;
     }
   }, [busy, conversationId]);
-  function reset() { activeRequest.current?.abort(); activeRequest.current = null; setBusy(false); setConversationId(null); setMessages([]); setContext({}); setBeforeId(null); setQuestion(''); setError(''); }
+  function reset() { activeRequest.current?.abort(); activeRequest.current = null; setBusy(false); setConversationId(null); setMessages([]); setContext({}); setBeforeId(null); setQuestion(''); setPendingQuestion(''); setError(''); }
   useEffect(() => {
     const changed = () => {
       reset(); historyRequest.current?.abort(); setConversations([]); setHasMoreConversations(false);
@@ -73,25 +182,26 @@ export default function AIAssistant() {
     return () => controller.abort();
   }, [open, loggedIn, sessionVersion]);
   useEffect(() => {
-    if (!open) return;
+    if (!open || tool !== 'filters') return;
     const controller = new AbortController();
     Promise.all([api.get('/films/', { signal: controller.signal, params: { limit: 200 } }), api.get('/theaters', { signal: controller.signal })])
       .then(([f, t]) => { setFilms(f.data); setTheaters(t.data); })
       .catch(e => { if (e.code !== 'ERR_CANCELED') setError('Chưa tải được bộ lọc phim/rạp.'); });
     return () => controller.abort();
-  }, [open]);
+  }, [open, tool]);
   useLayoutEffect(() => {
-    if (historyScroll.current && messageViewport.current) {
+    if (!messageViewport.current) return;
+    if (historyScroll.current) {
       const { height, top } = historyScroll.current;
       messageViewport.current.scrollTop = top + messageViewport.current.scrollHeight - height;
       historyScroll.current = null;
     } else {
-      bottom.current?.scrollIntoView({ block: 'nearest' });
+      messageViewport.current.scrollTop = messageViewport.current.scrollHeight;
     }
-  }, [messages]);
+  }, [messages, pendingQuestion]);
   async function send(event) {
     event.preventDefault(); if (busy || historyBusy || !question.trim()) return;
-    const text = question.trim(); setBusy(true); setError('');
+    const text = question.trim(); setBusy(true); setPendingQuestion(text); setError('');
     const controller = new AbortController(); activeRequest.current = controller;
     try {
       const { data } = await api.post('/ai/chat', { message: text, conversation_id: conversationId, context }, { timeout: 25000, signal: controller.signal });
@@ -110,7 +220,9 @@ export default function AIAssistant() {
         setConversations(old => old.filter(c => c.id !== conversationId));
         setConversationId(null); setMessages([]); setContext({}); setBeforeId(null);
       }
-    } finally { if (activeRequest.current === controller) setBusy(false); }
+    } finally {
+      if (activeRequest.current === controller) { setBusy(false); setPendingQuestion(''); }
+    }
   }
   async function loadConversation(id, older = false) {
     if (busy || historyBusy) return;
@@ -128,7 +240,10 @@ export default function AIAssistant() {
       }
       setMessages(old => older ? [...loaded, ...old] : loaded);
       setBeforeId(data.next_before_id);
-      if (!older) { setConversationId(data.id); setContext(data.context); setQuestion(''); }
+      if (!older) {
+        setConversationId(data.id); setContext(data.context); setQuestion(''); setTool(null);
+        requestAnimationFrame(() => messageViewport.current?.focus());
+      }
     } catch (e) {
       if (e.code !== 'ERR_CANCELED') setError('Không thể tải hội thoại. Vui lòng thử lại.');
     } finally { if (activeRequest.current === controller) setBusy(false); }
@@ -165,215 +280,171 @@ export default function AIAssistant() {
   function choose(key, value) {
     setContext(old => ({ ...old, [key]: value || null, ...(key === 'showtime_id' ? {} : { showtime_id: null }) }));
   }
+  const selectedFilters = ['film_id', 'theater_id', 'show_date', 'showtime_id'].filter(key => context[key]).length;
+  const controlsDisabled = busy || historyBusy;
+
+  function startConversation() {
+    reset();
+    setTool(null);
+    composer.current?.focus();
+  }
+
+  function chooseSuggestion(text) {
+    setQuestion(text);
+    composer.current?.focus();
+  }
+
   return (
-    <aside className={`assistant ${inBookingFlow ? "assistant-flow" : ""}`}>
+    <aside className={`assistant${inBookingFlow ? ' assistant-flow' : ''}`}>
       {open && (
-        <section
-          id="cinema-assistant"
-          ref={panel}
-          className="assistant-panel bg-white text-gray-900 rounded-xl border border-gray-200 shadow-2xl mb-3 flex flex-col"
-          aria-label="Trợ lý Cinema"
-          onKeyDown={(e) => {
-            if (e.key === "Escape") close();
-          }}
-        >
-          <header className="flex justify-between items-center bg-red-700 text-white rounded-t-xl px-4 py-2">
-            <h2 className="font-bold flex items-center gap-2">
-              <MessageCircle size={20} />
-              Trợ lý Cinema
-            </h2>
-            <button className="btn" onClick={close} aria-label="Đóng trợ lý">
-              <X size={20} />
-            </button>
-          </header>
-          <div className="p-3 border-b text-sm space-y-2">
-        {loggedIn && <div className="space-y-1">
-          <label htmlFor="ai-conversation-history" className="block text-xs text-gray-600">Lịch sử hội thoại</label>
-          <select id="ai-conversation-history" className="border rounded p-2 w-full" value={conversationId || ''}
-            disabled={busy || historyBusy} onChange={e => loadConversation(e.target.value)}>
-            <option value="">Hội thoại mới</option>
-            {conversations.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
-          </select>
-          {historyBusy && <p role="status" className="text-xs text-gray-500">Đang tải lịch sử…</p>}
-          {conversationId && <button disabled={busy || historyBusy} onClick={() => loadConversation(conversationId)} className="text-xs text-red-700 underline mr-3">Tải lại hội thoại</button>}
-          {hasMoreConversations && <button disabled={busy || historyBusy} onClick={loadMoreConversations} className="text-xs text-red-700 underline">Tải thêm hội thoại</button>}
-        </div>}
-            <p>Tra phim, lịch chiếu, giá vé và hướng dẫn đặt vé.</p>
-            <div className="grid grid-cols-2 gap-2">
-              <select
-                aria-label="Phim cho trợ lý"
-                className="border rounded p-2 min-w-0"
-                value={context.film_id || ""}
-                onChange={(e) => choose("film_id", Number(e.target.value))}
-              >
-                <option value="">Chọn phim</option>
-                {films.map((f) => (
-                  <option key={f.id} value={f.id}>
-                    {f.title}
-                  </option>
-                ))}
-              </select>
-              <select
-                aria-label="Rạp cho trợ lý"
-                className="border rounded p-2 min-w-0"
-                value={context.theater_id || ""}
-                onChange={(e) => choose("theater_id", Number(e.target.value))}
-              >
-                <option value="">Chọn rạp</option>
-                {theaters.map((t) => (
-                  <option key={t.id} value={t.id}>
-                    {t.name}
-                  </option>
-                ))}
-              </select>
-              <input
-                aria-label="Ngày xem cho trợ lý"
-                type="date"
-                className="border rounded p-2 min-w-0"
-                value={context.show_date || ""}
-                onChange={(e) => choose("show_date", e.target.value)}
-              />
-              <input
-                aria-label="Mã suất chiếu"
-                type="number"
-                min="1"
-                className="border rounded p-2 min-w-0"
-                placeholder="Mã suất chiếu"
-                value={context.showtime_id || ""}
-                onChange={(e) => choose("showtime_id", Number(e.target.value))}
-              />
-            </div>
-          </div>
-          <div
-            ref={messageViewport}
-            className="overflow-y-auto p-3 space-y-3 min-h-0 flex-1"
-            role="log"
-            aria-live="polite"
-          >
-            {beforeId && <button disabled={busy || historyBusy} onClick={() => loadConversation(conversationId, true)} className="text-xs text-red-700 underline">Tải tin nhắn cũ hơn</button>}
-            {!messages.length && (
-              <p className="text-gray-500 text-sm">
-                Thử hỏi: “Cách đặt vé?” hoặc “Phim nào được khen và có suất tối
-                nay?”
-              </p>
-            )}
-            {messages.map((m, i) => (
-              <article
-                key={m.id ? `message:${m.id}` : `local:${i}`}
-                className={`rounded-lg p-3 ${m.role === "user" ? "bg-red-50 ml-5" : "bg-gray-50 mr-2"}`}
-              >
-                <p className="text-xs font-semibold mb-1">
-                  {m.role === "user" ? "Bạn" : "Trợ lý"}
-                </p>
-                <p className="text-sm whitespace-pre-wrap break-words">
-                  {m.answer}
-                </p>
-                {m.cards?.map(card => <section key={card.showtime_id} className="border border-red-100 rounded-lg p-3 mt-3 space-y-1">
-                  <h3 className="font-bold">{card.film_title}</h3>
-                  <p className="text-sm">{card.theater_name} · {card.room_name}</p>
-                  <p className="text-sm">{card.show_date} · {String(card.start_time).slice(0, 5)} · {card.format}</p>
-                  <p className="text-sm">Giá từ {Number(card.min_ticket_price).toLocaleString('vi-VN')} ₫/vé · {card.party_size} vé từ {Number(card.minimum_total).toLocaleString('vi-VN')} ₫</p>
-                  <p className="text-xs text-gray-500">{card.available_seats} ghế trống lúc tra cứu. Chưa giữ ghế và chưa bảo đảm ghế liền nhau.</p>
-                  <Link to={card.url} className="inline-block bg-red-700 text-white rounded px-3 py-2 mt-2 text-sm">Chọn ghế</Link>
-                </section>)}
-                {m.has_more && <p className="text-xs mt-2">Còn kết quả khác. Bạn có thể thêm rạp, giờ hoặc ngân sách để thu hẹp.</p>}
-                {m.sources?.length > 0 && (
-                  <details className="text-xs mt-2">
-                    <summary className="cursor-pointer">
-                      Nguồn tham chiếu ({m.sources.length})
-                    </summary>
-                    {m.sources.map((s) => (
-                      <div key={s.id} className="mt-2">
-                        <strong>
-                          {s.title}
-                          {s.version ? ` · ${s.version}` : ""}
-                        </strong>
-                        <p className="whitespace-pre-wrap break-words">
-                          {s.text}
-                        </p>
-                        {s.kind === 'document' && <a href={s.url} target="_blank" rel="noreferrer" className="underline text-red-700">
-                          Mở nguồn{s.provenance?.page_start ? ` · trang PDF ${s.provenance.page_start}` : ''}
-                        </a>}
-                      </div>
-                    ))}
-                  </details>
-                )}
-                {m.links?.map((l, j) => (
-                  <Link
-                    key={j}
-                    to={l.url}
-                    className="block text-sm text-red-700 underline mt-2"
-                  >
-                    {l.title} →
-                  </Link>
-                ))}
-                {m.as_of && (
-                  <p className="text-xs text-gray-500 mt-2">
-                    Tra cứu lúc {formatTime(m.as_of)}
-                  </p>
-                )}
-                {m.mode === "model_unavailable" && (
-                  <p className="text-xs text-amber-700 mt-2">
-                    Mô hình đang bận; hiển thị dữ liệu truy xuất trực tiếp.
-                  </p>
-                )}
-              </article>
-            ))}
-            {busy && (
-              <p className="text-sm" role="status">
-                Đang xử lý…
-              </p>
-            )}
-            <div ref={bottom} />
-          </div>
-          {error && (
-            <p role="alert" className="text-red-700 px-3 text-sm">
-              {error}
-            </p>
-          )}
-          <div className="p-3 border-t">
-            {loggedIn ? (
-              <form onSubmit={send} className="flex gap-2">
-                <input
-                  aria-label="Câu hỏi cho trợ lý"
-                  className="border rounded p-2 min-w-0 flex-1"
-                  maxLength={2000}
-                  value={question}
-                  onChange={(e) => setQuestion(e.target.value)}
-                  placeholder="Nhập câu hỏi…"
-                  required
-                />
-                <button
-                  className="bg-red-700 text-white px-3 rounded disabled:opacity-50"
-                  disabled={busy || historyBusy || !question.trim()}
-                >
-                  Gửi
+        <dialog id="cinema-assistant" ref={panel} className="assistant-panel"
+          aria-labelledby="cinema-assistant-title" onCancel={event => { event.preventDefault(); close(); }}>
+          <div className="assistant-shell">
+            <header className="assistant-header">
+              <div className="assistant-identity">
+                <span className="assistant-brand-icon"><MessageCircle size={24} aria-hidden="true" /></span>
+                <h2 id="cinema-assistant-title">Trợ lý Cinema</h2>
+              </div>
+              <div className="assistant-header-actions">
+                {loggedIn && <button type="button" className="assistant-new" onClick={startConversation}
+                  disabled={controlsDisabled} aria-label="Hội thoại mới" title="Hội thoại mới">
+                  <SquarePen size={17} aria-hidden="true" /><span>Hội thoại mới</span>
+                </button>}
+                <button type="button" className="assistant-close" onClick={close} aria-label="Đóng trợ lý">
+                  <X size={22} aria-hidden="true" />
                 </button>
-              </form>
-            ) : (
-              <Link className="text-red-700 underline" to="/login">
-                Đăng nhập để trò chuyện
+              </div>
+            </header>
+
+            {loggedIn && <nav className="assistant-toolbar" aria-label="Công cụ trò chuyện">
+              <button type="button" aria-expanded={tool === 'history'} aria-controls="assistant-tools"
+                onClick={() => setTool(tool === 'history' ? null : 'history')}>
+                <History size={17} aria-hidden="true" /> Lịch sử
+              </button>
+              <button type="button" aria-expanded={tool === 'filters'} aria-controls="assistant-tools"
+                onClick={() => setTool(tool === 'filters' ? null : 'filters')}>
+                <SlidersHorizontal size={17} aria-hidden="true" /> Bộ lọc
+                {selectedFilters > 0 && <span className="assistant-filter-count">{selectedFilters}</span>}
+              </button>
+              <Link to="/ticket-booking" className="assistant-direct-link" onClick={dismiss}>
+                Đặt vé <ArrowUpRight size={15} aria-hidden="true" />
               </Link>
-            )}
-            <div className="flex justify-between text-xs mt-3">
-              <button disabled={busy || historyBusy} onClick={reset}>Hội thoại mới</button>
-              {conversationId && <button disabled={busy || historyBusy} onClick={removeConversation} className="text-red-700">Xóa hội thoại</button>}
-              <Link to="/ticket-booking" className="text-red-700 underline">
-                Đặt vé trực tiếp
-              </Link>
+            </nav>}
+
+            <div className={`assistant-workspace${tool && loggedIn ? ' has-tools' : ''}`}>
+              {tool === 'history' && loggedIn && (
+                <section id="assistant-tools" className="assistant-tools" aria-labelledby="ai-conversation-history">
+                  <h3 id="ai-conversation-history" tabIndex={-1}>Lịch sử hội thoại</h3>
+                  {historyBusy && <p role="status" className="assistant-note">Đang tải lịch sử…</p>}
+                  {!historyBusy && conversations.length === 0 && <p className="assistant-note">Chưa có hội thoại đã lưu.</p>}
+                  <ul className="assistant-history-list">
+                    {conversations.map(conversation => (
+                      <li key={conversation.id}>
+                        <button type="button" disabled={controlsDisabled}
+                          aria-current={conversation.id === conversationId ? 'true' : undefined}
+                          onClick={() => loadConversation(conversation.id)}>
+                          <span>{conversation.title}</span>
+                          {conversation.updated_at && <time dateTime={conversation.updated_at}>{formatDate(conversation.updated_at)}</time>}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                  {hasMoreConversations && <button type="button" className="assistant-text-button" disabled={controlsDisabled}
+                    onClick={loadMoreConversations}>Tải thêm hội thoại</button>}
+                  {conversationId && <div className="assistant-history-actions">
+                    <button type="button" className="assistant-text-button" disabled={controlsDisabled}
+                      onClick={() => loadConversation(conversationId)}>Tải lại hội thoại</button>
+                    <button type="button" className="assistant-text-button assistant-danger" disabled={controlsDisabled}
+                      onClick={removeConversation}>Xóa hội thoại</button>
+                  </div>}
+                </section>
+              )}
+
+              {tool === 'filters' && loggedIn && (
+                <section id="assistant-tools" className="assistant-tools" aria-labelledby="assistant-filter-title">
+                  <h3 id="assistant-filter-title">Bộ lọc suất chiếu</h3>
+                  <div className="assistant-fields">
+                    <label>Phim
+                      <select aria-label="Phim cho trợ lý" value={context.film_id || ''} disabled={busy}
+                        onChange={event => choose('film_id', Number(event.target.value))}>
+                        <option value="">Chọn phim</option>
+                        {films.map(film => <option key={film.id} value={film.id}>{film.title}</option>)}
+                      </select>
+                    </label>
+                    <label>Rạp
+                      <select aria-label="Rạp cho trợ lý" value={context.theater_id || ''} disabled={busy}
+                        onChange={event => choose('theater_id', Number(event.target.value))}>
+                        <option value="">Chọn rạp</option>
+                        {theaters.map(theater => <option key={theater.id} value={theater.id}>{theater.name}</option>)}
+                      </select>
+                    </label>
+                    <label>Ngày xem
+                      <input aria-label="Ngày xem cho trợ lý" type="date" value={context.show_date || ''} disabled={busy}
+                        onChange={event => choose('show_date', event.target.value)} />
+                    </label>
+                    <label>Mã suất chiếu
+                      <input aria-label="Mã suất chiếu" type="number" min="1" placeholder="Ví dụ 16"
+                        value={context.showtime_id || ''} disabled={busy}
+                        onChange={event => choose('showtime_id', Number(event.target.value))} />
+                    </label>
+                  </div>
+                </section>
+              )}
+
+              <div className="assistant-transcript" ref={messageViewport} role="log" aria-label="Tin nhắn" tabIndex={-1}>
+                {beforeId && <button type="button" disabled={controlsDisabled} onClick={() => loadConversation(conversationId, true)}
+                  className="assistant-text-button">Tải tin nhắn cũ hơn</button>}
+                {!messages.length && !pendingQuestion && !busy && (
+                  <div className="assistant-welcome">
+                    <h3>Bạn muốn hỏi gì?</h3>
+                    <p>Tra suất chiếu, giá vé, cách đặt vé hoặc tìm hiểu về điện ảnh.</p>
+                    {loggedIn && <div className="assistant-suggestions">
+                      {SUGGESTIONS.map(({ icon, label, question: suggestion }) => (
+                        <button key={label} type="button" onClick={() => chooseSuggestion(suggestion)}>
+                          {icon}<span>{label}</span><ArrowRight size={16} aria-hidden="true" />
+                        </button>
+                      ))}
+                    </div>}
+                  </div>
+                )}
+                {messages.map((message, index) => message.role === 'user'
+                  ? <div className="assistant-user-message" key={message.id ? `saved:${message.id}` : `local:${index}`}>
+                    <span className="sr-only">Bạn: </span><p>{message.answer}</p>
+                  </div>
+                  : <AssistantMessage key={message.id ? `saved:${message.id}` : `local:${index}`} message={message} onNavigate={dismiss} />)}
+                {pendingQuestion && <p className="assistant-user-message"><span className="sr-only">Bạn: </span>{pendingQuestion}</p>}
+                {busy && <p className="assistant-loading" role="status"><span aria-hidden="true" />{pendingQuestion ? 'Đang tìm thông tin…' : 'Đang xử lý…'}</p>}
+              </div>
             </div>
+
+            <footer className="assistant-composer">
+              {error && <p role="alert" className="assistant-error">{error}</p>}
+              {loggedIn ? (
+                <form onSubmit={send}>
+                  <textarea ref={composer} aria-label="Câu hỏi cho trợ lý" maxLength={2000} rows={2}
+                    value={pendingQuestion ? '' : question} readOnly={busy}
+                    onChange={event => setQuestion(event.target.value)} placeholder="Nhập câu hỏi…" required
+                    onKeyDown={event => {
+                      if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) {
+                        event.preventDefault();
+                        if (!controlsDisabled && question.trim()) event.currentTarget.form?.requestSubmit();
+                      }
+                    }} />
+                  <button type="submit" className="assistant-primary" disabled={controlsDisabled || !question.trim()}>
+                    Gửi <Send size={17} aria-hidden="true" />
+                  </button>
+                </form>
+              ) : <div className="assistant-guest-actions">
+                <Link className="assistant-primary" to="/login" onClick={dismiss}>Đăng nhập để trò chuyện <ArrowRight size={16} aria-hidden="true" /></Link>
+                <Link className="assistant-direct-link" to="/ticket-booking" onClick={dismiss}>Đặt vé <ArrowUpRight size={15} aria-hidden="true" /></Link>
+              </div>}
+            </footer>
           </div>
-        </section>
+        </dialog>
       )}
-      <button
-        ref={launcher}
-        onClick={() => (open ? close() : setOpen(true))}
-        aria-expanded={open}
-        aria-controls="cinema-assistant"
-        className="assistant-launcher"
-      >
-        <MessageCircle size={20} aria-hidden="true" />
-        {open ? "Thu gọn" : "Hỏi trợ lý"}
+      <button ref={launcher} onClick={() => setOpen(true)} aria-expanded={open} aria-controls="cinema-assistant"
+        aria-haspopup="dialog" className="assistant-launcher">
+        <MessageCircle size={20} aria-hidden="true" /> Hỏi trợ lý
       </button>
     </aside>
   );

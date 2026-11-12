@@ -154,6 +154,8 @@ Chọn cấu hình bằng validation, cố định lựa chọn/ngưỡng, rồi
 
 ## 5. KB đa nguồn và sách PDF
 
+Neo4j, công bố phiên bản KB và so sánh hai mô hình demo được hướng dẫn tại [AI_GRAPH_DEMO.md](AI_GRAPH_DEMO.md).
+
 Manifest: `pipelines/knowledge/sources.json`. Có hướng dẫn nội bộ, sách Open SUNY thật và bản tóm tắt/dịch Wikibooks có attribution/license. Bản tóm tắt không được mô tả là đã crawl toàn bộ website. Tất cả đang là draft chờ kiểm tra nội dung/quyền dùng theo bối cảnh.
 
 PDF local: `.local/knowledge/raw/exploring-movie-construction.pdf`. SHA-256 trong manifest; bản tải từ mirror cơ sở giáo dục vì URL nhà xuất bản trả 403 lúc tải. Không thêm PDF vào Git. Có 94 trang PDF; trang PDF có thể khác số trang in trong sách. Trích xuất báo các trang ít text; chưa OCR và chưa tự phê duyệt.
@@ -170,7 +172,7 @@ Kết quả có `approved=false`, metadata, checksum, page blocks và file `.ext
 & $py scripts/ai/import_knowledge.py .local/knowledge/film-book.json --origin http://127.0.0.1:8082
 ```
 
-Lặp cho hai nguồn còn lại. CLI này chỉ tạo draft, không duyệt. Khi cập nhật nguồn đã tồn tại, API yêu cầu `expected_updated_at`; lấy phiên bản hiện tại, kiểm tra thay đổi rồi bổ sung timestamp vào input. Không tự ghi đè khi nhận 409.
+Lặp cho hai nguồn còn lại. CLI này chỉ tạo draft. Với nguồn đã tồn tại, dùng `--revision-of <document-id>` để lưu bản mới trong lúc bản hiện tại tiếp tục phục vụ. Nếu có đồ thị đã nạp cho phiên bản mới, thêm `--graph-release-id <release-id>`.
 
 Trang quản trị cho xem chunk, metadata, trang PDF; thử lexical/BM25/dense/hybrid/rerank và xem nguồn/điểm/độ trễ. PDF sửa bằng pipeline nhập để giữ provenance. Thu hồi duyệt làm tài liệu mất khỏi truy xuất tiếp theo. Giá/ghế/suất sống trong owner API, không chép vào KB tĩnh.
 
@@ -205,7 +207,7 @@ Dense similarity dương chưa phải ngưỡng đủ căn cứ. Cần gold/hard
 
 ## 6. Chat và runtime ứng dụng
 
-Theo [runbook runtime chung](runbooks/final-runtime.md) khi chạy toàn bộ dự án. Thay đổi schema mới được thực hiện bởi migration owner: AI `ai_002`, Review `review_003`; không chạy migration source lịch sử vào DB owner. Migrate trước API/worker mới. Không có downgrade phá dữ liệu; rollback bằng bản tương thích hoặc forward fix.
+Theo [runbook runtime chung](runbooks/final-runtime.md) khi chạy toàn bộ dự án. Migration owner hiện dùng AI `ai_003` và Review `review_003`. Migrate trước API/worker mới.
 
 Đã thêm các biến cấu hình vào `services/ai-service/.env.example`, `.env.microservices.example` và service AI trong `compose.yml`. Mặc định LLM disabled. Khi Ollama đã khởi động/nạp model, đặt trong cấu hình private:
 

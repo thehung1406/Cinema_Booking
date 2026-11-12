@@ -7,6 +7,7 @@ from datetime import datetime, timezone
 import hashlib
 import json
 import math
+import os
 from pathlib import Path
 import statistics
 import time
@@ -47,12 +48,14 @@ def measure(sources, expected, k):
             "returned_any": bool(sources), "relevant_retrieved": len(seen)}
 
 
-def evaluate(corpus_files, gold_file, strategies, k, embedding_url="", reranker_url="", pilot=False, chunk_size=1200, chunk_overlap=0):
+def evaluate(corpus_files, gold_file, strategies, k, embedding_url="", reranker_url="", pilot=False,
+             chunk_size=1200, chunk_overlap=0, graph=None):
     from sqlalchemy import create_engine
     from sqlmodel import Session
     from ai_service.models import Base
     from ai_service.schemas import DocumentWrite
     from ai_service.rag import upsert_document, retrieve
+    from ai_service.graph import graph_evidence, merge_evidence
     documents = [doc for path in corpus_files for doc in json.loads(Path(path).read_text(encoding="utf-8"))]
     questions = read_jsonl(gold_file)
     if not questions or len({q["id"] for q in questions}) != len(questions):
@@ -79,12 +82,23 @@ def evaluate(corpus_files, gold_file, strategies, k, embedding_url="", reranker_
             for document in documents:
                 validated = DocumentWrite.model_validate({k: v for k, v in document.items() if k != "approved"}).model_dump()
                 upsert_document(db, validated | {"approved": True}, chunk_size=chunk_size, chunk_overlap=chunk_overlap)  # Isolated replay only.
+
+            def fetch(question, strategy):
+                base, _, addition = strategy.partition("+")
+                sources = retrieve(db, question["question"], limit=k, scope=question["scope"], strategy=base,
+                                   embedding_url=embedding_url, reranker_url=reranker_url)
+                if addition == "graph":
+                    if graph is None:
+                        raise ValueError("Graph comparison needs a loaded release")
+                    evidence, state = graph_evidence(db, graph, question["question"], question["scope"], limit=k)
+                    return merge_evidence(sources, evidence, state, k), state
+                return sources, None
+
             for strategy in strategies:
                 # Cold model/index initialization is reported separately from warm queries.
                 start = time.perf_counter()
                 try:
-                    retrieve(db, questions[0]["question"], limit=k, scope=questions[0]["scope"],
-                             strategy=strategy, embedding_url=embedding_url, reranker_url=reranker_url)
+                    fetch(questions[0], strategy)
                 except Exception as exc:
                     runs.append({"strategy": strategy, "state": "unavailable", "error_type": type(exc).__name__})
                     continue
@@ -92,11 +106,11 @@ def evaluate(corpus_files, gold_file, strategies, k, embedding_url="", reranker_
                 rows = []
                 for question in questions:
                     start = time.perf_counter()
-                    sources = retrieve(db, question["question"], limit=k, scope=question["scope"],
-                                       strategy=strategy, embedding_url=embedding_url, reranker_url=reranker_url)
+                    sources, graph_state = fetch(question, strategy)
                     rows.append({"id": question["id"], "question": question["question"],
                                  "latency_ms": (time.perf_counter()-start)*1000,
-                                 **measure(sources, question["expected"], k), "sources": sources})
+                                 **measure(sources, question["expected"], k), "sources": sources,
+                                 "graph_state": graph_state})
                 summary = {key: statistics.mean(row[key] for row in rows if row[key] is not None)
                            for key in ("recall_at_k", "mrr_at_k", "ndcg_at_k") if any(row[key] is not None for row in rows)}
                 negatives = [row for row, question in zip(rows, questions) if not question["expected"]]
@@ -108,6 +122,7 @@ def evaluate(corpus_files, gold_file, strategies, k, embedding_url="", reranker_
         engine.dispose()
     return {"created_at": datetime.now(timezone.utc).isoformat(), "stage": "development-pilot" if pilot else "reviewed-retrieval-evaluation",
             "k": k, "question_count": len(questions), "generation_quality_evaluated": False,
+            "graph_release": graph.release_id if graph else None,
             "chunking": {"size_characters": chunk_size, "overlap_characters": chunk_overlap},
             "sha256": {str(path): hashlib.sha256(Path(path).read_bytes()).hexdigest() for path in [*corpus_files, gold_file]}, "runs": runs}
 
@@ -116,7 +131,9 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--corpus", nargs="+", required=True)
     parser.add_argument("--gold", required=True)
-    parser.add_argument("--strategies", nargs="+", choices=["lexical", "bm25", "dense", "hybrid", "rerank"], default=["lexical", "bm25"])
+    strategies = ["lexical", "bm25", "dense", "hybrid", "rerank"]
+    parser.add_argument("--strategies", nargs="+", choices=strategies + [f"{name}+graph" for name in strategies],
+                        default=["lexical", "bm25"])
     parser.add_argument("--k", type=int, choices=range(1, 21), default=3)
     parser.add_argument("--embedding-url", default="")
     parser.add_argument("--reranker-url", default="")
@@ -125,7 +142,18 @@ def main():
     parser.add_argument("--chunk-overlap", type=int, default=0)
     parser.add_argument("--output", required=True)
     args = parser.parse_args()
-    report = evaluate(args.corpus, args.gold, args.strategies, args.k, args.embedding_url, args.reranker_url, args.pilot, args.chunk_size, args.chunk_overlap)
+    graph = None
+    if any(name.endswith("+graph") for name in args.strategies):
+        from ai_service.graph import KnowledgeGraph
+        graph = KnowledgeGraph(os.environ["AI_GRAPH_URI"], os.environ.get("AI_GRAPH_USERNAME", "neo4j"),
+                               os.environ["AI_GRAPH_PASSWORD"], os.environ.get("AI_GRAPH_DATABASE", "neo4j"),
+                               os.environ["AI_GRAPH_RELEASE_ID"])
+    try:
+        report = evaluate(args.corpus, args.gold, args.strategies, args.k, args.embedding_url, args.reranker_url,
+                          args.pilot, args.chunk_size, args.chunk_overlap, graph)
+    finally:
+        if graph:
+            graph.close()
     output = Path(args.output)
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")

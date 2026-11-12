@@ -49,7 +49,14 @@ def safe_source_url(url):
     raise ValueError("Source URL must be an internal path or HTTPS URL")
 
 
-def upsert_document(db, data, *, chunk_size=1200, chunk_overlap=0):
+def chunk_segments(paragraph, size=1200, overlap=0):
+    for offset in range(0, len(paragraph), size - overlap):
+        yield offset, paragraph[offset:offset + size]
+        if offset + size >= len(paragraph):
+            break
+
+
+def upsert_document(db, data, *, chunk_size=1200, chunk_overlap=0, commit=True):
     """Replace chunks atomically when a document is updated or revoked."""
     if not isinstance(chunk_size, int) or not isinstance(chunk_overlap, int) or not 200 <= chunk_size <= 4000 or not 0 <= chunk_overlap < chunk_size:
         raise ValueError("Invalid character chunk size or overlap")
@@ -66,18 +73,15 @@ def upsert_document(db, data, *, chunk_size=1200, chunk_overlap=0):
     blocks = data.get("blocks") or [dict(text=p) for p in data.get("content", "").split("\n\n") if p.strip()]
     for block_index, block in enumerate(blocks):
         paragraph = block["text"].strip()
-        for offset in range(0, len(paragraph), chunk_size - chunk_overlap):
-            chunk = paragraph[offset:offset+chunk_size]
-            if chunk:
-                provenance = {k: v for k, v in block.items() if k != "text"}
-                provenance.update(block_index=block_index, character_start=offset,
-                                  character_end=offset+len(chunk), chunking="characters-1200-v1" if (chunk_size, chunk_overlap) == (1200, 0)
-                                  else f"characters-{chunk_size}-overlap-{chunk_overlap}-v1")
-                db.add(KnowledgeChunk(document_id=doc.id, content=chunk, embedding=embed(doc.title + " " + chunk),
-                    embedding_version=EMBEDDING_VERSION, provenance=provenance))
-            if offset + chunk_size >= len(paragraph):
-                break
-    db.commit()
+        for offset, chunk in chunk_segments(paragraph, chunk_size, chunk_overlap):
+            provenance = {k: v for k, v in block.items() if k != "text"}
+            provenance.update(block_index=block_index, character_start=offset,
+                              character_end=offset+len(chunk), chunking="characters-1200-v1" if (chunk_size, chunk_overlap) == (1200, 0)
+                              else f"characters-{chunk_size}-overlap-{chunk_overlap}-v1")
+            db.add(KnowledgeChunk(document_id=doc.id, content=chunk, embedding=embed(doc.title + " " + chunk),
+                embedding_version=EMBEDDING_VERSION, provenance=provenance))
+    if commit:
+        db.commit()
     return doc
 
 
@@ -132,6 +136,19 @@ def retrieve(db, question, limit=3, *, strategy="lexical", scope=None, embedding
             url=url, version=doc.version, kind="document", score=score,
             provenance=doc.provenance | chunk.provenance, document_id=doc.id, source_id=doc.source_id))
     return result
+
+
+def current_evidence(db, sources, scope):
+    if not sources:
+        return []
+    ids = [int(source["id"].removeprefix("doc:")) for source in sources]
+    rows = db.exec(select(KnowledgeChunk.id, KnowledgeDocument).join(KnowledgeDocument).where(
+        KnowledgeChunk.id.in_(ids), KnowledgeDocument.approved.is_(True), KnowledgeDocument.effective_at <= utcnow(),
+    )).all()
+    available = {f"doc:{chunk_id}": document.version for chunk_id, document in rows
+                 if document.provenance.get("scope", "policy") == scope}
+    db.rollback()
+    return [source for source in sources if available.get(source["id"]) == source["version"]]
 
 
 def bm25_scores(question, documents, k1=1.5, b=.75):

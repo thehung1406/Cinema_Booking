@@ -31,7 +31,7 @@ def test_supported_numeric_policy_can_pass_conservative_check():
 
 
 def test_fabricated_support_span_is_rejected_even_with_a_real_citation_id(monkeypatch):
-    monkeypatch.setattr(llm,'structured',lambda *a,**k:GroundedAnswer(sentences=[dict(
+    monkeypatch.setattr(llm,'structured',lambda *a,**k:GroundedAnswer(decision='answer', clarification='', sentences=[dict(
         text='Unsupported claim.',source_id='doc:1:span:999')]))
     trace={}
     with pytest.raises(ValueError,match='invented'):
@@ -43,3 +43,59 @@ def test_missing_year_abstains_before_model_call(monkeypatch):
     trace={}
     assert llm.grounded_answer(None,'Who won in 2026?',[dict(id='doc:1',text='This book was published in 2017.')],trace=trace)==''
     assert trace['grounding_validation']['model_called'] is False
+
+
+def test_missing_scene_context_gets_a_focused_followup_without_evidence(monkeypatch):
+    monkeypatch.setattr(llm, "structured", lambda *a, **k: pytest.fail("Should not call the model"))
+    reply = llm.grounded_reply(None, "Tôi nên chọn góc máy nào cho cảnh này?", [])
+    assert reply.status == "needs_clarification"
+    assert "cảm giác" in reply.text
+
+
+def test_question_echo_is_rejected_even_if_its_citation_exists(monkeypatch):
+    monkeypatch.setattr(llm, "structured", lambda *a, **k: GroundedAnswer(
+        decision="answer", clarification="", sentences=[
+            dict(text="Dolly có thể làm lộ điều gì.", source_id="doc:1:span:0"),
+        ]))
+    reply = llm.grounded_reply(None, "Dolly có thể làm lộ điều gì?",
+                               [dict(id="doc:1", text="A dolly can reveal scenery.")])
+    assert reply.status == "no_evidence"
+
+
+def test_policy_returns_exact_quote_only_after_grounding(monkeypatch):
+    source = dict(id="doc:1", text="Thời gian giữ ghế là 5 phút. Xem hướng dẫn thanh toán.")
+    monkeypatch.setattr(llm, "structured", lambda *a, **k: GroundedAnswer(
+        decision="answer", clarification="", sentences=[
+            dict(text="Ghế được giữ trong 5 phút.", source_id="doc:1:span:0"),
+        ]))
+    reply = llm.grounded_reply(None, "Ghế được giữ bao nhiêu phút?", [source], extractive=True)
+    assert reply.text == "Thời gian giữ ghế là 5 phút. [doc:1]"
+    assert reply.source_ids == ("doc:1",)
+    monkeypatch.setattr(llm, "structured", lambda *a, **k: GroundedAnswer(
+        decision="insufficient", clarification="Đổi hình thức thanh toán được không?" * 10, sentences=[]))
+    assert llm.grounded_reply(None, "Đổi hình thức thanh toán được không?", [source], extractive=True).status == "no_evidence"
+
+
+def test_generated_answer_cannot_add_an_unsupported_number(monkeypatch):
+    monkeypatch.setattr(llm, "structured", lambda *a, **k: GroundedAnswer(
+        decision="answer", clarification="", sentences=[
+            dict(text="Có 2 loại nguồn sáng.", source_id="doc:1:span:0"),
+        ]))
+    assert llm.grounded_reply(None, "Nguồn sáng nào được dùng?",
+                              [dict(id="doc:1", text="Phần này nói về nguồn sáng chính.")]).status == "no_evidence"
+
+
+def test_two_separate_questions_require_support_for_each(monkeypatch):
+    responses = iter([
+        GroundedAnswer(decision="answer", clarification="", sentences=[
+            dict(text="Pan là lia máy.", source_id="doc:1:span:0"),
+        ]),
+        GroundedAnswer(decision="insufficient", clarification="", sentences=[]),
+    ])
+    monkeypatch.setattr(llm, "structured", lambda *a, **k: next(responses))
+    trace = {}
+    reply = llm.grounded_reply(None, "Pan là gì? Hộp đựng làm bằng gì?",
+                               [dict(id="doc:1", text="Pan is a camera movement.")], trace=trace)
+    assert reply.status == "no_evidence" and reply.source_ids == ()
+    assert trace["parts"][0]["grounding_validation"]["accepted"]
+    assert trace["grounding_validation"]["reason"] == "part_missing_support_or_context"

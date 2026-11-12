@@ -4,6 +4,7 @@ import httpx
 import time
 from fastapi import HTTPException
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
+from .rag import folded
 
 
 class Entity(BaseModel):
@@ -100,6 +101,31 @@ class ReadSession:
             except ValidationError as exc:
                 raise HTTPException(503, "Invalid business context") from exc
         return self.context_cache[key]
+
+    def showing_films(self, context):
+        limit = 12
+        if context.show_date is None:
+            films = self.call(self.settings.catalog_origin, "POST", "/internal/v1/films/search",
+                              json={"now_showing": True, "limit": limit + 1, "genre": context.genre})
+        else:
+            params = {"show_date": context.show_date.isoformat(), "evening": context.start_after is not None
+                      and context.start_after.hour >= 18}
+            if context.theater_id is not None:
+                params["theater_id"] = context.theater_id
+            ids = sorted(set(self.call(self.settings.booking_origin, "GET", "/internal/v1/booking-read/candidates", params=params)))
+            films = []
+            for offset in range(0, len(ids), 200):
+                batch = self.call(self.settings.catalog_origin, "POST", "/internal/v1/films/batch",
+                                  json={"ids": ids[offset:offset + 200], "include_retired": False})
+                films.extend(film for film in batch if not context.genre or folded(context.genre) in folded(film.get("genre") or ""))
+                if len(films) > limit:
+                    break
+        evidence = []
+        for film in films[:limit]:
+            film_id = int(film["id"])
+            evidence.append(dict(id=f"film:{film_id}", title=film["title"], text=film["title"],
+                                 url=f"/movie/{film_id}", kind="film"))
+        return evidence, len(films) > limit
 
     def run(self, call, evening):
         try:

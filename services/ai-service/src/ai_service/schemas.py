@@ -2,7 +2,7 @@ from datetime import date, datetime, time
 from decimal import Decimal
 from typing import Literal
 from uuid import UUID
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, field_validator, model_validator
 
 class ToolContext(BaseModel):
     model_config = ConfigDict(extra="forbid")
@@ -81,14 +81,37 @@ class AssistantPlan(BaseModel):
 
 
 class GroundedSentence(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
     source_id: str = Field(min_length=1, max_length=100)
     text: str = Field(min_length=1, max_length=900)
 
 
 class GroundedAnswer(BaseModel):
     model_config = ConfigDict(extra="forbid")
+    decision: Literal["answer", "insufficient", "clarify"]
     sentences: list[GroundedSentence] = Field(max_length=2)
+    clarification: str = Field(max_length=240)
+
+    @model_validator(mode="before")
+    @classmethod
+    def discard_inactive_fields(cls, value):
+        if isinstance(value, dict):
+            decision = value.get("decision")
+            if decision == "insufficient":
+                return value | {"sentences": [], "clarification": ""}
+            if decision == "clarify":
+                return value | {"sentences": []}
+            if decision == "answer":
+                return value | {"clarification": ""}
+        return value
+
+    @model_validator(mode="after")
+    def response_shape(self):
+        if self.decision == "answer" and not self.sentences:
+            raise ValueError("An answer must contain supported sentences")
+        return self
+
+
 class AdminInput(BaseModel):
     model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
 
@@ -139,6 +162,7 @@ class DocumentWrite(AdminInput):
             raise ValueError("PDF requires license, checksum and page provenance")
         return self
 
+
     @field_validator("source_url")
     @classmethod
     def source(cls, value):
@@ -151,6 +175,15 @@ class DocumentWrite(AdminInput):
         if value is not None and value.tzinfo is None:
             raise ValueError("Thời điểm phải có múi giờ")
         return value
+
+
+class DocumentRevisionWrite(AdminInput):
+    document: DocumentWrite
+    graph_release_id: str = Field(default="", pattern=r"^(?:[a-f0-9]{64})?$")
+
+
+class DocumentRevisionPublish(AdminInput):
+    expected_updated_at: AwareDatetime
 
 
 class DocumentApproval(AdminInput):

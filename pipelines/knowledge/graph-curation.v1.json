@@ -1,0 +1,34 @@
+{
+  "concepts": {
+    "cinematography": {"en": ["cinematography"], "vi": ["quay phim", "nghệ thuật quay phim"]},
+    "camera-movement": {"en": ["camera movement", "camera movements", "dolly"], "vi": ["chuyển động máy quay", "chuyển động của máy quay"]},
+    "seat-selection": {"vi": ["chọn ghế", "giữ ghế"]}
+  },
+  "claims": [
+    {
+      "source_id": "open-suny-film-construction", "version": "2017",
+      "concept_id": "cinematography", "predicate": "definition", "value": "motion-picture-photography",
+      "block_index": 55, "page": 62, "excerpt": "the art or technique of motion-picture photography."
+    },
+    {
+      "source_id": "wikibooks-cinematography-summary", "version": "oldid-3335736-summary-1",
+      "concept_id": "cinematography", "predicate": "definition", "value": "motion-picture-photography",
+      "block_index": 1, "excerpt": "Cinematography là quá trình tạo hình ảnh chuyển động bằng phim hoặc kỹ thuật số."
+    },
+    {
+      "source_id": "open-suny-film-construction", "version": "2017",
+      "concept_id": "camera-movement", "predicate": "example-purpose", "qualifier": "dolly", "value": "reveal-in-scene",
+      "block_index": 56, "page": 63, "excerpt": "Dolly: The camera moves side to side. This movement can be used to reveal something in a scene."
+    },
+    {
+      "source_id": "wikibooks-cinematography-summary", "version": "oldid-3335736-summary-1",
+      "concept_id": "camera-movement", "predicate": "example-purpose", "qualifier": "general", "value": "express-emotion",
+      "block_index": 1, "excerpt": "Chuyển động máy quay có thể góp phần thể hiện cảm xúc."
+    },
+    {
+      "source_id": "cinema-booking-guide", "version": "draft-1",
+      "concept_id": "seat-selection", "predicate": "holds-seat", "qualifier": "chat-assistant-search", "value": "no",
+      "block_index": 1, "excerpt": "Việc tra cứu trong trợ lý chưa giữ ghế."
+    }
+  ]
+}

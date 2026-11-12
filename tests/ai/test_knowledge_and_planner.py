@@ -45,10 +45,10 @@ def test_generator_rejects_invented_citations(monkeypatch):
     settings = Settings(database_url="sqlite://", redis_url="redis://localhost/0", llm_provider="ollama")
     original = httpx.Client
     transport = httpx.MockTransport(lambda request: httpx.Response(200, json={"message": {
-        "content": '{"sentences":[{"source_id":"invented","text":"Unsupported claim"}]}'}}))
+        "content": '{"decision":"answer","clarification":"","sentences":[{"source_id":"invented","text":"Unsupported claim"}]}'}}))
     monkeypatch.setattr(httpx, "Client", lambda **kwargs: original(transport=transport, **kwargs))
     with pytest.raises(ValueError, match="invented"):
-        grounded_answer(settings, "What?", [{"id": "doc:1", "text": "Known evidence"}])
+        grounded_answer(settings, "What?", [{"id": "doc:1", "text": "This is known evidence."}])
 
 
 def test_unknown_budget_does_not_call_booking():

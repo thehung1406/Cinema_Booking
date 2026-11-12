@@ -1,6 +1,6 @@
 import httpx
 from typing import Literal
-from pydantic import Field, field_validator
+from pydantic import Field, SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -28,7 +28,18 @@ class Settings(BaseSettings):
     retrieval_strategy: Literal["lexical", "bm25", "dense", "hybrid", "rerank"] = "lexical"
     embedding_url: str = ""
     reranker_url: str = ""
+    graph_uri: str = ""
+    graph_username: str = "neo4j"
+    graph_password: SecretStr = SecretStr("")
+    graph_database: str = "neo4j"
+    graph_release_id: str = Field(default="", pattern=r"^(?:[a-f0-9]{64})?$")
     model_config = SettingsConfigDict(env_prefix="AI_", extra="ignore", hide_input_in_errors=True)
+
+    @model_validator(mode="after")
+    def graph_connection(self):
+        if self.graph_uri and not (self.graph_release_id and self.graph_password.get_secret_value()):
+            raise ValueError("Graph URI requires a release ID and password")
+        return self
 
     @field_validator("read_origin", "identity_origin", "catalog_origin", "cinema_origin", "booking_origin", "review_origin", "llm_base_url", "embedding_url", "reranker_url")
     @classmethod

@@ -1,6 +1,6 @@
 # AI Service
 
-Cập nhật 04/11/2026. Owner của chatbot, lịch sử hội thoại, Knowledge Base và RAG; có PostgreSQL, Redis, Alembic và image riêng. User ID là tham chiếu ngoài miền. AI không nhận credential database của owner khác, JWT signing key, SMTP hay payment secret.
+Cập nhật 12/11/2026. Owner của chatbot, lịch sử hội thoại, Knowledge Base và RAG; có PostgreSQL, Redis, Alembic và image riêng. Neo4j được bật qua cấu hình demo. User ID là tham chiếu ngoài miền. AI không nhận credential database của owner khác, JWT signing key, SMTP hay payment secret.
 
 ## Kiến trúc hiện tại
 
@@ -23,12 +23,12 @@ Khởi tạo mới hoặc chạy toàn bộ stack theo [runtime chung](../../doc
 
 - Gateway: `/api/ai/*`, `/api/admin/documents*`, `/api/admin/knowledge*`.
 - Health riêng: `http://127.0.0.1:8082/health/ready`.
-- DB: `ai_documents`, `ai_chunks`, `ai_conversations`, `ai_messages`; migrations `ai_001 → ai_002`.
+- DB: `ai_documents`, `ai_chunks`, `ai_knowledge_revisions`, `ai_conversations`, `ai_messages`; migrations `ai_001 → ai_003`.
 - `ai-migrate` quản lý schema owner. Job `ai-backfill` thuộc profile migration, không nằm trong luồng khởi động chatbot.
 
 ## KB và kiểm chứng
 
-Chuẩn bị nguồn, PDF/provenance và nhập draft bằng `scripts/ai/prepare_knowledge.py`, `scripts/ai/import_knowledge.py`. CLI nhập qua API cần token có `knowledge.manage`; không tự duyệt. Người phụ trách duyệt tại `/admin/documents`, kiểm tra version và `expected_updated_at`. Sửa tài liệu làm mất phê duyệt.
+Chuẩn bị nguồn, PDF/provenance và nhập draft bằng `scripts/ai/prepare_knowledge.py`, `scripts/ai/import_knowledge.py`. CLI nhập qua API cần token có `knowledge.manage`. Quản trị viên có thể soạn và xem bản nháp tại `/admin/documents`, sau đó công bố hoặc khôi phục một phiên bản. Bản đang phục vụ tiếp tục có hiệu lực trong lúc chờ duyệt. Xem [cách chạy Neo4j và demo KB](../../docs/AI_GRAPH_DEMO.md).
 
 DB lưu chunks cùng biểu diễn lexical hash dạng JSON. Dense E5 tính điểm qua tiến trình suy luận riêng; chưa có vector database hay chỉ mục dense được lưu bền vững. Output pilot không thay kết quả đánh giá học thuật.
 

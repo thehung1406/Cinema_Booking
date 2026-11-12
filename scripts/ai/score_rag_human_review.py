@@ -46,8 +46,10 @@ def score(run_path, worksheet):
     for criterion in CRITERIA:
         observed = [r[criterion] for r in ratings if r[criterion] is not None]
         summary[criterion] = dict(scored=len(observed), mean_0_to_2=statistics.mean(observed) if observed else None)
-    return dict(stage='human-scores-on-ai-authored-development-cases', total=len(cases), human_reviewed=len(ratings),
-        pending=len(pending), independent_held_out_gold=False, summary=summary, ratings=ratings,
+    reviewed_run = run.get('stage') == 'human-curated-evaluation'
+    return dict(stage='human-scores-on-curated-cases' if reviewed_run else 'human-scores-on-ai-authored-development-cases',
+        total=len(cases), human_reviewed=len(ratings),
+        pending=len(pending), independent_held_out_gold=None if reviewed_run else False, summary=summary, ratings=ratings,
         run_sha256=hashlib.sha256(Path(run_path).read_bytes()).hexdigest(),
         worksheet_sha256=hashlib.sha256(Path(worksheet).read_bytes()).hexdigest())
 

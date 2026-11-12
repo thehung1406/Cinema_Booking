@@ -19,15 +19,19 @@ from .models import AIConversation, AIMessage
 from .models import utcnow
 from .schemas import ToolCall, ToolContext
 from .tools import validate_context, missing_fields, run_tool
-from .rag import folded, retrieve
+from .rag import folded
+from .knowledge_retrieval import retrieve_knowledge
 from .history import owned_conversation
 
 LABELS = {"film_id": "phim", "theater_id": "rạp", "show_date": "ngày xem", "showtime_id": "mã suất chiếu"}
-SHOWTIME_PATTERN = r"(?:ma suat|suat chieu so)\s*(\d+)"
 # Owner reads have a 20-second deadline and the browser waits 25 seconds.
 PLANNER_TIMEOUT = 5
 CHAT_INFERENCE_BUDGET = 16
 RECOMMENDATION_FILTERS = ("show_date", "genre", "party_size", "budget_amount", "budget_scope", "start_after")
+SHOWTIME_PATTERN = r"(?:ma suat|suat chieu so)\s*(\d+)"
+FILM_EDUCATION_TERMS = ("cinematography", "camera movement", "chuyen dong may quay", "chuyen dong cua may quay",
+                        "dolly", "slider", "goc may", "goc quay", "co canh", "khung hinh", "iso", "pan ngang",
+                        "lia may", "over-the-shoulder", "framing", "muc phim xem them")
 RATE_SCRIPT = """
 local n = redis.call('INCR', KEYS[1])
 if n == 1 then redis.call('EXPIRE', KEYS[1], 60) end
@@ -39,7 +43,7 @@ def detect_intent(message):
     text = folded(message)
     if any(w in text for w in ("dat ho", "giu ho", "thanh toan ho", "xac nhan thanh toan", "don hang cua", "don hang toi")):
         return "out_of_scope"
-    if "la gi" in text and any(w in text for w in ("the loai", "dien anh", "quay phim", "dung phim", "cinematography")):
+    if "la gi" in text and is_film_education(text):
         return "knowledge"
     if any(w in text for w in ("khen", "tich cuc")):
         return "get_positive_films"
@@ -51,11 +55,24 @@ def detect_intent(message):
         return "get_seat_availability"
     if any(w in text for w in ("gia ve", "bao nhieu tien", "gia ghe")):
         return "get_ticket_prices"
+    if (re.search(r"\b(?:danh sach|liet ke)(?: nhung| cac)? phim\b|\b(?:nhung|cac) phim (?:hien )?dang chieu\b", text)
+            or (re.search(r"\bphim (?:gi|nao)\b", text)
+                and re.search(r"\b(?:co|hom nay|ngay mai|ngay kia|toi nay|toi mai|dang chieu)\b", text))
+            or re.fullmatch(r"\s*(?:hien tai |hien )?phim dang chieu[?!.\s]*", text)):
+        return "recommend" if re.search(r"\b(?:sau|tu)\s*\d{1,2}(?:h|gio|:)", text) else "get_showing_films"
     if any(w in text for w in ("lich chieu", "suat chieu", "toi nay", "may gio")):
         return "get_showtimes"
+    if is_film_education(text):
+        return "knowledge"
     if any(w in text for w in ("phim", "the loai", "noi dung")):
         return "search_films"
     return "knowledge"
+
+
+def is_film_education(text):
+    return any(re.search(rf"\b{term}\b", text) for term in FILM_EDUCATION_TERMS) or (
+        "la gi" in text and any(w in text for w in ("the loai", "dien anh", "quay phim", "dung phim"))
+    )
 
 
 def infer_context(reader, message, context):
@@ -130,10 +147,10 @@ def infer_preferences(message, context):
             raise HTTPException(422, "Giờ xem không hợp lệ")
     if any(w in text for w in ("toi nay", "toi mai")) and context.start_after is None:
         context.start_after = time(18)
-    if "la gi" in text and any(w in text for w in ("the loai", "dien anh", "quay phim", "dung phim", "cinematography")):
-        context.knowledge_scope = "film_education"
-    elif any(w in text for w in ("chinh sach", "cach dat ve", "huong dan dat ve", "hoan tien", "huy ve", "giu ghe bao lau")):
+    if any(w in text for w in ("chinh sach", "cach dat ve", "huong dan dat ve", "hoan tien", "huy ve", "giu ghe bao lau")):
         context.knowledge_scope = "policy"
+    elif is_film_education(text):
+        context.knowledge_scope = "film_education"
     # Validate assignments too: Pydantic does not validate assignment by default.
     try:
         return ToolContext.model_validate(context.model_dump())
@@ -183,7 +200,7 @@ def select_evidence(question, evidence, config, *, deadline=None):
         return evidence, "model_unavailable"
 
 
-def chat(db, user_id, request, redis, reader, config):
+def chat(db, user_id, request, redis, reader, config, *, graph=None):
     inference_deadline = monotonic() + CHAT_INFERENCE_BUDGET
     try:
         count = redis.eval(RATE_SCRIPT, 1, f"ai:rate:{user_id}")
@@ -202,17 +219,26 @@ def chat(db, user_id, request, redis, reader, config):
         previous, previous_updated_at = {}, None
     db.rollback()  # Release history read connection before calling another service.
     previous_context = ToolContext.model_validate(previous.get("context", {}))
-    values = previous.get("context", {}) | request.context.model_dump(mode="json", exclude_unset=True)
-    context = infer_preferences(request.message, ToolContext.model_validate(values))
+    submitted = request.context.model_dump(mode="json", exclude_unset=True)
+    values = previous.get("context", {}) | submitted
+    from .grounding import clarification_needed, covers_specifics, explicit_questions
     message_text = folded(request.message)
     deterministic = detect_intent(request.message)
     pending_tool = previous.get("pending_tool")
+    listing = deterministic == "get_showing_films"
+    clarification = clarification_needed(request.message) if deterministic == "knowledge" else None
+    if listing:
+        # A list request starts a new film lookup even when the UI echoes a selected film or an old date.
+        selected_date = request.context.show_date if request.context.show_date != previous_context.show_date else None
+        values = {"theater_id": values.get("theater_id"), "show_date": selected_date}
+    context = infer_preferences(request.message, ToolContext.model_validate(values))
     explicit_knowledge = any(word in message_text for word in (
         "cach ", "chinh sach", "huong dan", "hoan tien", "doi ve", "huy ve", "thanh toan",
         "giu ghe bao lau", "la gi",
     ))
+    explicit_knowledge = explicit_knowledge or clarification or is_film_education(message_text)
     refining_recommendation = (
-        previous.get("active_recommendation") and not explicit_knowledge
+        not listing and previous.get("active_recommendation") and not explicit_knowledge
         and (deterministic == "knowledge"
              or deterministic == "get_showtimes" and not any(
                  word in message_text for word in ("lich chieu", "suat chieu", "may gio")))
@@ -220,7 +246,9 @@ def chat(db, user_id, request, redis, reader, config):
                 for field in RECOMMENDATION_FILTERS)
     )
     proposed_intent, planner_mode = None, "retrieval_only"
-    if refining_recommendation:
+    if listing or clarification:
+        proposed_intent = deterministic
+    elif refining_recommendation:
         proposed_intent = "recommend"
     elif config.llm_provider != "disabled":
         try:
@@ -246,13 +274,13 @@ def chat(db, user_id, request, redis, reader, config):
             deterministic == "recommend" and preliminary == "search_films") or (
             deterministic == "knowledge" and explicit_knowledge):
         preliminary = proposed_intent = deterministic
-    read_context = preliminary not in {"knowledge", "out_of_scope"} or (
+    read_context = preliminary not in {"knowledge", "out_of_scope", "get_showing_films"} or (
         bool(pending_tool) and preliminary == "knowledge" and not explicit_knowledge)
     # FAQ needs only the AI-owned approved KB; do not call Catalog/Cinema unnecessarily.
     if read_context:
         context = infer_context(reader, request.message, context)
     context = infer_preferences(request.message, context)
-    ordinal = re.search(r"suat thu\s*(\d+|hai|ba|bon)\b", folded(request.message))
+    ordinal = None if listing else re.search(r"suat thu\s*(\d+|hai|ba|bon)\b", folded(request.message))
     if ordinal:
         index = {"hai": 2, "ba": 3, "bon": 4}.get(ordinal[1])
         index = index if index is not None else int(ordinal[1])
@@ -286,36 +314,79 @@ def chat(db, user_id, request, redis, reader, config):
     if intent == "out_of_scope":
         answer = "Mình hỗ trợ tra cứu phim và hướng dẫn đặt vé. Bạn cần tự chọn ghế, tạo đơn và thanh toán trên giao diện; trợ lý chưa hỗ trợ tra đơn cá nhân."
         status = "out_of_scope"
-    elif intent == "knowledge":
+    elif intent == "get_showing_films":
         try:
-            sources = retrieve(db, request.message, strategy=config.retrieval_strategy,
-                scope=context.knowledge_scope, embedding_url=config.embedding_url, reranker_url=config.reranker_url,
-                deadline=inference_deadline)
+            if re.search(r"\brap\s+\w+", folded(request.message)):
+                theaters = reader.matches(request.message).theater_id
+                if len(theaters) == 1:
+                    context.theater_id = theaters[0].id
+            theater = reader.names(context).theater_name if context.theater_id else None
+            if theater and context.show_date is None:
+                context.show_date = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh")).date()
+            sources, truncated = reader.showing_films(context)
+            where = f" tại {theater}" if theater else ""
+            if context.show_date:
+                when = f"ngày {context.show_date:%d/%m/%Y}"
+                lead = f"Các phim có suất chiếu sắp tới trong {when}{where}"
+                empty = f"Mình chưa tìm thấy suất chiếu sắp tới trong {when}{where}."
+            else:
+                lead, empty = "Các phim đang chiếu", "Mình chưa tìm thấy phim đang chiếu trong danh mục."
+            if sources:
+                answer = lead + ":\n" + "\n".join(f"• {source['title']}" for source in sources)
+                if truncated:
+                    answer += f"\n\nĐang hiển thị {len(sources)} phim đầu tiên."
+            else:
+                answer, status = empty, "no_results"
         except Exception:
-            sources = retrieve(db, request.message, scope=context.knowledge_scope)
+            answer, status = "Mình chưa tra cứu được danh sách phim lúc này. Bạn có thể xem trang Phim hoặc thử lại sau.", "tool_unavailable"
+    elif intent == "knowledge" and clarification:
+        graph_state = "disabled"
+        answer, status = clarification, "needs_clarification"
+    elif intent == "knowledge":
+        split = config.llm_provider != "disabled"
+        try:
+            sources, graph_state, _ = retrieve_knowledge(db, request.message, context.knowledge_scope,
+                graph=graph, split=split, strategy=config.retrieval_strategy,
+                embedding_url=config.embedding_url, reranker_url=config.reranker_url, deadline=inference_deadline)
+        except Exception:
+            sources, graph_state, _ = retrieve_knowledge(db, request.message, context.knowledge_scope,
+                graph=graph, split=split)
             mode = "retrieval_unavailable"
         db.rollback()  # Do not occupy a database connection while waiting for the model.
-        from .grounding import covers_specifics
-        sources = [s for s in sources if covers_specifics(request.message,s['text'])]
-        sources, selection_mode = select_evidence(request.message, sources, config, deadline=inference_deadline)
-        if selection_mode != "retrieval_only":
-            mode = selection_mode
-        answer = "\n\n".join(s["text"] for s in sources) if sources else "Chưa có tài liệu đã duyệt đủ căn cứ cho câu hỏi này. Bạn có thể xem hướng dẫn trên giao diện hoặc liên hệ rạp."
-        if sources and context.knowledge_scope != "policy" and config.llm_provider != "disabled":
-            try:
-                from .llm import grounded_answer
-                timeout = min(config.llm_timeout_seconds, inference_deadline - monotonic())
-                if timeout <= 0:
-                    raise TimeoutError("Chat inference budget exhausted")
-                answer_settings = config.model_copy(update={"llm_timeout_seconds": timeout})
-                generated = grounded_answer(answer_settings, request.message, sources)
-                if generated:
-                    answer, mode = generated, "grounded_generation"
-                else:
-                    sources, answer = [], "Chưa có đủ căn cứ trong các nguồn được duyệt để trả lời câu hỏi này."
-            except Exception:
-                mode = "model_unavailable"
-        status = "ok" if sources else "no_evidence"
+        answer, status = "Mình chưa có đủ căn cứ trong các nguồn được duyệt để trả lời câu hỏi này.", "no_evidence"
+        if graph_state == "conflict":
+            answer = "Các nguồn đã duyệt đang có thông tin mâu thuẫn. Mình chưa thể xác nhận câu trả lời này."
+            mode = "graph_conflict"
+        elif graph_state == "ambiguous":
+            answer = "Cụm từ này khớp với nhiều khái niệm. Bạn có thể nói rõ kỹ thuật hoặc ngữ cảnh cần tìm không?"
+            status, mode = "needs_clarification", "graph_ambiguous"
+        elif graph_state == "uncertain":
+            answer = "Thông tin liên quan đang chờ xác minh. Mình chưa có đủ căn cứ để trả lời."
+            mode = "graph_uncertain"
+        else:
+            questions = explicit_questions(request.message) if split else (request.message,)
+            sources = [s for s in sources if any(covers_specifics(part, s["text"]) for part in questions)]
+            sources, selection_mode = select_evidence(request.message, sources, config, deadline=inference_deadline)
+            if selection_mode != "retrieval_only":
+                mode = selection_mode
+            if sources and config.llm_provider == "disabled":
+                answer, status = "\n\n".join(s["text"] for s in sources), "ok"
+            elif sources:
+                try:
+                    from .llm import grounded_reply
+                    policy = context.knowledge_scope == "policy"
+                    reply = grounded_reply(config, request.message, sources, extractive=policy, deadline=inference_deadline)
+                    status = reply.status
+                    if reply.text:
+                        answer = reply.text
+                    if status == "ok":
+                        sources = [source for source in sources if source["id"] in reply.source_ids]
+                        mode = "grounded_extract" if policy else "grounded_generation"
+                except Exception:
+                    answer = "Mình chưa thể kiểm tra căn cứ lúc này. Bạn có thể thử lại sau."
+                    mode = "grounding_unavailable"
+            if status != "ok":
+                sources = []
     elif intent == "recommend":
         try:
             from .recommendations import recommend
@@ -349,10 +420,12 @@ def chat(db, user_id, request, redis, reader, config):
     links = [dict(title=s["title"], url=s["url"]) for s in sources if s["kind"] != "document"]
     state = dict(context=context.model_dump(mode="json"), pending_tool=intent if missing else None,
                  active_recommendation=intent == "recommend", evening=evening,
-                 options=cards if intent == "recommend" or selection_changed else previous.get("options", []))
+                 options=cards if intent == "recommend" or listing or selection_changed else previous.get("options", []))
     result = dict(conversation_id=conversation_id, answer=answer, sources=sources, links=links, cards=cards, has_more=has_more,
                 status=status, mode=mode, missing_fields=missing, context=context.model_dump(mode="json"),
                 as_of=utcnow(), tool=intent if intent.startswith(("get_", "search_")) else None)
+    if intent == "knowledge" and graph is not None:
+        result["graph_retrieval"] = graph_state
     now = result["as_of"]
     try:
         if request.conversation_id:

@@ -88,7 +88,8 @@ try {
   assert.equal(unsupported.status, 'out_of_scope');
   await page.reload();
   await page.getByRole('button', { name: 'Hỏi trợ lý', exact: true }).click();
-  await page.getByLabel('Lịch sử hội thoại', { exact: true }).selectOption(first.conversation_id);
+  await page.getByRole('button', { name: 'Lịch sử', exact: true }).click();
+  await page.getByRole('button', { name: /^Tối mai tôi muốn xem phim hài, hai người/ }).first().click();
   await page.getByRole('log').getByRole('heading', { name: card.film_title, exact: true }).waitFor();
   await page.setViewportSize({ width: 390, height: 900 });
   await page.screenshot({ path: resolve(evidence, 'history-mobile.png'), fullPage: true });
