@@ -81,9 +81,13 @@ Khi Gateway và cơ sở dữ liệu Review đã chạy, dùng cùng tên projec
 ```powershell
 $env:REVIEW_DEMO_LR_ARTIFACT = (Resolve-Path '<thu-muc-artifact-lr>').Path
 $env:REVIEW_DEMO_VISOBERT_ARTIFACT = (Resolve-Path '<thu-muc-artifact-visobert>').Path
-docker compose --env-file .env.microservices -p backend -f compose.yml -f compose.ai-sentiment-demo.yml up -d --no-deps --build --wait review-service
+$sentimentCompose = @('--env-file', '.env.microservices', '-p', 'backend', '-f', 'compose.yml', '-f', 'compose.ai-sentiment-demo.yml')
+docker compose @sentimentCompose up -d --no-deps --build --wait gateway review-service
+docker compose @sentimentCompose up -d --no-deps --build --wait web
 ```
 
 Nếu dùng thêm các tệp Compose khác cho môi trường hiện tại, giữ nguyên danh sách đó rồi thêm overlay cảm xúc. Mở **Duyệt đánh giá → Nhãn cảm xúc**, nhập một nhận xét phim và chọn **So sánh hai mô hình**. Để quay về cấu hình API mặc định, chạy lại lệnh khởi động Review Service với bộ Compose thường dùng.
+
+Review Service nạp hai artifact khi khởi động. Nếu demo báo lỗi nạp mô hình, kiểm tra log của Review Service và khởi động lại service sau khi sửa artifact. Nếu nội dung vượt giới hạn token của ViSoBERT, hãy rút ngắn nhận xét rồi chạy lại để cả hai mô hình đọc được toàn bộ nội dung.
 
 Hai artifact dùng nhãn silver và được kiểm tra trên pilot phim. Kết quả trên một nhận xét chỉ minh họa cách hai mô hình suy luận.

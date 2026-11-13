@@ -166,6 +166,27 @@ def test_upstream_failure_does_not_retry_a_booking_write(exception, status):
     UUID(response.headers["x-request-id"])
 
 
+def test_sentiment_demo_gets_longer_upstream_read_timeout():
+    timeouts = []
+
+    def handler(request):
+        timeouts.append(request.extensions["timeout"])
+        return httpx.Response(200, stream=httpx.ByteStream(b""))
+
+    settings = GatewaySettings(
+        legacy_enabled=False,
+        enabled_domains=["review"],
+        upstreams={"review": "http://review-service:8083"},
+        _env_file=None,
+    )
+    with TestClient(create_app(settings, transport=httpx.MockTransport(handler))) as client:
+        assert client.post("/api/reviews/sentiment/demo").status_code == 200
+        assert client.get("/api/reviews/sentiment/pending").status_code == 200
+    demo, pending = timeouts
+    assert demo == pending | {"read": 60}
+    assert pending["read"] == 30
+
+
 def test_health_and_unknown_paths(upstream):
     with gateway_client(upstream) as client:
         assert client.get("/health/ready").status_code == 200

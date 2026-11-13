@@ -59,7 +59,7 @@ function SentimentDemo() {
     event.preventDefault();
     setBusy(true); setError(''); setPredictions([]);
     try {
-      const { data } = await api.post('/reviews/sentiment/demo', { content: content.trim() }, { timeout: 60000 });
+      const { data } = await api.post('/reviews/sentiment/demo', { content: content.trim() }, { timeout: 65000 });
       setPredictions(data.predictions);
     } catch (err) {
       const detail = err.response?.data?.detail;
@@ -72,7 +72,7 @@ function SentimentDemo() {
     <form onSubmit={compare} className="space-y-2">
       <label className="block">Nội dung review phim
         <textarea className="block border rounded p-2 w-full" required minLength={5} maxLength={3000} disabled={busy}
-          value={content} onChange={e => { setContent(e.target.value); setPredictions([]); }} />
+          value={content} onChange={e => { setContent(e.target.value); setPredictions([]); setError(''); }} />
       </label>
       <button className="bg-red-700 text-white rounded px-4 py-2" disabled={busy || content.trim().length < 5}>
         {busy ? 'Đang chạy hai mô hình…' : 'So sánh hai mô hình'}

@@ -16,6 +16,7 @@ from cinema_platform.auth import AuthError
 from .. import service
 
 from ..models import Review, ReviewSentiment, utcnow
+from ..predictor import InputTooLong, validate_scores
 
 from ..read_client import ReadClient
 
@@ -325,25 +326,24 @@ def create_router(app, engine, settings, logger):
         return dict(items=[service.sentiment_item(review, result) for review, result in rows], total=total,
                     demo_enabled=demo_enabled)
 
-    @router.post("/reviews/sentiment/demo")
+    @router.post("/reviews/sentiment/demo", responses={400: {"description": "ViSoBERT token limit exceeded"}})
     def sentiment_demo(body: ReviewWrite, user=Depends(staff_user)):
         if not demo_enabled:
             raise HTTPException(404, "Chưa bật chế độ so sánh mô hình")
+        if not app.state.demo_models:
+            raise HTTPException(503, "Chưa nạp được hai mô hình demo")
         if not demo_lock.acquire(blocking=False):
             raise HTTPException(429, "Đang chạy một lượt so sánh; vui lòng thử lại")
-        from ..predictor import load_predictor, validate_scores
         try:
             predictions = []
-            for name, backend, path in (
-                ("TF-IDF + Logistic Regression", "sklearn", settings.sentiment_demo_lr_path),
-                ("ViSoBERT", "transformers", settings.sentiment_demo_visobert_path),
-            ):
-                predict, version = load_predictor(backend, path)
+            for name, (predict, version) in app.state.demo_models:
                 scores = predict(body.content)
                 validate_scores(scores)
                 label = max(scores, key=scores.get)
                 predictions.append(dict(model=name, model_version=version, label=label, scores=scores,
                                         needs_review=scores[label] < settings.sentiment_review_threshold))
+        except InputTooLong as exc:
+            raise HTTPException(400, "Nội dung vượt giới hạn token của ViSoBERT. Hãy rút ngắn nhận xét.") from exc
         except Exception as exc:
             logger.error("sentiment_demo_failed error_type=%s", type(exc).__name__)
             raise HTTPException(503, "Chưa chạy được hai mô hình demo") from exc

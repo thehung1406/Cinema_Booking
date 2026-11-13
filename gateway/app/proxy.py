@@ -54,9 +54,10 @@ def public_location(value: bytes, upstream_origin: str) -> bytes:
 
 
 async def proxy_request(request: Request, settings: GatewaySettings):
-    if request.url.path[len("/api"):].lstrip("/").split("/", 1)[0] == "internal":
+    request_path = request.url.path[len("/api"):]
+    if request_path.lstrip("/").split("/", 1)[0] == "internal":
         return JSONResponse({"detail": "Not Found"}, status_code=404)
-    domain = owner(request.url.path[len("/api"):])
+    domain = owner(request_path)
     if not settings.legacy_enabled and domain not in settings.enabled_domains:
         return JSONResponse({"detail":"Not Found"},status_code=404)
     request.state.upstream_domain = domain if domain in settings.enabled_domains else "monolith"
@@ -70,10 +71,14 @@ async def proxy_request(request: Request, settings: GatewaySettings):
     )
     headers = filtered_headers(request.headers.raw, incoming=True)
     headers.append((b"x-request-id", request.state.request_id.encode("ascii")))
+    timeout = settings.timeout()
+    if ("review" in settings.enabled_domains and request.method == "POST"
+            and request_path.rstrip("/") == "/reviews/sentiment/demo"):
+        timeout.read = max(settings.read_timeout_seconds, 60)
     # Do not build through AsyncClient: its cookie jar must never inject another user's cookies.
     outgoing = httpx.Request(
         request.method, url, headers=headers, content=request.stream(),
-        extensions={"timeout": settings.timeout().as_dict()},
+        extensions={"timeout": timeout.as_dict()},
     )
     try:
         upstream = await request.app.state.upstream.send(outgoing, stream=True, follow_redirects=False)
