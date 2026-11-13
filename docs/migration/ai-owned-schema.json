@@ -41,6 +41,23 @@
     "foreign_keys": []
   },
   {
+    "table": "ai_knowledge_revisions",
+    "columns": [
+      "id",
+      "document_id",
+      "version",
+      "payload",
+      "base_updated_at",
+      "created_at",
+      "created_by",
+      "published_at",
+      "published_by"
+    ],
+    "foreign_keys": [
+      "document_id -> ai_documents.id"
+    ]
+  },
+  {
     "table": "ai_messages",
     "columns": [
       "id",

@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 from uuid import UUID, uuid4
 
-from sqlalchemy import BigInteger, CheckConstraint, DateTime, ForeignKey, Index, Integer, JSON, String, Text, Uuid
+from sqlalchemy import BigInteger, CheckConstraint, DateTime, ForeignKey, Index, Integer, JSON, String, Text, UniqueConstraint, Uuid
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
@@ -65,3 +65,18 @@ class KnowledgeChunk(Base):
     embedding: Mapped[list] = mapped_column(JSON)
     embedding_version: Mapped[str] = mapped_column(String(100))
     provenance: Mapped[dict] = mapped_column(JSON, default=dict)
+
+
+class KnowledgeRevision(Base):
+    __tablename__ = "ai_knowledge_revisions"
+    __table_args__ = (UniqueConstraint("document_id", "version", name="uq_ai_knowledge_revision_version"),)
+
+    id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid4)
+    document_id: Mapped[int] = mapped_column(ForeignKey("ai_documents.id", ondelete="CASCADE"))
+    version: Mapped[str] = mapped_column(String(50))
+    payload: Mapped[dict] = mapped_column(JSON)
+    base_updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    created_by: Mapped[int | None] = mapped_column(Integer)
+    published_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    published_by: Mapped[int | None] = mapped_column(Integer)

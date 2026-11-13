@@ -233,6 +233,10 @@ def create_router(app, engine, settings, logger):
         if body.now_showing:
             today = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh")).date()
             query = query.where(Film.release_date <= today, Film.end_date >= today)
+        elif body.upcoming:
+            today = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh")).date()
+            query = query.where(Film.release_date > today)
+            query = query.order_by(Film.release_date)
         return [
             service.film_data(f)
             for f in db.scalars(

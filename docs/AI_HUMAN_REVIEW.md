@@ -47,7 +47,7 @@ Những câu khác nhãn nằm trong `adjudication-pending.jsonl`. Người th�
 
 ## Chấm câu trả lời RAG
 
-Bộ `pipelines/knowledge/rag-development-v2.jsonl` có 24 câu phát triển do AI soạn: 14 câu dự kiến có đáp án và 10 câu dự kiến thiếu thông tin. Đây là kiểm tra phát triển, chưa phải gold độc lập. Mỗi lượt chạy xuất `run.json`, thư mục `traces` và `human-review.csv`; trace có đầy đủ chunks, điểm, context, OUT và trang nguồn.
+Bộ `pipelines/knowledge/rag-development-v3.jsonl` có 24 câu phát triển do AI soạn, gồm 16 câu dự kiến có đáp án, 6 câu thiếu dữ kiện và 2 câu mơ hồ. Mỗi lượt chạy xuất `run.json`, thư mục `traces` và `human-review.csv`. Trace lưu đoạn truy xuất, context thực tế gửi Qwen, phản hồi và trang nguồn. [Kết quả kiểm tra căn cứ](reports/AI_RAG_GROUNDING_2026-11-13.md).
 
 Mở `human-review.csv`, đọc câu hỏi, câu trả lời và nguồn; đối chiếu nội dung trong trace/PDF. Nhập tên người chấm và các cột sau bằng **0 = sai/không đạt, 1 = đạt một phần, 2 = đạt đầy đủ**:
 

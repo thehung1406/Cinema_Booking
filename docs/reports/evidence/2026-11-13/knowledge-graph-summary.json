@@ -1,0 +1,1881 @@
+{
+  "stage": "development",
+  "human_evaluated": false,
+  "benchmarks": {
+    "bm25-release-guard": {
+      "strategy": "bm25",
+      "k": 3,
+      "graph_release": null,
+      "model": {
+        "name": "qwen3:4b",
+        "digest": "359d7dd4bcdab3d86b87d73ac27966f4dbb9f5efdfcc75d34a8764a09474fae7"
+      },
+      "input_sha256": {
+        ".local/knowledge/film-book.json": "1a727bce433cde6724a32a36a149429429af0f3b6c293e2a1b4999c2b77512e8",
+        ".local/knowledge/cinematography-summary.json": "6a36d0f279b21719b78c0da968127ce776f5834fba1f2f54b44e4a9d6f7b3743",
+        ".local/knowledge/booking-guide.json": "741b41d05d5c8bd798e4e71249a8cd291bca78da99e606b5ce18f138225b501a",
+        "pipelines/knowledge/rag-development-v3.jsonl": "7becb23bb5d505462d570d0518a7897be7e2d0bd2fcc0952dac7c94474463ce6"
+      },
+      "recall_at_k": 0.625,
+      "summary": {
+        "completed": 24,
+        "failed": 0,
+        "unanswerable_development_abstention_rate": 1.0,
+        "answerable_development_answer_rate": 0.4375,
+        "note": "Rates use AI-authored expectations; correctness requires human scoring."
+      },
+      "cases": [
+        {
+          "id": "Q01",
+          "expected_answerable_development": true,
+          "reply_status": "no_evidence",
+          "retrieval_metrics_development": {
+            "recall_at_k": 0.5,
+            "mrr_at_k": 1.0,
+            "ndcg_at_k": 0.6131471927654584,
+            "returned_any": true,
+            "relevant_retrieved": 1
+          }
+        },
+        {
+          "id": "Q02",
+          "expected_answerable_development": true,
+          "reply_status": "no_evidence",
+          "retrieval_metrics_development": {
+            "recall_at_k": 0.5,
+            "mrr_at_k": 1.0,
+            "ndcg_at_k": 0.6131471927654584,
+            "returned_any": true,
+            "relevant_retrieved": 1
+          }
+        },
+        {
+          "id": "Q03",
+          "expected_answerable_development": true,
+          "reply_status": "no_evidence",
+          "retrieval_metrics_development": {
+            "recall_at_k": 0.5,
+            "mrr_at_k": 1.0,
+            "ndcg_at_k": 0.6131471927654584,
+            "returned_any": true,
+            "relevant_retrieved": 1
+          }
+        },
+        {
+          "id": "Q04",
+          "expected_answerable_development": true,
+          "reply_status": "no_evidence",
+          "retrieval_metrics_development": {
+            "recall_at_k": 0.5,
+            "mrr_at_k": 1.0,
+            "ndcg_at_k": 0.6131471927654584,
+            "returned_any": true,
+            "relevant_retrieved": 1
+          }
+        },
+        {
+          "id": "Q05",
+          "expected_answerable_development": true,
+          "reply_status": "ok",
+          "retrieval_metrics_development": {
+            "recall_at_k": 1.0,
+            "mrr_at_k": 0.5,
+            "ndcg_at_k": 0.6309297535714574,
+            "returned_any": true,
+            "relevant_retrieved": 1
+          }
+        },
+        {
+          "id": "Q06",
+          "expected_answerable_development": true,
+          "reply_status": "no_evidence",
+          "retrieval_metrics_development": {
+            "recall_at_k": 0.0,
+            "mrr_at_k": 0.0,
+            "ndcg_at_k": 0.0,
+            "returned_any": true,
+            "relevant_retrieved": 0
+          }
+        },
+        {
+          "id": "Q07",
+          "expected_answerable_development": true,
+          "reply_status": "no_evidence",
+          "retrieval_metrics_development": {
+            "recall_at_k": 0.0,
+            "mrr_at_k": 0.0,
+            "ndcg_at_k": 0.0,
+            "returned_any": true,
+            "relevant_retrieved": 0
+          }
+        },
+        {
+          "id": "Q08",
+          "expected_answerable_development": true,
+          "reply_status": "ok",
+          "retrieval_metrics_development": {
+            "recall_at_k": 1.0,
+            "mrr_at_k": 0.5,
+            "ndcg_at_k": 0.6309297535714574,
+            "returned_any": true,
+            "relevant_retrieved": 1
+          }
+        },
+        {
+          "id": "Q09",
+          "expected_answerable_development": true,
+          "reply_status": "ok",
+          "retrieval_metrics_development": {
+            "recall_at_k": 1.0,
+            "mrr_at_k": 0.5,
+            "ndcg_at_k": 0.6309297535714574,
+            "returned_any": true,
+            "relevant_retrieved": 1
+          }
+        },
+        {
+          "id": "Q10",
+          "expected_answerable_development": true,
+          "reply_status": "no_evidence",
+          "retrieval_metrics_development": {
+            "recall_at_k": 1.0,
+            "mrr_at_k": 0.3333333333333333,
+            "ndcg_at_k": 0.5,
+            "returned_any": true,
+            "relevant_retrieved": 1
+          }
+        },
+        {
+          "id": "Q11",
+          "expected_answerable_development": true,
+          "reply_status": "ok",
+          "retrieval_metrics_development": {
+            "recall_at_k": 1.0,
+            "mrr_at_k": 0.3333333333333333,
+            "ndcg_at_k": 0.5,
+            "returned_any": true,
+            "relevant_retrieved": 1
+          }
+        },
+        {
+          "id": "Q12",
+          "expected_answerable_development": true,
+          "reply_status": "no_evidence",
+          "retrieval_metrics_development": {
+            "recall_at_k": 0.0,
+            "mrr_at_k": 0.0,
+            "ndcg_at_k": 0.0,
+            "returned_any": true,
+            "relevant_retrieved": 0
+          }
+        },
+        {
+          "id": "Q13",
+          "expected_answerable_development": true,
+          "reply_status": "no_evidence",
+          "retrieval_metrics_development": {
+            "recall_at_k": 0.0,
+            "mrr_at_k": 0.0,
+            "ndcg_at_k": 0.0,
+            "returned_any": true,
+            "relevant_retrieved": 0
+          }
+        },
+        {
+          "id": "Q14",
+          "expected_answerable_development": true,
+          "reply_status": "ok",
+          "retrieval_metrics_development": {
+            "recall_at_k": 1.0,
+            "mrr_at_k": 1.0,
+            "ndcg_at_k": 1.0,
+            "returned_any": true,
+            "relevant_retrieved": 1
+          }
+        },
+        {
+          "id": "Q15",
+          "expected_answerable_development": true,
+          "reply_status": "ok",
+          "retrieval_metrics_development": {
+            "recall_at_k": 1.0,
+            "mrr_at_k": 1.0,
+            "ndcg_at_k": 1.0,
+            "returned_any": true,
+            "relevant_retrieved": 1
+          }
+        },
+        {
+          "id": "Q16",
+          "expected_answerable_development": true,
+          "reply_status": "ok",
+          "retrieval_metrics_development": {
+            "recall_at_k": 1.0,
+            "mrr_at_k": 1.0,
+            "ndcg_at_k": 1.0,
+            "returned_any": true,
+            "relevant_retrieved": 1
+          }
+        },
+        {
+          "id": "Q17",
+          "expected_answerable_development": false,
+          "reply_status": "no_evidence",
+          "retrieval_metrics_development": {
+            "recall_at_k": null,
+            "mrr_at_k": null,
+            "ndcg_at_k": null,
+            "returned_any": true,
+            "relevant_retrieved": 0
+          }
+        },
+        {
+          "id": "Q18",
+          "expected_answerable_development": false,
+          "reply_status": "no_evidence",
+          "retrieval_metrics_development": {
+            "recall_at_k": null,
+            "mrr_at_k": null,
+            "ndcg_at_k": null,
+            "returned_any": true,
+            "relevant_retrieved": 0
+          }
+        },
+        {
+          "id": "Q19",
+          "expected_answerable_development": false,
+          "reply_status": "no_evidence",
+          "retrieval_metrics_development": {
+            "recall_at_k": null,
+            "mrr_at_k": null,
+            "ndcg_at_k": null,
+            "returned_any": true,
+            "relevant_retrieved": 0
+          }
+        },
+        {
+          "id": "Q20",
+          "expected_answerable_development": false,
+          "reply_status": "no_evidence",
+          "retrieval_metrics_development": {
+            "recall_at_k": null,
+            "mrr_at_k": null,
+            "ndcg_at_k": null,
+            "returned_any": true,
+            "relevant_retrieved": 0
+          }
+        },
+        {
+          "id": "Q21",
+          "expected_answerable_development": false,
+          "reply_status": "no_evidence",
+          "retrieval_metrics_development": {
+            "recall_at_k": null,
+            "mrr_at_k": null,
+            "ndcg_at_k": null,
+            "returned_any": true,
+            "relevant_retrieved": 0
+          }
+        },
+        {
+          "id": "Q22",
+          "expected_answerable_development": false,
+          "reply_status": "no_evidence",
+          "retrieval_metrics_development": {
+            "recall_at_k": null,
+            "mrr_at_k": null,
+            "ndcg_at_k": null,
+            "returned_any": true,
+            "relevant_retrieved": 0
+          }
+        },
+        {
+          "id": "Q23",
+          "expected_answerable_development": false,
+          "reply_status": "needs_clarification",
+          "retrieval_metrics_development": {
+            "recall_at_k": null,
+            "mrr_at_k": null,
+            "ndcg_at_k": null,
+            "returned_any": true,
+            "relevant_retrieved": 0
+          }
+        },
+        {
+          "id": "Q24",
+          "expected_answerable_development": false,
+          "reply_status": "needs_clarification",
+          "retrieval_metrics_development": {
+            "recall_at_k": null,
+            "mrr_at_k": null,
+            "ndcg_at_k": null,
+            "returned_any": true,
+            "relevant_retrieved": 0
+          }
+        }
+      ]
+    },
+    "bm25-graph-release-guard": {
+      "strategy": "bm25+graph",
+      "k": 3,
+      "graph_release": "6addb722253c791b7ba188df46deb8caf9fde4f0a44a362f576a0cc274da90d1",
+      "model": {
+        "name": "qwen3:4b",
+        "digest": "359d7dd4bcdab3d86b87d73ac27966f4dbb9f5efdfcc75d34a8764a09474fae7"
+      },
+      "input_sha256": {
+        ".local/knowledge/film-book.json": "1a727bce433cde6724a32a36a149429429af0f3b6c293e2a1b4999c2b77512e8",
+        ".local/knowledge/cinematography-summary.json": "6a36d0f279b21719b78c0da968127ce776f5834fba1f2f54b44e4a9d6f7b3743",
+        ".local/knowledge/booking-guide.json": "741b41d05d5c8bd798e4e71249a8cd291bca78da99e606b5ce18f138225b501a",
+        "pipelines/knowledge/rag-development-v3.jsonl": "7becb23bb5d505462d570d0518a7897be7e2d0bd2fcc0952dac7c94474463ce6"
+      },
+      "recall_at_k": 0.71875,
+      "summary": {
+        "completed": 24,
+        "failed": 0,
+        "unanswerable_development_abstention_rate": 1.0,
+        "answerable_development_answer_rate": 0.5625,
+        "note": "Rates use AI-authored expectations; correctness requires human scoring."
+      },
+      "cases": [
+        {
+          "id": "Q01",
+          "expected_answerable_development": true,
+          "reply_status": "no_evidence",
+          "retrieval_metrics_development": {
+            "recall_at_k": 0.5,
+            "mrr_at_k": 1.0,
+            "ndcg_at_k": 0.6131471927654584,
+            "returned_any": true,
+            "relevant_retrieved": 1
+          }
+        },
+        {
+          "id": "Q02",
+          "expected_answerable_development": true,
+          "reply_status": "no_evidence",
+          "retrieval_metrics_development": {
+            "recall_at_k": 0.5,
+            "mrr_at_k": 1.0,
+            "ndcg_at_k": 0.6131471927654584,
+            "returned_any": true,
+            "relevant_retrieved": 1
+          }
+        },
+        {
+          "id": "Q03",
+          "expected_answerable_development": true,
+          "reply_status": "ok",
+          "retrieval_metrics_development": {
+            "recall_at_k": 1.0,
+            "mrr_at_k": 1.0,
+            "ndcg_at_k": 1.0,
+            "returned_any": true,
+            "relevant_retrieved": 2
+          }
+        },
+        {
+          "id": "Q04",
+          "expected_answerable_development": true,
+          "reply_status": "no_evidence",
+          "retrieval_metrics_development": {
+            "recall_at_k": 0.5,
+            "mrr_at_k": 1.0,
+            "ndcg_at_k": 0.6131471927654584,
+            "returned_any": true,
+            "relevant_retrieved": 1
+          }
+        },
+        {
+          "id": "Q05",
+          "expected_answerable_development": true,
+          "reply_status": "ok",
+          "retrieval_metrics_development": {
+            "recall_at_k": 1.0,
+            "mrr_at_k": 0.5,
+            "ndcg_at_k": 0.6309297535714574,
+            "returned_any": true,
+            "relevant_retrieved": 1
+          }
+        },
+        {
+          "id": "Q06",
+          "expected_answerable_development": true,
+          "reply_status": "no_evidence",
+          "retrieval_metrics_development": {
+            "recall_at_k": 0.0,
+            "mrr_at_k": 0.0,
+            "ndcg_at_k": 0.0,
+            "returned_any": true,
+            "relevant_retrieved": 0
+          }
+        },
+        {
+          "id": "Q07",
+          "expected_answerable_development": true,
+          "reply_status": "no_evidence",
+          "retrieval_metrics_development": {
+            "recall_at_k": 0.0,
+            "mrr_at_k": 0.0,
+            "ndcg_at_k": 0.0,
+            "returned_any": true,
+            "relevant_retrieved": 0
+          }
+        },
+        {
+          "id": "Q08",
+          "expected_answerable_development": true,
+          "reply_status": "ok",
+          "retrieval_metrics_development": {
+            "recall_at_k": 1.0,
+            "mrr_at_k": 0.5,
+            "ndcg_at_k": 0.6309297535714574,
+            "returned_any": true,
+            "relevant_retrieved": 1
+          }
+        },
+        {
+          "id": "Q09",
+          "expected_answerable_development": true,
+          "reply_status": "ok",
+          "retrieval_metrics_development": {
+            "recall_at_k": 1.0,
+            "mrr_at_k": 0.5,
+            "ndcg_at_k": 0.6309297535714574,
+            "returned_any": true,
+            "relevant_retrieved": 1
+          }
+        },
+        {
+          "id": "Q10",
+          "expected_answerable_development": true,
+          "reply_status": "no_evidence",
+          "retrieval_metrics_development": {
+            "recall_at_k": 1.0,
+            "mrr_at_k": 0.3333333333333333,
+            "ndcg_at_k": 0.5,
+            "returned_any": true,
+            "relevant_retrieved": 1
+          }
+        },
+        {
+          "id": "Q11",
+          "expected_answerable_development": true,
+          "reply_status": "ok",
+          "retrieval_metrics_development": {
+            "recall_at_k": 1.0,
+            "mrr_at_k": 0.3333333333333333,
+            "ndcg_at_k": 0.5,
+            "returned_any": true,
+            "relevant_retrieved": 1
+          }
+        },
+        {
+          "id": "Q12",
+          "expected_answerable_development": true,
+          "reply_status": "ok",
+          "retrieval_metrics_development": {
+            "recall_at_k": 1.0,
+            "mrr_at_k": 0.3333333333333333,
+            "ndcg_at_k": 0.5,
+            "returned_any": true,
+            "relevant_retrieved": 1
+          }
+        },
+        {
+          "id": "Q13",
+          "expected_answerable_development": true,
+          "reply_status": "no_evidence",
+          "retrieval_metrics_development": {
+            "recall_at_k": 0.0,
+            "mrr_at_k": 0.0,
+            "ndcg_at_k": 0.0,
+            "returned_any": true,
+            "relevant_retrieved": 0
+          }
+        },
+        {
+          "id": "Q14",
+          "expected_answerable_development": true,
+          "reply_status": "ok",
+          "retrieval_metrics_development": {
+            "recall_at_k": 1.0,
+            "mrr_at_k": 1.0,
+            "ndcg_at_k": 1.0,
+            "returned_any": true,
+            "relevant_retrieved": 1
+          }
+        },
+        {
+          "id": "Q15",
+          "expected_answerable_development": true,
+          "reply_status": "ok",
+          "retrieval_metrics_development": {
+            "recall_at_k": 1.0,
+            "mrr_at_k": 1.0,
+            "ndcg_at_k": 1.0,
+            "returned_any": true,
+            "relevant_retrieved": 1
+          }
+        },
+        {
+          "id": "Q16",
+          "expected_answerable_development": true,
+          "reply_status": "ok",
+          "retrieval_metrics_development": {
+            "recall_at_k": 1.0,
+            "mrr_at_k": 1.0,
+            "ndcg_at_k": 1.0,
+            "returned_any": true,
+            "relevant_retrieved": 1
+          }
+        },
+        {
+          "id": "Q17",
+          "expected_answerable_development": false,
+          "reply_status": "no_evidence",
+          "retrieval_metrics_development": {
+            "recall_at_k": null,
+            "mrr_at_k": null,
+            "ndcg_at_k": null,
+            "returned_any": true,
+            "relevant_retrieved": 0
+          }
+        },
+        {
+          "id": "Q18",
+          "expected_answerable_development": false,
+          "reply_status": "no_evidence",
+          "retrieval_metrics_development": {
+            "recall_at_k": null,
+            "mrr_at_k": null,
+            "ndcg_at_k": null,
+            "returned_any": true,
+            "relevant_retrieved": 0
+          }
+        },
+        {
+          "id": "Q19",
+          "expected_answerable_development": false,
+          "reply_status": "no_evidence",
+          "retrieval_metrics_development": {
+            "recall_at_k": null,
+            "mrr_at_k": null,
+            "ndcg_at_k": null,
+            "returned_any": true,
+            "relevant_retrieved": 0
+          }
+        },
+        {
+          "id": "Q20",
+          "expected_answerable_development": false,
+          "reply_status": "no_evidence",
+          "retrieval_metrics_development": {
+            "recall_at_k": null,
+            "mrr_at_k": null,
+            "ndcg_at_k": null,
+            "returned_any": true,
+            "relevant_retrieved": 0
+          }
+        },
+        {
+          "id": "Q21",
+          "expected_answerable_development": false,
+          "reply_status": "no_evidence",
+          "retrieval_metrics_development": {
+            "recall_at_k": null,
+            "mrr_at_k": null,
+            "ndcg_at_k": null,
+            "returned_any": true,
+            "relevant_retrieved": 0
+          }
+        },
+        {
+          "id": "Q22",
+          "expected_answerable_development": false,
+          "reply_status": "no_evidence",
+          "retrieval_metrics_development": {
+            "recall_at_k": null,
+            "mrr_at_k": null,
+            "ndcg_at_k": null,
+            "returned_any": true,
+            "relevant_retrieved": 0
+          }
+        },
+        {
+          "id": "Q23",
+          "expected_answerable_development": false,
+          "reply_status": "needs_clarification",
+          "retrieval_metrics_development": {
+            "recall_at_k": null,
+            "mrr_at_k": null,
+            "ndcg_at_k": null,
+            "returned_any": true,
+            "relevant_retrieved": 0
+          }
+        },
+        {
+          "id": "Q24",
+          "expected_answerable_development": false,
+          "reply_status": "needs_clarification",
+          "retrieval_metrics_development": {
+            "recall_at_k": null,
+            "mrr_at_k": null,
+            "ndcg_at_k": null,
+            "returned_any": true,
+            "relevant_retrieved": 0
+          }
+        }
+      ]
+    },
+    "bm25-coverage-final": {
+      "strategy": "bm25",
+      "k": 3,
+      "graph_release": null,
+      "model": {
+        "name": "qwen3:4b",
+        "digest": "359d7dd4bcdab3d86b87d73ac27966f4dbb9f5efdfcc75d34a8764a09474fae7"
+      },
+      "input_sha256": {
+        ".local/knowledge/film-book.json": "1a727bce433cde6724a32a36a149429429af0f3b6c293e2a1b4999c2b77512e8",
+        ".local/knowledge/cinematography-summary.json": "6a36d0f279b21719b78c0da968127ce776f5834fba1f2f54b44e4a9d6f7b3743",
+        ".local/knowledge/booking-guide.json": "741b41d05d5c8bd798e4e71249a8cd291bca78da99e606b5ce18f138225b501a",
+        "pipelines/knowledge/rag-development-v3.jsonl": "7becb23bb5d505462d570d0518a7897be7e2d0bd2fcc0952dac7c94474463ce6"
+      },
+      "recall_at_k": 0.90625,
+      "summary": {
+        "completed": 24,
+        "failed": 0,
+        "unanswerable_development_abstention_rate": 1.0,
+        "answerable_development_answer_rate": 0.875,
+        "note": "Rates use AI-authored expectations; correctness requires human scoring."
+      },
+      "cases": [
+        {
+          "id": "Q01",
+          "expected_answerable_development": true,
+          "reply_status": "ok",
+          "retrieval_metrics_development": {
+            "recall_at_k": 1.0,
+            "mrr_at_k": 1.0,
+            "ndcg_at_k": 0.9197207891481876,
+            "returned_any": true,
+            "relevant_retrieved": 2
+          }
+        },
+        {
+          "id": "Q02",
+          "expected_answerable_development": true,
+          "reply_status": "ok",
+          "retrieval_metrics_development": {
+            "recall_at_k": 1.0,
+            "mrr_at_k": 1.0,
+            "ndcg_at_k": 0.9197207891481876,
+            "returned_any": true,
+            "relevant_retrieved": 2
+          }
+        },
+        {
+          "id": "Q03",
+          "expected_answerable_development": true,
+          "reply_status": "no_evidence",
+          "retrieval_metrics_development": {
+            "recall_at_k": 0.5,
+            "mrr_at_k": 1.0,
+            "ndcg_at_k": 0.6131471927654584,
+            "returned_any": true,
+            "relevant_retrieved": 1
+          }
+        },
+        {
+          "id": "Q04",
+          "expected_answerable_development": true,
+          "reply_status": "ok",
+          "retrieval_metrics_development": {
+            "recall_at_k": 1.0,
+            "mrr_at_k": 0.5,
+            "ndcg_at_k": 0.6934264036172708,
+            "returned_any": true,
+            "relevant_retrieved": 2
+          }
+        },
+        {
+          "id": "Q05",
+          "expected_answerable_development": true,
+          "reply_status": "ok",
+          "retrieval_metrics_development": {
+            "recall_at_k": 1.0,
+            "mrr_at_k": 0.5,
+            "ndcg_at_k": 0.6309297535714574,
+            "returned_any": true,
+            "relevant_retrieved": 1
+          }
+        },
+        {
+          "id": "Q06",
+          "expected_answerable_development": true,
+          "reply_status": "ok",
+          "retrieval_metrics_development": {
+            "recall_at_k": 1.0,
+            "mrr_at_k": 0.5,
+            "ndcg_at_k": 0.6309297535714574,
+            "returned_any": true,
+            "relevant_retrieved": 1
+          }
+        },
+        {
+          "id": "Q07",
+          "expected_answerable_development": true,
+          "reply_status": "ok",
+          "retrieval_metrics_development": {
+            "recall_at_k": 1.0,
+            "mrr_at_k": 1.0,
+            "ndcg_at_k": 1.0,
+            "returned_any": true,
+            "relevant_retrieved": 1
+          }
+        },
+        {
+          "id": "Q08",
+          "expected_answerable_development": true,
+          "reply_status": "ok",
+          "retrieval_metrics_development": {
+            "recall_at_k": 1.0,
+            "mrr_at_k": 0.5,
+            "ndcg_at_k": 0.6309297535714574,
+            "returned_any": true,
+            "relevant_retrieved": 1
+          }
+        },
+        {
+          "id": "Q09",
+          "expected_answerable_development": true,
+          "reply_status": "ok",
+          "retrieval_metrics_development": {
+            "recall_at_k": 1.0,
+            "mrr_at_k": 1.0,
+            "ndcg_at_k": 1.0,
+            "returned_any": true,
+            "relevant_retrieved": 1
+          }
+        },
+        {
+          "id": "Q10",
+          "expected_answerable_development": true,
+          "reply_status": "ok",
+          "retrieval_metrics_development": {
+            "recall_at_k": 1.0,
+            "mrr_at_k": 0.5,
+            "ndcg_at_k": 0.6309297535714574,
+            "returned_any": true,
+            "relevant_retrieved": 1
+          }
+        },
+        {
+          "id": "Q11",
+          "expected_answerable_development": true,
+          "reply_status": "ok",
+          "retrieval_metrics_development": {
+            "recall_at_k": 1.0,
+            "mrr_at_k": 0.3333333333333333,
+            "ndcg_at_k": 0.5,
+            "returned_any": true,
+            "relevant_retrieved": 1
+          }
+        },
+        {
+          "id": "Q12",
+          "expected_answerable_development": true,
+          "reply_status": "no_evidence",
+          "retrieval_metrics_development": {
+            "recall_at_k": 0.0,
+            "mrr_at_k": 0.0,
+            "ndcg_at_k": 0.0,
+            "returned_any": true,
+            "relevant_retrieved": 0
+          }
+        },
+        {
+          "id": "Q13",
+          "expected_answerable_development": true,
+          "reply_status": "ok",
+          "retrieval_metrics_development": {
+            "recall_at_k": 1.0,
+            "mrr_at_k": 1.0,
+            "ndcg_at_k": 1.0,
+            "returned_any": true,
+            "relevant_retrieved": 1
+          }
+        },
+        {
+          "id": "Q14",
+          "expected_answerable_development": true,
+          "reply_status": "ok",
+          "retrieval_metrics_development": {
+            "recall_at_k": 1.0,
+            "mrr_at_k": 1.0,
+            "ndcg_at_k": 1.0,
+            "returned_any": true,
+            "relevant_retrieved": 1
+          }
+        },
+        {
+          "id": "Q15",
+          "expected_answerable_development": true,
+          "reply_status": "ok",
+          "retrieval_metrics_development": {
+            "recall_at_k": 1.0,
+            "mrr_at_k": 1.0,
+            "ndcg_at_k": 1.0,
+            "returned_any": true,
+            "relevant_retrieved": 1
+          }
+        },
+        {
+          "id": "Q16",
+          "expected_answerable_development": true,
+          "reply_status": "ok",
+          "retrieval_metrics_development": {
+            "recall_at_k": 1.0,
+            "mrr_at_k": 1.0,
+            "ndcg_at_k": 1.0,
+            "returned_any": true,
+            "relevant_retrieved": 1
+          }
+        },
+        {
+          "id": "Q17",
+          "expected_answerable_development": false,
+          "reply_status": "no_evidence",
+          "retrieval_metrics_development": {
+            "recall_at_k": null,
+            "mrr_at_k": null,
+            "ndcg_at_k": null,
+            "returned_any": true,
+            "relevant_retrieved": 0
+          }
+        },
+        {
+          "id": "Q18",
+          "expected_answerable_development": false,
+          "reply_status": "no_evidence",
+          "retrieval_metrics_development": {
+            "recall_at_k": null,
+            "mrr_at_k": null,
+            "ndcg_at_k": null,
+            "returned_any": true,
+            "relevant_retrieved": 0
+          }
+        },
+        {
+          "id": "Q19",
+          "expected_answerable_development": false,
+          "reply_status": "no_evidence",
+          "retrieval_metrics_development": {
+            "recall_at_k": null,
+            "mrr_at_k": null,
+            "ndcg_at_k": null,
+            "returned_any": true,
+            "relevant_retrieved": 0
+          }
+        },
+        {
+          "id": "Q20",
+          "expected_answerable_development": false,
+          "reply_status": "no_evidence",
+          "retrieval_metrics_development": {
+            "recall_at_k": null,
+            "mrr_at_k": null,
+            "ndcg_at_k": null,
+            "returned_any": true,
+            "relevant_retrieved": 0
+          }
+        },
+        {
+          "id": "Q21",
+          "expected_answerable_development": false,
+          "reply_status": "no_evidence",
+          "retrieval_metrics_development": {
+            "recall_at_k": null,
+            "mrr_at_k": null,
+            "ndcg_at_k": null,
+            "returned_any": true,
+            "relevant_retrieved": 0
+          }
+        },
+        {
+          "id": "Q22",
+          "expected_answerable_development": false,
+          "reply_status": "no_evidence",
+          "retrieval_metrics_development": {
+            "recall_at_k": null,
+            "mrr_at_k": null,
+            "ndcg_at_k": null,
+            "returned_any": true,
+            "relevant_retrieved": 0
+          }
+        },
+        {
+          "id": "Q23",
+          "expected_answerable_development": false,
+          "reply_status": "needs_clarification",
+          "retrieval_metrics_development": {
+            "recall_at_k": null,
+            "mrr_at_k": null,
+            "ndcg_at_k": null,
+            "returned_any": true,
+            "relevant_retrieved": 0
+          }
+        },
+        {
+          "id": "Q24",
+          "expected_answerable_development": false,
+          "reply_status": "needs_clarification",
+          "retrieval_metrics_development": {
+            "recall_at_k": null,
+            "mrr_at_k": null,
+            "ndcg_at_k": null,
+            "returned_any": true,
+            "relevant_retrieved": 0
+          }
+        }
+      ]
+    },
+    "bm25-graph-coverage-final": {
+      "strategy": "bm25+graph",
+      "k": 3,
+      "graph_release": "6addb722253c791b7ba188df46deb8caf9fde4f0a44a362f576a0cc274da90d1",
+      "model": {
+        "name": "qwen3:4b",
+        "digest": "359d7dd4bcdab3d86b87d73ac27966f4dbb9f5efdfcc75d34a8764a09474fae7"
+      },
+      "input_sha256": {
+        ".local/knowledge/film-book.json": "1a727bce433cde6724a32a36a149429429af0f3b6c293e2a1b4999c2b77512e8",
+        ".local/knowledge/cinematography-summary.json": "6a36d0f279b21719b78c0da968127ce776f5834fba1f2f54b44e4a9d6f7b3743",
+        ".local/knowledge/booking-guide.json": "741b41d05d5c8bd798e4e71249a8cd291bca78da99e606b5ce18f138225b501a",
+        "pipelines/knowledge/rag-development-v3.jsonl": "7becb23bb5d505462d570d0518a7897be7e2d0bd2fcc0952dac7c94474463ce6"
+      },
+      "recall_at_k": 1.0,
+      "summary": {
+        "completed": 24,
+        "failed": 0,
+        "unanswerable_development_abstention_rate": 1.0,
+        "answerable_development_answer_rate": 1.0,
+        "note": "Rates use AI-authored expectations; correctness requires human scoring."
+      },
+      "cases": [
+        {
+          "id": "Q01",
+          "expected_answerable_development": true,
+          "reply_status": "ok",
+          "retrieval_metrics_development": {
+            "recall_at_k": 1.0,
+            "mrr_at_k": 1.0,
+            "ndcg_at_k": 0.9197207891481876,
+            "returned_any": true,
+            "relevant_retrieved": 2
+          }
+        },
+        {
+          "id": "Q02",
+          "expected_answerable_development": true,
+          "reply_status": "ok",
+          "retrieval_metrics_development": {
+            "recall_at_k": 1.0,
+            "mrr_at_k": 1.0,
+            "ndcg_at_k": 0.9197207891481876,
+            "returned_any": true,
+            "relevant_retrieved": 2
+          }
+        },
+        {
+          "id": "Q03",
+          "expected_answerable_development": true,
+          "reply_status": "ok",
+          "retrieval_metrics_development": {
+            "recall_at_k": 1.0,
+            "mrr_at_k": 1.0,
+            "ndcg_at_k": 0.9197207891481876,
+            "returned_any": true,
+            "relevant_retrieved": 2
+          }
+        },
+        {
+          "id": "Q04",
+          "expected_answerable_development": true,
+          "reply_status": "ok",
+          "retrieval_metrics_development": {
+            "recall_at_k": 1.0,
+            "mrr_at_k": 0.5,
+            "ndcg_at_k": 0.6934264036172708,
+            "returned_any": true,
+            "relevant_retrieved": 2
+          }
+        },
+        {
+          "id": "Q05",
+          "expected_answerable_development": true,
+          "reply_status": "ok",
+          "retrieval_metrics_development": {
+            "recall_at_k": 1.0,
+            "mrr_at_k": 0.5,
+            "ndcg_at_k": 0.6309297535714574,
+            "returned_any": true,
+            "relevant_retrieved": 1
+          }
+        },
+        {
+          "id": "Q06",
+          "expected_answerable_development": true,
+          "reply_status": "ok",
+          "retrieval_metrics_development": {
+            "recall_at_k": 1.0,
+            "mrr_at_k": 0.5,
+            "ndcg_at_k": 0.6309297535714574,
+            "returned_any": true,
+            "relevant_retrieved": 1
+          }
+        },
+        {
+          "id": "Q07",
+          "expected_answerable_development": true,
+          "reply_status": "ok",
+          "retrieval_metrics_development": {
+            "recall_at_k": 1.0,
+            "mrr_at_k": 1.0,
+            "ndcg_at_k": 1.0,
+            "returned_any": true,
+            "relevant_retrieved": 1
+          }
+        },
+        {
+          "id": "Q08",
+          "expected_answerable_development": true,
+          "reply_status": "ok",
+          "retrieval_metrics_development": {
+            "recall_at_k": 1.0,
+            "mrr_at_k": 0.5,
+            "ndcg_at_k": 0.6309297535714574,
+            "returned_any": true,
+            "relevant_retrieved": 1
+          }
+        },
+        {
+          "id": "Q09",
+          "expected_answerable_development": true,
+          "reply_status": "ok",
+          "retrieval_metrics_development": {
+            "recall_at_k": 1.0,
+            "mrr_at_k": 1.0,
+            "ndcg_at_k": 1.0,
+            "returned_any": true,
+            "relevant_retrieved": 1
+          }
+        },
+        {
+          "id": "Q10",
+          "expected_answerable_development": true,
+          "reply_status": "ok",
+          "retrieval_metrics_development": {
+            "recall_at_k": 1.0,
+            "mrr_at_k": 0.5,
+            "ndcg_at_k": 0.6309297535714574,
+            "returned_any": true,
+            "relevant_retrieved": 1
+          }
+        },
+        {
+          "id": "Q11",
+          "expected_answerable_development": true,
+          "reply_status": "ok",
+          "retrieval_metrics_development": {
+            "recall_at_k": 1.0,
+            "mrr_at_k": 0.3333333333333333,
+            "ndcg_at_k": 0.5,
+            "returned_any": true,
+            "relevant_retrieved": 1
+          }
+        },
+        {
+          "id": "Q12",
+          "expected_answerable_development": true,
+          "reply_status": "ok",
+          "retrieval_metrics_development": {
+            "recall_at_k": 1.0,
+            "mrr_at_k": 0.3333333333333333,
+            "ndcg_at_k": 0.5,
+            "returned_any": true,
+            "relevant_retrieved": 1
+          }
+        },
+        {
+          "id": "Q13",
+          "expected_answerable_development": true,
+          "reply_status": "ok",
+          "retrieval_metrics_development": {
+            "recall_at_k": 1.0,
+            "mrr_at_k": 1.0,
+            "ndcg_at_k": 1.0,
+            "returned_any": true,
+            "relevant_retrieved": 1
+          }
+        },
+        {
+          "id": "Q14",
+          "expected_answerable_development": true,
+          "reply_status": "ok",
+          "retrieval_metrics_development": {
+            "recall_at_k": 1.0,
+            "mrr_at_k": 1.0,
+            "ndcg_at_k": 1.0,
+            "returned_any": true,
+            "relevant_retrieved": 1
+          }
+        },
+        {
+          "id": "Q15",
+          "expected_answerable_development": true,
+          "reply_status": "ok",
+          "retrieval_metrics_development": {
+            "recall_at_k": 1.0,
+            "mrr_at_k": 1.0,
+            "ndcg_at_k": 1.0,
+            "returned_any": true,
+            "relevant_retrieved": 1
+          }
+        },
+        {
+          "id": "Q16",
+          "expected_answerable_development": true,
+          "reply_status": "ok",
+          "retrieval_metrics_development": {
+            "recall_at_k": 1.0,
+            "mrr_at_k": 1.0,
+            "ndcg_at_k": 1.0,
+            "returned_any": true,
+            "relevant_retrieved": 1
+          }
+        },
+        {
+          "id": "Q17",
+          "expected_answerable_development": false,
+          "reply_status": "no_evidence",
+          "retrieval_metrics_development": {
+            "recall_at_k": null,
+            "mrr_at_k": null,
+            "ndcg_at_k": null,
+            "returned_any": true,
+            "relevant_retrieved": 0
+          }
+        },
+        {
+          "id": "Q18",
+          "expected_answerable_development": false,
+          "reply_status": "no_evidence",
+          "retrieval_metrics_development": {
+            "recall_at_k": null,
+            "mrr_at_k": null,
+            "ndcg_at_k": null,
+            "returned_any": true,
+            "relevant_retrieved": 0
+          }
+        },
+        {
+          "id": "Q19",
+          "expected_answerable_development": false,
+          "reply_status": "no_evidence",
+          "retrieval_metrics_development": {
+            "recall_at_k": null,
+            "mrr_at_k": null,
+            "ndcg_at_k": null,
+            "returned_any": true,
+            "relevant_retrieved": 0
+          }
+        },
+        {
+          "id": "Q20",
+          "expected_answerable_development": false,
+          "reply_status": "no_evidence",
+          "retrieval_metrics_development": {
+            "recall_at_k": null,
+            "mrr_at_k": null,
+            "ndcg_at_k": null,
+            "returned_any": true,
+            "relevant_retrieved": 0
+          }
+        },
+        {
+          "id": "Q21",
+          "expected_answerable_development": false,
+          "reply_status": "no_evidence",
+          "retrieval_metrics_development": {
+            "recall_at_k": null,
+            "mrr_at_k": null,
+            "ndcg_at_k": null,
+            "returned_any": true,
+            "relevant_retrieved": 0
+          }
+        },
+        {
+          "id": "Q22",
+          "expected_answerable_development": false,
+          "reply_status": "no_evidence",
+          "retrieval_metrics_development": {
+            "recall_at_k": null,
+            "mrr_at_k": null,
+            "ndcg_at_k": null,
+            "returned_any": true,
+            "relevant_retrieved": 0
+          }
+        },
+        {
+          "id": "Q23",
+          "expected_answerable_development": false,
+          "reply_status": "needs_clarification",
+          "retrieval_metrics_development": {
+            "recall_at_k": null,
+            "mrr_at_k": null,
+            "ndcg_at_k": null,
+            "returned_any": true,
+            "relevant_retrieved": 0
+          }
+        },
+        {
+          "id": "Q24",
+          "expected_answerable_development": false,
+          "reply_status": "needs_clarification",
+          "retrieval_metrics_development": {
+            "recall_at_k": null,
+            "mrr_at_k": null,
+            "ndcg_at_k": null,
+            "returned_any": true,
+            "relevant_retrieved": 0
+          }
+        }
+      ]
+    }
+  },
+  "graph_stages": [
+    {
+      "source_count": 1,
+      "sources": [
+        "open-suny-film-construction"
+      ],
+      "simulated_source": false,
+      "release_id": "cd38ce59f43ffa431f3ac1312afd315e97c0480da27a5f43ee4d92a7fb59958b",
+      "claims": 2,
+      "import_ms": 466.77,
+      "duplicate_claim_edges": 0,
+      "definition_status": "matched",
+      "definition_sources": [
+        "open-suny-film-construction"
+      ],
+      "policy_status": "no_match",
+      "alias_status": "matched",
+      "unverified_claim_status": "no_match"
+    },
+    {
+      "source_count": 2,
+      "sources": [
+        "open-suny-film-construction",
+        "wikibooks-cinematography-summary"
+      ],
+      "simulated_source": false,
+      "release_id": "1f6fbbf58357c2a9ec6e2a94153c918725769dcad8ff0bce46cfe8c06eab083e",
+      "claims": 4,
+      "import_ms": 96.12,
+      "duplicate_claim_edges": 0,
+      "definition_status": "matched",
+      "definition_sources": [
+        "open-suny-film-construction",
+        "wikibooks-cinematography-summary"
+      ],
+      "policy_status": "no_match",
+      "alias_status": "matched",
+      "unverified_claim_status": "no_match"
+    },
+    {
+      "source_count": 3,
+      "sources": [
+        "open-suny-film-construction",
+        "wikibooks-cinematography-summary",
+        "cinema-booking-guide"
+      ],
+      "simulated_source": false,
+      "release_id": "6addb722253c791b7ba188df46deb8caf9fde4f0a44a362f576a0cc274da90d1",
+      "claims": 5,
+      "import_ms": 76.44,
+      "duplicate_claim_edges": 0,
+      "definition_status": "matched",
+      "definition_sources": [
+        "open-suny-film-construction",
+        "wikibooks-cinematography-summary"
+      ],
+      "policy_status": "matched",
+      "alias_status": "matched",
+      "unverified_claim_status": "no_match"
+    },
+    {
+      "source_count": 4,
+      "sources": [
+        "open-suny-film-construction",
+        "wikibooks-cinematography-summary",
+        "cinema-booking-guide",
+        "simulated-conflicting-definition"
+      ],
+      "simulated_source": true,
+      "release_id": "5a0fbb368af986df12b4993439417ab4a32a00ad115ceb820c17c818ae4cc517",
+      "claims": 8,
+      "import_ms": 108.69,
+      "duplicate_claim_edges": 0,
+      "definition_status": "conflict",
+      "definition_sources": [],
+      "policy_status": "matched",
+      "alias_status": "ambiguous",
+      "unverified_claim_status": "uncertain"
+    }
+  ],
+  "kb_lifecycle": {
+    "draft": {
+      "status": "no_evidence",
+      "mode": "retrieval_only",
+      "sources": []
+    },
+    "combined": {
+      "status": "ok",
+      "mode": "retrieval_only",
+      "sources": [
+        {
+          "id": "wikibooks-cinematography-summary",
+          "version": "oldid-3335736-summary-1",
+          "page": null
+        },
+        {
+          "id": "open-suny-film-construction",
+          "version": "2017",
+          "page": 63
+        },
+        {
+          "id": "open-suny-film-construction",
+          "version": "2017",
+          "page": 62
+        }
+      ]
+    },
+    "english": {
+      "status": "ok",
+      "mode": "retrieval_only",
+      "sources": [
+        {
+          "id": "open-suny-film-construction",
+          "version": "2017",
+          "page": 85
+        },
+        {
+          "id": "open-suny-film-construction",
+          "version": "2017",
+          "page": 62
+        },
+        {
+          "id": "wikibooks-cinematography-summary",
+          "version": "oldid-3335736-summary-1",
+          "page": null
+        }
+      ]
+    },
+    "typo": {
+      "status": "ok",
+      "mode": "retrieval_only",
+      "sources": [
+        {
+          "id": "open-suny-film-construction",
+          "version": "2017",
+          "page": 7
+        },
+        {
+          "id": "open-suny-film-construction",
+          "version": "2017",
+          "page": 62
+        },
+        {
+          "id": "wikibooks-cinematography-summary",
+          "version": "oldid-3335736-summary-1",
+          "page": null
+        }
+      ]
+    },
+    "unsupported": {
+      "status": "no_evidence",
+      "mode": "retrieval_only",
+      "sources": []
+    },
+    "revoked": {
+      "status": "ok",
+      "mode": "retrieval_only",
+      "sources": [
+        {
+          "id": "wikibooks-cinematography-summary",
+          "version": "oldid-3335736-summary-1",
+          "page": null
+        },
+        {
+          "id": "wikibooks-cinematography-summary",
+          "version": "oldid-3335736-summary-1",
+          "page": null
+        },
+        {
+          "id": "wikibooks-cinematography-summary",
+          "version": "oldid-3335736-summary-1",
+          "page": null
+        }
+      ]
+    },
+    "pending": {
+      "status": "ok",
+      "mode": "retrieval_only",
+      "sources": [
+        {
+          "id": "open-suny-film-construction",
+          "version": "2017",
+          "page": 85
+        },
+        {
+          "id": "open-suny-film-construction",
+          "version": "2017",
+          "page": 62
+        },
+        {
+          "id": "wikibooks-cinematography-summary",
+          "version": "oldid-3335736-summary-1",
+          "page": null
+        }
+      ]
+    },
+    "failed_publication": {
+      "status": "ok",
+      "mode": "retrieval_only",
+      "sources": [
+        {
+          "id": "open-suny-film-construction",
+          "version": "2017",
+          "page": 85
+        },
+        {
+          "id": "open-suny-film-construction",
+          "version": "2017",
+          "page": 62
+        },
+        {
+          "id": "wikibooks-cinematography-summary",
+          "version": "oldid-3335736-summary-1",
+          "page": null
+        }
+      ]
+    },
+    "published": {
+      "status": "ok",
+      "mode": "retrieval_only",
+      "sources": [
+        {
+          "id": "open-suny-film-construction",
+          "version": "2017",
+          "page": 85
+        },
+        {
+          "id": "open-suny-film-construction",
+          "version": "2017",
+          "page": 62
+        },
+        {
+          "id": "wikibooks-cinematography-summary",
+          "version": "demo-edition-2",
+          "page": null
+        }
+      ]
+    },
+    "rollback": {
+      "status": "ok",
+      "mode": "retrieval_only",
+      "sources": [
+        {
+          "id": "open-suny-film-construction",
+          "version": "2017",
+          "page": 85
+        },
+        {
+          "id": "open-suny-film-construction",
+          "version": "2017",
+          "page": 62
+        },
+        {
+          "id": "wikibooks-cinematography-summary",
+          "version": "oldid-3335736-summary-1",
+          "page": null
+        }
+      ]
+    },
+    "generated": {
+      "status": "ok",
+      "mode": "grounded_generation",
+      "sources": [
+        {
+          "id": "wikibooks-cinematography-summary",
+          "version": "oldid-3335736-summary-1",
+          "page": null
+        },
+        {
+          "id": "open-suny-film-construction",
+          "version": "2017",
+          "page": 63
+        }
+      ]
+    }
+  },
+  "demo_runs": {
+    "live-before-guard.json": {
+      "Q03": {
+        "status": "ok",
+        "mode": "grounded_generation",
+        "sources": [
+          {
+            "id": "wikibooks-cinematography-summary",
+            "version": "oldid-3335736-summary-1",
+            "page": null
+          },
+          {
+            "id": "open-suny-film-construction",
+            "version": "2017",
+            "page": 63
+          },
+          {
+            "id": "open-suny-film-construction",
+            "version": "2017",
+            "page": 36
+          }
+        ]
+      },
+      "Q17": {
+        "status": "ok",
+        "mode": "model_planned",
+        "sources": [
+          {
+            "id": "cinema-booking-guide",
+            "version": "draft-1",
+            "page": null
+          }
+        ]
+      },
+      "Q18": {
+        "status": "ok",
+        "mode": "model_planned",
+        "sources": [
+          {
+            "id": "cinema-booking-guide",
+            "version": "draft-1",
+            "page": null
+          },
+          {
+            "id": "cinema-booking-guide",
+            "version": "draft-1",
+            "page": null
+          },
+          {
+            "id": "cinema-booking-guide",
+            "version": "draft-1",
+            "page": null
+          }
+        ]
+      },
+      "Q19": {
+        "status": "ok",
+        "mode": "model_planned",
+        "sources": [
+          {
+            "id": "cinema-booking-guide",
+            "version": "draft-1",
+            "page": null
+          },
+          {
+            "id": "cinema-booking-guide",
+            "version": "draft-1",
+            "page": null
+          },
+          {
+            "id": "cinema-booking-guide",
+            "version": "draft-1",
+            "page": null
+          }
+        ]
+      },
+      "Q20": {
+        "status": "ok",
+        "mode": "model_planned",
+        "sources": [
+          {
+            "id": "cinema-booking-guide",
+            "version": "draft-1",
+            "page": null
+          }
+        ]
+      },
+      "Q21": {
+        "status": "ok",
+        "mode": "grounded_generation",
+        "sources": [
+          {
+            "id": "wikibooks-cinematography-summary",
+            "version": "oldid-3335736-summary-1",
+            "page": null
+          },
+          {
+            "id": "open-suny-film-construction",
+            "version": "2017",
+            "page": 36
+          },
+          {
+            "id": "open-suny-film-construction",
+            "version": "2017",
+            "page": 33
+          }
+        ]
+      },
+      "Q22": {
+        "status": "ok",
+        "mode": "model_planned",
+        "sources": [
+          {
+            "id": "cinema-booking-guide",
+            "version": "draft-1",
+            "page": null
+          },
+          {
+            "id": "cinema-booking-guide",
+            "version": "draft-1",
+            "page": null
+          },
+          {
+            "id": "cinema-booking-guide",
+            "version": "draft-1",
+            "page": null
+          }
+        ]
+      },
+      "Q23": {
+        "status": "ok",
+        "mode": "grounded_generation",
+        "sources": [
+          {
+            "id": "wikibooks-cinematography-summary",
+            "version": "oldid-3335736-summary-1",
+            "page": null
+          },
+          {
+            "id": "wikibooks-cinematography-summary",
+            "version": "oldid-3335736-summary-1",
+            "page": null
+          }
+        ]
+      },
+      "Q24": {
+        "status": "ok",
+        "mode": "model_planned",
+        "sources": [
+          {
+            "id": "cinema-booking-guide",
+            "version": "draft-1",
+            "page": null
+          }
+        ]
+      }
+    },
+    "live-grounding-verified.json": {
+      "Q03": {
+        "status": "ok",
+        "mode": "grounded_generation",
+        "sources": [
+          {
+            "id": "wikibooks-cinematography-summary",
+            "version": "oldid-3335736-summary-1",
+            "page": null
+          },
+          {
+            "id": "open-suny-film-construction",
+            "version": "2017",
+            "page": 63
+          }
+        ]
+      },
+      "Q17": {
+        "status": "no_evidence",
+        "mode": "model_planned",
+        "sources": []
+      },
+      "Q18": {
+        "status": "no_evidence",
+        "mode": "model_planned",
+        "sources": []
+      },
+      "Q19": {
+        "status": "no_evidence",
+        "mode": "model_planned",
+        "sources": []
+      },
+      "Q20": {
+        "status": "no_evidence",
+        "mode": "model_planned",
+        "sources": []
+      },
+      "Q21": {
+        "status": "no_evidence",
+        "mode": "model_planned",
+        "sources": []
+      },
+      "Q22": {
+        "status": "no_evidence",
+        "mode": "model_planned",
+        "sources": []
+      },
+      "Q23": {
+        "status": "needs_clarification",
+        "mode": "retrieval_only",
+        "sources": []
+      },
+      "Q24": {
+        "status": "needs_clarification",
+        "mode": "retrieval_only",
+        "sources": []
+      },
+      "Q14": {
+        "status": "ok",
+        "mode": "grounded_extract",
+        "sources": [
+          {
+            "id": "cinema-booking-guide",
+            "version": "draft-1",
+            "page": null
+          }
+        ]
+      }
+    },
+    "live-coverage-final.json": {
+      "Q01": {
+        "status": "ok",
+        "mode": "grounded_generation",
+        "sources": [
+          {
+            "id": "wikibooks-cinematography-summary",
+            "version": "oldid-3335736-summary-1",
+            "page": null
+          },
+          {
+            "id": "open-suny-film-construction",
+            "version": "2017",
+            "page": 63
+          }
+        ]
+      },
+      "Q02": {
+        "status": "ok",
+        "mode": "grounded_generation",
+        "sources": [
+          {
+            "id": "wikibooks-cinematography-summary",
+            "version": "oldid-3335736-summary-1",
+            "page": null
+          },
+          {
+            "id": "open-suny-film-construction",
+            "version": "2017",
+            "page": 62
+          }
+        ]
+      },
+      "Q03": {
+        "status": "ok",
+        "mode": "grounded_generation",
+        "sources": [
+          {
+            "id": "wikibooks-cinematography-summary",
+            "version": "oldid-3335736-summary-1",
+            "page": null
+          },
+          {
+            "id": "open-suny-film-construction",
+            "version": "2017",
+            "page": 63
+          }
+        ]
+      },
+      "Q04": {
+        "status": "ok",
+        "mode": "grounded_generation",
+        "sources": [
+          {
+            "id": "wikibooks-cinematography-summary",
+            "version": "oldid-3335736-summary-1",
+            "page": null
+          },
+          {
+            "id": "open-suny-film-construction",
+            "version": "2017",
+            "page": 64
+          }
+        ]
+      },
+      "Q06": {
+        "status": "ok",
+        "mode": "grounded_generation",
+        "sources": [
+          {
+            "id": "open-suny-film-construction",
+            "version": "2017",
+            "page": 62
+          }
+        ]
+      },
+      "Q07": {
+        "status": "ok",
+        "mode": "grounded_generation",
+        "sources": [
+          {
+            "id": "open-suny-film-construction",
+            "version": "2017",
+            "page": 62
+          }
+        ]
+      },
+      "Q10": {
+        "status": "ok",
+        "mode": "grounded_generation",
+        "sources": [
+          {
+            "id": "open-suny-film-construction",
+            "version": "2017",
+            "page": 67
+          }
+        ]
+      },
+      "Q13": {
+        "status": "ok",
+        "mode": "grounded_generation",
+        "sources": [
+          {
+            "id": "wikibooks-cinematography-summary",
+            "version": "oldid-3335736-summary-1",
+            "page": null
+          }
+        ]
+      },
+      "Q20": {
+        "status": "no_evidence",
+        "mode": "model_planned",
+        "sources": []
+      },
+      "Q23": {
+        "status": "needs_clarification",
+        "mode": "retrieval_only",
+        "sources": []
+      }
+    }
+  }
+}

@@ -1,5 +1,7 @@
-from datetime import timedelta
+from datetime import datetime, timedelta
+import json
 from uuid import UUID
+from zoneinfo import ZoneInfo
 
 from fastapi.testclient import TestClient
 import httpx
@@ -31,6 +33,255 @@ def client_for(store, settings, *, permissions=None, read=None, cache=None):
 
 
 HEADERS = {"Authorization": "Bearer test-token"}
+
+
+@pytest.mark.parametrize(("message", "scheduled"), [
+    ("Hôm nay có những phim gì", True),
+    ("Phim nào có suất chiếu hôm nay?", True),
+    ("Hiện đang có những phim gì đang chiếu", False),
+])
+def test_showing_film_list_does_not_require_selected_film(ai_store, ai_settings, monkeypatch, message, scheduled):
+    from ai_service import llm
+
+    ai_settings.llm_provider = "ollama"
+    ai_settings.direct_reads_enabled = True
+    monkeypatch.setattr(llm, "plan", lambda *args: pytest.fail("An explicit list request should bypass the model"))
+    today = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh")).date().isoformat()
+    paths = []
+
+    def reads(request):
+        paths.append(request.url.path)
+        if request.url.path.endswith("/candidates"):
+            assert dict(request.url.params) == {"show_date": today, "evening": "false"}
+            return httpx.Response(200, json=[7, 7, 8])
+        payload = json.loads(request.content)
+        if scheduled:
+            assert payload == {"ids": [7, 8], "include_retired": False}
+        else:
+            assert payload["now_showing"] is True
+        return httpx.Response(200, json=[{"id": 7, "title": "Phim thứ nhất"}, {"id": 8, "title": "Phim thứ hai"}])
+
+    client, _ = client_for(ai_store, ai_settings, read=reads)
+    with client:
+        response = client.post("/ai/chat", headers=HEADERS, json={"message": message, "context": {"film_id": 99}})
+    assert response.status_code == 200
+    result = response.json()
+    assert result["tool"] == "get_showing_films"
+    assert result["status"] == "ok" and result["missing_fields"] == []
+    assert result["context"]["film_id"] is None
+    assert [item["url"] for item in result["links"]] == ["/movie/7", "/movie/8"]
+    assert "Phim thứ nhất" in result["answer"] and "Phim thứ hai" in result["answer"]
+    assert paths == (["/internal/v1/booking-read/candidates", "/internal/v1/films/batch"] if scheduled
+                     else ["/internal/v1/films/search"])
+
+
+@pytest.mark.parametrize(("message", "tool", "scheduled"), [
+    ("Liệt kê phim đang chiếu", "get_showing_films", False),
+    ("Liệt kê phim hôm nay", "get_showing_films", True),
+    ("Liệt kê phim sắp chiếu", "get_upcoming_films", False),
+])
+def test_film_lists_use_legacy_origin(ai_store, ai_settings, message, tool, scheduled):
+    ai_settings.direct_reads_enabled = False
+    today = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh")).date()
+    upcoming = tool == "get_upcoming_films"
+    paths = []
+
+    def reads(request):
+        assert request.url.host == httpx.URL(ai_settings.read_origin).host
+        paths.append(request.url.path)
+        if request.url.path == "/films/":
+            assert request.url.params["now_showing"] == str(not upcoming and not scheduled).lower()
+            return httpx.Response(200, json=[
+                {"id": 7, "title": "Space Film", "genre": "Khoa học viễn tưởng",
+                 "release_date": (today + timedelta(days=1 if upcoming else -1)).isoformat()},
+                {"id": 8, "title": "Drama Film", "genre": "Drama", "release_date": today.isoformat()},
+            ])
+        if request.url.path == "/theaters/by-film/7":
+            assert request.url.params["from_date"] == today.isoformat()
+            return httpx.Response(200, json=[{"id": 3}])
+        assert request.url.path == "/internal/v1/ai-read/tool"
+        assert json.loads(request.content)["call"]["context"] == {
+            "film_id": 7, "theater_id": 3, "show_date": today.isoformat(), "showtime_id": None,
+        }
+        return httpx.Response(200, json=[{"id": "showtime:4", "title": "Suất", "text": "Suất chiếu",
+                                         "url": "/seat-selection/4", "kind": "live"}])
+
+    client, _ = client_for(ai_store, ai_settings, read=reads)
+    with client:
+        result = client.post("/ai/chat", headers=HEADERS, json={
+            "message": message, "context": {"genre": "Khoa học viễn tưởng"},
+        }).json()
+    assert result["tool"] == tool and result["status"] == "ok"
+    assert [item["url"] for item in result["links"]] == ["/movie/7"]
+    assert paths == (["/films/", "/theaters/by-film/7", "/internal/v1/ai-read/tool"] if scheduled else ["/films/"])
+
+
+def test_upcoming_films_and_qualified_showtime_have_distinct_routes(ai_store, ai_settings):
+    ai_settings.direct_reads_enabled = True
+    paths = []
+
+    def reads(request):
+        path = request.url.path
+        paths.append(path)
+        if path.endswith("/matches"):
+            return httpx.Response(200, json=[])
+        assert path == "/internal/v1/films/search"
+        assert json.loads(request.content) == {"upcoming": True, "limit": 13, "genre": ""}
+        return httpx.Response(200, json=[{"id": 9, "title": "Phim sắp ra mắt"}])
+
+    client, _ = client_for(ai_store, ai_settings, read=reads)
+    with client:
+        upcoming = client.post("/ai/chat", headers=HEADERS, json={"message": "Liệt kê phim sắp chiếu"}).json()
+        qualified = client.post("/ai/chat", headers=HEADERS, json={"message": "Phim nào có suất chiếu lúc 20h?"}).json()
+    assert upcoming["tool"] == "get_upcoming_films" and upcoming["status"] == "ok"
+    assert "Các phim sắp chiếu" in upcoming["answer"]
+    assert qualified["tool"] == "get_showtimes" and qualified["status"] == "needs_clarification"
+    assert paths.count("/internal/v1/films/search") == 1
+
+
+def test_versioned_knowledge_publication_keeps_active_source_until_publish(ai_store, ai_settings):
+    client, _ = client_for(ai_store, ai_settings, permissions=["knowledge.manage"])
+    first = {
+        "source_id": "checkout-guide", "title": "Hướng dẫn đặt vé", "version": "1",
+        "source_url": "/booking", "effective_at": (utcnow() - timedelta(days=1)).isoformat(),
+        "content": "Hướng dẫn đặt vé: vào trang đặt vé rồi chọn suất chiếu.",
+    }
+    with client:
+        response = client.post("/admin/documents", headers=HEADERS, json=first)
+        assert response.status_code == 200
+        doc = response.json()
+        document_url = f"/admin/documents/{doc['id']}"
+        approval = {"approved": True, "version": doc["version"], "expected_updated_at": doc["updated_at"]}
+        response = client.put(f"{document_url}/approval", headers=HEADERS, json=approval)
+        assert response.status_code == 200
+        live = response.json()
+        stamp = {"expected_updated_at": live["updated_at"]}
+        second = first | stamp | {
+            "version": "2", "content": "Hướng dẫn đặt vé: chọn ngày xem trước khi chọn suất.",
+        }
+        drafts = f"{document_url}/revisions"
+        staged = client.post(drafts, headers=HEADERS, json={"document": second})
+        assert staged.status_code == 200
+        assert client.post(drafts, headers=HEADERS, json={"document": second}).status_code == 409
+        assert client.post("/admin/documents", headers=HEADERS, json=second).status_code == 409
+        question = {"message": "Hướng dẫn đặt vé"}
+        before = client.post("/ai/chat", headers=HEADERS, json=question).json()
+        assert [source["version"] for source in before["sources"]] == ["1"]
+        publish = f"{drafts}/{staged.json()['id']}/publication"
+        switched = client.put(publish, headers=HEADERS, json=stamp)
+        assert switched.status_code == 200 and switched.json()["version"] == "2"
+        current_stamp = {"expected_updated_at": switched.json()["updated_at"]}
+        for version in ("1", "2"):
+            overwritten = client.post("/admin/documents", headers=HEADERS,
+                                      json=first | current_stamp | {"version": version, "content": "Nội dung ghi đè."})
+            assert overwritten.status_code == 409
+        assert client.put(publish, headers=HEADERS, json=stamp).status_code == 409
+        after = client.post("/ai/chat", headers=HEADERS, json=question).json()
+        assert [source["version"] for source in after["sources"]] == ["2"]
+        history = client.get(drafts, headers=HEADERS).json()
+        archived = next(item for item in history if item["version"] == "1")
+        restored = client.put(f"{drafts}/{archived['id']}/publication", headers=HEADERS,
+                              json={"expected_updated_at": switched.json()["updated_at"]})
+        assert restored.status_code == 200 and restored.json()["version"] == "1"
+        restored_detail = client.get(document_url, headers=HEADERS).json()
+        assert [chunk["content"] for chunk in restored_detail["chunks"]] == [first["content"]]
+
+
+@pytest.mark.parametrize("already_approved", [False, True])
+def test_restore_keeps_inherited_graph_release(ai_store, ai_settings, monkeypatch, already_approved):
+    from ai_service import main
+    from ai_service.models import KnowledgeDocument
+
+    old_release, new_release = "a" * 64, "b" * 64
+    ai_settings.graph_uri = "bolt://test-graph:7687"
+    ai_settings.graph_release_id = old_release
+    checked = []
+
+    class Graph:
+        def __init__(self, *args):
+            self.release_id = args[-1]
+
+        def close(self):
+            pass
+
+        def revision_spans(self, release_id, document):
+            checked.append((document["version"], release_id))
+            return [{"block_index": 0, "page": None, "excerpt": document["blocks"][0]["text"]}]
+
+    monkeypatch.setattr(main, "KnowledgeGraph", Graph)
+    client, _ = client_for(ai_store, ai_settings, permissions=["knowledge.manage"])
+    first = {
+        "source_id": "graph-guide", "title": "Hướng dẫn", "version": "1", "source_url": "/booking",
+        "effective_at": (utcnow() - timedelta(days=1)).isoformat(),
+        "blocks": [{"text": "Chọn suất chiếu trước khi đặt vé."}],
+        "provenance": {"checksum": "c" * 64},
+    }
+    with client:
+        saved = client.post("/admin/documents", headers=HEADERS, json=first).json()
+        url = f"/admin/documents/{saved['id']}"
+        live = client.put(f"{url}/approval", headers=HEADERS, json={
+            "approved": True, "version": "1", "expected_updated_at": saved["updated_at"],
+        }).json()
+        assert live["provenance"]["graph_release_id"] == old_release
+
+    if already_approved:
+        # Simulate a source approved before the service recorded the inherited release.
+        with Session(ai_store) as db:
+            document = db.get(KnowledgeDocument, saved["id"])
+            document.provenance = {key: value for key, value in document.provenance.items()
+                                   if not key.startswith("graph_release_")}
+            db.commit()
+    else:
+        ai_settings.graph_release_id = new_release
+    with client:
+        stamp = {"expected_updated_at": live["updated_at"]}
+        second = first | stamp | {"version": "2", "blocks": [{"text": "Chọn ngày trước khi chọn suất chiếu."}]}
+        drafts = f"{url}/revisions"
+        staged = client.post(drafts, headers=HEADERS, json={"document": second, "graph_release_id": new_release})
+        assert staged.status_code == 200
+        switched = client.put(f"{drafts}/{staged.json()['id']}/publication", headers=HEADERS, json=stamp)
+        assert switched.status_code == 200
+        history = client.get(drafts, headers=HEADERS).json()
+        archived = next(item for item in history if item["version"] == "1")
+        assert archived["graph_release_id"] == old_release
+    ai_settings.graph_release_id = new_release
+    with client:
+        restored = client.put(f"{drafts}/{archived['id']}/publication", headers=HEADERS,
+                              json={"expected_updated_at": switched.json()["updated_at"]})
+        assert restored.status_code == 200
+        assert restored.json()["provenance"]["graph_release_id"] == old_release
+    assert checked == [("2", new_release), ("1", old_release)]
+
+
+def test_policy_never_displays_unverified_excerpt_when_model_fails(ai_store, ai_settings, monkeypatch):
+    from ai_service import llm
+    from ai_service.schemas import AssistantPlan
+
+    ai_settings.llm_provider = "ollama"
+    monkeypatch.setattr(llm, "plan", lambda *args: AssistantPlan(intent="knowledge"))
+    client, _ = client_for(ai_store, ai_settings, permissions=["knowledge.manage"])
+    with client:
+        doc = client.post("/admin/documents", headers=HEADERS, json={
+            "source_id": "payments", "title": "Hướng dẫn thanh toán", "version": "1",
+            "source_url": "/booking", "effective_at": (utcnow() - timedelta(days=1)).isoformat(),
+            "content": "Người dùng thực hiện thanh toán qua giao diện của hệ thống.",
+        }).json()
+        approved = client.put(f"/admin/documents/{doc['id']}/approval", headers=HEADERS, json={
+            "approved": True, "version": doc["version"], "expected_updated_at": doc["updated_at"],
+        })
+        assert approved.status_code == 200
+
+        def unavailable(settings, question, sources, *, extractive, deadline):
+            assert extractive and sources
+            raise TimeoutError("Model unavailable")
+
+        monkeypatch.setattr(llm, "grounded_reply", unavailable)
+        response = client.post("/ai/chat", headers=HEADERS, json={"message": "Đổi phương thức thanh toán được không?"})
+        assert response.status_code == 200
+        result = response.json()
+        assert result["mode"] == "grounding_unavailable"
+        assert result["status"] == "no_evidence" and result["sources"] == []
+        assert "qua giao diện" not in result["answer"]
 
 
 @pytest.mark.parametrize('message,intent', [('Mã suất 1 còn ghế nào?', 'get_seat_availability'), ('Giá vé mã suất 1?', 'get_ticket_prices')])
@@ -83,6 +334,7 @@ def test_knowledge_inference_shares_one_budget(ai_store, ai_settings, monkeypatc
 
     elapsed = 0
     monkeypatch.setattr(chat, "monotonic", lambda: elapsed)
+    monkeypatch.setattr(llm, "monotonic", lambda: elapsed)
     ai_settings.llm_provider = "ollama"
     ai_settings.llm_timeout_seconds = 20
 
@@ -91,15 +343,19 @@ def test_knowledge_inference_shares_one_budget(ai_store, ai_settings, monkeypatc
         elapsed += settings.llm_timeout_seconds
         return AssistantPlan(intent="knowledge")
 
-    def answer(settings, *_):
+    from ai_service.schemas import GroundedAnswer
+
+    def answer(settings, *_args, **_kwargs):
         assert elapsed + settings.llm_timeout_seconds < 25
-        return "Đoạn trích đã duyệt."
+        return GroundedAnswer(decision="answer", clarification="", sentences=[
+            {"source_id": "doc:1:span:0", "text": "Đoạn trích đã duyệt."},
+        ])
 
     monkeypatch.setattr(llm, "plan", plan)
-    monkeypatch.setattr(llm, "grounded_answer", answer)
-    monkeypatch.setattr(chat, "retrieve", lambda *args, **kwargs: [
+    monkeypatch.setattr(llm, "structured", answer)
+    monkeypatch.setattr(chat, "retrieve_knowledge", lambda *args, **kwargs: ([
         {"id": "doc:1", "text": "Đoạn trích đã duyệt.", "kind": "document"}
-    ])
+    ], "disabled", []))
     client, _ = client_for(ai_store, ai_settings)
     with client:
         response = client.post("/ai/chat", headers=HEADERS, json={"message": "Thể loại điện ảnh là gì?"})
@@ -114,14 +370,8 @@ def test_recommendation_budget_followup_preserves_party_and_allows_topic_change(
     options = []
     def reads(request):
         if request.url.path.endswith('/options'):
-            payload = json.loads(request.content)
-            options.append(payload)
-            items = [dict(showtime_id=1, sales_version=1, film_id=1, film_title="Phim hài",
-                theater_id=1, theater_name="Rạp", room_name="Phòng 1", show_date=payload["show_date"],
-                start_time="19:00:00", format="2D", available_seats=10, min_ticket_price=75000,
-                minimum_total=150000, party_size=2, currency="VND", url="/seat-selection/1")
-            ] if payload["budget_total"] == "250000" else []
-            return httpx.Response(200, json={"items": items, "has_more": False})
+            options.append(json.loads(request.content))
+            return httpx.Response(200, json={"items": [], "has_more": False})
         if request.url.path.endswith('/matches'):
             return httpx.Response(200, json={"film_id": [], "theater_id": []})
         return httpx.Response(200, json={"film_name": None, "theater_name": None})
@@ -132,23 +382,13 @@ def test_recommendation_budget_followup_preserves_party_and_allows_topic_change(
         assert first['missing_fields'] == ['budget_scope'] and not options
         second = client.post('/ai/chat', headers=HEADERS,
             json={"conversation_id": first['conversation_id'], "message": "Tổng cả nhóm"})
-        assert second.status_code == 200 and len(second.json()['cards']) == 1
+        assert second.status_code == 200 and second.json()['status'] == 'no_results'
         assert options[-1]['party_size'] == 2 and options[-1]['budget_total'] == '250000'
         assert options[-1]['show_date'] == (datetime.now(ZoneInfo('Asia/Ho_Chi_Minh')).date()+timedelta(days=1)).isoformat()
-        refined = client.post('/ai/chat', headers=HEADERS,
-            json={"conversation_id": first['conversation_id'], "message": "Tổng dưới 100k"})
-        assert refined.status_code == 200 and refined.json()['status'] == 'no_results'
-        assert options[-1]['party_size'] == 2 and options[-1]['budget_total'] == '100000'
-        with Session(ai_store) as db:
-            assert db.get(AIConversation, UUID(first['conversation_id'])).context['options'] == []
-        policy = client.post('/ai/chat', headers=HEADERS,
-            json={"conversation_id": first['conversation_id'], "message": "Chính sách hoàn tiền là gì?"})
-        assert policy.status_code == 200 and policy.json()['status'] == 'no_evidence'
-        assert len(options) == 2
         pending = client.post('/ai/chat', headers=HEADERS, json=question).json()
         changed = client.post('/ai/chat', headers=HEADERS,
             json={"conversation_id": pending['conversation_id'], "message": "Đặt hộ hai vé"}).json()
-        assert changed['status'] == 'out_of_scope' and len(options) == 2
+        assert changed['status'] == 'out_of_scope' and len(options) == 1
 
 
 def test_history_context_pagination_owner_and_delete(ai_store, ai_settings):

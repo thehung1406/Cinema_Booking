@@ -14,7 +14,7 @@ from sqlmodel import Session, select
 
 from cinema_platform.auth import AuthError
 
-from .. import chat as chat_service, documents, history
+from .. import chat as chat_service, documents, history, knowledge_versions
 
 from ..models import KnowledgeDocument
 
@@ -26,6 +26,8 @@ from ..schemas import (
     ConversationDetail,
     DocumentWrite,
     DocumentApproval,
+    DocumentRevisionWrite,
+    DocumentRevisionPublish,
 )
 
 from fastapi import APIRouter
@@ -100,7 +102,8 @@ def create_router(app, engine, settings, logger, cache):
     @router.post("/ai/chat", dependencies=[Depends(writes)])
     def ask(body: ChatRequest, user=Depends(current_user), db=Depends(db_session)):
         reader = ReadSession(app.state.read_http, settings)
-        return chat_service.chat(db, user.user_id, body, cache, reader, settings)
+        return chat_service.chat(db, user.user_id, body, cache, reader, settings,
+                                 graph=app.state.knowledge_graph)
 
     @router.get("/ai/conversations", response_model=list[ConversationRead])
     def conversations(
@@ -183,7 +186,7 @@ def create_router(app, engine, settings, logger, cache):
     def document_write(
         body: DocumentWrite, user=Depends(knowledge_user), db=Depends(db_session)
     ):
-        return documents.document_write(db, body)
+        return documents.document_write(db, body, settings.graph_release_id if settings.graph_uri else "")
 
     @router.put(
         "/admin/documents/{document_id}/approval", dependencies=[Depends(writes)]
@@ -194,7 +197,25 @@ def create_router(app, engine, settings, logger, cache):
         user=Depends(knowledge_user),
         db=Depends(db_session),
     ):
-        return documents.document_approve(db, document_id, body)
+        return documents.document_approve(db, document_id, body, settings.graph_release_id if settings.graph_uri else "")
+
+    @router.get("/admin/documents/{document_id}/revisions")
+    def revisions(document_id: int, user=Depends(knowledge_user), db=Depends(db_session)):
+        return knowledge_versions.revision_list(db, document_id)
+
+    @router.post("/admin/documents/{document_id}/revisions", dependencies=[Depends(writes)])
+    def stage_revision(document_id: int, body: DocumentRevisionWrite,
+                       user=Depends(knowledge_user), db=Depends(db_session)):
+        return knowledge_versions.stage(db, document_id, body, user.user_id)
+
+    @router.get("/admin/documents/{document_id}/revisions/{revision_id}")
+    def revision(document_id: int, revision_id: UUID, user=Depends(knowledge_user), db=Depends(db_session)):
+        return knowledge_versions.revision_detail(db, document_id, revision_id)
+
+    @router.put("/admin/documents/{document_id}/revisions/{revision_id}/publication", dependencies=[Depends(writes)])
+    def publish_revision(document_id: int, revision_id: UUID, body: DocumentRevisionPublish,
+                         user=Depends(knowledge_user), db=Depends(db_session)):
+        return knowledge_versions.publish(db, document_id, revision_id, body, user.user_id, app.state.knowledge_graph)
 
     @router.delete("/admin/documents/{document_id}", dependencies=[Depends(writes)])
     def document_delete(

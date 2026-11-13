@@ -15,6 +15,7 @@ from cinema_platform.auth import AuthClient
 from cinema_platform.logging import service_logger
 
 from .config import Settings
+from .graph import KnowledgeGraph
 
 from .router.api import create_router
 
@@ -35,19 +36,28 @@ def create_app(
 
     @asynccontextmanager
     async def lifespan(app):
-        async with httpx.AsyncClient(
-            trust_env=False, transport=auth_transport
-        ) as auth_http:
-            with httpx.Client(
-                trust_env=False, transport=read_transport, timeout=5
-            ) as read_http:
-                app.state.auth = AuthClient(
-                    auth_http, settings.identity_origin, settings.service_key
-                )
-                app.state.read_http = read_http
-                yield
-        if own_engine:
-            engine.dispose()
+        graph = KnowledgeGraph(
+            settings.graph_uri, settings.graph_username, settings.graph_password.get_secret_value(),
+            settings.graph_database, settings.graph_release_id,
+        ) if settings.graph_uri else None
+        try:
+            async with httpx.AsyncClient(
+                trust_env=False, transport=auth_transport
+            ) as auth_http:
+                with httpx.Client(
+                    trust_env=False, transport=read_transport, timeout=5
+                ) as read_http:
+                    app.state.auth = AuthClient(
+                        auth_http, settings.identity_origin, settings.service_key
+                    )
+                    app.state.read_http = read_http
+                    app.state.knowledge_graph = graph
+                    yield
+        finally:
+            if graph is not None:
+                graph.close()
+            if own_engine:
+                engine.dispose()
 
     app = FastAPI(
         title="Cinema AI",

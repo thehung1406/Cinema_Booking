@@ -14,6 +14,9 @@ function localDateTime(value = new Date().toISOString()) {
 
 function DocumentReview({ documentId, onClose, onEdit, onSaved }) {
   const detail = useAdminData(`/admin/documents/${documentId}`);
+  const revisions = useAdminData(`/admin/documents/${documentId}/revisions`);
+  const [selected, setSelected] = useState(null);
+  const revision = useAdminData(selected ? `/admin/documents/${documentId}/revisions/${selected}` : null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const doc = detail.data;
@@ -22,6 +25,15 @@ function DocumentReview({ documentId, onClose, onEdit, onSaved }) {
     try {
       await api.put(`/admin/documents/${documentId}/approval`, { approved, version: doc.version, expected_updated_at: utcStamp(doc.updated_at) });
       onSaved(approved ? "Đã phê duyệt tài liệu." : "Đã thu hồi phê duyệt tài liệu."); onClose();
+    } catch (err) { setError(errorText(err)); } finally { setBusy(false); }
+  };
+  const publish = async () => {
+    setBusy(true); setError("");
+    try {
+      await api.put(`/admin/documents/${documentId}/revisions/${selected}/publication`, {
+        expected_updated_at: utcStamp(doc.updated_at),
+      });
+      onSaved(`Đang phục vụ phiên bản ${revision.data.version}.`); onClose();
     } catch (err) { setError(errorText(err)); } finally { setBusy(false); }
   };
   return <Dialog title="Kiểm tra tài liệu tri thức" onClose={() => { if (!busy) onClose(); }}>
@@ -47,8 +59,33 @@ function DocumentReview({ documentId, onClose, onEdit, onSaved }) {
             {chunk.provenance?.page_start && <a href={`${doc.source_url.split('#')[0]}#page=${chunk.provenance.page_start}`} target="_blank" rel="noreferrer">Mở trang gốc</a>}
           </article>)}
         </details>
+        <details>
+          <summary>Phiên bản và lịch sử công bố</summary>
+          {revisions.loading && <p>Đang tải phiên bản…</p>}
+          {revisions.error && <p role="alert">{revisions.error}</p>}
+          {revisions.data?.length === 0 && <p>Chưa có bản nháp hoặc bản lưu trước đó.</p>}
+          {revisions.data?.map(item => <button key={item.id} disabled={busy}
+            onClick={() => { setSelected(item.id); setError(""); }}>
+            {item.version} · {item.version === doc.version ? "Đang chọn" : item.published_at ? "Đã công bố" : "Bản nháp"}
+          </button>)}
+          {revision.loading && <p>Đang tải nội dung phiên bản…</p>}
+          {revision.error && <p role="alert">{revision.error}</p>}
+          {revision.data && <section className="border rounded p-3 my-2">
+            <h4>{revision.data.title} · phiên bản {revision.data.version}</h4>
+            <p>So sánh với phiên bản hiện tại {doc.version}.</p>
+            <div className="grid gap-2 md:grid-cols-2">
+              <div><strong>Đang chọn</strong><p className="whitespace-pre-wrap">{doc.chunks.map(chunk => chunk.content).join("\n\n")}</p></div>
+              <div><strong>Phiên bản đã lưu</strong><p className="whitespace-pre-wrap">{revision.data.document.content ||
+                revision.data.document.blocks.map(block => block.text).join("\n\n")}</p></div>
+            </div>
+            {revision.data.graph_release_id && <p className="break-all">Bản đồ thị {revision.data.graph_release_id}</p>}
+            {revision.data.version !== doc.version && <button className="admin-primary" disabled={busy} onClick={publish}>
+              {revision.data.published_at ? "Khôi phục phiên bản này" : "Duyệt và công bố phiên bản này"}
+            </button>}
+          </section>}
+        </details>
         {doc.provenance?.source_type === 'pdf' && <p>Thay nội dung PDF bằng công cụ nhập nguồn để giữ đúng thông tin trang.</p>}
-        <footer><button disabled={busy || doc.provenance?.source_type === 'pdf'} onClick={() => onEdit(doc)}>Chỉnh sửa</button>
+        <footer><button disabled={busy || doc.provenance?.source_type === 'pdf'} onClick={() => onEdit(doc)}>Soạn phiên bản mới</button>
           <button className="admin-primary" disabled={busy || !doc.chunks.length} onClick={() => approve(!doc.approved)}>{busy ? "Đang xử lý…" : doc.approved ? "Thu hồi phê duyệt" : "Phê duyệt phiên bản này"}</button></footer>
       </>}
     </div>
@@ -112,13 +149,23 @@ export function DocumentsPage() {
       <Pagination total={list.data?.total} offset={offset} onChange={setOffset} />
     </section>
     {reviewId && <DocumentReview documentId={reviewId} onClose={() => setReviewId(null)} onSaved={refresh} onEdit={(doc) => { setReviewId(null); setEditor(doc); }} />}
-    {editor && <Editor title={editor.id ? "Cập nhật tài liệu" : "Nhập tài liệu tri thức"} onClose={() => setEditor(null)} submitLabel="Lưu & xử lý tài liệu"
-      initial={{ source_id: editor.source_id || "", title: editor.title || "", version: editor.version || "1.0", source_url: editor.source_url || "/about",
+    {editor && <Editor title={editor.id ? "Soạn phiên bản tài liệu" : "Nhập tài liệu tri thức"} onClose={() => setEditor(null)}
+      submitLabel={editor.id ? "Lưu bản nháp" : "Lưu & xử lý tài liệu"}
+      initial={{ source_id: editor.source_id || "", title: editor.title || "", version: editor.id ? "" : "1.0", source_url: editor.source_url || "/about",
         effective_at: localDateTime(editor.effective_at), content: editor.chunks?.map((chunk) => chunk.content).join("\n\n") || "" }}
       onSave={async (value) => {
-        await api.post("/admin/documents", { ...value, provenance: editor.provenance || {}, effective_at: new Date(`${value.effective_at}:00+07:00`).toISOString(),
-          ...(editor.id ? { expected_updated_at: utcStamp(editor.updated_at) } : {}) });
-        refresh("Đã xử lý tài liệu. Phiên bản vừa lưu đang chờ phê duyệt.");
+        const { source_type, scope, author, license, language } = editor.provenance || {};
+        const document = { ...value, provenance: { source_type, scope, author, license, language },
+          effective_at: new Date(`${value.effective_at}:00+07:00`).toISOString() };
+        if (editor.id) {
+          document.expected_updated_at = utcStamp(editor.updated_at);
+          await api.post(`/admin/documents/${editor.id}/revisions`, { document });
+          refresh("Đã lưu bản nháp. Phiên bản hiện tại vẫn được phục vụ.");
+          setReviewId(editor.id);
+        } else {
+          await api.post("/admin/documents", document);
+          refresh("Đã xử lý tài liệu. Phiên bản vừa lưu đang chờ phê duyệt.");
+        }
       }}>{(value, set, setValue) => <>
         <div className="admin-form-grid"><Field label="Mã nguồn tài liệu *" required disabled={!!editor.id} maxLength={100} value={value.source_id} onChange={set("source_id")} />
           <Field label="Phiên bản *" required maxLength={50} value={value.version} onChange={set("version")} /></div>

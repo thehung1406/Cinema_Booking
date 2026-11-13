@@ -576,8 +576,8 @@ try {
     .getByRole("button", { name: "Đóng trợ lý", exact: true })
     .waitFor();
   await layout("assistant-375", true);
-  const history = page.getByLabel("Lịch sử hội thoại", { exact: true });
-  await history.selectOption(savedChatId);
+  await page.getByRole("button", { name: "Lịch sử", exact: true }).click();
+  await page.getByRole("button", { name: /^Hội thoại đã lưu/ }).click();
   await page.getByText("Hướng dẫn đã lưu", { exact: true }).waitFor();
   await page.getByRole("button", { name: "Tải tin nhắn cũ hơn", exact: true }).click();
   await page.getByText("Câu hỏi đầu tiên", { exact: true }).waitFor();
@@ -591,11 +591,14 @@ try {
   await page.getByText("Câu trả lời vừa lưu", { exact: true }).waitFor();
   await page.reload();
   await page.getByRole("button", { name: "Hỏi trợ lý", exact: true }).click();
-  await page.getByLabel("Lịch sử hội thoại", { exact: true }).selectOption(newChatId);
+  await page.getByRole("button", { name: "Lịch sử", exact: true }).click();
+  const recentConversation = page.getByRole("button", { name: /^Hội thoại mới để kiểm tra tải lại/ });
+  await recentConversation.click();
   await page.getByRole("log").getByText("Hội thoại mới để kiểm tra tải lại", { exact: true }).waitFor();
+  await page.getByRole("button", { name: "Lịch sử", exact: true }).click();
   await page.getByRole("button", { name: "Xóa hội thoại", exact: true }).click();
   await page.getByRole("log").getByText("Hội thoại mới để kiểm tra tải lại", { exact: true }).waitFor({ state: "detached" });
-  assert.equal(await page.locator(`option[value="${newChatId}"]`).count(), 0);
+  assert.equal(await recentConversation.count(), 0);
   assert.equal(await page.locator(":focus").getAttribute("id"), "ai-conversation-history");
   await layout("assistant-history-375", true);
   await page.keyboard.press("Escape");
