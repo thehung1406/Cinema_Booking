@@ -117,3 +117,33 @@ def test_upstream_failure_and_freeze_do_not_create_review(review_store, review_s
     with Session(review_store) as db:
         assert db.scalar(select(func.count()).select_from(Review)) == 0
         assert db.scalar(select(func.count()).select_from(OutboxRecord)) == 0
+
+
+def test_sentiment_demo_compares_two_models_without_creating_reviews(review_store, review_settings, monkeypatch):
+    from review_service import predictor
+
+    review_settings.sentiment_demo_lr_path = "/demo/lr"
+    review_settings.sentiment_demo_visobert_path = "/demo/visobert"
+    calls = []
+    content = "Diễn xuất tốt nhưng kịch bản kéo dài."
+
+    def load(backend, path):
+        def predict(text):
+            calls.append((backend, path, text))
+            return {"positive": .1, "neutral": .2, "negative": .7}
+
+        return predict, backend + "-demo"
+
+    monkeypatch.setattr(predictor, "load_predictor", load)
+    client, identity = client_for(review_store, review_settings)
+    with client:
+        assert client.post("/reviews/sentiment/demo", headers=HEADERS, json={"content": content}).status_code == 403
+        identity["permissions"] = ["reviews.moderate"]
+        assert client.get("/reviews/sentiment/pending", headers=HEADERS).json()["demo_enabled"]
+        result = client.post("/reviews/sentiment/demo", headers=HEADERS, json={"content": content})
+        assert result.status_code == 200
+        assert [item["model_version"] for item in result.json()["predictions"]] == ["sklearn-demo", "transformers-demo"]
+    assert calls == [("sklearn", "/demo/lr", content), ("transformers", "/demo/visobert", content)]
+    with Session(review_store) as db:
+        assert db.exec(select(func.count()).select_from(Review)).one() == 0
+        assert db.exec(select(func.count()).select_from(ReviewSentiment)).one() == 0

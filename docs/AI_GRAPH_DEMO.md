@@ -66,3 +66,24 @@ Trên 24 câu phát triển, Recall@3 trên các câu có bằng chứng chuẩn
 Dùng `scripts/ai/benchmark_rag_answers.py` với hai lượt `--strategy bm25` và `--strategy bm25+graph`, mỗi lượt một thư mục `--output`. Với tập do người duyệt chuẩn bị, thêm `--reviewed-gold --cases <tệp-jsonl>`. Mỗi câu cần ID, câu hỏi, scope, cờ có đáp án, danh sách nguồn/phiên bản/trang kỳ vọng và metadata duyệt. Hai lượt xuất riêng `human-review.csv` với điểm để trống. Chạy `score_rag_human_review.py` sau khi người chấm điền điểm để tổng hợp và kiểm SHA của các trace gốc.
 
 [Số liệu mới nhất trên bộ 24 câu phát triển](reports/AI_RAG_COVERAGE_2026-11-13.md).
+
+## Demo so sánh hai mô hình cảm xúc
+
+Dùng cùng một nhận xét để chạy TF-IDF + Logistic Regression và ViSoBERT. Mỗi kết quả hiển thị phiên bản, nhãn, ba xác suất và trạng thái cần rà soát. API chỉ cho tài khoản có quyền duyệt review. Lượt so sánh không ghi nhãn vào review hay thay model của worker.
+
+Lấy hai thư mục artifact của pilot phim từ thành viên giữ dữ liệu hoặc tạo lại theo [hướng dẫn huấn luyện](reports/AI_FILM_HUMAN_PILOT_2026-11-04.md). Giữ các file mô hình ngoài Git. Chỉ nạp thư mục do nhóm tạo hoặc nhận từ người tin cậy vì Logistic Regression dùng định dạng Joblib.
+
+- Thư mục LR cần `metadata.json` và `model.joblib`.
+- Thư mục ViSoBERT cần `metadata.json`, `config.json`, `model.safetensors` và các file tokenizer đã lưu cùng model. Có thể bỏ các thư mục checkpoint huấn luyện.
+
+Khi Gateway và cơ sở dữ liệu Review đã chạy, dùng cùng tên project Compose với hệ thống đang chạy.
+
+```powershell
+$env:REVIEW_DEMO_LR_ARTIFACT = (Resolve-Path '<thu-muc-artifact-lr>').Path
+$env:REVIEW_DEMO_VISOBERT_ARTIFACT = (Resolve-Path '<thu-muc-artifact-visobert>').Path
+docker compose --env-file .env.microservices -p backend -f compose.yml -f compose.ai-sentiment-demo.yml up -d --no-deps --build --wait review-service
+```
+
+Nếu dùng thêm các tệp Compose khác cho môi trường hiện tại, giữ nguyên danh sách đó rồi thêm overlay cảm xúc. Mở **Duyệt đánh giá → Nhãn cảm xúc**, nhập một nhận xét phim và chọn **So sánh hai mô hình**. Để quay về cấu hình API mặc định, chạy lại lệnh khởi động Review Service với bộ Compose thường dùng.
+
+Hai artifact dùng nhãn silver và được kiểm tra trên pilot phim. Kết quả trên một nhận xét chỉ minh họa cách hai mô hình suy luận.

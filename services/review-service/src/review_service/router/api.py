@@ -1,6 +1,7 @@
 """HTTP routes and request dependencies for this owner. App lifecycle stays in main."""
 
 from secrets import compare_digest
+from threading import Lock
 
 from fastapi import Depends, Header, HTTPException, Query, Response
 
@@ -82,6 +83,8 @@ def report_sentiments(db, body):
 
 def create_router(app, engine, settings, logger):
     router = APIRouter()
+    demo_lock = Lock()
+    demo_enabled = bool(settings.sentiment_demo_lr_path and settings.sentiment_demo_visobert_path)
 
     def reader():
         return ReadClient(app.state.read_http, settings)
@@ -319,7 +322,34 @@ def create_router(app, engine, settings, logger):
             query = query.where(Review.film_id == film_id)
         total = db.exec(select(func.count()).select_from(query.subquery())).one()
         rows = db.exec(query.order_by(ReviewSentiment.updated_at, Review.id).offset(offset).limit(limit)).all()
-        return dict(items=[service.sentiment_item(review, result) for review, result in rows], total=total)
+        return dict(items=[service.sentiment_item(review, result) for review, result in rows], total=total,
+                    demo_enabled=demo_enabled)
+
+    @router.post("/reviews/sentiment/demo")
+    def sentiment_demo(body: ReviewWrite, user=Depends(staff_user)):
+        if not demo_enabled:
+            raise HTTPException(404, "Chưa bật chế độ so sánh mô hình")
+        if not demo_lock.acquire(blocking=False):
+            raise HTTPException(429, "Đang chạy một lượt so sánh; vui lòng thử lại")
+        from ..predictor import load_predictor, validate_scores
+        try:
+            predictions = []
+            for name, backend, path in (
+                ("TF-IDF + Logistic Regression", "sklearn", settings.sentiment_demo_lr_path),
+                ("ViSoBERT", "transformers", settings.sentiment_demo_visobert_path),
+            ):
+                predict, version = load_predictor(backend, path)
+                scores = predict(body.content)
+                validate_scores(scores)
+                label = max(scores, key=scores.get)
+                predictions.append(dict(model=name, model_version=version, label=label, scores=scores,
+                                        needs_review=scores[label] < settings.sentiment_review_threshold))
+        except Exception as exc:
+            logger.error("sentiment_demo_failed error_type=%s", type(exc).__name__)
+            raise HTTPException(503, "Chưa chạy được hai mô hình demo") from exc
+        finally:
+            demo_lock.release()
+        return {"predictions": predictions}
 
     @router.post("/reviews/{review_id}/sentiment-decision", dependencies=[Depends(writes)])
     def sentiment_decision(review_id: int, body: SentimentDecisionWrite,
