@@ -80,6 +80,7 @@ class FilmSearch(BaseModel):
     limit: int = Field(default=8, ge=1, le=200)
     skip: int = Field(default=0, ge=0)
     now_showing: bool = False
+    upcoming: bool = False
     genre: str = Field(default="", max_length=100)
     language: str = Field(default="", max_length=100)
     duration_max: int | None = Field(default=None, ge=1, le=600)

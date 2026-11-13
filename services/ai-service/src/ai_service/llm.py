@@ -180,7 +180,7 @@ def grounded_reply(settings, question, sources, *, trace=None, extractive=False,
         span=spans[sentence.source_id]
         if not covers_specifics(question,span[1]):
             reason='support_quote_does_not_contain_requested_specific_fact'
-        elif echoes_question(question, sentence.text):
+        elif echoes_question(question, sentence.text) or (extractive and echoes_question(question, span[1])):
             reason='question_echo_is_not_an_answer'
         elif not extractive and not set(re.findall(r"\d+", sentence.text)).issubset(re.findall(r"\d+", span[1])):
             reason='answer_adds_a_number_absent_from_support_quote'

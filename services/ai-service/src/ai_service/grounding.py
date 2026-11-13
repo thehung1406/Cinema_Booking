@@ -36,7 +36,7 @@ def clarification_needed(question):
 def echoes_question(question, answer):
     question = folded(canonical(question))
     answer = folded(canonical(answer))
-    if answer.rstrip().endswith("?"):
+    if re.search(r'[?？][”"]?\d*$', answer):
         return True
     parts = (part.strip(" .?!") for part in re.split(r"[?\n]", question))
     return any(answer.strip(" .?!") == part for part in parts if part) or any(
@@ -48,14 +48,16 @@ def support_spans(source):
     # The server supplies the literal source spans. The model selects IDs rather
     # than attempting to reproduce quotes (which can introduce subtle typos).
     text=canonical(source['text'])  # PDF layout line breaks are not sentence boundaries.
+    provenance = source.get("provenance", {})
+    starts_mid_sentence = bool(provenance.get("character_start", 0)) and source["text"] != provenance.get("graph_excerpt")
     parts=re.split(r'(?<=[.!?])\s+|(?<=[.!?][”"])\s+',text)
     result=[]
     for i,part in enumerate(parts):
-        if i==0 and source.get('provenance',{}).get('character_start',0)>0:
+        if i == 0 and starts_mid_sentence:
             continue  # Character chunking can start in the middle of a sentence.
         if len(part)>=8 and re.search(r'[.!?][”"]?\d*$',part):
             # An anaphoric sentence can depend on the preceding definition or film title.
-            if (i > 0 and (i > 1 or not source.get("provenance", {}).get("character_start"))
+            if (i > 0 and (i > 1 or not starts_mid_sentence)
                     and re.match(r"(?:This|That) (?:movie|film|shot|movement|technique)\b", part)):
                 part = f"{parts[i - 1]} {part}"
             result.append(dict(id=f"{source['id']}:span:{i}",text=part))

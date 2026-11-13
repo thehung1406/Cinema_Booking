@@ -1,10 +1,18 @@
 """Typed, fixed-origin read-only allowlist. Never forwards SQL or model-generated calls."""
 
+from datetime import datetime
+from zoneinfo import ZoneInfo
+
 import httpx
 import time
 from fastapi import HTTPException
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 from .rag import folded
+from .schemas import ToolCall
+
+
+LEGACY_CONTEXT_FIELDS = {"film_id", "theater_id", "show_date", "showtime_id"}
+FILM_LIST_LIMIT = 12
 
 
 class Entity(BaseModel):
@@ -75,11 +83,22 @@ class ReadSession:
 
     def post(self, path, payload):
         if self.settings.direct_reads_enabled:return self.direct(path,payload)
+        if path == "context":
+            payload = {field: payload[field] for field in LEGACY_CONTEXT_FIELDS}
+        elif path == "tool":
+            call = payload["call"]
+            payload = payload | {"call": call | {
+                "context": {field: call["context"][field] for field in LEGACY_CONTEXT_FIELDS},
+            }}
         if len(self.settings.service_key) < 32:
             raise HTTPException(503, "AI read adapter is not configured")
+        remaining = self.deadline - time.monotonic()
+        if remaining <= 0:
+            raise HTTPException(503, "AI request deadline exceeded")
         try:
             response = self.http.post(self.settings.read_origin + "/internal/v1/ai-read/" + path,
-                headers={"X-Service-Key": self.settings.service_key}, json=payload, timeout=5, follow_redirects=False)
+                headers={"X-Service-Key": self.settings.service_key}, json=payload,
+                timeout=min(5, remaining), follow_redirects=False)
             if response.status_code == 422:
                 raise HTTPException(422, response.json().get("detail", "Ngữ cảnh không hợp lệ"))
             response.raise_for_status()
@@ -103,10 +122,11 @@ class ReadSession:
         return self.context_cache[key]
 
     def showing_films(self, context):
-        limit = 12
-        if context.show_date is None:
+        if not self.settings.direct_reads_enabled:
+            films = self.legacy_film_list(context)
+        elif context.show_date is None:
             films = self.call(self.settings.catalog_origin, "POST", "/internal/v1/films/search",
-                              json={"now_showing": True, "limit": limit + 1, "genre": context.genre})
+                              json={"now_showing": True, "limit": FILM_LIST_LIMIT + 1, "genre": context.genre})
         else:
             params = {"show_date": context.show_date.isoformat(), "evening": context.start_after is not None
                       and context.start_after.hour >= 18}
@@ -117,15 +137,55 @@ class ReadSession:
             for offset in range(0, len(ids), 200):
                 batch = self.call(self.settings.catalog_origin, "POST", "/internal/v1/films/batch",
                                   json={"ids": ids[offset:offset + 200], "include_retired": False})
-                films.extend(film for film in batch if not context.genre or folded(context.genre) in folded(film.get("genre") or ""))
-                if len(films) > limit:
+                films.extend(film for film in batch if genre_matches(film, context.genre))
+                if len(films) > FILM_LIST_LIMIT:
                     break
-        evidence = []
-        for film in films[:limit]:
-            film_id = int(film["id"])
-            evidence.append(dict(id=f"film:{film_id}", title=film["title"], text=film["title"],
-                                 url=f"/movie/{film_id}", kind="film"))
-        return evidence, len(films) > limit
+        return film_list_evidence(films)
+
+    def upcoming_films(self, context):
+        if self.settings.direct_reads_enabled:
+            films = self.call(self.settings.catalog_origin, "POST", "/internal/v1/films/search",
+                              json={"upcoming": True, "limit": FILM_LIST_LIMIT + 1, "genre": context.genre})
+        else:
+            films = self.legacy_film_list(context, upcoming=True)
+        return film_list_evidence(films)
+
+    def legacy_film_list(self, context, *, upcoming=False):
+        origin = self.settings.read_origin
+        scheduled = not upcoming and context.show_date is not None
+        today = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh")).date().isoformat()
+        page_size = 50
+        offset, films = 0, []
+        while len(films) <= FILM_LIST_LIMIT:
+            rows = self.call(origin, "GET", "/films/", params={
+                "now_showing": not upcoming and not scheduled, "skip": offset, "limit": page_size,
+            })
+            for film in rows:
+                if not genre_matches(film, context.genre):
+                    continue
+                if upcoming and (film.get("release_date") or "") <= today:
+                    continue
+                if scheduled and not self.legacy_film_has_showtime(film["id"], context):
+                    continue
+                films.append(film)
+                if len(films) > FILM_LIST_LIMIT:
+                    break
+            if len(rows) < page_size:
+                break
+            offset += page_size
+        return films
+
+    def legacy_film_has_showtime(self, film_id, context):
+        if context.theater_id is not None:
+            theater_ids = [context.theater_id]
+        else:
+            theaters = self.call(self.settings.read_origin, "GET", f"/theaters/by-film/{int(film_id)}",
+                                 params={"from_date": context.show_date.isoformat()})
+            theater_ids = [theater["id"] for theater in theaters]
+        evening = context.start_after is not None and context.start_after.hour >= 18
+        return any(self.run(ToolCall(name="get_showtimes", context=context.model_copy(update={
+            "film_id": film_id, "theater_id": theater_id,
+        })), evening) for theater_id in theater_ids)
 
     def run(self, call, evening):
         try:
@@ -138,3 +198,16 @@ class ReadSession:
             return [row.model_dump(exclude_none=True) for row in result]
         except (ValueError, ValidationError) as exc:
             raise HTTPException(503, "Invalid business evidence") from exc
+
+
+def genre_matches(film, genre):
+    return not genre or folded(genre) in folded(film.get("genre") or "")
+
+
+def film_list_evidence(films):
+    evidence = []
+    for film in films[:FILM_LIST_LIMIT]:
+        film_id = int(film["id"])
+        evidence.append(dict(id=f"film:{film_id}", title=film["title"], text=film["title"],
+                             url=f"/movie/{film_id}", kind="film"))
+    return evidence, len(films) > FILM_LIST_LIMIT

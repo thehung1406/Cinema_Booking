@@ -2,6 +2,7 @@ from concurrent.futures import ThreadPoolExecutor
 from datetime import timedelta
 from decimal import Decimal
 from threading import Barrier
+from zoneinfo import ZoneInfo
 import pytest
 from fastapi import HTTPException
 from sqlalchemy import select, func
@@ -32,6 +33,19 @@ def test_public_films_menu_search_and_authorization(catalog_client, catalog_sett
     assert client.post("/internal/v1/films/batch", json={"ids": [1]}).status_code == 401
     facts = client.post("/internal/v1/films/batch", headers=private(catalog_settings), json={"ids": [1]}).json()
     assert facts[0]["catalog_version"] == 1
+
+
+def test_upcoming_search_only_returns_future_releases_in_date_order(catalog_client, catalog_settings):
+    today = utcnow().astimezone(ZoneInfo("Asia/Ho_Chi_Minh")).date()
+    for days, title in [(8, "Later release"), (3, "Next release"), (-40, "Past release")]:
+        response = catalog_client.post("/admin/films", headers=HEADERS, json=film_body(
+            title=title, release_date=(today + timedelta(days=days)).isoformat(),
+            end_date=(today + timedelta(days=days + 30)).isoformat(),
+        ))
+        assert response.status_code == 201
+    result = catalog_client.post("/internal/v1/films/search", headers=private(catalog_settings),
+                                 json={"upcoming": True, "genre": "Drama", "limit": 2})
+    assert [film["title"] for film in result.json()] == ["Next release", "Later release"]
 
 
 def test_film_create_edit_soft_retire_preserves_id_and_no_auth_role_escalation(catalog_client, catalog_store):

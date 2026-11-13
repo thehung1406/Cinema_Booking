@@ -186,7 +186,7 @@ def create_router(app, engine, settings, logger, cache):
     def document_write(
         body: DocumentWrite, user=Depends(knowledge_user), db=Depends(db_session)
     ):
-        return documents.document_write(db, body)
+        return documents.document_write(db, body, settings.graph_release_id if settings.graph_uri else "")
 
     @router.put(
         "/admin/documents/{document_id}/approval", dependencies=[Depends(writes)]
@@ -197,7 +197,7 @@ def create_router(app, engine, settings, logger, cache):
         user=Depends(knowledge_user),
         db=Depends(db_session),
     ):
-        return documents.document_approve(db, document_id, body)
+        return documents.document_approve(db, document_id, body, settings.graph_release_id if settings.graph_uri else "")
 
     @router.get("/admin/documents/{document_id}/revisions")
     def revisions(document_id: int, user=Depends(knowledge_user), db=Depends(db_session)):

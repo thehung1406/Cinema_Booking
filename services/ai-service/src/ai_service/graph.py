@@ -132,6 +132,7 @@ def graph_evidence(db, graph, question, scope, limit=3):
                 kind="document", document_id=doc.id, source_id=doc.source_id, score=match["alias_score"],
                 provenance=doc.provenance | chunk.provenance | {
                     "graph_release": match["graph_release"],
+                    "graph_excerpt": excerpt,
                     "concept_id": match["concept_id"],
                     "claim_id": match["claim_id"],
                     "alias_method": match["alias_method"],
@@ -162,8 +163,7 @@ def merge_evidence(text_sources, graph_sources, graph_state, limit):
     linked = {}
     for source in graph_sources:
         text_source = by_id.get(source["id"])
-        linked[source["id"]] = (text_source | {"provenance": source["provenance"] | {"graph_excerpt": source["text"]}}
-                                if text_source else source)
+        linked[source["id"]] = text_source | {"provenance": source["provenance"]} if text_source else source
     # The text retriever ranks the question itself. Graph matches expand coverage through related sources.
     merged = {source["id"]: linked.get(source["id"], source) for source in text_sources[:1]}
     merged.update(linked)

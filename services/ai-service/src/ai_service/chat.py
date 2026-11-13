@@ -29,6 +29,12 @@ PLANNER_TIMEOUT = 5
 CHAT_INFERENCE_BUDGET = 16
 RECOMMENDATION_FILTERS = ("show_date", "genre", "party_size", "budget_amount", "budget_scope", "start_after")
 SHOWTIME_PATTERN = r"(?:ma suat|suat chieu so)\s*(\d+)"
+FILM_LIST_PATTERN = (
+    r"\b(?:danh sach|liet ke)(?: nhung| cac)? phim\b|\bphim (?:gi|nao)\b"
+    r"|^\s*(?:(?:nhung|cac) )?phim (?:hien )?(?:dang chieu|sap chieu|sap ra mat)\b"
+)
+CURRENT_FILM_PATTERN = r"\b(?:dang chieu|hom nay|ngay mai|ngay kia|toi nay|toi mai)\b"
+UPCOMING_FILM_PATTERN = r"\b(?:sap chieu|sap ra mat|chua ra mat|chua khoi chieu|chieu sap toi)\b"
 FILM_EDUCATION_TERMS = ("cinematography", "camera movement", "chuyen dong may quay", "chuyen dong cua may quay",
                         "dolly", "slider", "goc may", "goc quay", "co canh", "khung hinh", "iso", "pan ngang",
                         "lia may", "over-the-shoulder", "framing", "muc phim xem them")
@@ -55,12 +61,16 @@ def detect_intent(message):
         return "get_seat_availability"
     if any(w in text for w in ("gia ve", "bao nhieu tien", "gia ghe")):
         return "get_ticket_prices"
-    if (re.search(r"\b(?:danh sach|liet ke)(?: nhung| cac)? phim\b|\b(?:nhung|cac) phim (?:hien )?dang chieu\b", text)
-            or (re.search(r"\bphim (?:gi|nao)\b", text)
-                and re.search(r"\b(?:co|hom nay|ngay mai|ngay kia|toi nay|toi mai|dang chieu)\b", text))
-            or re.fullmatch(r"\s*(?:hien tai |hien )?phim dang chieu[?!.\s]*", text)):
-        return "recommend" if re.search(r"\b(?:sau|tu)\s*\d{1,2}(?:h|gio|:)", text) else "get_showing_films"
-    if any(w in text for w in ("lich chieu", "suat chieu", "toi nay", "may gio")):
+    if any(w in text for w in ("lich chieu", "may gio")):
+        return "get_showtimes"
+    if "suat chieu" in text and re.search(r"\b(?:luc|vao)\s*\d{1,2}(?:h|\s*gio|:)", text):
+        return "get_showtimes"
+    if re.search(FILM_LIST_PATTERN, text) or re.fullmatch(r"(?:hien tai |hien )?phim dang chieu[?!.\s]*", text):
+        if re.search(UPCOMING_FILM_PATTERN, text):
+            return "get_upcoming_films"
+        if re.search(CURRENT_FILM_PATTERN, text):
+            return "recommend" if re.search(r"\b(?:sau|tu)\s*\d{1,2}(?:h|gio|:)", text) else "get_showing_films"
+    if "suat chieu" in text or "toi nay" in text:
         return "get_showtimes"
     if is_film_education(text):
         return "knowledge"
@@ -225,12 +235,14 @@ def chat(db, user_id, request, redis, reader, config, *, graph=None):
     message_text = folded(request.message)
     deterministic = detect_intent(request.message)
     pending_tool = previous.get("pending_tool")
-    listing = deterministic == "get_showing_films"
+    listing = deterministic in {"get_showing_films", "get_upcoming_films"}
     clarification = clarification_needed(request.message) if deterministic == "knowledge" else None
     if listing:
         # A list request starts a new film lookup even when the UI echoes a selected film or an old date.
         selected_date = request.context.show_date if request.context.show_date != previous_context.show_date else None
         values = {"theater_id": values.get("theater_id"), "show_date": selected_date}
+        if "genre" in submitted and request.context.genre != previous_context.genre:
+            values["genre"] = request.context.genre
     context = infer_preferences(request.message, ToolContext.model_validate(values))
     explicit_knowledge = any(word in message_text for word in (
         "cach ", "chinh sach", "huong dan", "hoan tien", "doi ve", "huy ve", "thanh toan",
@@ -274,8 +286,10 @@ def chat(db, user_id, request, redis, reader, config, *, graph=None):
             deterministic == "recommend" and preliminary == "search_films") or (
             deterministic == "knowledge" and explicit_knowledge):
         preliminary = proposed_intent = deterministic
-    read_context = preliminary not in {"knowledge", "out_of_scope", "get_showing_films"} or (
-        bool(pending_tool) and preliminary == "knowledge" and not explicit_knowledge)
+    read_context = not listing and (
+        preliminary not in {"knowledge", "out_of_scope"}
+        or (bool(pending_tool) and preliminary == "knowledge" and not explicit_knowledge)
+    )
     # FAQ needs only the AI-owned approved KB; do not call Catalog/Cinema unnecessarily.
     if read_context:
         context = infer_context(reader, request.message, context)
@@ -314,23 +328,27 @@ def chat(db, user_id, request, redis, reader, config, *, graph=None):
     if intent == "out_of_scope":
         answer = "Mình hỗ trợ tra cứu phim và hướng dẫn đặt vé. Bạn cần tự chọn ghế, tạo đơn và thanh toán trên giao diện; trợ lý chưa hỗ trợ tra đơn cá nhân."
         status = "out_of_scope"
-    elif intent == "get_showing_films":
+    elif listing:
         try:
-            if re.search(r"\brap\s+\w+", folded(request.message)):
-                theaters = reader.matches(request.message).theater_id
-                if len(theaters) == 1:
-                    context.theater_id = theaters[0].id
-            theater = reader.names(context).theater_name if context.theater_id else None
-            if theater and context.show_date is None:
-                context.show_date = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh")).date()
-            sources, truncated = reader.showing_films(context)
-            where = f" tại {theater}" if theater else ""
-            if context.show_date:
-                when = f"ngày {context.show_date:%d/%m/%Y}"
-                lead = f"Các phim có suất chiếu sắp tới trong {when}{where}"
-                empty = f"Mình chưa tìm thấy suất chiếu sắp tới trong {when}{where}."
+            if intent == "get_upcoming_films":
+                sources, truncated = reader.upcoming_films(context)
+                lead, empty = "Các phim sắp chiếu", "Mình chưa tìm thấy phim sắp chiếu trong danh mục."
             else:
-                lead, empty = "Các phim đang chiếu", "Mình chưa tìm thấy phim đang chiếu trong danh mục."
+                if re.search(r"\brap\s+\w+", message_text):
+                    theaters = reader.matches(request.message).theater_id
+                    if len(theaters) == 1:
+                        context.theater_id = theaters[0].id
+                theater = reader.names(context).theater_name if context.theater_id else None
+                if theater and context.show_date is None:
+                    context.show_date = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh")).date()
+                sources, truncated = reader.showing_films(context)
+                where = f" tại {theater}" if theater else ""
+                if context.show_date:
+                    when = f"ngày {context.show_date:%d/%m/%Y}"
+                    lead = f"Các phim có suất chiếu sắp tới trong {when}{where}"
+                    empty = f"Mình chưa tìm thấy suất chiếu sắp tới trong {when}{where}."
+                else:
+                    lead, empty = "Các phim đang chiếu", "Mình chưa tìm thấy phim đang chiếu trong danh mục."
             if sources:
                 answer = lead + ":\n" + "\n".join(f"• {source['title']}" for source in sources)
                 if truncated:

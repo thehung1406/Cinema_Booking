@@ -37,12 +37,14 @@ HEADERS = {"Authorization": "Bearer test-token"}
 
 @pytest.mark.parametrize(("message", "scheduled"), [
     ("Hôm nay có những phim gì", True),
+    ("Phim nào có suất chiếu hôm nay?", True),
     ("Hiện đang có những phim gì đang chiếu", False),
 ])
 def test_showing_film_list_does_not_require_selected_film(ai_store, ai_settings, monkeypatch, message, scheduled):
     from ai_service import llm
 
     ai_settings.llm_provider = "ollama"
+    ai_settings.direct_reads_enabled = True
     monkeypatch.setattr(llm, "plan", lambda *args: pytest.fail("An explicit list request should bypass the model"))
     today = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh")).date().isoformat()
     paths = []
@@ -73,6 +75,70 @@ def test_showing_film_list_does_not_require_selected_film(ai_store, ai_settings,
                      else ["/internal/v1/films/search"])
 
 
+@pytest.mark.parametrize(("message", "tool", "scheduled"), [
+    ("Liệt kê phim đang chiếu", "get_showing_films", False),
+    ("Liệt kê phim hôm nay", "get_showing_films", True),
+    ("Liệt kê phim sắp chiếu", "get_upcoming_films", False),
+])
+def test_film_lists_use_legacy_origin(ai_store, ai_settings, message, tool, scheduled):
+    ai_settings.direct_reads_enabled = False
+    today = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh")).date()
+    upcoming = tool == "get_upcoming_films"
+    paths = []
+
+    def reads(request):
+        assert request.url.host == httpx.URL(ai_settings.read_origin).host
+        paths.append(request.url.path)
+        if request.url.path == "/films/":
+            assert request.url.params["now_showing"] == str(not upcoming and not scheduled).lower()
+            return httpx.Response(200, json=[
+                {"id": 7, "title": "Space Film", "genre": "Khoa học viễn tưởng",
+                 "release_date": (today + timedelta(days=1 if upcoming else -1)).isoformat()},
+                {"id": 8, "title": "Drama Film", "genre": "Drama", "release_date": today.isoformat()},
+            ])
+        if request.url.path == "/theaters/by-film/7":
+            assert request.url.params["from_date"] == today.isoformat()
+            return httpx.Response(200, json=[{"id": 3}])
+        assert request.url.path == "/internal/v1/ai-read/tool"
+        assert json.loads(request.content)["call"]["context"] == {
+            "film_id": 7, "theater_id": 3, "show_date": today.isoformat(), "showtime_id": None,
+        }
+        return httpx.Response(200, json=[{"id": "showtime:4", "title": "Suất", "text": "Suất chiếu",
+                                         "url": "/seat-selection/4", "kind": "live"}])
+
+    client, _ = client_for(ai_store, ai_settings, read=reads)
+    with client:
+        result = client.post("/ai/chat", headers=HEADERS, json={
+            "message": message, "context": {"genre": "Khoa học viễn tưởng"},
+        }).json()
+    assert result["tool"] == tool and result["status"] == "ok"
+    assert [item["url"] for item in result["links"]] == ["/movie/7"]
+    assert paths == (["/films/", "/theaters/by-film/7", "/internal/v1/ai-read/tool"] if scheduled else ["/films/"])
+
+
+def test_upcoming_films_and_qualified_showtime_have_distinct_routes(ai_store, ai_settings):
+    ai_settings.direct_reads_enabled = True
+    paths = []
+
+    def reads(request):
+        path = request.url.path
+        paths.append(path)
+        if path.endswith("/matches"):
+            return httpx.Response(200, json=[])
+        assert path == "/internal/v1/films/search"
+        assert json.loads(request.content) == {"upcoming": True, "limit": 13, "genre": ""}
+        return httpx.Response(200, json=[{"id": 9, "title": "Phim sắp ra mắt"}])
+
+    client, _ = client_for(ai_store, ai_settings, read=reads)
+    with client:
+        upcoming = client.post("/ai/chat", headers=HEADERS, json={"message": "Liệt kê phim sắp chiếu"}).json()
+        qualified = client.post("/ai/chat", headers=HEADERS, json={"message": "Phim nào có suất chiếu lúc 20h?"}).json()
+    assert upcoming["tool"] == "get_upcoming_films" and upcoming["status"] == "ok"
+    assert "Các phim sắp chiếu" in upcoming["answer"]
+    assert qualified["tool"] == "get_showtimes" and qualified["status"] == "needs_clarification"
+    assert paths.count("/internal/v1/films/search") == 1
+
+
 def test_versioned_knowledge_publication_keeps_active_source_until_publish(ai_store, ai_settings):
     client, _ = client_for(ai_store, ai_settings, permissions=["knowledge.manage"])
     first = {
@@ -97,12 +163,18 @@ def test_versioned_knowledge_publication_keeps_active_source_until_publish(ai_st
         staged = client.post(drafts, headers=HEADERS, json={"document": second})
         assert staged.status_code == 200
         assert client.post(drafts, headers=HEADERS, json={"document": second}).status_code == 409
+        assert client.post("/admin/documents", headers=HEADERS, json=second).status_code == 409
         question = {"message": "Hướng dẫn đặt vé"}
         before = client.post("/ai/chat", headers=HEADERS, json=question).json()
         assert [source["version"] for source in before["sources"]] == ["1"]
         publish = f"{drafts}/{staged.json()['id']}/publication"
         switched = client.put(publish, headers=HEADERS, json=stamp)
         assert switched.status_code == 200 and switched.json()["version"] == "2"
+        current_stamp = {"expected_updated_at": switched.json()["updated_at"]}
+        for version in ("1", "2"):
+            overwritten = client.post("/admin/documents", headers=HEADERS,
+                                      json=first | current_stamp | {"version": version, "content": "Nội dung ghi đè."})
+            assert overwritten.status_code == 409
         assert client.put(publish, headers=HEADERS, json=stamp).status_code == 409
         after = client.post("/ai/chat", headers=HEADERS, json=question).json()
         assert [source["version"] for source in after["sources"]] == ["2"]
@@ -111,6 +183,74 @@ def test_versioned_knowledge_publication_keeps_active_source_until_publish(ai_st
         restored = client.put(f"{drafts}/{archived['id']}/publication", headers=HEADERS,
                               json={"expected_updated_at": switched.json()["updated_at"]})
         assert restored.status_code == 200 and restored.json()["version"] == "1"
+        restored_detail = client.get(document_url, headers=HEADERS).json()
+        assert [chunk["content"] for chunk in restored_detail["chunks"]] == [first["content"]]
+
+
+@pytest.mark.parametrize("already_approved", [False, True])
+def test_restore_keeps_inherited_graph_release(ai_store, ai_settings, monkeypatch, already_approved):
+    from ai_service import main
+    from ai_service.models import KnowledgeDocument
+
+    old_release, new_release = "a" * 64, "b" * 64
+    ai_settings.graph_uri = "bolt://test-graph:7687"
+    ai_settings.graph_release_id = old_release
+    checked = []
+
+    class Graph:
+        def __init__(self, *args):
+            self.release_id = args[-1]
+
+        def close(self):
+            pass
+
+        def revision_spans(self, release_id, document):
+            checked.append((document["version"], release_id))
+            return [{"block_index": 0, "page": None, "excerpt": document["blocks"][0]["text"]}]
+
+    monkeypatch.setattr(main, "KnowledgeGraph", Graph)
+    client, _ = client_for(ai_store, ai_settings, permissions=["knowledge.manage"])
+    first = {
+        "source_id": "graph-guide", "title": "Hướng dẫn", "version": "1", "source_url": "/booking",
+        "effective_at": (utcnow() - timedelta(days=1)).isoformat(),
+        "blocks": [{"text": "Chọn suất chiếu trước khi đặt vé."}],
+        "provenance": {"checksum": "c" * 64},
+    }
+    with client:
+        saved = client.post("/admin/documents", headers=HEADERS, json=first).json()
+        url = f"/admin/documents/{saved['id']}"
+        live = client.put(f"{url}/approval", headers=HEADERS, json={
+            "approved": True, "version": "1", "expected_updated_at": saved["updated_at"],
+        }).json()
+        assert live["provenance"]["graph_release_id"] == old_release
+
+    if already_approved:
+        # Simulate a source approved before the service recorded the inherited release.
+        with Session(ai_store) as db:
+            document = db.get(KnowledgeDocument, saved["id"])
+            document.provenance = {key: value for key, value in document.provenance.items()
+                                   if not key.startswith("graph_release_")}
+            db.commit()
+    else:
+        ai_settings.graph_release_id = new_release
+    with client:
+        stamp = {"expected_updated_at": live["updated_at"]}
+        second = first | stamp | {"version": "2", "blocks": [{"text": "Chọn ngày trước khi chọn suất chiếu."}]}
+        drafts = f"{url}/revisions"
+        staged = client.post(drafts, headers=HEADERS, json={"document": second, "graph_release_id": new_release})
+        assert staged.status_code == 200
+        switched = client.put(f"{drafts}/{staged.json()['id']}/publication", headers=HEADERS, json=stamp)
+        assert switched.status_code == 200
+        history = client.get(drafts, headers=HEADERS).json()
+        archived = next(item for item in history if item["version"] == "1")
+        assert archived["graph_release_id"] == old_release
+    ai_settings.graph_release_id = new_release
+    with client:
+        restored = client.put(f"{drafts}/{archived['id']}/publication", headers=HEADERS,
+                              json={"expected_updated_at": switched.json()["updated_at"]})
+        assert restored.status_code == 200
+        assert restored.json()["provenance"]["graph_release_id"] == old_release
+    assert checked == [("2", new_release), ("1", old_release)]
 
 
 def test_policy_never_displays_unverified_excerpt_when_model_fails(ai_store, ai_settings, monkeypatch):
