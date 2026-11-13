@@ -12,6 +12,7 @@ from cinema_platform.auth import AuthClient
 
 from cinema_platform.logging import service_logger
 
+from . import predictor
 from .config import Settings
 
 from .router.api import create_router, ReportInput, report_sentiments
@@ -25,6 +26,18 @@ def create_app(settings=None, *, engine=None, auth_transport=None, read_transpor
 
     @asynccontextmanager
     async def lifespan(app):
+        app.state.demo_models = []
+        if settings.sentiment_demo_lr_path and settings.sentiment_demo_visobert_path:
+            try:
+                app.state.demo_models = [
+                    ("TF-IDF + Logistic Regression",
+                     predictor.load_predictor("sklearn", settings.sentiment_demo_lr_path)),
+                    ("ViSoBERT", predictor.load_predictor(
+                        "transformers", settings.sentiment_demo_visobert_path, reject_truncation=True
+                    )),
+                ]
+            except Exception as exc:
+                logger.error("sentiment_demo_load_failed error_type=%s", type(exc).__name__)
         async with httpx.AsyncClient(
             trust_env=False, transport=auth_transport
         ) as auth_http:

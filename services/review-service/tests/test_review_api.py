@@ -117,3 +117,56 @@ def test_upstream_failure_and_freeze_do_not_create_review(review_store, review_s
     with Session(review_store) as db:
         assert db.scalar(select(func.count()).select_from(Review)) == 0
         assert db.scalar(select(func.count()).select_from(OutboxRecord)) == 0
+
+
+def test_sentiment_demo_compares_two_models_without_creating_reviews(review_store, review_settings, monkeypatch):
+    from review_service import predictor
+
+    review_settings.sentiment_demo_lr_path = "/demo/lr"
+    review_settings.sentiment_demo_visobert_path = "/demo/visobert"
+    calls = []
+    loaded = []
+    content = "Diễn xuất tốt nhưng kịch bản kéo dài."
+
+    def load(backend, path, *, reject_truncation=False):
+        loaded.append((backend, path, reject_truncation))
+
+        def predict(text):
+            if reject_truncation and len(text) > 100:
+                raise predictor.InputTooLong
+            calls.append((backend, path, text))
+            return {"positive": .1, "neutral": .2, "negative": .7}
+
+        return predict, backend + "-demo"
+
+    monkeypatch.setattr(predictor, "load_predictor", load)
+    client, identity = client_for(review_store, review_settings)
+    with client:
+        assert loaded == [("sklearn", "/demo/lr", False), ("transformers", "/demo/visobert", True)]
+        assert client.post("/reviews/sentiment/demo", headers=HEADERS, json={"content": content}).status_code == 403
+        identity["permissions"] = ["reviews.moderate"]
+        assert client.get("/reviews/sentiment/pending", headers=HEADERS).json()["demo_enabled"]
+        result = client.post("/reviews/sentiment/demo", headers=HEADERS, json={"content": content})
+        assert result.status_code == 200
+        assert [item["model_version"] for item in result.json()["predictions"]] == ["sklearn-demo", "transformers-demo"]
+        assert calls == [("sklearn", "/demo/lr", content), ("transformers", "/demo/visobert", content)]
+        result = client.post("/reviews/sentiment/demo", headers=HEADERS, json={"content": content * 10})
+        assert result.status_code == 400
+        assert "ViSoBERT" in result.json()["detail"]
+        assert client.post("/reviews/sentiment/demo", headers=HEADERS, json={"content": content}).status_code == 200
+    assert len(loaded) == 2
+    with Session(review_store) as db:
+        assert db.exec(select(func.count()).select_from(Review)).one() == 0
+        assert db.exec(select(func.count()).select_from(ReviewSentiment)).one() == 0
+
+
+def test_unreadable_demo_artifact_keeps_moderation_available(review_store, review_settings, tmp_path):
+    review_settings.sentiment_demo_lr_path = str(tmp_path / "missing-lr")
+    review_settings.sentiment_demo_visobert_path = str(tmp_path / "missing-visobert")
+    client, identity = client_for(review_store, review_settings)
+    identity["permissions"] = ["reviews.moderate"]
+    with client:
+        pending = client.get("/reviews/sentiment/pending", headers=HEADERS)
+        assert pending.status_code == 200 and pending.json()["demo_enabled"]
+        demo = client.post("/reviews/sentiment/demo", headers=HEADERS, json={"content": "Phim rất hay"})
+        assert demo.status_code == 503

@@ -15,6 +15,8 @@ class Settings(BaseSettings):
     auto_approve: bool = False
     sentiment_backend: str = "disabled"
     sentiment_model_path: str = "/models/sentiment"
+    sentiment_demo_lr_path: str = ""
+    sentiment_demo_visobert_path: str = ""
     sentiment_review_threshold: float = Field(default=0.65, ge=0, le=1)
     sentiment_window_days: int = Field(default=30, ge=1, le=365)
     sentiment_min_reviews: int = Field(default=10, ge=1)

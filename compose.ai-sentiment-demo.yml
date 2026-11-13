@@ -1,0 +1,14 @@
+# Compare the two trusted pilot artifacts through the review moderation UI.
+services:
+  review-service:
+    image: cinema-review:sentiment-demo
+    build:
+      target: sentiment-demo
+    environment:
+      REVIEW_SENTIMENT_DEMO_LR_PATH: /models/demo/lr
+      REVIEW_SENTIMENT_DEMO_VISOBERT_PATH: /models/demo/visobert
+      HF_HUB_OFFLINE: '1'
+      TRANSFORMERS_OFFLINE: '1'
+    volumes:
+      - ${REVIEW_DEMO_LR_ARTIFACT:?Set path to the trusted film LR artifact}:/models/demo/lr:ro
+      - ${REVIEW_DEMO_VISOBERT_ARTIFACT:?Set path to the trusted film ViSoBERT artifact}:/models/demo/visobert:ro

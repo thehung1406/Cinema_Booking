@@ -1,20 +1,21 @@
-"""Lazy-loaded, trusted local models; the application never invents a prediction."""
+"""Load trusted local models and validate their predictions."""
 import json
 import math
 import os
 from functools import lru_cache
 from pathlib import Path
 
-
-
-
 from .text import normalize_text
 
 LABELS = ("negative", "neutral", "positive")
 
 
+class InputTooLong(ValueError):
+    pass
+
+
 @lru_cache(maxsize=2)
-def load_predictor(backend, model_path):
+def load_predictor(backend, model_path, *, reject_truncation=False):
     path = Path(model_path).resolve()
     metadata = json.loads((path / "metadata.json").read_text(encoding="utf-8"))
     if backend == "sklearn":
@@ -37,11 +38,18 @@ def load_predictor(backend, model_path):
             finally:
                 os.chdir(original)
         classifier = pipeline("text-classification", model=str(path), tokenizer=str(path), device=-1)
+        max_length = metadata.get("max_length", 256)
+
         def predict(text):
             prepared = normalize_text(text)
             if segmenter:
                 prepared = " ".join(segmenter.word_segment(prepared))
-            return {r["label"]: r["score"] for r in classifier(prepared, top_k=None, truncation=True, max_length=metadata.get("max_length", 256))}
+            if reject_truncation:
+                tokens = classifier.tokenizer(prepared, truncation=False, verbose=False)["input_ids"]
+                if len(tokens) > max_length:
+                    raise InputTooLong
+            results = classifier(prepared, top_k=None, truncation=not reject_truncation, max_length=max_length)
+            return {r["label"]: r["score"] for r in results}
     else:
         raise RuntimeError("Sentiment model is not configured")
     return predict, metadata["model_version"]
