@@ -84,6 +84,59 @@ def test_invalid_prediction_bounded_retry_manual_reset_and_disabled_backend(revi
     assert process_one(review_store, review_settings, PREDICTOR) == "succeeded"
 
 
+@pytest.mark.parametrize(("primary_score", "fallback_score", "expected_status", "expected_backend"), [
+    (.65, .80, "succeeded", "sklearn"),
+    (.44, .73, "succeeded", "transformers"),
+    (.44, .51, "needs_review", "transformers"),
+])
+def test_sentiment_worker_uses_fallback_only_below_threshold(
+    review_store, review_settings, monkeypatch, primary_score, fallback_score, expected_status, expected_backend
+):
+    review_settings.sentiment_backend = "sklearn"
+    review_settings.sentiment_fallback_backend = "transformers"
+    review_settings.sentiment_fallback_model_path = "/models/visobert"
+    rid = make_review(review_store, review_settings)
+    called = []
+
+    def load(backend, path):
+        called.append(backend)
+        score = primary_score if backend == "sklearn" else fallback_score
+        return (lambda _: {"positive": score, "neutral": (1 - score) / 2, "negative": (1 - score) / 2}), backend
+
+    monkeypatch.setattr("review_service.worker.load_predictor", load)
+    assert process_one(review_store, review_settings) == expected_status
+    assert called == (["sklearn"] if expected_backend == "sklearn" else ["sklearn", "transformers"])
+    with Session(review_store) as db:
+        result = db.get(ReviewSentiment, rid)
+        assert result.model_version == expected_backend
+        assert result.predicted_label == "positive"
+        assert result.scores["positive"] == (primary_score if expected_backend == "sklearn" else fallback_score)
+
+
+@pytest.mark.parametrize(("content", "enabled", "status", "source", "label"), [
+    ("Phim dở quá", True, "succeeded", "rule", "negative"),
+    ("Phim này rất tệ!", True, "succeeded", "rule", "negative"),
+    ("Phim dở quá", False, "needs_review", "model", "positive"),
+    ("Phim không dở", True, "needs_review", "model", "positive"),
+    ("Phim dở quá nhưng diễn xuất tốt.", True, "needs_review", "model", "positive"),
+    ("Phim dở quá?", True, "needs_review", "model", "positive"),
+])
+def test_literal_negative_rule_preserves_the_original_prediction(
+    review_store, review_settings, content, enabled, status, source, label
+):
+    review_settings.auto_approve = True
+    review_settings.sentiment_literal_negative_enabled = enabled
+    with Session(review_store) as db:
+        rid = service.create_review(db, 1, 777, content, review_settings).id
+    prediction = {"positive": .44, "neutral": .26, "negative": .30}
+    assert process_one(review_store, review_settings, (lambda _: prediction, "model-demo")) == status
+    with Session(review_store) as db:
+        result = db.get(ReviewSentiment, rid)
+        assert (result.label, result.decision_source) == (label, source)
+        assert result.predicted_label == "positive"
+        assert result.scores == prediction
+
+
 def test_outbox_error_rolls_back_review_and_pending_job(review_store, review_settings, monkeypatch):
     from review_service import events
     from sqlalchemy.exc import SQLAlchemyError

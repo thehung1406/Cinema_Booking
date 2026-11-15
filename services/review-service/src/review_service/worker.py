@@ -9,6 +9,7 @@ from .config import Settings
 from .models import Review, ReviewSentiment, utcnow
 from .events import changed
 from .predictor import load_predictor, validate_scores
+from .text import is_literal_negative_review
 
 
 def process_one(engine, settings, predictor=None):
@@ -35,12 +36,24 @@ def process_one(engine, settings, predictor=None):
         predict, model_version = predictor or load_predictor(settings.sentiment_backend, settings.sentiment_model_path)
         scores = predict(content)
         validate_scores(scores)
+        if (max(scores.values()) < settings.sentiment_review_threshold
+                and settings.sentiment_fallback_backend != "disabled"
+                and settings.sentiment_fallback_model_path):
+            predict, model_version = load_predictor(
+                settings.sentiment_fallback_backend, settings.sentiment_fallback_model_path)
+            scores = predict(content)
+            validate_scores(scores)
         if not isinstance(model_version, str) or not model_version or len(model_version) > 200:
             raise ValueError("Invalid model version")
-        label = max(scores, key=scores.get)
+        predicted_label = max(scores, key=scores.get)
+        label = predicted_label
         status = "succeeded" if scores[label] >= settings.sentiment_review_threshold else "needs_review"
+        decision_source = "model"
+        if (status == "needs_review" and settings.sentiment_literal_negative_enabled
+                and is_literal_negative_review(content)):
+            label, status, decision_source = "negative", "succeeded", "rule"
     except Exception:
-        scores, label, model_version, status = {}, None, None, "failed"
+        scores, label, predicted_label, model_version, status, decision_source = {}, None, None, None, "failed", None
     with Session(engine) as db, db.begin():
         review = db.exec(select(Review).where(Review.id == review_id).with_for_update()).first()
         result = db.get(ReviewSentiment, review_id, with_for_update=True)
@@ -49,8 +62,8 @@ def process_one(engine, settings, predictor=None):
                 or result.analysis_generation != generation or result.lease_token != token):
             return "stale"
         result.status, result.scores, result.label, result.model_version = status, scores, label, model_version
-        result.predicted_label = label
-        result.decision_source = "model" if status in {"succeeded", "needs_review"} else None
+        result.predicted_label = predicted_label
+        result.decision_source = decision_source
         result.confirmed_by_user_id = result.confirmed_at = result.confirmation_note = None
         result.lease_token = result.lease_until = None
         result.updated_at = utcnow()

@@ -72,6 +72,27 @@ def test_permissions_moderation_ownership_edit_delete_recreate(review_store, rev
         assert all("content" not in r.payload["data"] and "user_id" not in r.payload["data"] for r in events)
 
 
+def test_auto_approved_review_is_public_while_sentiment_is_pending(review_store, review_settings):
+    review_settings.auto_approve = True
+    client, _ = client_for(review_store, review_settings)
+    with client:
+        response = client.post("/films/1/reviews", headers=HEADERS, json={"content": "Phim hay."})
+        assert response.status_code == 201
+        first = response.json()
+        assert first["moderation_status"] == "approved" and first["analysis_status"] == "pending"
+        assert [item["content"] for item in client.get("/films/1/reviews").json()] == ["Phim hay."]
+        assert process_one(review_store, review_settings, PREDICTOR) == "succeeded"
+
+        response = client.patch(f'/reviews/{first["id"]}', headers=HEADERS, json={
+            "content": "Phim hay lắm.",
+            "content_version": first["content_version"],
+        })
+        assert response.status_code == 200
+        edited = response.json()
+        assert edited["moderation_status"] == "approved" and edited["analysis_status"] == "pending"
+        assert [item["content"] for item in client.get("/films/1/reviews").json()] == ["Phim hay lắm."]
+
+
 def test_analysis_ranking_window_and_reporting_semantics(review_store, review_settings):
     review_settings.auto_approve = True
     review_settings.sentiment_min_reviews = 1

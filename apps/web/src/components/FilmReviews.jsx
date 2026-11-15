@@ -18,7 +18,7 @@ const statuses = {
 };
 const moderation = {
   pending: "Chờ duyệt",
-  approved: "Đã duyệt",
+  approved: "Đã công khai",
   rejected: "Chưa được duyệt",
 };
 
@@ -80,16 +80,18 @@ export default function FilmReviews({ filmId }) {
     setError("");
     setNotice("");
     try {
-      if (mine)
-        await api.patch(`/reviews/${mine.id}`, {
-          content,
-          content_version: editVersion ?? mine.content_version,
-        });
-      else await api.post(`/films/${filmId}/reviews`, { content });
+      const { data } = mine
+        ? await api.patch(`/reviews/${mine.id}`, {
+            content,
+            content_version: editVersion ?? mine.content_version,
+          })
+        : await api.post(`/films/${filmId}/reviews`, { content });
       setContent("");
       setEditVersion(null);
       setNotice(
-        "Đã lưu đánh giá. Kết quả sẽ xuất hiện sau khi duyệt và phân tích.",
+        data.moderation_status === "approved"
+          ? "Đánh giá đã được đăng. Hệ thống sẽ tự phân tích cảm xúc."
+          : "Đã lưu đánh giá. Nội dung đang chờ duyệt.",
       );
       await load();
     } catch (e) {
