@@ -5,6 +5,7 @@ services:
     build:
       target: sentiment-demo
     environment:
+      REVIEW_AUTO_APPROVE: 'true'
       REVIEW_SENTIMENT_DEMO_LR_PATH: /models/demo/lr
       REVIEW_SENTIMENT_DEMO_VISOBERT_PATH: /models/demo/visobert
       HF_HUB_OFFLINE: '1'
@@ -12,3 +13,20 @@ services:
     volumes:
       - ${REVIEW_DEMO_LR_ARTIFACT:?Set path to the trusted film LR artifact}:/models/demo/lr:ro
       - ${REVIEW_DEMO_VISOBERT_ARTIFACT:?Set path to the trusted film ViSoBERT artifact}:/models/demo/visobert:ro
+  review-worker:
+    image: cinema-review:sentiment-demo
+    build:
+      target: sentiment-demo
+    command: ["python", "-m", "review_service.worker"]
+    mem_limit: 2g
+    environment:
+      REVIEW_SENTIMENT_BACKEND: sklearn
+      REVIEW_SENTIMENT_MODEL_PATH: /models
+      REVIEW_SENTIMENT_FALLBACK_BACKEND: transformers
+      REVIEW_SENTIMENT_FALLBACK_MODEL_PATH: /opt/demo-visobert
+      REVIEW_SENTIMENT_LITERAL_NEGATIVE_ENABLED: 'true'
+      HF_HUB_OFFLINE: '1'
+      TRANSFORMERS_OFFLINE: '1'
+    volumes:
+      - ${REVIEW_DEMO_LR_ARTIFACT:?Set path to the trusted film LR artifact}:/models:ro
+      - ${REVIEW_DEMO_VISOBERT_ARTIFACT:?Set path to the trusted film ViSoBERT artifact}:/opt/demo-visobert:ro

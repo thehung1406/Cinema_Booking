@@ -76,18 +76,29 @@ Lấy hai thư mục artifact của pilot phim từ thành viên giữ dữ li�
 - Thư mục LR cần `metadata.json` và `model.joblib`.
 - Thư mục ViSoBERT cần `metadata.json`, `config.json`, `model.safetensors` và các file tokenizer đã lưu cùng model. Có thể bỏ các thư mục checkpoint huấn luyện.
 
-Khi Gateway và cơ sở dữ liệu Review đã chạy, dùng cùng tên project Compose với hệ thống đang chạy.
+Khi Gateway và cơ sở dữ liệu Review đã chạy, đặt `$runtimeCompose` theo tên project, tệp môi trường và danh sách tệp Compose của hệ thống đang chạy. Thêm `compose.ai-sentiment-demo.yml` sau các tệp đó cho phiên demo.
 
 ```powershell
 $env:REVIEW_DEMO_LR_ARTIFACT = (Resolve-Path '<thu-muc-artifact-lr>').Path
 $env:REVIEW_DEMO_VISOBERT_ARTIFACT = (Resolve-Path '<thu-muc-artifact-visobert>').Path
-$sentimentCompose = @('--env-file', '.env.microservices', '-p', 'backend', '-f', 'compose.yml', '-f', 'compose.ai-sentiment-demo.yml')
-docker compose @sentimentCompose up -d --no-deps --build --wait gateway review-service
+$runtimeCompose = @('--env-file', '.env.microservices', '-p', 'backend', '-f', 'compose.yml')
+$sentimentCompose = $runtimeCompose + @('-f', 'compose.ai-sentiment-demo.yml')
+docker compose @sentimentCompose up -d --no-deps --build --wait gateway review-service review-worker
 docker compose @sentimentCompose up -d --no-deps --build --wait web
 ```
 
-Nếu dùng thêm các tệp Compose khác cho môi trường hiện tại, giữ nguyên danh sách đó rồi thêm overlay cảm xúc. Mở **Duyệt đánh giá → Nhãn cảm xúc**, nhập một nhận xét phim và chọn **So sánh hai mô hình**. Để quay về cấu hình API mặc định, chạy lại lệnh khởi động Review Service với bộ Compose thường dùng.
+Mở **Duyệt đánh giá → Nhãn cảm xúc**, nhập một nhận xét phim và chọn **So sánh hai mô hình**.
 
 Review Service nạp hai artifact khi khởi động. Nếu demo báo lỗi nạp mô hình, kiểm tra log của Review Service và khởi động lại service sau khi sửa artifact. Nếu nội dung vượt giới hạn token của ViSoBERT, hãy rút ngắn nhận xét rồi chạy lại để cả hai mô hình đọc được toàn bộ nội dung.
 
+Trong cấu hình demo, đánh giá mới và chỉnh sửa của khách được công khai ngay. Review worker thử Logistic Regression. Nếu điểm cao nhất dưới ngưỡng cấu hình (mặc định 65%), worker chuyển sang ViSoBERT. Nếu đánh giá vượt giới hạn token của ViSoBERT, worker giữ kết quả Logistic Regression và đưa vào **Cần rà soát**. Khi ViSoBERT cũng dưới ngưỡng, cấu hình demo tự gán nhãn **Tiêu cực** cho mẫu lời chê ngắn, trực tiếp như “Phim dở quá”. Hệ thống giữ nguyên nhãn dự đoán và điểm mô hình để đối chiếu. Các trường hợp còn lại vào **Cần rà soát** nhãn cảm xúc. Kết quả đã lưu được phân tích lại khi có yêu cầu.
+
 Hai artifact dùng nhãn silver và được kiểm tra trên pilot phim. Kết quả trên một nhận xét chỉ minh họa cách hai mô hình suy luận.
+
+### Khôi phục cấu hình Review
+
+Sau khi demo, dùng `$runtimeCompose` để tạo lại cả `review-service` và `review-worker` theo cấu hình thường dùng của cùng project. Bước này gỡ cấu hình tự duyệt và các mô hình cảm xúc dành cho demo trước khi tiếp tục duyệt đánh giá.
+
+```powershell
+docker compose @runtimeCompose up -d --no-deps --build --wait review-service review-worker
+```

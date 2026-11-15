@@ -31,6 +31,8 @@ function SentimentDecision({ item, onSaved }) {
     <div className="flex gap-3 flex-wrap text-sm">{Object.entries(item.scores || {}).map(([key, value]) =>
       <span key={key}>{LABELS[key] || key}: {(Number(value) * 100).toFixed(1)}%</span>)}</div>
     <p className="text-xs text-gray-500">Điểm số của mô hình là thông tin tham khảo. Xác nhận của nhân viên được lưu riêng và không thay đổi điểm dự đoán.</p>
+    {item.decision_source === 'rule' && <p className="text-sm font-medium">Nhãn tự động theo quy tắc nhận biết lời chê trực tiếp: {LABELS[item.label]}</p>}
+    {item.analysis_status === 'needs_review' && <p className="text-sm">Kết quả dự đoán đang chờ xác nhận.</p>}
     {item.decision_source === 'staff' && <p className="text-sm">Nhãn đã được nhân viên xác nhận: {LABELS[item.label]}</p>}
     <form onSubmit={save} className="space-y-2">
       <label className="block">Nhãn xác nhận
