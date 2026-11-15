@@ -8,7 +8,7 @@ from sqlmodel import Session, select
 from .config import Settings
 from .models import Review, ReviewSentiment, utcnow
 from .events import changed
-from .predictor import load_predictor, validate_scores
+from .predictor import InputTooLong, load_predictor, validate_scores
 from .text import is_literal_negative_review
 
 
@@ -36,20 +36,27 @@ def process_one(engine, settings, predictor=None):
         predict, model_version = predictor or load_predictor(settings.sentiment_backend, settings.sentiment_model_path)
         scores = predict(content)
         validate_scores(scores)
+        fallback_input_too_long = False
         if (max(scores.values()) < settings.sentiment_review_threshold
                 and settings.sentiment_fallback_backend != "disabled"
                 and settings.sentiment_fallback_model_path):
-            predict, model_version = load_predictor(
-                settings.sentiment_fallback_backend, settings.sentiment_fallback_model_path)
-            scores = predict(content)
-            validate_scores(scores)
+            fallback_predict, fallback_model_version = load_predictor(
+                settings.sentiment_fallback_backend, settings.sentiment_fallback_model_path,
+                reject_truncation=True)
+            try:
+                fallback_scores = fallback_predict(content)
+            except InputTooLong:
+                fallback_input_too_long = True
+            else:
+                validate_scores(fallback_scores)
+                scores, model_version = fallback_scores, fallback_model_version
         if not isinstance(model_version, str) or not model_version or len(model_version) > 200:
             raise ValueError("Invalid model version")
         predicted_label = max(scores, key=scores.get)
         label = predicted_label
         status = "succeeded" if scores[label] >= settings.sentiment_review_threshold else "needs_review"
         decision_source = "model"
-        if (status == "needs_review" and settings.sentiment_literal_negative_enabled
+        if (status == "needs_review" and not fallback_input_too_long and settings.sentiment_literal_negative_enabled
                 and is_literal_negative_review(content)):
             label, status, decision_source = "negative", "succeeded", "rule"
     except Exception:

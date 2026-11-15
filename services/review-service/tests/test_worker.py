@@ -5,6 +5,7 @@ from sqlmodel import Session, select
 from sqlalchemy import func
 from cinema_platform.events import OutboxRecord
 from review_service.models import Review, ReviewSentiment, utcnow
+from review_service.predictor import InputTooLong
 from review_service import service
 from review_service.worker import process_one
 from review_service.schemas import ReviewEdit
@@ -98,19 +99,51 @@ def test_sentiment_worker_uses_fallback_only_below_threshold(
     rid = make_review(review_store, review_settings)
     called = []
 
-    def load(backend, path):
-        called.append(backend)
+    def load(backend, path, *, reject_truncation=False):
+        called.append((backend, reject_truncation))
         score = primary_score if backend == "sklearn" else fallback_score
         return (lambda _: {"positive": score, "neutral": (1 - score) / 2, "negative": (1 - score) / 2}), backend
 
     monkeypatch.setattr("review_service.worker.load_predictor", load)
     assert process_one(review_store, review_settings) == expected_status
-    assert called == (["sklearn"] if expected_backend == "sklearn" else ["sklearn", "transformers"])
+    assert called == ([("sklearn", False)] if expected_backend == "sklearn"
+                      else [("sklearn", False), ("transformers", True)])
     with Session(review_store) as db:
         result = db.get(ReviewSentiment, rid)
         assert result.model_version == expected_backend
         assert result.predicted_label == "positive"
         assert result.scores["positive"] == (primary_score if expected_backend == "sklearn" else fallback_score)
+
+
+@pytest.mark.parametrize(("error", "status"), [(InputTooLong, "needs_review"), (RuntimeError, "failed")])
+def test_worker_preserves_primary_when_fallback_rejects_long_input(
+    review_store, review_settings, monkeypatch, error, status
+):
+    review_settings.auto_approve = True
+    review_settings.sentiment_fallback_backend = "transformers"
+    review_settings.sentiment_fallback_model_path = "/models/visobert"
+    review_settings.sentiment_literal_negative_enabled = True
+    content = "Phim dở" + "!" * 1000
+    with Session(review_store) as db:
+        rid = service.create_review(db, 1, 777, content, review_settings).id
+
+    def fallback(text):
+        assert text == content
+        raise error
+
+    monkeypatch.setattr("review_service.worker.load_predictor", lambda *args, **kwargs: (fallback, "visobert"))
+    scores = {"positive": .44, "neutral": .26, "negative": .30}
+    assert process_one(review_store, review_settings, (lambda _: scores, "primary")) == status
+    with Session(review_store) as db:
+        result = db.get(ReviewSentiment, rid)
+        assert result.status == status
+        if status == "needs_review":
+            assert (result.label, result.predicted_label, result.decision_source) == ("positive", "positive", "model")
+            assert result.model_version == "primary"
+            assert result.scores == scores
+        else:
+            assert result.model_version is None
+            assert result.scores == {}
 
 
 @pytest.mark.parametrize(("content", "enabled", "status", "source", "label"), [

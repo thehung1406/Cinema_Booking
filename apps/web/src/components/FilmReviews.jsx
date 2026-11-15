@@ -90,7 +90,7 @@ export default function FilmReviews({ filmId }) {
       setEditVersion(null);
       setNotice(
         data.moderation_status === "approved"
-          ? "Đánh giá đã được đăng. Hệ thống sẽ tự phân tích cảm xúc."
+          ? "Đánh giá đã được đăng."
           : "Đã lưu đánh giá. Nội dung đang chờ duyệt.",
       );
       await load();
@@ -230,8 +230,7 @@ export default function FilmReviews({ filmId }) {
             {busy ? "Đang lưu…" : mine ? "Lưu chỉnh sửa" : "Gửi đánh giá"}
           </Button>
           <p className="text-sm text-gray-500">
-            Mỗi tài khoản có một đánh giá cho mỗi phim. Nội dung chỉnh sửa cần
-            được duyệt lại.
+            Mỗi tài khoản có một đánh giá cho mỗi phim.
           </p>
         </form>
       ) : (
