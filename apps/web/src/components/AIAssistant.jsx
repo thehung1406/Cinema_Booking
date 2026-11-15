@@ -3,7 +3,9 @@ import { Link, useLocation } from 'react-router-dom';
 import { ArrowRight, ArrowUpRight, BookOpen, CalendarDays, ChevronDown, Film, History, MapPin, MessageCircle, Send, SlidersHorizontal, SquarePen, Ticket, X } from 'lucide-react';
 import { formatCurrency, formatDate, formatTime } from '../utils/formatters';
 import api from '../config/api';
-import { getAccessToken, AUTH_SESSION_CHANGED_EVENT } from '../services/authStorage';
+import { getAccessToken, getCurrentUser, AUTH_SESSION_CHANGED_EVENT } from '../services/authStorage';
+import { bookingCommand, showtimeAtOrdinal } from '../services/chatBooking';
+import ChatBooking from './ChatBooking';
 import './AIAssistant.css';
 
 const SUGGESTIONS = [
@@ -12,7 +14,15 @@ const SUGGESTIONS = [
   { icon: <BookOpen size={19} aria-hidden="true" />, label: 'Hỏi về điện ảnh', question: 'Cinematography là gì?' },
 ];
 
-function ShowtimeCard({ card, onNavigate }) {
+function readDraft(userId) {
+  if (!userId) return null;
+  try {
+    const draft = JSON.parse(sessionStorage.getItem(`chat-booking:${userId}`));
+    return Number.isSafeInteger(draft?.showtimeId) && draft.showtimeId > 0 ? draft : null;
+  } catch { return null; }
+}
+
+function ShowtimeCard({ card, onNavigate, onBook }) {
   return (
     <section className="assistant-showtime">
       <div className="assistant-showtime-info">
@@ -28,14 +38,16 @@ function ShowtimeCard({ card, onNavigate }) {
       <div className="assistant-showtime-footer">
         <p><strong>{card.available_seats} ghế trống lúc tra cứu.</strong> Chưa giữ ghế hoặc xác nhận ghế liền nhau.</p>
         <Link to={card.url} className="assistant-primary" onClick={onNavigate}>Chọn ghế <ArrowRight size={16} aria-hidden="true" /></Link>
+        <button type="button" className="assistant-direct-link" onClick={() => onBook(card)}>Đặt trong chat</button>
       </div>
     </section>
   );
 }
 
-function AssistantMessage({ message, onNavigate }) {
+function AssistantMessage({ message, onNavigate, onBook }) {
   const sourcesPanel = useRef(null);
   const cards = message.cards || [];
+  const booking = message.booking;
   const documents = (message.sources || []).filter(source => source.kind === 'document');
   const links = (message.links || []).filter(link => !cards.some(card => card.url === link.url));
   const segments = message.answer?.split(/(\[doc:[^\]\r\n]+\])/g) || [];
@@ -64,8 +76,15 @@ function AssistantMessage({ message, onNavigate }) {
         return reference ? <button type="button" className="assistant-citation" key={index}
           aria-label={`Xem nguồn ${reference}`} onClick={() => showSource(reference)}>{reference}</button> : segment;
       })}</p>
+      {booking && <section className="assistant-booking" aria-label="Thông tin đơn của bạn">
+        <h4>Đơn #{booking.booking_id}{booking.film_title && ` · ${booking.film_title}`}</h4>
+        <p>{[booking.theater_name, booking.show_date && formatDate(booking.show_date), booking.start_time && formatTime(booking.start_time)].filter(Boolean).join(' · ')}</p>
+        <p>{booking.seat_count} vé · {formatCurrency(booking.total_amount)}</p>
+        {booking.ticket_url === `/payment-result?bookingId=${booking.booking_id}` &&
+          <Link className="assistant-primary" to={booking.ticket_url} onClick={onNavigate}>Xem vé</Link>}
+      </section>}
       {cards.length > 0 && <div className="assistant-showtimes">
-        {cards.map(card => <ShowtimeCard key={card.showtime_id} card={card} onNavigate={onNavigate} />)}
+        {cards.map(card => <ShowtimeCard key={card.showtime_id} card={card} onNavigate={onNavigate} onBook={onBook} />)}
       </div>}
       {message.has_more && <p className="assistant-note">Còn suất khác. Thêm rạp, giờ hoặc ngân sách để thu hẹp kết quả.</p>}
       {links.length > 0 && <div className="assistant-message-links">
@@ -123,6 +142,9 @@ export default function AIAssistant() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [loggedIn, setLoggedIn] = useState(Boolean(getAccessToken()));
+  const userId = loggedIn ? getCurrentUser()?.id : null;
+  const [bookingDraft, setBookingDraft] = useState(() => readDraft(getCurrentUser()?.id));
+  const bookingDraftRef = useRef(bookingDraft);
   const composer = useRef(null);
   const messageViewport = useRef(null);
   const historyScroll = useRef(null);
@@ -163,6 +185,8 @@ export default function AIAssistant() {
     const changed = () => {
       reset(); historyRequest.current?.abort(); setConversations([]); setHasMoreConversations(false);
       setLoggedIn(Boolean(getAccessToken())); setSessionVersion(v => v + 1);
+      bookingDraftRef.current = readDraft(getCurrentUser()?.id);
+      setBookingDraft(bookingDraftRef.current);
     };
     window.addEventListener(AUTH_SESSION_CHANGED_EVENT, changed);
     window.addEventListener('storage', changed);
@@ -198,10 +222,49 @@ export default function AIAssistant() {
     } else {
       messageViewport.current.scrollTop = messageViewport.current.scrollHeight;
     }
-  }, [messages, pendingQuestion]);
+  }, [messages, pendingQuestion, bookingDraft?.showtimeId]);
+
+  function updateBooking(draft) {
+    if (!userId || getCurrentUser()?.id !== userId) return;
+    bookingDraftRef.current = draft;
+    setBookingDraft(draft);
+    try {
+      const key = `chat-booking:${userId}`;
+      if (draft) sessionStorage.setItem(key, JSON.stringify({ showtimeId: draft.showtimeId, partySize: draft.partySize, reservationId: draft.reservationId }));
+      else sessionStorage.removeItem(key);
+    } catch { /* Continue with the draft in this tab when storage is unavailable. */ }
+  }
+
+  function startBooking(card, seatNames = []) {
+    const current = bookingDraftRef.current;
+    if (!Number.isSafeInteger(card?.showtime_id) || card.showtime_id <= 0) {
+      setError('Không có suất tương ứng trong danh sách gần nhất.');
+      return false;
+    }
+    if (current && current.showtimeId !== card.showtime_id) {
+      setError('Hãy đóng bước đặt vé hoặc hủy giữ ghế hiện tại trước khi chọn suất khác.');
+      return false;
+    }
+    setError('');
+    updateBooking({ ...current, showtimeId: card.showtime_id, partySize: card.party_size ?? current?.partySize,
+      command: seatNames.length ? seatNames : current?.command });
+    return true;
+  }
+
   async function send(event) {
     event.preventDefault(); if (busy || historyBusy || !question.trim()) return;
-    const text = question.trim(); setBusy(true); setPendingQuestion(text); setError('');
+    const text = question.trim();
+    const command = bookingCommand(text);
+    if (command) {
+      const card = command.ordinal !== null ? showtimeAtOrdinal(messages, command.ordinal) : bookingDraft && { showtime_id: bookingDraft.showtimeId };
+      if (!card && command.ordinal === null) setError('Hãy chọn một suất trước khi nhập tên ghế.');
+      else if (startBooking(card, command.seatNames)) {
+        setMessages(old => [...old, { role: 'user', answer: text }]);
+        setQuestion('');
+      }
+      return;
+    }
+    setBusy(true); setPendingQuestion(text); setError('');
     const controller = new AbortController(); activeRequest.current = controller;
     try {
       const { data } = await api.post('/ai/chat', { message: text, conversation_id: conversationId, context }, { timeout: 25000, signal: controller.signal });
@@ -411,9 +474,12 @@ export default function AIAssistant() {
                   ? <div className="assistant-user-message" key={message.id ? `saved:${message.id}` : `local:${index}`}>
                     <span className="sr-only">Bạn: </span><p>{message.answer}</p>
                   </div>
-                  : <AssistantMessage key={message.id ? `saved:${message.id}` : `local:${index}`} message={message} onNavigate={dismiss} />)}
+                  : <AssistantMessage key={message.id ? `saved:${message.id}` : `local:${index}`} message={message} onNavigate={dismiss} onBook={startBooking} />)}
                 {pendingQuestion && <p className="assistant-user-message"><span className="sr-only">Bạn: </span>{pendingQuestion}</p>}
                 {busy && <p className="assistant-loading" role="status"><span aria-hidden="true" />{pendingQuestion ? 'Đang tìm thông tin…' : 'Đang xử lý…'}</p>}
+                {userId && bookingDraft && <ChatBooking key={`${userId}:${bookingDraft.showtimeId}`} draft={bookingDraft} userId={userId}
+                  onReservation={reservationId => updateBooking({ ...bookingDraftRef.current, reservationId })}
+                  onDiscard={() => updateBooking(null)} />}
               </div>
             </div>
 

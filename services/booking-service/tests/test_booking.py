@@ -14,6 +14,7 @@ from sqlalchemy.exc import DBAPIError
 from sqlmodel import Session
 from booking_service.config import Settings,settings
 from booking_service.models import Model,SalesBase,Booking,BookingDetail,Reservation,Checkout,Idempotency,SeatStatus,Payment,Ticket
+from booking_service.models.sales import SalesConfiguration, SalesGate
 from booking_service.schemas.sales import SalesSnapshot
 from booking_service.schemas.booking import BookingCreateRequest
 from booking_service import reservations,bookings,sales
@@ -183,3 +184,39 @@ def test_failure_after_provider_validation_preserves_paid_evidence_and_retries_o
         assert PaymentService.confirm_vnpay_payment(db,bid,'00',payload)['status']=='success'
         assert PaymentService.confirm_vnpay_payment(db,bid,'00',payload)['status']=='success'
         assert len(list(db.scalars(select(Ticket))))==2 and len(list(db.scalars(select(OutboxRecord))))==3
+
+
+
+def test_showtime_facts_apply_start_time_before_limit(booking_store):
+    day = date.today() + timedelta(days=3)
+    earlier_shows = [(identifier, time(19, 30), True) for identifier in range(10, 31)]
+    with Session(booking_store) as db:
+        for identifier, start, is_open in [(1, time(21), True), (2, time(20, 15), True),
+                                           (3, time(20, 10), False), *earlier_shows]:
+            db.add(SalesConfiguration(showtime_id=identifier, sales_version=1, digest="a" * 64,
+                                      film_id=1, theater_id=2, room_id=identifier, show_date=day,
+                                      start_time=start, end_time=time(23), status="ACTIVE",
+                                      snapshot={"film": {"format_name": "2D"}}))
+            db.add(SalesGate(showtime_id=identifier, sales_version=1, is_open=is_open))
+        db.commit()
+
+    key = "a" * 32
+    app = create_app(Settings(service_key=key), engine=booking_store)
+    payload = {"call": {"name": "get_showtimes", "context": {"film_id": 1, "theater_id": 2,
+                                                            "show_date": day.isoformat()}}}
+    headers = {"X-Service-Key": key}
+    path = "/internal/v1/booking-read/tool"
+    with TestClient(app) as client:
+        response = client.post(path, json=payload, headers=headers)
+        assert response.status_code == 200, response.text
+        assert [row["id"] for row in response.json()] == [f"showtime:{identifier}" for identifier in range(10, 30)]
+
+        for start_after in ("20:00:00", "20:15:00"):
+            payload["call"]["context"]["start_after"] = start_after
+            response = client.post(path, json=payload, headers=headers)
+            assert response.status_code == 200, response.text
+            assert [row["id"] for row in response.json()] == ["showtime:2", "showtime:1"]
+
+        for invalid in ("invalid", "20:00:00+07:00"):
+            payload["call"]["context"]["start_after"] = invalid
+            assert client.post(path, json=payload, headers=headers).status_code == 422

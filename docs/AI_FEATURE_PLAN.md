@@ -284,13 +284,26 @@ flowchart LR
     V --> O[Câu trả lời và liên kết mở đúng nguồn]
 ```
 
-Phân biệt rõ ba thành phần: **KB** là tài liệu/chunk/metadata được quản lý; **retrieval** tìm chứng cứ; **generation** dùng chứng cứ để tạo câu trả lời. Luồng hiện tại render nguyên đoạn nguồn là baseline trích xuất; không trình bày nó như đã hoàn thành một RAG sinh trả lời đầy đủ.
+**KB** quản lý các bản tài liệu đã duyệt, chunk và thông tin nguồn. **Retrieval** lọc theo scope, phiên bản và hiệu lực rồi lấy top-k, có thể bổ sung căn cứ qua Neo4j khi được cấu hình. **Generation** tùy cấu hình mô hình. AI Service có thể hiển thị đoạn nguồn trực tiếp, hoặc dùng LLM chọn căn cứ cho câu chính sách và diễn đạt lại câu kiến thức điện ảnh. Backend kiểm tra dẫn nguồn và báo thiếu căn cứ nếu các đoạn tìm được chưa hỗ trợ dữ kiện được hỏi.
 
 Mỗi case minh chứng phải có: câu hỏi → scope/phiên bản KB → top-k chunk và scores → context thực đưa vào model → câu trả lời → citation tới đúng tài liệu/trang → thời gian từng bước. Citation có ID tồn tại chưa đủ: nội dung nguồn phải thực sự hỗ trợ phát biểu. Đánh giá khả năng hỗ trợ bằng tập gold và người chấm; kiểm tra ID bằng code không bảo đảm toàn bộ diễn đạt của LLM đúng.
 
 Với chính sách/giá/luồng đặt vé, giữ cách dựng thông tin quan trọng từ dữ liệu đã kiểm tra; không để LLM tạo con số hoặc URL. Với giải thích khái niệm điện ảnh từ sách, cho phép tóm tắt có nguồn nhưng phải chấm groundedness và trả lời không đủ căn cứ khi cần.
 
 Trang quản trị/tiện ích demo KB cần xem được nguồn, giấy phép, version, trang PDF, chunk và trạng thái duyệt; chế độ trace chỉ dành cho người có quyền, không công khai prompt hệ thống hoặc credential. Tách câu FAQ không cần dữ liệu nghiệp vụ khỏi bước match phim/rạp để tránh phụ thuộc owner không cần thiết.
+
+#### 4.4.4. Ranh giới giữa RAG, agent và đặt vé
+
+| Yêu cầu | Luồng xử lý |
+| --- | --- |
+| Chính sách, hướng dẫn và kiến thức điện ảnh | AI Service truy xuất KB đã duyệt, kiểm tra căn cứ và dựng câu trả lời có dẫn nguồn. |
+| Phim, suất, giá và ghế trống | AI Service dùng tool đọc từ API nghiệp vụ. Với câu cần nhiều bước, mô hình chọn bước kế tiếp từ kết quả tool qua native Function Calling hoặc JSON có cấu trúc. Vòng lặp Python giới hạn ba tool và dùng chung deadline 16 giây. |
+| Giữ ghế, chọn combo và tạo đơn | Khách chọn trong chat và xác nhận trước khi ghi. AI Service chuyển tiếp yêu cầu có xác thực để Booking Service kiểm tra giữ ghế, giá và khóa chống tạo đơn trùng. Màn hình thanh toán xử lý bước VNPay. |
+| Tra đơn và vé cá nhân | AI Service xác thực chủ đơn qua Booking Service, lấy trạng thái từ Payment Service và dẫn khách tới màn hình vé khi đã phát hành. |
+
+Thiết kế và ca nghiệm thu nằm trong [plan đặt vé và tra đơn](superpowers/plans/2026-11-15-chat-booking.md) và [plan Function Calling và ReAct](superpowers/plans/2026-11-15-chat-agent.md). LangGraph là lựa chọn điều phối khi workflow cần lưu và tiếp tục hoặc tiêu chí đồ án yêu cầu.
+
+Nhánh ReAct dùng adapter theo `AI_LLM_PROVIDER`. Giá trị `openai` dùng giao thức Responses API, giá trị `ollama` dùng `/api/chat`. Nếu model hoặc endpoint từ chối native Function Calling hay trả về thiếu lời gọi tool, AI Service yêu cầu quyết định bước tiếp theo bằng JSON có cấu trúc. Cả hai cách đều kiểm tra tên tool, tham số và dữ kiện trước khi gọi API nghiệp vụ. Có thể đặt `AI_REACT_LOOKUP_ENABLED=false` để dùng luồng tra cứu thông thường.
 
 ### 4.5. Giao diện và kết quả
 

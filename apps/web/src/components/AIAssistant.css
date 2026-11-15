@@ -282,6 +282,15 @@ body:has(.assistant-panel[open]) { overflow: hidden; }
   line-height: 1.45;
 }
 .assistant-composer button { min-height: 48px; }
+
+.assistant-booking { display: grid; gap: 8px; padding: 12px; border: 1px solid #ead9dd; border-radius: 12px; background: #fffafb; }
+.assistant-booking h3, .assistant-booking h4 { font-weight: 650; }
+.assistant-booking-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.assistant-booking-seats { display: grid; grid-template-columns: repeat(auto-fill, minmax(45px, 1fr)); gap: 5px; max-height: 175px; overflow: auto; }
+.assistant-booking-seats button { justify-content: center; padding-inline: 4px; min-height: 44px; }
+.assistant-booking-seats button[aria-pressed="true"] { background: var(--assistant-wine); color: #fff; }
+.assistant-booking-food { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+.assistant-booking button:disabled { opacity: .52; cursor: default; }
 .assistant-error { margin-bottom: 8px; color: #9b1828; font-size: 14px; }
 .assistant-loading { display: flex; align-items: center; gap: 8px; color: var(--assistant-muted); font-size: 14px; }
 .assistant-loading > span { width: 8px; height: 8px; border-radius: 50%; background: #a91e2b; }

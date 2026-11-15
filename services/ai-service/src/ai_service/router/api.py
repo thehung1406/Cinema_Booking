@@ -15,6 +15,7 @@ from sqlmodel import Session, select
 from cinema_platform.auth import AuthError
 
 from .. import chat as chat_service, documents, history, knowledge_versions
+from ..booking_tools import BookingTools, CheckoutRequest, ReleaseSelection, SeatSelection
 
 from ..models import KnowledgeDocument
 
@@ -100,10 +101,26 @@ def create_router(app, engine, settings, logger, cache):
         return {"writes_enabled": settings.writes_enabled}
 
     @router.post("/ai/chat", dependencies=[Depends(writes)])
-    def ask(body: ChatRequest, user=Depends(current_user), db=Depends(db_session)):
+    def ask(body: ChatRequest, authorization: str = Header(default=""), user=Depends(current_user), db=Depends(db_session)):
         reader = ReadSession(app.state.read_http, settings)
+        booking = BookingTools(app.state.read_http, settings, user.user_id, authorization)
         return chat_service.chat(db, user.user_id, body, cache, reader, settings,
-                                 graph=app.state.knowledge_graph)
+                                 graph=app.state.knowledge_graph, booking=booking)
+
+    def booking_tools(authorization: str = Header(default=""), user=Depends(current_user)):
+        return BookingTools(app.state.read_http, settings, user.user_id, authorization)
+
+    @router.post("/ai/booking/hold", dependencies=[Depends(writes)])
+    def hold_seats(body: SeatSelection, booking=Depends(booking_tools)):
+        return booking.hold(body)
+
+    @router.post("/ai/booking/release", dependencies=[Depends(writes)])
+    def release_seats(body: ReleaseSelection, booking=Depends(booking_tools)):
+        return booking.release(body)
+
+    @router.post("/ai/booking/checkout", status_code=201, dependencies=[Depends(writes)])
+    def checkout(body: CheckoutRequest, idempotency_key: str = Header(), booking=Depends(booking_tools)):
+        return booking.checkout(body, idempotency_key)
 
     @router.get("/ai/conversations", response_model=list[ConversationRead])
     def conversations(
