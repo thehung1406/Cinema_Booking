@@ -85,6 +85,159 @@
         }
       }
     },
+    "/ai/booking/hold": {
+      "post": {
+        "summary": "Hold Seats",
+        "operationId": "hold_seats_ai_booking_hold_post",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SeatSelection"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/ai/booking/release": {
+      "post": {
+        "summary": "Release Seats",
+        "operationId": "release_seats_ai_booking_release_post",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReleaseSelection"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/ai/booking/checkout": {
+      "post": {
+        "summary": "Checkout",
+        "operationId": "checkout_ai_booking_checkout_post",
+        "parameters": [
+          {
+            "name": "idempotency-key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Idempotency-Key"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CheckoutRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/ai/conversations": {
       "get": {
         "summary": "Conversations",
@@ -847,6 +1000,111 @@
         ],
         "title": "ChatRequest"
       },
+      "CheckoutFood": {
+        "properties": {
+          "food_item_id": {
+            "type": "integer",
+            "exclusiveMinimum": 0.0,
+            "title": "Food Item Id"
+          },
+          "quantity": {
+            "type": "integer",
+            "maximum": 20.0,
+            "minimum": 1.0,
+            "title": "Quantity"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "food_item_id",
+          "quantity"
+        ],
+        "title": "CheckoutFood"
+      },
+      "CheckoutRequest": {
+        "properties": {
+          "showtime_id": {
+            "type": "integer",
+            "exclusiveMinimum": 0.0,
+            "title": "Showtime Id"
+          },
+          "reservation_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Reservation Id"
+          },
+          "total_amount": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0,
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,10}|(?=[\\d.]{1,13}0*$)\\d{0,10}\\.\\d{0,2}0*$)"
+              }
+            ],
+            "title": "Total Amount"
+          },
+          "seats": {
+            "items": {
+              "$ref": "#/components/schemas/CheckoutSeat"
+            },
+            "type": "array",
+            "maxItems": 20,
+            "minItems": 1,
+            "title": "Seats"
+          },
+          "food_items": {
+            "items": {
+              "$ref": "#/components/schemas/CheckoutFood"
+            },
+            "type": "array",
+            "maxItems": 50,
+            "title": "Food Items"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "showtime_id",
+          "reservation_id",
+          "total_amount",
+          "seats"
+        ],
+        "title": "CheckoutRequest"
+      },
+      "CheckoutSeat": {
+        "properties": {
+          "seat_id": {
+            "type": "integer",
+            "exclusiveMinimum": 0.0,
+            "title": "Seat Id"
+          },
+          "price": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,10}|(?=[\\d.]{1,13}0*$)\\d{0,10}\\.\\d{0,2}0*$)"
+              }
+            ],
+            "title": "Price"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "seat_id",
+          "price"
+        ],
+        "title": "CheckoutSeat"
+      },
       "ConversationDetail": {
         "properties": {
           "id": {
@@ -1264,6 +1522,76 @@
           "created_at"
         ],
         "title": "MessageRead"
+      },
+      "ReleaseSelection": {
+        "properties": {
+          "showtime_id": {
+            "type": "integer",
+            "exclusiveMinimum": 0.0,
+            "title": "Showtime Id"
+          },
+          "seat_ids": {
+            "items": {
+              "type": "integer",
+              "exclusiveMinimum": 0.0
+            },
+            "type": "array",
+            "maxItems": 20,
+            "minItems": 1,
+            "title": "Seat Ids"
+          },
+          "reservation_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Reservation Id"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "showtime_id",
+          "seat_ids",
+          "reservation_id"
+        ],
+        "title": "ReleaseSelection"
+      },
+      "SeatSelection": {
+        "properties": {
+          "showtime_id": {
+            "type": "integer",
+            "exclusiveMinimum": 0.0,
+            "title": "Showtime Id"
+          },
+          "seat_ids": {
+            "items": {
+              "type": "integer",
+              "exclusiveMinimum": 0.0
+            },
+            "type": "array",
+            "maxItems": 20,
+            "minItems": 1,
+            "title": "Seat Ids"
+          },
+          "reservation_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reservation Id"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "showtime_id",
+          "seat_ids"
+        ],
+        "title": "SeatSelection"
       },
       "ToolContext-Input": {
         "properties": {
