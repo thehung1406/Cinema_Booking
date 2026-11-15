@@ -1,5 +1,5 @@
 const zone = "Asia/Ho_Chi_Minh";
-export function formatCurrency(value) {
+export function formatCurrency(value, maximumFractionDigits = 0) {
   if (
     value === null ||
     value === undefined ||
@@ -10,6 +10,7 @@ export function formatCurrency(value) {
   return new Intl.NumberFormat("vi-VN", {
     style: "currency",
     currency: "VND",
+    maximumFractionDigits,
   }).format(Number(value));
 }
 export function formatDate(value) {

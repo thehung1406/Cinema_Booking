@@ -15,6 +15,7 @@ from fastapi import HTTPException
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy import update
 from sqlalchemy.exc import SQLAlchemyError
+from .booking_tools import SAVED_LOOKUP, is_personal_order
 from .models import AIConversation, AIMessage
 from .models import utcnow
 from .schemas import ToolCall, ToolContext
@@ -29,6 +30,8 @@ PLANNER_TIMEOUT = 5
 CHAT_INFERENCE_BUDGET = 16
 RECOMMENDATION_FILTERS = ("show_date", "genre", "party_size", "budget_amount", "budget_scope", "start_after")
 SHOWTIME_PATTERN = r"(?:ma suat|suat chieu so)\s*(\d+)"
+BOOKING_REQUEST = re.compile(r"\b(?:dat|mua)(?: [\w]+){0,4} ve\b")
+BOOKING_POLICY = ("chinh sach", "huong dan", "cach ", "hoan tien", "doi ve", "huy ve", "giu ghe bao lau")
 FILM_LIST_PATTERN = (
     r"\b(?:danh sach|liet ke)(?: nhung| cac)? phim\b|\bphim (?:gi|nao)\b"
     r"|^\s*(?:(?:nhung|cac) )?phim (?:hien )?(?:dang chieu|sap chieu|sap ra mat)\b"
@@ -47,15 +50,23 @@ return n
 
 def detect_intent(message):
     text = folded(message)
+    policy = any(term in text for term in BOOKING_POLICY)
+    booking_request = BOOKING_REQUEST.search(text)
+    if booking_request and (policy or any(term in text for term in ("nhu the nao", "the nao", "lam sao"))):
+        return "knowledge"
+    if not policy and is_personal_order(text):
+        return "get_my_booking"
     if any(w in text for w in ("dat ho", "giu ho", "thanh toan ho", "xac nhan thanh toan", "don hang cua", "don hang toi")):
         return "out_of_scope"
+    if not policy and "thanh toan" not in text and booking_request:
+        return "recommend"
     if "la gi" in text and is_film_education(text):
         return "knowledge"
     if any(w in text for w in ("khen", "tich cuc")):
         return "get_positive_films"
     if any(w in text for w in ("de xuat phim", "goi y phim", "tu van phim", "muon xem", "ngan sach", "tim phim")):
         return "recommend"
-    if any(w in text for w in ("chinh sach", "cach ", "huong dan", "hoan tien", "doi ve", "huy ve", "giu ghe bao lau", "thanh toan")):
+    if policy or "thanh toan" in text:
         return "knowledge"
     if any(w in text for w in ("ghe trong", "con ghe", "ghe nao")):
         return "get_seat_availability"
@@ -210,7 +221,7 @@ def select_evidence(question, evidence, config, *, deadline=None):
         return evidence, "model_unavailable"
 
 
-def chat(db, user_id, request, redis, reader, config, *, graph=None):
+def chat(db, user_id, request, redis, reader, config, *, graph=None, booking=None):
     inference_deadline = monotonic() + CHAT_INFERENCE_BUDGET
     try:
         count = redis.eval(RATE_SCRIPT, 1, f"ai:rate:{user_id}")
@@ -234,6 +245,8 @@ def chat(db, user_id, request, redis, reader, config, *, graph=None):
     from .grounding import clarification_needed, covers_specifics, explicit_questions
     message_text = folded(request.message)
     deterministic = detect_intent(request.message)
+    personal_lookup = deterministic == "get_my_booking"
+    booking_request = deterministic == "recommend" and BOOKING_REQUEST.search(message_text)
     pending_tool = previous.get("pending_tool")
     listing = deterministic in {"get_showing_films", "get_upcoming_films"}
     clarification = clarification_needed(request.message) if deterministic == "knowledge" else None
@@ -243,12 +256,16 @@ def chat(db, user_id, request, redis, reader, config, *, graph=None):
         values = {"theater_id": values.get("theater_id"), "show_date": selected_date}
         if "genre" in submitted and request.context.genre != previous_context.genre:
             values["genre"] = request.context.genre
-    context = infer_preferences(request.message, ToolContext.model_validate(values))
+    context = ToolContext.model_validate(values)
+    if not personal_lookup:
+        context = infer_preferences(request.message, context)
     explicit_knowledge = any(word in message_text for word in (
         "cach ", "chinh sach", "huong dan", "hoan tien", "doi ve", "huy ve", "thanh toan",
         "giu ghe bao lau", "la gi",
     ))
-    explicit_knowledge = explicit_knowledge or clarification or is_film_education(message_text)
+    explicit_knowledge = explicit_knowledge or clarification or is_film_education(message_text) or (
+        deterministic == "knowledge" and bool(BOOKING_REQUEST.search(message_text))
+    )
     refining_recommendation = (
         not listing and previous.get("active_recommendation") and not explicit_knowledge
         and (deterministic == "knowledge"
@@ -258,7 +275,36 @@ def chat(db, user_id, request, redis, reader, config, *, graph=None):
                 for field in RECOMMENDATION_FILTERS)
     )
     proposed_intent, planner_mode = None, "retrieval_only"
-    if listing or clarification:
+    agent_result, agent_context_ready = None, False
+    if config.react_lookup_enabled and config.llm_provider != "disabled" and not (personal_lookup or explicit_knowledge):
+        from . import react_lookup
+
+        if react_lookup.applies(message_text):
+            reader.deadline = min(reader.deadline, inference_deadline)
+            try:
+                context = infer_context(reader, request.message, context)
+                needed = [name for name in ("film_id", "theater_id", "show_date") if not getattr(context, name)]
+                party = react_lookup.party_size(message_text, context.party_size)
+                if not 1 <= party <= 20:
+                    agent_result = react_lookup.LookupResult("Bạn muốn kiểm tra từ 1 đến 20 ghế cho bao nhiêu người?", "needs_clarification", [], [])
+                elif needed:
+                    labels = ", ".join(LABELS[name] for name in needed)
+                    agent_result = react_lookup.LookupResult(f"Hãy chọn {labels} rồi gửi lại yêu cầu kiểm tra các suất.", "needs_clarification", [], needed)
+                else:
+                    context.party_size = party
+                    agent_context_ready = True
+                    agent_result = react_lookup.run_lookup(reader, config, request.message, context,
+                                                          "toi nay" in message_text, party, inference_deadline)
+                    if agent_result is None and monotonic() >= inference_deadline:
+                        agent_result = react_lookup.LookupResult("Chưa tra được dữ liệu trong thời gian cho phép. Bạn có thể thử lại.", "tool_unavailable", [], [])
+            except HTTPException:
+                agent_result = react_lookup.LookupResult("Chưa xác minh được phim, rạp hoặc ngày chiếu. Bạn có thể thử lại.", "tool_unavailable", [], [])
+
+    if agent_result is not None:
+        proposed_intent, planner_mode = "react_lookup", "react_lookup"
+    elif agent_context_ready:
+        proposed_intent, planner_mode = "get_showtimes", "react_fallback"
+    elif listing or clarification or personal_lookup or booking_request:
         proposed_intent = deterministic
     elif refining_recommendation:
         proposed_intent = "recommend"
@@ -282,19 +328,20 @@ def chat(db, user_id, request, redis, reader, config, *, graph=None):
         except Exception:
             planner_mode = "model_unavailable"
     preliminary = proposed_intent or deterministic
-    if deterministic in {"out_of_scope", "get_seat_availability", "get_ticket_prices", "get_positive_films"} or (
+    if not (agent_result is not None or agent_context_ready) and (deterministic in {"out_of_scope", "get_seat_availability", "get_ticket_prices", "get_positive_films"} or (
             deterministic == "recommend" and preliminary == "search_films") or (
-            deterministic == "knowledge" and explicit_knowledge):
+            deterministic == "knowledge" and explicit_knowledge)):
         preliminary = proposed_intent = deterministic
-    read_context = not listing and (
-        preliminary not in {"knowledge", "out_of_scope"}
+    read_context = not (listing or agent_result is not None or agent_context_ready) and (
+        preliminary not in {"knowledge", "out_of_scope", "get_my_booking"}
         or (bool(pending_tool) and preliminary == "knowledge" and not explicit_knowledge)
     )
     # FAQ needs only the AI-owned approved KB; do not call Catalog/Cinema unnecessarily.
     if read_context:
         context = infer_context(reader, request.message, context)
-    context = infer_preferences(request.message, context)
-    ordinal = None if listing else re.search(r"suat thu\s*(\d+|hai|ba|bon)\b", folded(request.message))
+    if not personal_lookup:
+        context = infer_preferences(request.message, context)
+    ordinal = None if listing or personal_lookup or agent_result is not None or agent_context_ready else re.search(r"suat thu\s*(\d+|hai|ba|bon)\b", message_text)
     if ordinal:
         index = {"hai": 2, "ba": 3, "bon": 4}.get(ordinal[1])
         index = index if index is not None else int(ordinal[1])
@@ -325,8 +372,16 @@ def chat(db, user_id, request, redis, reader, config, *, graph=None):
     sources, missing = [], []
     status, mode = "ok", planner_mode
     cards, has_more = [], False
-    if intent == "out_of_scope":
-        answer = "Mình hỗ trợ tra cứu phim và hướng dẫn đặt vé. Bạn cần tự chọn ghế, tạo đơn và thanh toán trên giao diện; trợ lý chưa hỗ trợ tra đơn cá nhân."
+    private_order = None
+    if agent_result is not None:
+        answer, status, sources, missing = agent_result
+    elif personal_lookup:
+        if booking is None:
+            answer, status = "Chưa thể tra đơn lúc này. Bạn có thể thử lại sau.", "tool_unavailable"
+        else:
+            answer, status, private_order = booking.get_my_booking(message_text)
+    elif intent == "out_of_scope":
+        answer = "Mình có thể tìm suất để bạn đặt vé trong chat hoặc kiểm tra trạng thái đơn của bạn. Giữ ghế, tạo đơn và thanh toán cần bạn xác nhận trên giao diện."
         status = "out_of_scope"
     elif listing:
         try:
@@ -432,18 +487,27 @@ def chat(db, user_id, request, redis, reader, config, *, graph=None):
                 }
                 answer = "\n\n".join(s["text"] for s in sources) if sources else empty_answers[intent]
                 status = "ok" if sources else "no_results"
+                if mode == "react_fallback" and sources:
+                    answer += "\n\nMình mới tìm được lịch chiếu. Hãy chọn suất để kiểm tra ghế và giá."
+                    status = "partial"
             except Exception:
                 answer = "Không thể tra cứu dữ liệu lúc này. Bạn có thể tiếp tục đặt vé trực tiếp hoặc thử lại sau."
                 status = "tool_unavailable"
     links = [dict(title=s["title"], url=s["url"]) for s in sources if s["kind"] != "document"]
-    state = dict(context=context.model_dump(mode="json"), pending_tool=intent if missing else None,
+    state = dict(context=context.model_dump(mode="json"), pending_tool=intent if missing and intent != "react_lookup" else None,
                  active_recommendation=intent == "recommend", evening=evening,
                  options=cards if intent == "recommend" or listing or selection_changed else previous.get("options", []))
+    if personal_lookup:
+        state = previous | {"context": context.model_dump(mode="json")}
     result = dict(conversation_id=conversation_id, answer=answer, sources=sources, links=links, cards=cards, has_more=has_more,
                 status=status, mode=mode, missing_fields=missing, context=context.model_dump(mode="json"),
-                as_of=utcnow(), tool=intent if intent.startswith(("get_", "search_")) else None)
+                as_of=utcnow(), tool=intent if intent.startswith(("get_", "search_")) or intent == "react_lookup" else None)
     if intent == "knowledge" and graph is not None:
         result["graph_retrieval"] = graph_state
+    if intent == "recommend":
+        result["showtime_options"] = True
+    if private_order is not None:
+        result["booking"] = private_order
     now = result["as_of"]
     try:
         if request.conversation_id:
@@ -464,9 +528,9 @@ def chat(db, user_id, request, redis, reader, config, *, graph=None):
         db.add(AIMessage(conversation_id=UUID(conversation_id), role="user",
                          content=request.message, created_at=now))
         db.flush()
-        metadata = jsonable_encoder({k: v for k, v in result.items() if k not in ("answer", "conversation_id")})
+        metadata = jsonable_encoder({k: v for k, v in result.items() if k not in ("answer", "conversation_id", "booking")})
         db.add(AIMessage(conversation_id=UUID(conversation_id), role="assistant",
-                         content=answer, details=metadata, created_at=now))
+                         content=SAVED_LOOKUP if personal_lookup else answer, details=metadata, created_at=now))
         db.commit()
     except SQLAlchemyError:
         db.rollback()
