@@ -8,6 +8,24 @@ export function bookingCommand(message) {
   return { ordinal, seatNames: match[2]?.toUpperCase().split(/[\s,]+/) || [] };
 }
 
+export function showtimeAtOrdinal(messages, ordinal) {
+  const latest = messages.findLast(message => message.showtime_options || message.cards?.length
+    || message.tool === 'get_showtimes' || message.tool === 'react_lookup');
+  if (latest?.tool !== 'get_showtimes' && latest?.tool !== 'react_lookup') {
+    return latest?.cards?.[ordinal - 1];
+  }
+
+  const showtimeIds = new Set();
+  for (const source of latest.sources || []) {
+    const match = /^showtime:([1-9]\d*)$/.exec(source.id);
+    if (!match || source.url !== `/seat-selection/${match[1]}`) continue;
+    const id = Number(match[1]);
+    if (Number.isSafeInteger(id)) showtimeIds.add(id);
+  }
+  const showtimeId = [...showtimeIds][ordinal - 1];
+  if (showtimeId !== undefined) return { showtime_id: showtimeId, party_size: latest.context?.party_size };
+}
+
 export function seatIdsForCommand(names, seats) {
   if (names.length > 20 || new Set(names).size !== names.length) throw new Error('Hãy chọn tối đa 20 ghế và chỉ nhập mỗi ghế một lần.');
   return names.map(name => {

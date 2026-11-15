@@ -221,6 +221,17 @@ def select_evidence(question, evidence, config, *, deadline=None):
         return evidence, "model_unavailable"
 
 
+def showtime_choices(sources, context):
+    scope = context.model_dump(mode="json", include={"film_id", "theater_id", "show_date"})
+    choices = {}
+    for source in sources:
+        match = re.fullmatch(r"showtime:([1-9]\d*)", source["id"])
+        if match and source["url"] == f"/seat-selection/{match[1]}":
+            showtime_id = int(match[1])
+            choices[showtime_id] = dict(scope, showtime_id=showtime_id)
+    return list(choices.values())
+
+
 def chat(db, user_id, request, redis, reader, config, *, graph=None, booking=None):
     inference_deadline = monotonic() + CHAT_INFERENCE_BUDGET
     try:
@@ -494,9 +505,14 @@ def chat(db, user_id, request, redis, reader, config, *, graph=None, booking=Non
                 answer = "Không thể tra cứu dữ liệu lúc này. Bạn có thể tiếp tục đặt vé trực tiếp hoặc thử lại sau."
                 status = "tool_unavailable"
     links = [dict(title=s["title"], url=s["url"]) for s in sources if s["kind"] != "document"]
+    if intent in {"get_showtimes", "react_lookup"}:
+        options = showtime_choices(sources, context)
+    elif intent == "recommend" or listing or selection_changed:
+        options = cards
+    else:
+        options = previous.get("options", [])
     state = dict(context=context.model_dump(mode="json"), pending_tool=intent if missing and intent != "react_lookup" else None,
-                 active_recommendation=intent == "recommend", evening=evening,
-                 options=cards if intent == "recommend" or listing or selection_changed else previous.get("options", []))
+                 active_recommendation=intent == "recommend", evening=evening, options=options)
     if personal_lookup:
         state = previous | {"context": context.model_dump(mode="json")}
     result = dict(conversation_id=conversation_id, answer=answer, sources=sources, links=links, cards=cards, has_more=has_more,
@@ -504,7 +520,7 @@ def chat(db, user_id, request, redis, reader, config, *, graph=None, booking=Non
                 as_of=utcnow(), tool=intent if intent.startswith(("get_", "search_")) or intent == "react_lookup" else None)
     if intent == "knowledge" and graph is not None:
         result["graph_retrieval"] = graph_state
-    if intent == "recommend":
+    if intent in {"recommend", "get_showtimes", "react_lookup"}:
         result["showtime_options"] = True
     if private_order is not None:
         result["booking"] = private_order

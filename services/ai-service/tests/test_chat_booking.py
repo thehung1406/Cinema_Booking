@@ -1,4 +1,5 @@
 import json
+from datetime import date, timedelta
 
 import httpx
 import pytest
@@ -75,6 +76,78 @@ def test_booking_writes_preserve_customer_authorization_and_idempotency(client_f
             created = client.post("/ai/booking/checkout", headers=headers, json=checkout)
             assert created.status_code == 201 and created.json() == {"bookingId": 77, "expiresAt": DEADLINE}
     assert calls == ["/seats/hold", "/seats/release", "/bookings", "/bookings"]
+
+
+@pytest.mark.parametrize("conditional", [False, True])
+def test_ordinal_followups_use_the_latest_showtime_lookup(client_factory, monkeypatch, conditional):
+    from ai_service import llm, react_lookup
+    from ai_service.schemas import AssistantPlan
+
+    day = (date.today() + timedelta(days=3)).isoformat()
+    price_checks = []
+
+    def evidence(id, url):
+        return dict(id=id, url=url, kind="live", title=id, text=id)
+
+    def owner(request):
+        path = request.url.path
+        payload = json.loads(request.content) if request.content else {}
+        if path.endswith("/matches"):
+            return httpx.Response(200, json={"film_id": [
+                {"id": id, "name": name} for id, name in [(1, "Phim A"), (2, "Phim B")]
+                if name in payload["message"]
+            ], "theater_id": []})
+        if path.endswith("/context"):
+            return httpx.Response(200, json={"film_name": None, "theater_name": None})
+        if path.endswith("/options"):
+            assert payload["film_id"] == 1
+            return httpx.Response(200, json={"items": [dict(
+                showtime_id=id, sales_version=1, film_id=1, film_title="Phim A", theater_id=1,
+                theater_name="Rạp X", room_name="Phòng X", show_date=day, start_time="19:00:00",
+                format="2D", available_seats=4, min_ticket_price=90000, minimum_total=180000,
+                party_size=2, currency="VND", url=f"/seat-selection/{id}",
+            ) for id in (20, 21, 22)]})
+        if path.endswith("/available-count"):
+            return httpx.Response(200, json={"showtime_id": 31, "available_seats": 4})
+        assert path.endswith("/tool")
+        call = payload["call"]
+        assert call["context"]["film_id"] == 2
+        if call["name"] == "get_showtimes":
+            return httpx.Response(200, json=[evidence(f"showtime:{id}", f"/seat-selection/{id}")
+                                             for id in (31, 29)])
+        assert call["name"] == "get_ticket_prices"
+        showtime_id = call["context"]["showtime_id"]
+        price_checks.append(showtime_id)
+        return httpx.Response(200, json=[evidence("price:1", f"/seat-selection/{showtime_id}")])
+
+    actions = iter([
+        llm.FunctionCall("get_showtimes", {}, []),
+        llm.FunctionCall("get_seat_availability", {"showtime_id": 31}, []),
+        llm.FunctionCall("get_ticket_prices", {"showtime_id": 31}, []),
+    ])
+    monkeypatch.setattr(react_lookup, "function_step", lambda *args: next(actions))
+    monkeypatch.setattr(llm, "plan", lambda *args: AssistantPlan(intent="get_ticket_prices"))
+    with client_factory(owner, llm_provider="ollama" if conditional else "disabled", direct_reads_enabled=False) as client:
+        def ask(message, **fields):
+            return client.post("/ai/chat", headers=HEADERS, json={"message": message, **fields})
+
+        first = ask("Đặt hai vé Phim A", context={"theater_id": 1, "show_date": day})
+        assert first.status_code == 200, first.text
+        assert [card["showtime_id"] for card in first.json()["cards"]] == [20, 21, 22]
+        turn = {"conversation_id": first.json()["conversation_id"]}
+        question = "Lịch chiếu Phim B?"
+        if conditional:
+            question += " Nếu suất đầu còn đủ hai ghế thì báo giá. Nếu không đủ thì kiểm tra suất tiếp theo."
+        lookup = ask(question, **turn)
+        assert lookup.status_code == 200, lookup.text
+        assert lookup.json()["tool"] == ("react_lookup" if conditional else "get_showtimes")
+        assert lookup.json()["showtime_options"] is True
+        missing = ask("Giá vé suất thứ ba?", **turn)
+        assert missing.status_code == 422, missing.text
+        selected = ask("Giá vé suất thứ hai?", **turn)
+        assert selected.status_code == 200, selected.text
+        assert selected.json()["context"]["showtime_id"] == 29
+        assert price_checks == ([31, 29] if conditional else [29])
 
 
 @pytest.mark.parametrize("stage", ["AWAITING_PAYMENT", "PROCESSING", "REQUIRES_REVIEW", "FAILED", "ISSUED", None])

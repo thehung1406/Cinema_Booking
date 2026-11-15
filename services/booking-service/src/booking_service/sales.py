@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, time, timedelta, timezone
 from types import SimpleNamespace
 from zoneinfo import ZoneInfo
 from fastapi import HTTPException
@@ -39,7 +39,7 @@ def current_query():
         SalesGate.sales_version == SalesConfiguration.sales_version))
 
 
-def future_query(film_id=None, theater_id=None, show_date=None, evening=False):
+def future_query(film_id=None, theater_id=None, show_date=None, evening=False, *, start_after: time | None = None):
     now = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh"))
     query = current_query().where(SalesGate.is_open.is_(True), SalesConfiguration.status == "ACTIVE",
         or_(SalesConfiguration.show_date > now.date(), and_(SalesConfiguration.show_date == now.date(),
@@ -48,8 +48,9 @@ def future_query(film_id=None, theater_id=None, show_date=None, evening=False):
     if theater_id is not None: query = query.where(SalesConfiguration.theater_id == theater_id)
     if show_date is not None: query = query.where(SalesConfiguration.show_date == show_date)
     if evening:
-        from datetime import time
         query = query.where(SalesConfiguration.start_time >= time(18))
+    if start_after is not None:
+        query = query.where(SalesConfiguration.start_time >= start_after)
     return query.order_by(SalesConfiguration.show_date, SalesConfiguration.start_time, SalesConfiguration.showtime_id)
 
 

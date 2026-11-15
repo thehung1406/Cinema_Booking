@@ -4,7 +4,7 @@ import { ArrowRight, ArrowUpRight, BookOpen, CalendarDays, ChevronDown, Film, Hi
 import { formatCurrency, formatDate, formatTime } from '../utils/formatters';
 import api from '../config/api';
 import { getAccessToken, getCurrentUser, AUTH_SESSION_CHANGED_EVENT } from '../services/authStorage';
-import { bookingCommand } from '../services/chatBooking';
+import { bookingCommand, showtimeAtOrdinal } from '../services/chatBooking';
 import ChatBooking from './ChatBooking';
 import './AIAssistant.css';
 
@@ -256,8 +256,7 @@ export default function AIAssistant() {
     const text = question.trim();
     const command = bookingCommand(text);
     if (command) {
-      const latestCards = messages.findLast(message => message.showtime_options || message.cards?.length)?.cards;
-      const card = command.ordinal !== null ? latestCards?.[command.ordinal - 1] : bookingDraft && { showtime_id: bookingDraft.showtimeId };
+      const card = command.ordinal !== null ? showtimeAtOrdinal(messages, command.ordinal) : bookingDraft && { showtime_id: bookingDraft.showtimeId };
       if (!card && command.ordinal === null) setError('Hãy chọn một suất trước khi nhập tên ghế.');
       else if (startBooking(card, command.seatNames)) {
         setMessages(old => [...old, { role: 'user', answer: text }]);

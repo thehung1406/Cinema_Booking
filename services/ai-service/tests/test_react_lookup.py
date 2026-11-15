@@ -1,10 +1,11 @@
 import json
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
+from zoneinfo import ZoneInfo
 
 import httpx
 import pytest
 
-from ai_service import llm
+from ai_service import llm, react_lookup
 from ai_service.rag import folded
 from ai_service.react_lookup import applies
 from test_chat_booking import HEADERS, client_factory  # noqa: F401
@@ -123,3 +124,61 @@ def test_tool_observation_drives_the_next_action(client_factory, monkeypatch, av
         assert data["status"] == ("ok" if scenario == "no_next" else "partial")
         assert "còn 1 ghế" in data["answer"]
         assert actions == [("get_showtimes", None), ("get_seat_availability", 11)]
+
+
+
+@pytest.mark.parametrize(("window", "start_after"), [("sau 20h", "20:00:00"), ("", "18:00:00")])
+def test_react_looks_up_first_show_after_tomorrows_start_time(client_factory, monkeypatch, window, start_after):
+    tomorrow = (datetime.now(ZoneInfo("Asia/Ho_Chi_Minh")).date() + timedelta(days=1)).isoformat()
+    observations = []
+
+    def owner(request):
+        path = request.url.path
+        if path == "/internal/v1/films/matches":
+            return httpx.Response(200, json=[{"id": 1, "name": "Phim X"}])
+        if path == "/internal/v1/theaters/matches":
+            return httpx.Response(200, json=[{"id": 2, "name": "Rạp Y"}])
+        if path == "/internal/v1/films/batch":
+            return httpx.Response(200, json=[{"id": 1, "title": "Phim X"}])
+        if path == "/theaters/2":
+            return httpx.Response(200, json={"id": 2, "name": "Rạp Y"})
+        if path == "/internal/v1/booking-read/context":
+            return httpx.Response(200, json={"valid": True})
+        if path == "/seats/showtime/11/available-count":
+            observations.append("checked seats")
+            return httpx.Response(200, json={"showtime_id": 11, "available_seats": 2})
+        assert path == "/internal/v1/booking-read/tool"
+        call = json.loads(request.content)["call"]
+        if call["name"] == "get_showtimes":
+            assert call["context"]["show_date"] == tomorrow
+            assert call["context"]["start_after"] == start_after
+            observations.append("read showtimes")
+            earlier = "19:30:00" if window else "17:30:00"
+            shows = [(10, earlier), (11, "20:15:00"), (12, "21:00:00")]
+            return httpx.Response(200, json=[
+                {"id": f"showtime:{show_id}", "title": f"Suất {clock[:5]}", "text": f"Suất {clock[:5]}",
+                 "url": f"/seat-selection/{show_id}", "kind": "live"}
+                for show_id, clock in shows if clock >= call["context"]["start_after"]
+            ])
+        assert call["name"] == "get_ticket_prices" and call["context"]["showtime_id"] == 11
+        observations.append("read prices")
+        return httpx.Response(200, json=[{"id": "price:1", "title": "Ghế thường", "text": "Ghế thường: 90,000 VND",
+                                          "url": "/seat-selection/11", "kind": "live"}])
+
+    steps = iter([
+        llm.FunctionCall("get_showtimes", {}, []),
+        llm.FunctionCall("get_seat_availability", {"showtime_id": 11}, []),
+        llm.FunctionCall("get_ticket_prices", {"showtime_id": 11}, []),
+    ])
+    monkeypatch.setattr(react_lookup, "function_step", lambda *args: next(steps))
+    with client_factory(owner, llm_provider="ollama", direct_reads_enabled=True) as client:
+        response = client.post("/ai/chat", headers=HEADERS, json={
+            "message": f"Tìm các suất phim X tại rạp Y tối mai {window}. "
+                       "Nếu suất đầu còn đủ hai ghế thì báo giá. Nếu không đủ thì kiểm tra suất tiếp theo.",
+        })
+    assert response.status_code == 200, response.text
+    data = response.json()
+    assert data["mode"] == "react_lookup" and data["status"] == "ok"
+    assert "90,000 VND" in data["answer"]
+    assert [source["id"] for source in data["sources"]] == ["showtime:11", "showtime:12", "price:1"]
+    assert observations == ["read showtimes", "checked seats", "read prices"]

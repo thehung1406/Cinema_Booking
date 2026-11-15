@@ -4,7 +4,7 @@ import { chromium } from 'playwright';
 const browser = await chromium.launch(process.env.BROWSER_EXECUTABLE ? { executablePath: process.env.BROWSER_EXECUTABLE } : {});
 const base = process.env.UI_BASE_URL || 'http://127.0.0.1:5174';
 
-async function run({ typed, food, retry, conflict }) {
+async function run({ typed, lookupTool, food, retry, conflict }) {
   const page = await browser.newPage({ viewport: { width: 375, height: 760 } });
   await page.addInitScript(() => localStorage.setItem('userInfo', JSON.stringify({ id: 7, access_token: 'mock-token', role: 'USER' })));
   const reservation = '915167e4-6130-4ad0-826c-7922986d41da';
@@ -12,7 +12,12 @@ async function run({ typed, food, retry, conflict }) {
   const conversation = '11111111-1111-4111-8111-111111111111';
   const show = { film_title: 'Phim test', theater_name: 'Rạp test', room_name: 'Phòng 1', show_date: '2030-12-01', start_time: '19:30:00' };
   const cards = [10, 11].map(id => ({ ...show, showtime_id: id, party_size: 2, available_seats: 10, min_ticket_price: '90000', minimum_total: '180000', url: `/seat-selection/${id}` }));
+  const recommendations = lookupTool ? [20, 21, 22].map(id => ({
+    ...cards[0], showtime_id: id, film_title: 'Phim cũ', url: `/seat-selection/${id}`,
+  })) : cards;
+  const sources = cards.map(card => ({ id: `showtime:${card.showtime_id}`, kind: 'live', title: `Suất ${card.showtime_id}`, url: card.url }));
   let held = [];
+  const openedShowtimes = [];
   const checkouts = [];
   const errors = [];
   page.on('pageerror', error => errors.push(error.message));
@@ -23,13 +28,20 @@ async function run({ typed, food, retry, conflict }) {
     let status = 200;
     if (path === '/ai/chat') {
       const message = request.postDataJSON().message;
-      const response = { conversation_id: conversation, answer: 'Có suất phù hợp.', context: {}, cards, showtime_options: true, as_of: new Date().toISOString() };
+      const response = { conversation_id: conversation, answer: 'Có suất phù hợp.', context: {}, cards: recommendations, showtime_options: true, as_of: new Date().toISOString() };
       if (message === 'Cho tôi xem vé vừa mua') {
         body = { ...response, answer: 'Vé đã được phát hành.', cards: [], booking: { booking_id: 77, film_title: 'Phim test', seat_count: 2, total_amount: '240000', ticket_url: '/payment-result?bookingId=77' } };
       } else if (message === 'Tìm suất không có kết quả') {
-        body = { ...response, answer: 'Chưa có suất phù hợp.', cards: [] };
+        body = { ...response, answer: 'Chưa có suất phù hợp.', cards: [], tool: lookupTool, showtime_options: !lookupTool };
+      } else if (message === 'Tìm suất của Phim test') {
+        body = { ...response, answer: 'Đã tìm được lịch chiếu của Phim test.', cards: [], tool: lookupTool, showtime_options: true, sources };
+        if (lookupTool === 'react_lookup') {
+          body.sources = [...sources, { id: 'price:1', kind: 'live', title: 'Ghế thường', url: '/seat-selection/10' }];
+        }
+        body.links = body.sources.map(({ title, url }) => ({ title, url }));
       } else body = response;
     }
+    if (path.startsWith('/showtimes/')) openedShowtimes.push(path);
     if (path === '/showtimes/11') body = show;
     if (path === '/seats/showtime/11') body = [4, 5].map(id => ({ seat_id: id, seat_name: `A${id + 1}`, price: 90000, status: held.includes(id) ? 'HOLD' : 'AVAILABLE', is_held_by_me: held.includes(id), hold_expired_at: held.includes(id) ? expiry : null, reservation_id: held.includes(id) ? reservation : null }));
     if (path === '/food-items') body = [{ id: 3, name: 'Combo test', category: 'COMBO', price: '60000.00' }];
@@ -69,9 +81,20 @@ async function run({ typed, food, retry, conflict }) {
       await chat.getByText('Chưa có suất phù hợp.').waitFor();
       await ask(chat, 'Suất thứ hai');
       await chat.getByText('Không có suất tương ứng trong danh sách gần nhất.').waitFor();
-      await ask(chat, 'Đặt hai vé phim test tối nay');
-      await chat.getByText('Có suất phù hợp.', { exact: true }).nth(1).waitFor();
-      await ask(chat, 'Suất thứ hai, ghế A5 A6');
+      if (lookupTool) {
+        await ask(chat, 'Tìm suất của Phim test');
+        await chat.getByText('Đã tìm được lịch chiếu của Phim test.').waitFor();
+        await ask(chat, 'Suất thứ ba');
+        await chat.getByText('Không có suất tương ứng trong danh sách gần nhất.').waitFor();
+        assert.deepEqual(openedShowtimes, []);
+      } else {
+        await ask(chat, 'Đặt hai vé phim test tối nay');
+        await chat.getByText('Có suất phù hợp.', { exact: true }).nth(1).waitFor();
+      }
+      await ask(chat, lookupTool ? 'Suất thứ hai' : 'Suất thứ hai, ghế A5 A6');
+      await chat.getByRole('region', { name: 'Đặt vé trong chat' }).getByRole('heading', { name: 'Phim test' }).waitFor();
+      assert.deepEqual(openedShowtimes, ['/showtimes/11']);
+      if (lookupTool) await ask(chat, 'Ghế A5 A6');
     }
     else {
       await chat.getByRole('button', { name: 'Đặt trong chat', exact: true }).nth(1).click();
@@ -114,9 +137,11 @@ async function run({ typed, food, retry, conflict }) {
 
 try {
   await run({ typed: true, food: true, retry: true });
+  await run({ typed: true, lookupTool: 'get_showtimes', food: false });
+  await run({ typed: true, lookupTool: 'react_lookup', food: false });
   await run({ typed: false, food: false, retry: false });
   await run({ typed: false, food: false, conflict: true });
-  console.log('Chat booking passed: typed and button selection, combo and skip, idempotent retry after reload, existing order recovery, issued ticket link.');
+  console.log('Chat booking passed: typed selection from recommendations and lookups, button selection, combo and skip, idempotent retry after reload, existing order recovery, issued ticket link.');
 } finally {
   await browser.close();
 }

@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, time
 from decimal import Decimal
 from sqlalchemy import select,and_
 from .models import Booking,BookingDetail,Payment,Ticket,SeatStatus,SalesConfiguration as Config
@@ -43,7 +43,18 @@ def tool(db,call,evening=False):
     name=call.get('name'); context=call.get('context') or {}
     if name=='get_showtimes':
         if not all(context.get(k) for k in ('film_id','theater_id','show_date')): raise HTTPException(422,'Thiếu tham số công cụ')
-        shows=db.scalars(future_query(context['film_id'],context['theater_id'],date.fromisoformat(context['show_date']),evening).limit(20)).all()
+        cutoff = context.get("start_after")
+        start_after = None
+        if cutoff is not None:
+            try:
+                start_after = time.fromisoformat(cutoff)
+            except (TypeError, ValueError) as exc:
+                raise HTTPException(422, "Giờ xem không hợp lệ") from exc
+            if start_after.tzinfo is not None:
+                raise HTTPException(422, "Giờ xem phải dùng giờ địa phương")
+        query = future_query(context["film_id"], context["theater_id"],
+                             date.fromisoformat(context["show_date"]), evening, start_after=start_after)
+        shows = db.scalars(query.limit(20)).all()
         return [dict(id=f'showtime:{s.id}',title=f'Suất {s.start_time:%H:%M}',text=f'{s.show_date:%d/%m/%Y}, {s.start_time:%H:%M}, định dạng {s.format}, mã suất {s.id}.',url=f'/seat-selection/{s.id}',kind='live') for s in shows]
     if name not in {'get_ticket_prices','get_seat_availability'} or not context.get('showtime_id'): raise HTTPException(422,'Công cụ không được phép hoặc thiếu tham số')
     show=db.scalars(future_query().where(Config.showtime_id==context['showtime_id'])).first()
