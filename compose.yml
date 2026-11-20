@@ -889,7 +889,6 @@ services:
         condition: service_healthy
         required: true
     environment:
-      REVIEW_AUTO_APPROVE: ${REVIEW_AUTO_APPROVE:-false}
       REVIEW_DATABASE_URL: postgresql+psycopg2://review_owner:${REVIEW_DB_PASSWORD}@review-db:5432/cinema_review
       REVIEW_IDENTITY_ORIGIN: http://identity-service:8084
       REVIEW_SENTIMENT_BACKEND: ${REVIEW_SENTIMENT_BACKEND:-disabled}
@@ -936,7 +935,6 @@ services:
         condition: service_completed_successfully
         required: true
     environment:
-      REVIEW_AUTO_APPROVE: ${REVIEW_AUTO_APPROVE:-false}
       REVIEW_DATABASE_URL: postgresql+psycopg2://review_owner:${REVIEW_DB_PASSWORD}@review-db:5432/cinema_review
       REVIEW_IDENTITY_ORIGIN: http://identity-service:8084
       REVIEW_SENTIMENT_BACKEND: ${REVIEW_SENTIMENT_BACKEND:-disabled}

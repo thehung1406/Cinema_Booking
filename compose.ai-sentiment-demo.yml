@@ -1,11 +1,10 @@
-# Compare the two trusted pilot artifacts through the review moderation UI.
+# Compare the two trusted pilot artifacts through the authenticated sentiment demo API.
 services:
   review-service:
     image: cinema-review:sentiment-demo
     build:
       target: sentiment-demo
     environment:
-      REVIEW_AUTO_APPROVE: 'true'
       REVIEW_SENTIMENT_DEMO_LR_PATH: /models/demo/lr
       REVIEW_SENTIMENT_DEMO_VISOBERT_PATH: /models/demo/visobert
       HF_HUB_OFFLINE: '1'
@@ -24,7 +23,6 @@ services:
       REVIEW_SENTIMENT_MODEL_PATH: /models
       REVIEW_SENTIMENT_FALLBACK_BACKEND: transformers
       REVIEW_SENTIMENT_FALLBACK_MODEL_PATH: /opt/demo-visobert
-      REVIEW_SENTIMENT_LITERAL_NEGATIVE_ENABLED: 'true'
       HF_HUB_OFFLINE: '1'
       TRANSFORMERS_OFFLINE: '1'
     volumes:

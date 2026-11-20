@@ -44,6 +44,11 @@
 .admin-app .admin-danger{color:#b11e31}
 .admin-badge{display:inline-block;border-radius:6px;background:#eef1f7;color:#536078;padding:5px 8px;font-size:13px;white-space:nowrap}
 .admin-badge.success{background:#e9f6ef;color:#197343}
+.admin-badge.negative{background:#fff0f1;color:#a61c29}
+.admin-review-content{min-width:220px;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.6;margin:0}
+.admin-review-content summary{cursor:pointer}
+.admin-review-content summary span{color:#a61c29;text-decoration:underline}
+.admin-review-content p{margin-top:12px}
 .admin-badge.pending{background:#fff4dc;color:#92620c}
 .admin-empty{padding:38px 16px;text-align:center;color:#7a8394;font-size:14px}
 .admin-error{color:#b0192b;background:#fff0f1;border-radius:7px;padding:12px;font-size:13px;line-height:1.6}

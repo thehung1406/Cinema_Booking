@@ -6,7 +6,7 @@ const require = createRequire(import.meta.url);
 const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
 const browser = await chromium.launch({ headless: true, ...(process.env.BROWSER_EXECUTABLE ? { executablePath: process.env.BROWSER_EXECUTABLE } : {}) });
 const page = await browser.newPage({ viewport: { width: 375, height: 900 } });
-const errors = [], decisions = [], publications = [];
+const errors = [], publications = [];
 page.on('pageerror', error => errors.push(error.message));
 const user = { id: 1, role: 'ADMIN', full_name: 'AI UI test', access_token: 'isolated-test-token', permissions: ['reviews.moderate', 'knowledge.manage'] };
 await page.addInitScript(value => localStorage.setItem('userInfo', JSON.stringify(value)), user);
@@ -39,8 +39,6 @@ await page.route('**/*', async route => {
       { id: older ? 1 : 2, role: 'assistant', content: older ? 'Tin nhắn đầu tiên.' : 'Tin nhắn đã lưu.', metadata: {} },
     ] };
   }
-  else if (path === '/reviews/sentiment/pending') body = { total: decisions.length >= 2 ? 0 : 1, items: decisions.length >= 2 ? [] : [{ review_id: 21, film_id: 1, content: 'Review kiểm thử giao diện.', content_version: 2, analysis_generation: 3, updated_at: stamp, predicted_label: 'negative', label: null, scores: { positive: .2, neutral: .3, negative: .5 }, model_version: 'ui-fixture-model' }] };
-  else if (path === '/reviews/21/sentiment-decision') { decisions.push(req.postDataJSON()); status = decisions.length === 1 ? 503 : 200; body = status === 503 ? { detail: 'Lỗi tạm thời kiểm thử' } : { saved: true }; }
   else if (path === '/admin/session') body = { user, permissions: user.permissions };
   else if (path === '/admin/documents') body = { items: [doc], total: 1 };
   else if (path === '/admin/documents/8') body = doc;
@@ -133,18 +131,6 @@ try {
   await page.getByText('Tin nhắn đã lưu.', { exact: true }).waitFor({ state: 'detached' });
   assert.equal(await savedButton.count(), 0);
   assert.equal(await page.locator(':focus').getAttribute('id'), 'ai-conversation-history');
-  await page.goto(base+'/review-moderation');
-  await page.getByRole('tab', { name: 'Nhãn cảm xúc' }).click();
-  await page.getByRole('combobox', { name: /Nhãn xác nhận/ }).selectOption('positive');
-  await page.getByLabel('Lý do xác nhận hoặc sửa nhãn').fill('Lý do kiểm thử, không phải đánh giá thật.');
-  await page.getByRole('button', { name: 'Lưu nhãn xác nhận', exact: true }).click();
-  await page.getByText('Lỗi tạm thời kiểm thử', { exact: true }).waitFor();
-  await page.getByRole('button', { name: 'Lưu nhãn xác nhận', exact: true }).click();
-  await page.getByText('Không có đánh giá ở trạng thái này.', { exact: true }).waitFor();
-  assert.equal(decisions.length, 2);
-  assert.deepEqual(decisions[0], decisions[1], 'Network retry must reuse the same idempotent payload');
-  assert.equal(decisions[0].content_version, 2);
-  assert.equal(decisions[0].analysis_generation, 3);
   await page.setViewportSize({ width: 1440, height: 1000 });
   await page.goto(base+'/admin/documents');
   await page.getByText('Công cụ nâng cao · Kiểm tra truy xuất Knowledge Base', { exact: true }).click();
@@ -160,7 +146,7 @@ try {
   await page.getByText('Đang phục vụ phiên bản 2.', { exact: true }).waitFor();
   assert.deepEqual(publications, [{ expected_updated_at: stamp }]);
   assert.deepEqual(errors, []);
-  console.log(JSON.stringify({ passed: ['showtime cards on mobile', 'grouped PDF citation', 'saved chat pagination and deletion', 'sentiment CAS and idempotent retry',
+  console.log(JSON.stringify({ passed: ['showtime cards on mobile', 'grouped PDF citation', 'saved chat pagination and deletion',
     'KB retrieval trace', 'KB revision publication'], browserErrors: errors, data: 'isolated fixtures only' }));
 } catch (error) {
   if (process.env.UI_SCREENSHOT_DIR) await page.screenshot({ path: process.env.UI_SCREENSHOT_DIR+'/ai-flow-failure.png', fullPage: true });

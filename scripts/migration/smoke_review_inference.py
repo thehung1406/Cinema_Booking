@@ -40,10 +40,10 @@ def main():
             joblib.dump(model, Path(directory) / "model.joblib")
             (Path(directory) / "metadata.json").write_text(json.dumps({"model_version": "isolated-smoke-model"}))
             settings = Settings(database_url=url.render_as_string(hide_password=False), writes_enabled=True,
-                auto_approve=True, sentiment_backend="sklearn", sentiment_model_path=directory)
+                 sentiment_backend="sklearn", sentiment_model_path=directory)
             with Session(engine) as db:
                 rid = create_review(db, 1, 777, "phim hay tuyet voi", settings).id
-            assert process_one(engine, settings) in {"succeeded", "needs_review"}
+            assert process_one(engine, settings) == "succeeded"
             assert process_one(engine, settings) is False
             with Session(engine) as db:
                 assert db.get(ReviewSentiment, rid).model_version == "isolated-smoke-model"

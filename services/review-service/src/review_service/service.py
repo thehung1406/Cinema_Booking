@@ -1,7 +1,5 @@
 """Aggregates are read from current rows, so retries and edits cannot double count."""
 from datetime import timedelta, timezone
-import hashlib
-import json
 from math import sqrt
 
 from fastapi import HTTPException
@@ -10,7 +8,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlmodel import select
 
 from .config import Settings
-from .models import Review, ReviewSentiment, SentimentDecision, utcnow
+from .models import Review, ReviewSentiment, utcnow
 from .events import changed
 
 
@@ -55,7 +53,7 @@ def create_review(db, film_id, user_id, content, settings):
         review.updated_at = utcnow()
     else:
         review = Review(user_id=user_id, film_id=film_id, content=content, content_version=1, event_version=0, updated_at=utcnow(), is_deleted=False)
-    review.moderation_status = "approved" if settings.auto_approve else "pending"
+    review.moderation_status = "approved"
     db.add(review)
     try:
         db.flush()
@@ -77,7 +75,7 @@ def edit_review(db, review_id, user_id, body, settings):
     review.content = body.content
     review.content_version += 1
     review.updated_at = utcnow()
-    review.moderation_status = "approved" if settings.auto_approve else "pending"
+    review.moderation_status = "approved"
     invalidate(db, review)
     db.add(review)
     db.commit()
@@ -85,9 +83,9 @@ def edit_review(db, review_id, user_id, body, settings):
     return review
 
 
-def delete_review(db, review_id, user_id):
+def delete_review(db, review_id, user_id, *, can_moderate=False):
     review = locked_review(db, review_id)
-    if review.user_id != user_id:
+    if review.user_id != user_id and not can_moderate:
         raise HTTPException(403, "Bạn chỉ được xóa đánh giá của mình")
     review.is_deleted = True
     review.content = ""  # Do not retain deleted user text.
@@ -96,18 +94,6 @@ def delete_review(db, review_id, user_id):
     invalidate(db, review)
     db.add(review)
     db.commit()
-
-
-def moderate_review(db, review_id, body):
-    review = locked_review(db, review_id)
-    if review.content_version != body.content_version:
-        raise HTTPException(409, "Nội dung đã thay đổi; cần duyệt lại phiên bản mới")
-    review.moderation_status = body.status
-    invalidate(db, review)
-    db.add(review)
-    db.commit()
-    db.refresh(review)
-    return review
 
 
 def sentiment_item(review, result):
@@ -119,50 +105,6 @@ def sentiment_item(review, result):
                 analysis_status=result.status, label=result.label, predicted_label=result.predicted_label,
                 scores=result.scores, model_version=result.model_version, decision_source=result.decision_source,
                 updated_at=stamp.isoformat())
-
-
-def decide_sentiment(db, review_id, actor_user_id, body):
-    """Lock review -> result, CAS, invalidate inference, audit+event in one commit."""
-    digest = hashlib.sha256(json.dumps({"review_id": review_id, **body.model_dump(mode="json")},
-        sort_keys=True, separators=(",", ":")).encode()).hexdigest()
-    # Serialize repeated request IDs, including attempts against different reviews.
-    if db.bind.dialect.name == "postgresql":
-        from sqlalchemy import text
-        db.execute(text("SELECT pg_advisory_xact_lock(hashtextextended(:key,17))"),
-                   {"key": f"{actor_user_id}:{body.request_id}"})
-    replay = db.exec(select(SentimentDecision).where(SentimentDecision.actor_user_id == actor_user_id,
-        SentimentDecision.request_id == str(body.request_id))).first()
-    if replay:
-        if replay.request_digest != digest:
-            raise HTTPException(409, "Mã yêu cầu đã được dùng cho quyết định khác")
-        return replay.response
-    review = locked_review(db, review_id)
-    result = db.get(ReviewSentiment, review_id, with_for_update=True)
-    def utc(value):
-        return value.replace(tzinfo=timezone.utc) if value.tzinfo is None else value.astimezone(timezone.utc)
-    if (review.moderation_status != "approved" or not result or
-            review.content_version != body.content_version or result.content_version != body.content_version or
-            result.analysis_generation != body.analysis_generation or
-            utc(result.updated_at) != utc(body.expected_updated_at) or
-            result.status not in {"needs_review", "succeeded"}):
-        raise HTTPException(409, "Kết quả đã thay đổi hoặc chưa thể xác nhận; tải lại danh sách")
-    previous = result.label
-    result.predicted_label = result.predicted_label or (result.label if result.decision_source != "staff" else None)
-    result.label, result.status, result.decision_source = body.label, "succeeded", "staff"
-    result.confirmed_by_user_id, result.confirmed_at = actor_user_id, utcnow()
-    result.confirmation_note = body.reason
-    result.analysis_generation += 1
-    result.lease_token = result.lease_until = None
-    result.updated_at = result.confirmed_at
-    # Review.updated_at remains unchanged: confirming a label does not refresh the review window.
-    changed(db, review, result, "ReviewSentimentUpdated.v1")
-    response = {k: v for k, v in sentiment_item(review, result).items() if k != "content"}
-    db.add(SentimentDecision(review_id=review_id, actor_user_id=actor_user_id, request_id=str(body.request_id),
-        content_version=body.content_version, analysis_generation=body.analysis_generation,
-        previous_label=previous, label=body.label, reason=body.reason,
-        request_digest=digest, response=response))
-    db.commit()
-    return response
 
 
 def wilson_lower(positive, total, z=1.96):

@@ -84,20 +84,25 @@ $env:REVIEW_DEMO_VISOBERT_ARTIFACT = (Resolve-Path 'pipelines/models/sentiment-d
 $runtimeCompose = @('--env-file', '.env.microservices', '-p', 'backend', '-f', 'compose.yml')
 $sentimentCompose = $runtimeCompose + @('-f', 'compose.ai-sentiment-demo.yml')
 docker compose @sentimentCompose up -d --no-deps --build --wait gateway review-service review-worker
-docker compose @sentimentCompose up -d --no-deps --build --wait web
 ```
 
-Mở **Duyệt đánh giá → Nhãn cảm xúc**, nhập một nhận xét phim và chọn **So sánh hai mô hình**.
+Gọi API demo bằng access token của tài khoản có quyền `reviews.moderate`:
+
+```powershell
+$demoToken = Read-Host 'Access token của tài khoản có quyền quản lý nhận xét'
+$demoBody = @{ content = 'Diễn xuất tốt nhưng kịch bản kéo dài.' } | ConvertTo-Json
+Invoke-RestMethod -Method Post -Uri 'http://127.0.0.1:8080/api/reviews/sentiment/demo' -Headers @{ Authorization = "Bearer $demoToken" } -ContentType 'application/json; charset=utf-8' -Body ([System.Text.Encoding]::UTF8.GetBytes($demoBody))
+```
 
 Review Service nạp hai artifact khi khởi động. Nếu demo báo lỗi nạp mô hình, kiểm tra log của Review Service và khởi động lại service sau khi sửa artifact. Nếu nội dung vượt giới hạn token của ViSoBERT, hãy rút ngắn nhận xét rồi chạy lại để cả hai mô hình đọc được toàn bộ nội dung.
 
-Trong cấu hình demo, đánh giá mới và chỉnh sửa của khách được công khai ngay. Review worker thử Logistic Regression. Nếu điểm cao nhất dưới ngưỡng cấu hình (mặc định 65%), worker chuyển sang ViSoBERT. Nếu đánh giá vượt giới hạn token của ViSoBERT, worker giữ kết quả Logistic Regression và đưa vào **Cần rà soát**. Khi ViSoBERT cũng dưới ngưỡng, cấu hình demo tự gán nhãn **Tiêu cực** cho mẫu lời chê ngắn, trực tiếp như “Phim dở quá”. Hệ thống giữ nguyên nhãn dự đoán và điểm mô hình để đối chiếu. Các trường hợp còn lại vào **Cần rà soát** nhãn cảm xúc. Kết quả đã lưu được phân tích lại khi có yêu cầu.
+Nhận xét mới và chỉnh sửa của khách luôn công khai ngay. Review worker thử Logistic Regression. Nếu điểm cao nhất dưới ngưỡng cấu hình (mặc định 65%), worker thử ViSoBERT. Nếu mô hình dự phòng bị lỗi hoặc không nhận đủ nội dung, worker giữ kết quả hợp lệ của Logistic Regression. Điểm hợp lệ luôn tạo nhãn có điểm cao nhất, không yêu cầu nhân viên xác nhận và không dùng quy tắc ghi đè nhãn. API demo chỉ so sánh hai mô hình trong lượt gọi, không tạo hoặc sửa nhận xét.
 
 Hai artifact dùng nhãn silver và được kiểm tra trên pilot phim. Kết quả trên một nhận xét chỉ minh họa cách hai mô hình suy luận.
 
 ### Khôi phục cấu hình Review
 
-Sau khi demo, dùng `$runtimeCompose` để tạo lại cả `review-service` và `review-worker` theo cấu hình thường dùng của cùng project. Bước này gỡ cấu hình tự duyệt và các mô hình cảm xúc dành cho demo trước khi tiếp tục duyệt đánh giá.
+Sau khi demo, dùng `$runtimeCompose` để tạo lại cả `review-service` và `review-worker` theo cấu hình mô hình thường dùng của cùng project. Nhận xét tiếp tục công khai ngay và được quản lý tại `/admin/reviews`.
 
 ```powershell
 docker compose @runtimeCompose up -d --no-deps --build --wait review-service review-worker

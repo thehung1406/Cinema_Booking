@@ -9,6 +9,7 @@ from gateway.app.routing import owner
 
 
 @pytest.mark.parametrize("path,domain", [
+    ("/reviews", "review"), ("/reviews/1", "review"),
     ("/films/positive-trending", "review"), ("/films/1/reviews/mine", "review"),
     ("/films/1/sentiment-summary", "review"), ("/films/1", "catalog"),
     ("/admin/cinema-operations/abc", "cinema"), ("/admin/theaters", "cinema"),

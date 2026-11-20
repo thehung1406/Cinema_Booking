@@ -24,7 +24,6 @@ def test_review_events_reach_public_broker_with_separate_credential(review_store
         channel.queue_bind(queue, "cinema.events.v1", routing_key=event_type)
     publisher = Publisher(review_settings.amqp_public_url, "")
     try:
-        review_settings.auto_approve = True
         with Session(review_store) as db:
             service.create_review(db, 1, 777, "Đánh giá chỉ trong DB test", review_settings)
         assert process_one(review_store, review_settings, PREDICTOR) == "succeeded"
