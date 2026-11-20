@@ -185,7 +185,7 @@ def create_router(app, engine, settings, logger):
     def profiles(body: ProfileRequest, db=Depends(database)):
         # Explicit allowlist: never expose password hashes, tokens or session data.
         return [
-            profile(user)
+            {**profile(user), "avatar": user.avatar}
             for user in db.scalars(select(User).where(User.id.in_(set(body.user_ids))))
         ]
 

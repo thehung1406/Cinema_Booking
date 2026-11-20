@@ -24,7 +24,7 @@ def client_for(store, settings, read=None, auth=None):
         if request.url.path.endswith("/candidates"):
             films = [] if request.url.params.get("theater_id") == "999" else [{"id": 1, "title": "Phim test", "image": None}]
             return httpx.Response(200, json=films)
-        return httpx.Response(200, json=[r | {"author": f"User {r['user_id']}", "verified_purchase": True}
+        return httpx.Response(200, json=[r | {"author": f"User {r['user_id']}", "author_avatar": "https://example.org/avatar.png", "verified_purchase": True}
             for r in json.loads(request.content)["items"]])
     app = create_app(settings, engine=store, auth_transport=httpx.MockTransport(auth or (lambda request: httpx.Response(200, json=state))),
         read_transport=httpx.MockTransport(read or reads))
@@ -38,6 +38,7 @@ def test_permissions_ownership_edit_delete_recreate(review_store, review_setting
         assert client.post("/films/999/reviews", headers=HEADERS, json={"content": "Phim rất hay"}).status_code == 404
         saved = client.post("/films/1/reviews", headers=HEADERS, json={"content": "Phim rất hay"})
         assert saved.status_code == 201 and saved.json()["verified_purchase"]
+        assert saved.json()['author_avatar'] == 'https://example.org/avatar.png'
         rid = saved.json()["id"]
         assert saved.json()["moderation_status"] == "approved"
         assert len(client.get("/films/1/reviews").json()) == 1

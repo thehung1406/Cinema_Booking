@@ -132,7 +132,7 @@ def test_private_credentials_profile_allowlist_and_freeze(identity_client, ident
     response = identity_client.post(path, headers=headers, json={"token": pair["access_token"]})
     assert set(response.json()) == {"user_id", "role", "permissions", "is_active"}
     profiles = identity_client.post("/internal/v1/users/profiles", headers=headers, json={"user_ids": [user["id"]]}).json()
-    assert set(profiles[0]) == {"id", "username", "email", "full_name", "phone", "role"}
+    assert set(profiles[0]) == {"id", "username", "email", "full_name", "phone", "role", "avatar"}
     identity_settings.writes_enabled = False
     assert identity_client.post("/auth/logout", headers=bearer(pair)).status_code == 503
     assert identity_client.post("/auth/refresh", json={"refresh_token": pair["refresh_token"]}).status_code == 503

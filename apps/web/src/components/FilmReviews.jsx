@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
-import { Link } from "react-router-dom";
 import api from "../config/api";
 import { getAccessToken } from "../services/authStorage";
 import { Button, PageState } from "./ui/Primitives";
 import { formatDate } from "../utils/formatters";
+import { Pencil, Trash2, BadgeCheck, MessageSquare } from "lucide-react";
+import "./FilmReviews.css";
 
 const labels = {
   positive: "Tích cực",
@@ -21,6 +22,32 @@ const moderation = {
   approved: "Đã công khai",
   rejected: "Không công khai",
 };
+
+function ReviewAvatar({ name, avatar }) {
+  const [failed, setFailed] = useState(null);
+  const parts = (name?.trim() || "Khán giả").split(/\s+/);
+  const initials = [parts[0], ...(parts.length > 1 ? [parts.at(-1)] : [])].map(part => Array.from(part)[0]).join("").toLocaleUpperCase("vi");
+  const valid = /^(https?:\/\/|\/(?!\/))/.test(avatar || "");
+  return <span className="review-avatar" aria-hidden="true"><span>{initials}</span>
+    {valid && failed !== avatar && <img src={avatar} alt="" loading="lazy" referrerPolicy="no-referrer" onError={() => setFailed(avatar)} />}
+  </span>;
+}
+
+function ReviewEntry({ review, own = false, busy, onEdit, onRemove }) {
+  return <article className={`review-entry${own ? " review-entry-own" : ""}`}>
+    <ReviewAvatar name={review.author} avatar={review.author_avatar} />
+    <div className="review-body">
+      <div className="review-byline"><strong>{review.author || "Khán giả"}</strong>{own && <span className="review-you">Bạn</span>}
+        <time dateTime={review.updated_at}>{formatDate(review.updated_at)}</time></div>
+      <div className="review-meta">{review.verified_purchase && <span className="review-purchased"><BadgeCheck size={14} aria-hidden="true" />Đã mua vé</span>}
+        <span className={`review-sentiment review-sentiment-${review.sentiment || "pending"}`}>{labels[review.sentiment] || statuses[review.analysis_status]}</span>
+        {own && review.moderation_status !== "approved" && <span>{moderation[review.moderation_status]}</span>}</div>
+      <p className="review-text">{review.content}</p>
+      {own && <div className="review-actions"><button type="button" disabled={busy} onClick={onEdit}><Pencil size={15} aria-hidden="true" />Chỉnh sửa</button>
+        <button type="button" className="review-delete" disabled={busy} onClick={onRemove}><Trash2 size={15} aria-hidden="true" />Xóa đánh giá</button></div>}
+    </div>
+  </article>;
+}
 
 export default function FilmReviews({ filmId }) {
   const [summary, setSummary] = useState(null);
@@ -118,167 +145,33 @@ export default function FilmReviews({ filmId }) {
       setBusy(false);
     }
   }
-  return (
-    <section className="surface mt-8" aria-labelledby="review-title">
-      <h2 id="review-title" className="text-2xl font-bold mb-3">
-        Cảm nhận của khán giả
-      </h2>
-      {loading && <PageState loading title="Đang tải đánh giá…" />}
-      {loadError && (
-        <PageState
-          title="Chưa tải được đánh giá"
-          message={loadError}
-          onRetry={() => setAttempt((v) => v + 1)}
-        />
-      )}
-      {summary && (
-        <>
-          <p className="text-sm text-gray-600 mb-4">
-            {summary.total} đánh giá hợp lệ trong {summary.window_days} ngày gần
-            nhất ·{" "}
-            {summary.eligible
-              ? "Đủ dữ liệu xếp hạng"
-              : `Chưa đủ đánh giá (cần ${summary.min_reviews})`}
-          </p>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            {Object.entries(labels).map(([key, label]) => (
-              <div className="rounded-lg bg-gray-50 p-3" key={key}>
-                <p>{label}</p>
-                <strong className="text-xl">
-                  {summary.total
-                    ? Math.round((summary[key] / summary.total) * 100)
-                    : 0}
-                  %
-                </strong>
-                <span className="block text-sm text-gray-500">
-                  {summary[key]} đánh giá
-                </span>
-              </div>
-            ))}
-          </div>
-          <p className="text-sm text-gray-500 mt-2">
-            Chờ phân tích: {summary.pending + (summary.needs_review || 0)}.
-            Các đánh giá này chưa được tính vào tỷ lệ.
-          </p>
-        </>
-      )}
-      {error && (
-        <p role="alert" className="my-3 text-red-700">
-          {error}
-        </p>
-      )}
-      {notice && (
-        <p role="status" className="my-3 text-green-700">
-          {notice}
-        </p>
-      )}
-      {loggedIn ? (
-        <form onSubmit={save} className="my-6 space-y-3">
-          {mine && (
-            <div className="bg-blue-50 rounded p-3">
-              <p className="font-medium">
-                Đánh giá của bạn · {moderation[mine.moderation_status]} ·{" "}
-                {statuses[mine.analysis_status]}
-              </p>
-              <p className="whitespace-pre-wrap break-words my-2">
-                {mine.content}
-              </p>
-              <button
-                type="button"
-                className="text-blue-700 mr-4 underline"
-                disabled={busy}
-                onClick={() => {
-                  setContent(mine.content);
-                  setEditVersion(mine.content_version);
-                }}
-              >
-                Chỉnh sửa
-              </button>
-              <button
-                type="button"
-                className="text-red-700 underline"
-                disabled={busy}
-                onClick={remove}
-              >
-                Xóa đánh giá
-              </button>
-            </div>
-          )}
-          <label className="block font-medium" htmlFor="review-content">
-            {mine ? "Cập nhật cảm nhận" : "Viết cảm nhận về phim"}
-          </label>
-          <textarea
-            id="review-content"
-            value={content}
-            onChange={(e) => {
-              if (mine && editVersion === null)
-                setEditVersion(mine.content_version);
-              setContent(e.target.value);
-            }}
-            minLength={5}
-            maxLength={3000}
-            required
-            rows={3}
-            className="w-full border rounded p-3"
-            placeholder="Bạn thấy nội dung, diễn xuất của phim như thế nào?"
-          />
-          <Button
-            type="submit"
-            busy={busy}
-            disabled={content.trim().length < 5}
-          >
-            {busy ? "Đang lưu…" : mine ? "Lưu chỉnh sửa" : "Gửi đánh giá"}
-          </Button>
-          <p className="text-sm text-gray-500">
-            Mỗi tài khoản có một đánh giá cho mỗi phim.
-          </p>
-        </form>
-      ) : (
-        <p className="my-6">
-          <Link className="text-red-700 underline" to="/login">
-            Đăng nhập
-          </Link>{" "}
-          để viết đánh giá.
-        </p>
-      )}
-      <div className="divide-y">
-        {reviews.map((review) => (
-          <article className="py-4" key={review.id}>
-            <p className="font-semibold">
-              {review.author}{" "}
-              {review.verified_purchase && (
-                <span className="text-green-700 text-sm">· Đã mua vé</span>
-              )}
-            </p>
-            <p className="whitespace-pre-wrap break-words my-2">
-              {review.content}
-            </p>
-            <p className="text-sm text-gray-500">
-              {labels[review.sentiment] || statuses[review.analysis_status]} ·{" "}
-              {formatDate(review.updated_at)}
-            </p>
-          </article>
-        ))}
-        {!loading && !loadError && !reviews.length && (
-          <p className="py-4 text-gray-500">Chưa có đánh giá công khai.</p>
-        )}
-      </div>
-      <div className="flex gap-4 mt-3">
-        <button
-          disabled={!page}
-          onClick={() => setPage((p) => p - 1)}
-          className="disabled:opacity-40"
-        >
-          Trang trước
-        </button>
-        <button
-          disabled={reviews.length < 20}
-          onClick={() => setPage((p) => p + 1)}
-          className="disabled:opacity-40"
-        >
-          Trang sau
-        </button>
-      </div>
-    </section>
-  );
+  const publicReviews = reviews.filter(review => review.id !== mine?.id);
+  return <section className="surface film-reviews" aria-labelledby="review-title">
+    <header className="reviews-heading"><div><p className="reviews-eyebrow">Góc khán giả</p><h2 id="review-title">Cảm nhận về bộ phim</h2></div><MessageSquare size={24} aria-hidden="true" /></header>
+    {loading && <PageState loading title="Đang tải đánh giá…" />}
+    {loadError && <PageState title="Chưa tải được đánh giá" message={loadError} onRetry={() => setAttempt(v => v + 1)} />}
+    {summary && <div className="reviews-overview" aria-label="Tổng hợp cảm xúc">
+      <span>{summary.total} nhận xét đã phân tích</span>
+      {Object.entries(labels).map(([key, label]) => <span key={key} className={`review-sentiment review-sentiment-${key}`}>{label} <strong>{summary[key]}</strong></span>)}
+      {(summary.pending + (summary.needs_review || 0)) > 0 && <span>{summary.pending + (summary.needs_review || 0)} đang phân tích</span>}
+    </div>}
+    {error && <p role="alert" className="reviews-error">{error}</p>}
+    {notice && <p role="status" className="reviews-notice">{notice}</p>}
+    {mine && <ReviewEntry review={mine} own busy={busy} onEdit={() => { setContent(mine.content); setEditVersion(mine.content_version); setNotice(""); }} onRemove={remove} />}
+    {loggedIn ? (!mine || editVersion !== null) && <form onSubmit={save} className="review-composer">
+      <label htmlFor="review-content">{mine ? "Cập nhật cảm nhận" : "Viết cảm nhận về phim"}</label>
+      <textarea id="review-content" value={content} onChange={e => setContent(e.target.value)} minLength={5} maxLength={3000}
+        required rows={4} autoFocus={Boolean(mine)} placeholder="Chia sẻ điều bạn thích hoặc chưa thích về bộ phim…" />
+      <div className="review-composer-footer"><small>Mỗi tài khoản có một nhận xét cho mỗi phim.</small><div>
+        {mine && <Button variant="secondary" onClick={() => { setEditVersion(null); setContent(""); }}>Hủy chỉnh sửa</Button>}
+        <Button type="submit" busy={busy} disabled={busy || content.trim().length < 5}>{mine ? "Lưu chỉnh sửa" : "Gửi đánh giá"}</Button>
+      </div></div>
+    </form> : <div className="reviews-login"><Button to="/login" variant="secondary">Đăng nhập để nhận xét</Button></div>}
+    <div className="review-list">{publicReviews.map(review => <ReviewEntry key={review.id} review={review} />)}</div>
+    {!loading && !loadError && !mine && !reviews.length && <p className="reviews-empty">Chưa có nhận xét. Hãy chia sẻ cảm nhận đầu tiên về bộ phim.</p>}
+    {(page > 0 || reviews.length >= 20) && <nav className="reviews-pagination" aria-label="Phân trang nhận xét">
+      <Button variant="secondary" disabled={!page} onClick={() => setPage(v => v - 1)}>Trang trước</Button><span>Trang {page + 1}</span>
+      <Button variant="secondary" disabled={reviews.length < 20} onClick={() => setPage(v => v + 1)}>Trang sau</Button>
+    </nav>}
+  </section>;
 }

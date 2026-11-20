@@ -934,6 +934,17 @@
             "type": "string",
             "title": "Author"
           },
+          "author_avatar": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Author Avatar"
+          },
           "is_owner": {
             "type": "boolean",
             "title": "Is Owner",
@@ -1057,6 +1068,17 @@
           "author": {
             "type": "string",
             "title": "Author"
+          },
+          "author_avatar": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Author Avatar"
           },
           "is_owner": {
             "type": "boolean",

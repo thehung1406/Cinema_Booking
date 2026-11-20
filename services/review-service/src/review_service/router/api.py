@@ -181,7 +181,7 @@ def create_router(app, engine, settings, logger):
             fact = authors[(item.pop("user_id"), item["film_id"])]
             if not admin:
                 item.pop("film_id")
-            item.update(author=fact.author, verified_purchase=fact.verified_purchase)
+            item.update(author=fact.author, author_avatar=fact.author_avatar, verified_purchase=fact.verified_purchase)
         return payload
 
     def ranked(db, theater_id, show_date, window_days, limit, evening=False):

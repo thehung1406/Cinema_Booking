@@ -28,6 +28,7 @@ class ReviewRead(BaseModel):
     analysis_status: str
     sentiment: str | None = None
     author: str
+    author_avatar: str | None = None
     is_owner: bool = False
     verified_purchase: bool = False
 

@@ -16,12 +16,13 @@ const rows = Array.from({ length: 25 }, (_, index) => ({ id: index + 1, film_id:
   updated_at: '2026-11-20T05:00:00Z', moderation_status: index === 1 ? 'rejected' : 'approved',
   analysis_status: index === 2 ? 'failed' : index === 3 ? 'pending' : 'succeeded',
   sentiment: index === 2 || index === 3 ? null : 'positive', scores: { positive: .7, neutral: .2, negative: .1 }, model_version: 'fixture-model' }));
+await page.route('**/review-avatar.svg', route => route.fulfill({ contentType: 'image/svg+xml', body: '<svg xmlns="http://www.w3.org/2000/svg" width="44" height="44"><rect width="44" height="44" fill="#555"/></svg>' }));
 await page.route('**/api/**', async route => {
   const request = route.request(), url = new URL(request.url()), path = url.pathname.replace(/^\/api/, '').replace(/\/$/, '');
   const respond = (body, status = 200) => route.fulfill({ status, json: body });
   if (path === '/admin/session') return respond({ user, permissions: reviewOnly ? user.permissions : ['films.manage'] });
   if (path === '/reviews') {
-    if (failList) { failList = false; return respond({ detail: 'Lỗi tải nhận xét kiểm thử' }, 503); }
+    if (failList) return respond({ detail: 'Lỗi tải nhận xét kiểm thử' }, 503);
     const params = url.searchParams;
     const filtered = rows.filter(row => (!params.get('q') || row.content.includes(params.get('q')))
       && ['film_id', 'sentiment', 'analysis_status', 'moderation_status'].every(key => !params.get(key) || String(row[key]) === params.get(key)));
@@ -40,7 +41,7 @@ await page.route('**/api/**', async route => {
   if (path === '/films/1/reviews/mine') return respond(mine);
   if (path === '/films/1/reviews') {
     if (request.method() === 'POST') {
-      mine = { ...rows[0], id: 100, content: request.postDataJSON().content, analysis_status: 'pending', sentiment: null,
+      mine = { ...rows[0], id: 100, author_avatar: '/review-avatar.svg', content: request.postDataJSON().content, analysis_status: 'pending', sentiment: null,
         moderation_status: 'approved', verified_purchase: true };
       return respond(mine, 201);
     }
@@ -88,6 +89,7 @@ try {
   failList = true;
   await page.reload();
   await page.getByText('Lỗi tải nhận xét kiểm thử', { exact: true }).waitFor();
+  failList = false;
   await page.getByRole('button', { name: 'Thử lại', exact: true }).click();
   await page.getByText('1–20 / 24 bản ghi', { exact: true }).waitFor();
   for (const width of [375, 768, 1440]) {
@@ -106,7 +108,18 @@ try {
   assert.equal(await page.getByRole('link', { name: 'Duyệt đánh giá phim', exact: false }).count(), 0);
   await page.getByRole('button', { name: 'Gửi đánh giá', exact: true }).click();
   await page.getByText('Đánh giá đã được đăng.', { exact: true }).waitFor();
-  assert.equal(await page.getByText('Nhận xét được đăng ngay', { exact: true }).count(), 2);
+  assert.equal(await page.getByText('Nhận xét được đăng ngay', { exact: true }).count(), 1);
+  await page.getByText('Bạn', { exact: true }).waitFor();
+  assert.equal(await page.locator('.review-avatar').count(), 1);
+  await page.waitForFunction(() => document.querySelector('.review-avatar img')?.naturalWidth > 0);
+  assert.equal(await page.getByLabel('Cập nhật cảm nhận').count(), 0);
+  await page.getByRole('button', { name: 'Chỉnh sửa', exact: true }).click();
+  await page.getByLabel('Cập nhật cảm nhận').waitFor();
+  await page.getByRole('button', { name: 'Hủy chỉnh sửa', exact: true }).click();
+  for (const width of [320, 390, 768, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), true);
+  }
   assert.equal((await page.locator('body').innerText()).includes('chờ duyệt'), false);
   assert.deepEqual(errors, []);
   console.log(JSON.stringify({ passed: ['redirect and review-only permission', 'filters and pagination', 'delete cancellation and retry',
