@@ -12,12 +12,10 @@ class Settings(BaseSettings):
     catalog_origin: str = "http://catalog-service:8085"
     booking_origin: str = "http://booking-service:8087"
     writes_enabled: bool = False
-    auto_approve: bool = False
     sentiment_backend: str = "disabled"
     sentiment_model_path: str = "/models/sentiment"
     sentiment_fallback_backend: str = "disabled"
     sentiment_fallback_model_path: str = ""
-    sentiment_literal_negative_enabled: bool = False
     sentiment_demo_lr_path: str = ""
     sentiment_demo_visobert_path: str = ""
     sentiment_review_threshold: float = Field(default=0.65, ge=0, le=1)

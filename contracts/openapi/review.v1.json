@@ -461,20 +461,99 @@
         }
       }
     },
-    "/reviews/moderation/pending": {
+    "/reviews": {
       "get": {
-        "summary": "Pending",
-        "operationId": "pending_reviews_moderation_pending_get",
+        "summary": "All Reviews",
+        "operationId": "all_reviews_reviews_get",
         "parameters": [
           {
-            "name": "skip",
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 1000,
+              "default": "",
+              "title": "Q"
+            }
+          },
+          {
+            "name": "film_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "exclusiveMinimum": 0
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Film Id"
+            }
+          },
+          {
+            "name": "sentiment",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^(positive|neutral|negative)$"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Sentiment"
+            }
+          },
+          {
+            "name": "analysis_status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^(pending|failed|succeeded|needs_review)$"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Analysis Status"
+            }
+          },
+          {
+            "name": "moderation_status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^(approved|pending|rejected)$"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Moderation Status"
+            }
+          },
+          {
+            "name": "offset",
             "in": "query",
             "required": false,
             "schema": {
               "type": "integer",
               "minimum": 0,
               "default": 0,
-              "title": "Skip"
+              "title": "Offset"
             }
           },
           {
@@ -483,7 +562,7 @@
             "required": false,
             "schema": {
               "type": "integer",
-              "maximum": 50,
+              "maximum": 100,
               "minimum": 1,
               "default": 20,
               "title": "Limit"
@@ -506,11 +585,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/ReviewRead"
-                  },
-                  "title": "Response Pending Reviews Moderation Pending Get"
+                  "$ref": "#/components/schemas/AdminReviewList"
                 }
               }
             }
@@ -668,63 +743,6 @@
         }
       }
     },
-    "/reviews/{review_id}/sentiment-decision": {
-      "post": {
-        "summary": "Sentiment Decision",
-        "operationId": "sentiment_decision_reviews__review_id__sentiment_decision_post",
-        "parameters": [
-          {
-            "name": "review_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "title": "Review Id"
-            }
-          },
-          {
-            "name": "authorization",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "default": "",
-              "title": "Authorization"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/SentimentDecisionWrite"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/reviews/{review_id}/sentiment-decisions": {
       "get": {
         "summary": "Sentiment Decisions",
@@ -768,65 +786,6 @@
             "content": {
               "application/json": {
                 "schema": {}
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/reviews/{review_id}/moderation": {
-      "patch": {
-        "summary": "Moderate",
-        "operationId": "moderate_reviews__review_id__moderation_patch",
-        "parameters": [
-          {
-            "name": "review_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "title": "Review Id"
-            }
-          },
-          {
-            "name": "authorization",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "default": "",
-              "title": "Authorization"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ModerationWrite"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ReviewRead"
-                }
               }
             }
           },
@@ -912,6 +871,117 @@
   },
   "components": {
     "schemas": {
+      "AdminReviewList": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/AdminReviewRead"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total"
+        ],
+        "title": "AdminReviewList"
+      },
+      "AdminReviewRead": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "content": {
+            "type": "string",
+            "title": "Content"
+          },
+          "content_version": {
+            "type": "integer",
+            "title": "Content Version"
+          },
+          "moderation_status": {
+            "type": "string",
+            "title": "Moderation Status"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          },
+          "analysis_status": {
+            "type": "string",
+            "title": "Analysis Status"
+          },
+          "sentiment": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sentiment"
+          },
+          "author": {
+            "type": "string",
+            "title": "Author"
+          },
+          "is_owner": {
+            "type": "boolean",
+            "title": "Is Owner",
+            "default": false
+          },
+          "verified_purchase": {
+            "type": "boolean",
+            "title": "Verified Purchase",
+            "default": false
+          },
+          "film_id": {
+            "type": "integer",
+            "title": "Film Id"
+          },
+          "scores": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Scores"
+          },
+          "model_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model Version"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "content",
+          "content_version",
+          "moderation_status",
+          "updated_at",
+          "analysis_status",
+          "author",
+          "film_id",
+          "scores",
+          "model_version"
+        ],
+        "title": "AdminReviewRead"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -924,30 +994,6 @@
         },
         "type": "object",
         "title": "HTTPValidationError"
-      },
-      "ModerationWrite": {
-        "properties": {
-          "content_version": {
-            "type": "integer",
-            "exclusiveMinimum": 0.0,
-            "title": "Content Version"
-          },
-          "status": {
-            "type": "string",
-            "enum": [
-              "approved",
-              "rejected",
-              "pending"
-            ],
-            "title": "Status"
-          }
-        },
-        "type": "object",
-        "required": [
-          "content_version",
-          "status"
-        ],
-        "title": "ModerationWrite"
       },
       "ReviewEdit": {
         "properties": {
@@ -1049,56 +1095,6 @@
           "content"
         ],
         "title": "ReviewWrite"
-      },
-      "SentimentDecisionWrite": {
-        "properties": {
-          "request_id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Request Id"
-          },
-          "content_version": {
-            "type": "integer",
-            "exclusiveMinimum": 0.0,
-            "title": "Content Version"
-          },
-          "analysis_generation": {
-            "type": "integer",
-            "exclusiveMinimum": 0.0,
-            "title": "Analysis Generation"
-          },
-          "expected_updated_at": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Expected Updated At"
-          },
-          "label": {
-            "type": "string",
-            "enum": [
-              "positive",
-              "neutral",
-              "negative"
-            ],
-            "title": "Label"
-          },
-          "reason": {
-            "type": "string",
-            "maxLength": 1000,
-            "minLength": 3,
-            "title": "Reason"
-          }
-        },
-        "additionalProperties": false,
-        "type": "object",
-        "required": [
-          "request_id",
-          "content_version",
-          "analysis_generation",
-          "expected_updated_at",
-          "label",
-          "reason"
-        ],
-        "title": "SentimentDecisionWrite"
       },
       "SentimentRetryWrite": {
         "properties": {

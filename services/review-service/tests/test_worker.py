@@ -14,14 +14,12 @@ import pytest
 
 
 def make_review(engine, settings):
-    settings.auto_approve = True
     with Session(engine) as db:
         return service.create_review(db, 1, 777, "Phim hay rất đáng xem", settings).id
 
 
-@pytest.mark.parametrize("action", ["edit", "retry", "delete", "moderate"])
+@pytest.mark.parametrize("action", ["edit", "retry", "delete"])
 def test_old_inference_cannot_overwrite_content_or_analysis_generation(review_store, review_settings, action):
-    from review_service.schemas import ModerationWrite
     rid = make_review(review_store, review_settings)
     def racing(text):
         with Session(review_store) as db:
@@ -32,8 +30,6 @@ def test_old_inference_cannot_overwrite_content_or_analysis_generation(review_st
                 db.commit()
             elif action == "delete":
                 service.delete_review(db, rid, 777)
-            else:
-                service.moderate_review(db, rid, ModerationWrite(content_version=1, status="rejected"))
         return PREDICTOR[0](text)
     assert process_one(review_store, review_settings, (racing, "old-model")) == "stale"
     with Session(review_store) as db:
@@ -88,7 +84,7 @@ def test_invalid_prediction_bounded_retry_manual_reset_and_disabled_backend(revi
 @pytest.mark.parametrize(("primary_score", "fallback_score", "expected_status", "expected_backend"), [
     (.65, .80, "succeeded", "sklearn"),
     (.44, .73, "succeeded", "transformers"),
-    (.44, .51, "needs_review", "transformers"),
+    (.44, .51, "succeeded", "transformers"),
 ])
 def test_sentiment_worker_uses_fallback_only_below_threshold(
     review_store, review_settings, monkeypatch, primary_score, fallback_score, expected_status, expected_backend
@@ -115,14 +111,12 @@ def test_sentiment_worker_uses_fallback_only_below_threshold(
         assert result.scores["positive"] == (primary_score if expected_backend == "sklearn" else fallback_score)
 
 
-@pytest.mark.parametrize(("error", "status"), [(InputTooLong, "needs_review"), (RuntimeError, "failed")])
+@pytest.mark.parametrize(("error", "status"), [(InputTooLong, "succeeded"), (RuntimeError, "succeeded")])
 def test_worker_preserves_primary_when_fallback_rejects_long_input(
     review_store, review_settings, monkeypatch, error, status
 ):
-    review_settings.auto_approve = True
     review_settings.sentiment_fallback_backend = "transformers"
     review_settings.sentiment_fallback_model_path = "/models/visobert"
-    review_settings.sentiment_literal_negative_enabled = True
     content = "Phim dở" + "!" * 1000
     with Session(review_store) as db:
         rid = service.create_review(db, 1, 777, content, review_settings).id
@@ -137,7 +131,7 @@ def test_worker_preserves_primary_when_fallback_rejects_long_input(
     with Session(review_store) as db:
         result = db.get(ReviewSentiment, rid)
         assert result.status == status
-        if status == "needs_review":
+        if status == "succeeded":
             assert (result.label, result.predicted_label, result.decision_source) == ("positive", "positive", "model")
             assert result.model_version == "primary"
             assert result.scores == scores
@@ -146,28 +140,45 @@ def test_worker_preserves_primary_when_fallback_rejects_long_input(
             assert result.scores == {}
 
 
-@pytest.mark.parametrize(("content", "enabled", "status", "source", "label"), [
-    ("Phim dở quá", True, "succeeded", "rule", "negative"),
-    ("Phim này rất tệ!", True, "succeeded", "rule", "negative"),
-    ("Phim dở quá", False, "needs_review", "model", "positive"),
-    ("Phim không dở", True, "needs_review", "model", "positive"),
-    ("Phim dở quá nhưng diễn xuất tốt.", True, "needs_review", "model", "positive"),
-    ("Phim dở quá?", True, "needs_review", "model", "positive"),
+@pytest.mark.parametrize(("content", "label"), [
+    ("Phim dở quá", "negative"),
+    ("Diễn xuất vừa phải", "neutral"),
+    ("Phim không dở", "positive"),
 ])
-def test_literal_negative_rule_preserves_the_original_prediction(
-    review_store, review_settings, content, enabled, status, source, label
-):
-    review_settings.auto_approve = True
-    review_settings.sentiment_literal_negative_enabled = enabled
+def test_low_confidence_uses_highest_model_score(review_store, review_settings, content, label):
     with Session(review_store) as db:
         rid = service.create_review(db, 1, 777, content, review_settings).id
-    prediction = {"positive": .44, "neutral": .26, "negative": .30}
-    assert process_one(review_store, review_settings, (lambda _: prediction, "model-demo")) == status
+    prediction = {key: .44 if key == label else .28 for key in ('positive', 'neutral', 'negative')}
+    assert process_one(review_store, review_settings, (lambda _: prediction, "model-demo")) == 'succeeded'
     with Session(review_store) as db:
         result = db.get(ReviewSentiment, rid)
-        assert (result.label, result.decision_source) == (label, source)
-        assert result.predicted_label == "positive"
+        assert (result.label, result.decision_source) == (label, 'model')
+        assert result.predicted_label == label
         assert result.scores == prediction
+
+
+@pytest.mark.parametrize('failure', ['missing', 'inference', 'scores', 'version'])
+def test_broken_optional_fallback_preserves_valid_primary(review_store, review_settings, monkeypatch, failure):
+    rid = make_review(review_store, review_settings)
+    review_settings.sentiment_fallback_backend = 'transformers'
+    review_settings.sentiment_fallback_model_path = '/models/missing-fallback'
+    primary = {'positive': .44, 'neutral': .28, 'negative': .28}
+
+    def load(*args, **kwargs):
+        if failure == 'missing':
+            raise FileNotFoundError('missing artifact')
+        def predict(_):
+            if failure == 'inference':
+                raise RuntimeError('fallback failure')
+            return {'positive': 2.0} if failure == 'scores' else primary
+        return predict, '' if failure == 'version' else 'fallback-model'
+
+    monkeypatch.setattr('review_service.worker.load_predictor', load)
+    assert process_one(review_store, review_settings, (lambda _: primary, 'primary-model')) == 'succeeded'
+    with Session(review_store) as db:
+        result = db.get(ReviewSentiment, rid)
+        assert result.scores == primary and result.model_version == 'primary-model'
+        assert result.label == 'positive' and result.decision_source == 'model'
 
 
 def test_outbox_error_rolls_back_review_and_pending_job(review_store, review_settings, monkeypatch):

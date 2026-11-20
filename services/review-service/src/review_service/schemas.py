@@ -1,8 +1,6 @@
-from datetime import date, datetime
-from typing import Literal
-from uuid import UUID
+from datetime import datetime
 
-from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, Field, field_validator
 
 
 class ReviewWrite(BaseModel):
@@ -21,11 +19,6 @@ class ReviewEdit(ReviewWrite):
     content_version: int = Field(gt=0)
 
 
-class ModerationWrite(BaseModel):
-    content_version: int = Field(gt=0)
-    status: Literal["approved", "rejected", "pending"]
-
-
 class ReviewRead(BaseModel):
     id: int
     content: str
@@ -39,14 +32,15 @@ class ReviewRead(BaseModel):
     verified_purchase: bool = False
 
 
-class SentimentDecisionWrite(BaseModel):
-    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
-    request_id: UUID
-    content_version: int = Field(gt=0)
-    analysis_generation: int = Field(gt=0)
-    expected_updated_at: AwareDatetime
-    label: Literal["positive", "neutral", "negative"]
-    reason: str = Field(min_length=3, max_length=1000)
+class AdminReviewRead(ReviewRead):
+    film_id: int
+    scores: dict[str, float]
+    model_version: str | None
+
+
+class AdminReviewList(BaseModel):
+    items: list[AdminReviewRead]
+    total: int
 
 
 class SentimentRetryWrite(BaseModel):

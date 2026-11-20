@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { Route, Routes, useMatch } from "react-router-dom";
+import { Navigate, Route, Routes, useMatch } from "react-router-dom";
 import "./customer-theme.css";
 import NotFound from "./components/NotFound";
 import LoginPage from "./components/LoginPage";
@@ -17,7 +17,7 @@ import TicketBooking from "./components/TicketBooking";
 import VNPayReturn from "./components/VNPayReturn";
 import PaymentPage from "./components/PaymentPage";
 import AIAssistant from "./components/AIAssistant";
-import ReviewModeration from "./components/ReviewModeration";
+import ReviewsPage from "./components/admin/ReviewsPage";
 import AdminLayout from "./components/admin/AdminLayout";
 import PaymentReconciliation from "./components/admin/PaymentReconciliation";
 import { FilmsPage, RoomsPage, SeatsPage, ShowtimesPage, PricesPage } from "./components/admin/AdminCatalogPages";
@@ -28,7 +28,7 @@ import { DocumentsPage, ReportsPage } from "./components/admin/AdminKnowledgeRep
 
 function App() {
   const adminPage = useMatch("/admin/*");
-  const moderationPage = useMatch("/review-moderation");
+  const moderationPage = useMatch("/review-moderation/*");
   const staffPage = Boolean(adminPage || moderationPage);
   useEffect(() => {
     document.querySelector('meta[name="theme-color"]')?.setAttribute("content", staffPage ? "#f7f6f3" : "#101117");
@@ -47,8 +47,10 @@ function App() {
           <Route path="documents" element={<DocumentsPage />} />
           <Route path="reports" element={<ReportsPage />} />
           <Route path="payment-reconciliation" element={<PaymentReconciliation />} />
+          <Route path="reviews" element={<ReviewsPage />} />
           <Route path="*" element={<NotFound />} />
         </Route>
+        <Route path="/review-moderation/*" element={<Navigate to="/admin/reviews" replace />} />
         <Route path="/" element={<HomePage />}>
           <Route index element={<MainHomePage />} />
           <Route path="cinema" element={<CinemaList />} />
@@ -67,14 +69,13 @@ function App() {
           <Route path="food-selection/:showtimeId" element={<FoodSelection />} />
           <Route path="user-info" element={<UserInfor />} />
           <Route path="userInfo" element={<UserInfor />} />
-          <Route path="review-moderation" element={<ReviewModeration />} />
         </Route>
         <Route path="login" element={<LoginPage />} />
         <Route path="loginPage" element={<LoginPage />} />
         <Route path="loginpage" element={<LoginPage />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
-      {!adminPage && <AIAssistant />}
+      {!staffPage && <AIAssistant />}
     </div>
   );
 }

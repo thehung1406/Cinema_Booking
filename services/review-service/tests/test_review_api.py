@@ -31,7 +31,7 @@ def client_for(store, settings, read=None, auth=None):
     return TestClient(app), state
 
 
-def test_permissions_moderation_ownership_edit_delete_recreate(review_store, review_settings):
+def test_permissions_ownership_edit_delete_recreate(review_store, review_settings):
     client, state = client_for(review_store, review_settings)
     with client:
         assert client.post("/films/1/reviews", json={"content": "Phim rất hay"}).status_code == 401
@@ -39,41 +39,36 @@ def test_permissions_moderation_ownership_edit_delete_recreate(review_store, rev
         saved = client.post("/films/1/reviews", headers=HEADERS, json={"content": "Phim rất hay"})
         assert saved.status_code == 201 and saved.json()["verified_purchase"]
         rid = saved.json()["id"]
-        assert saved.json()["moderation_status"] == "pending"
-        assert client.get("/films/1/reviews").json() == []
+        assert saved.json()["moderation_status"] == "approved"
+        assert len(client.get("/films/1/reviews").json()) == 1
         assert client.get("/films/1/reviews/mine", headers=HEADERS).json()["id"] == rid
         assert client.post("/films/1/reviews", headers=HEADERS, json={"content": "Bị trùng"}).status_code == 409
-        body = {"content_version": 1, "status": "approved"}
-        assert client.patch(f"/reviews/{rid}/moderation", headers=HEADERS, json=body).status_code == 403
         state["permissions"] = ["reviews.moderate"]
-        assert len(client.get("/reviews/moderation/pending", headers=HEADERS).json()) == 1
-        assert client.patch(f"/reviews/{rid}/moderation", headers=HEADERS, json=body).status_code == 200
+        assert client.get("/reviews", headers=HEADERS).json()["total"] == 1
         assert len(client.get("/films/1/reviews").json()) == 1
         state["user_id"] = 2
+        state["permissions"] = []
         assert client.get("/films/1/reviews/mine", headers=HEADERS).json() is None
         assert client.patch(f"/reviews/{rid}", headers=HEADERS, json={"content": "Sửa trái phép", "content_version": 1}).status_code == 403
         assert client.delete(f"/reviews/{rid}", headers=HEADERS).status_code == 403
         state["user_id"] = 1
         edited = client.patch(f"/reviews/{rid}", headers=HEADERS, json={"content": "Nội dung thay đổi", "content_version": 1})
-        assert edited.status_code == 200 and edited.json()["content_version"] == 2 and edited.json()["moderation_status"] == "pending"
-        assert client.patch(f"/reviews/{rid}/moderation", headers=HEADERS, json=body).status_code == 409
-        assert client.post(f"/reviews/{rid}/retry", headers=HEADERS).status_code == 409
+        assert edited.status_code == 200 and edited.json()["content_version"] == 2 and edited.json()["moderation_status"] == "approved"
         assert client.delete(f"/reviews/{rid}", headers=HEADERS).status_code == 204
         assert client.get("/films/1/reviews/mine", headers=HEADERS).json() is None
         recreated = client.post("/films/1/reviews", headers=HEADERS, json={"content": "Viết đánh giá lại"})
         assert recreated.status_code == 201 and recreated.json()["id"] == rid and recreated.json()["content_version"] == 4
         state["permissions"] = []
-        assert client.get("/reviews/moderation/pending", headers=HEADERS).status_code == 403
+        assert client.get("/reviews", headers=HEADERS).status_code == 403
         state["is_active"] = False
         assert client.get("/films/1/reviews/mine", headers=HEADERS).status_code == 403
     with Session(review_store) as db:
         events = db.exec(select(OutboxRecord).order_by(OutboxRecord.aggregate_version)).all()
-        assert [r.aggregate_version for r in events] == list(range(1, 6))
+        assert [r.aggregate_version for r in events] == list(range(1, 5))
         assert all("content" not in r.payload["data"] and "user_id" not in r.payload["data"] for r in events)
 
 
-def test_auto_approved_review_is_public_while_sentiment_is_pending(review_store, review_settings):
-    review_settings.auto_approve = True
+def test_review_is_public_while_sentiment_is_pending(review_store, review_settings):
     client, _ = client_for(review_store, review_settings)
     with client:
         response = client.post("/films/1/reviews", headers=HEADERS, json={"content": "Phim hay."})
@@ -94,7 +89,6 @@ def test_auto_approved_review_is_public_while_sentiment_is_pending(review_store,
 
 
 def test_analysis_ranking_window_and_reporting_semantics(review_store, review_settings):
-    review_settings.auto_approve = True
     review_settings.sentiment_min_reviews = 1
     client, state = client_for(review_store, review_settings)
     with client:
@@ -181,7 +175,7 @@ def test_sentiment_demo_compares_two_models_without_creating_reviews(review_stor
         assert db.exec(select(func.count()).select_from(ReviewSentiment)).one() == 0
 
 
-def test_unreadable_demo_artifact_keeps_moderation_available(review_store, review_settings, tmp_path):
+def test_unreadable_demo_artifact_keeps_management_available(review_store, review_settings, tmp_path):
     review_settings.sentiment_demo_lr_path = str(tmp_path / "missing-lr")
     review_settings.sentiment_demo_visobert_path = str(tmp_path / "missing-visobert")
     client, identity = client_for(review_store, review_settings)

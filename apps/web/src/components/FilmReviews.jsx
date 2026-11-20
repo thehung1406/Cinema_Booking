@@ -13,13 +13,13 @@ const labels = {
 const statuses = {
   pending: "Chờ phân tích",
   failed: "Chưa phân tích được",
-  needs_review: "Cần rà soát",
+  needs_review: "Chờ phân tích lại",
   succeeded: "Đã phân tích",
 };
 const moderation = {
-  pending: "Chờ duyệt",
+  pending: "Chưa công khai",
   approved: "Đã công khai",
-  rejected: "Chưa được duyệt",
+  rejected: "Không công khai",
 };
 
 export default function FilmReviews({ filmId }) {
@@ -91,7 +91,7 @@ export default function FilmReviews({ filmId }) {
       setNotice(
         data.moderation_status === "approved"
           ? "Đánh giá đã được đăng."
-          : "Đã lưu đánh giá. Nội dung đang chờ duyệt.",
+          : "Đã lưu đánh giá. Nội dung chưa công khai.",
       );
       await load();
     } catch (e) {
@@ -157,7 +157,7 @@ export default function FilmReviews({ filmId }) {
             ))}
           </div>
           <p className="text-sm text-gray-500 mt-2">
-            Chờ xử lý: {summary.pending} · Cần rà soát: {summary.needs_review}.
+            Chờ phân tích: {summary.pending + (summary.needs_review || 0)}.
             Các đánh giá này chưa được tính vào tỷ lệ.
           </p>
         </>
@@ -260,7 +260,7 @@ export default function FilmReviews({ filmId }) {
           </article>
         ))}
         {!loading && !loadError && !reviews.length && (
-          <p className="py-4 text-gray-500">Chưa có đánh giá được duyệt.</p>
+          <p className="py-4 text-gray-500">Chưa có đánh giá công khai.</p>
         )}
       </div>
       <div className="flex gap-4 mt-3">

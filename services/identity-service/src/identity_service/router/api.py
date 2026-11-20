@@ -37,6 +37,7 @@ from .. import tokens
 from fastapi import APIRouter
 
 MANAGEMENT = {
+    "reviews.moderate",
     "films.manage",
     "rooms.manage",
     "showtimes.manage",

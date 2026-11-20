@@ -7,7 +7,7 @@ from fastapi import Depends, Header, HTTPException, Query, Response
 
 from fastapi.responses import JSONResponse
 
-from sqlalchemy import func, text
+from sqlalchemy import and_, func, text
 
 from sqlmodel import Session, select
 
@@ -20,7 +20,7 @@ from ..predictor import InputTooLong, validate_scores
 
 from ..read_client import ReadClient
 
-from ..schemas import ReviewWrite, ReviewEdit, ReviewRead, ModerationWrite, SentimentDecisionWrite, SentimentRetryWrite
+from ..schemas import ReviewWrite, ReviewEdit, ReviewRead, AdminReviewList, SentimentRetryWrite
 
 from datetime import date, datetime, time, timedelta
 
@@ -107,7 +107,7 @@ def create_router(app, engine, settings, logger):
 
     async def staff_user(user=Depends(current_user)):
         if "reviews.moderate" not in user.permissions:
-            raise HTTPException(403, "Bạn không có quyền kiểm duyệt đánh giá")
+            raise HTTPException(403, "Bạn không có quyền quản lý nhận xét")
         return user
 
     def writes():
@@ -143,11 +143,11 @@ def create_router(app, engine, settings, logger):
     def migration_state():
         return {"writes_enabled": settings.writes_enabled}
 
-    def present(db, rows, viewer_id=None):
+    def present(db, rows, viewer_id=None, *, admin=False):
         # Load own results then release the read transaction before the external author API.
         payload = []
-        for row in rows:
-            result = db.get(ReviewSentiment, row.id)
+        entries = rows if admin else ((row, db.get(ReviewSentiment, row.id)) for row in rows)
+        for row, result in entries:
             current = (
                 result is not None and result.content_version == row.content_version
             )
@@ -169,13 +169,18 @@ def create_router(app, engine, settings, logger):
                     is_owner=viewer_id == row.user_id,
                 )
             )
+            if admin:
+                payload[-1].update(scores=result.scores if current else {},
+                                   model_version=result.model_version if current else None)
         # Only primitive copies cross the transaction boundary.
         from types import SimpleNamespace
 
         db.rollback()
         authors = reader().authors([SimpleNamespace(**r) for r in payload])
         for item in payload:
-            fact = authors[(item.pop("user_id"), item.pop("film_id"))]
+            fact = authors[(item.pop("user_id"), item["film_id"])]
+            if not admin:
+                item.pop("film_id")
             item.update(author=fact.author, verified_purchase=fact.verified_purchase)
         return payload
 
@@ -290,24 +295,37 @@ def create_router(app, engine, settings, logger):
         "/reviews/{review_id}", status_code=204, dependencies=[Depends(writes)]
     )
     def remove(review_id: int, user=Depends(current_user), db=Depends(db_session)):
-        service.delete_review(db, review_id, user.user_id)
+        service.delete_review(db, review_id, user.user_id,
+                              can_moderate="reviews.moderate" in user.permissions)
         return Response(status_code=204)
 
-    @router.get("/reviews/moderation/pending", response_model=list[ReviewRead])
-    def pending(
-        skip: int = Query(0, ge=0),
-        limit: int = Query(20, ge=1, le=50),
-        user=Depends(staff_user),
-        db=Depends(db_session),
+    @router.get("/reviews", response_model=AdminReviewList)
+    def all_reviews(
+        q: str = Query("", max_length=1000),
+        film_id: int | None = Query(None, gt=0),
+        sentiment: str | None = Query(None, pattern="^(positive|neutral|negative)$"),
+        analysis_status: str | None = Query(None, pattern="^(pending|failed|succeeded|needs_review)$"),
+        moderation_status: str | None = Query(None, pattern="^(approved|pending|rejected)$"),
+        offset: int = Query(0, ge=0), limit: int = Query(20, ge=1, le=100),
+        user=Depends(staff_user), db=Depends(db_session),
     ):
-        rows = db.exec(
-            select(Review)
-            .where(Review.is_deleted == False, Review.moderation_status == "pending")
-            .order_by(Review.updated_at, Review.id)
-            .offset(skip)
-            .limit(limit)
-        ).all()
-        return present(db, rows, user.user_id)
+        query = select(Review, ReviewSentiment).outerjoin(ReviewSentiment, and_(
+            ReviewSentiment.review_id == Review.id,
+            ReviewSentiment.content_version == Review.content_version,
+        )).where(Review.is_deleted == False)
+        if q.strip():
+            query = query.where(Review.content.icontains(q.strip(), autoescape=True))
+        if film_id is not None:
+            query = query.where(Review.film_id == film_id)
+        if moderation_status:
+            query = query.where(Review.moderation_status == moderation_status)
+        if sentiment:
+            query = query.where(ReviewSentiment.status == "succeeded", ReviewSentiment.label == sentiment)
+        if analysis_status:
+            query = query.where(func.coalesce(ReviewSentiment.status, "pending") == analysis_status)
+        total = db.exec(select(func.count()).select_from(query.subquery())).one()
+        rows = db.exec(query.order_by(Review.updated_at.desc(), Review.id.desc()).offset(offset).limit(limit)).all()
+        return dict(items=present(db, rows, user.user_id, admin=True), total=total)
 
     @router.get("/reviews/sentiment/pending")
     def sentiment_pending(
@@ -351,11 +369,6 @@ def create_router(app, engine, settings, logger):
             demo_lock.release()
         return {"predictions": predictions}
 
-    @router.post("/reviews/{review_id}/sentiment-decision", dependencies=[Depends(writes)])
-    def sentiment_decision(review_id: int, body: SentimentDecisionWrite,
-                           user=Depends(staff_user), db=Depends(db_session)):
-        return service.decide_sentiment(db, review_id, user.user_id, body)
-
     @router.get("/reviews/{review_id}/sentiment-decisions")
     def sentiment_decisions(review_id: int, limit: int = Query(50, ge=1, le=100),
                             user=Depends(staff_user), db=Depends(db_session)):
@@ -366,21 +379,6 @@ def create_router(app, engine, settings, logger):
                      label=row.label, previous_label=row.previous_label, reason=row.reason,
                      created_at=row.created_at) for row in rows]
 
-    @router.patch(
-        "/reviews/{review_id}/moderation",
-        response_model=ReviewRead,
-        dependencies=[Depends(writes)],
-    )
-    def moderate(
-        review_id: int,
-        body: ModerationWrite,
-        user=Depends(staff_user),
-        db=Depends(db_session),
-    ):
-        return present(
-            db, [service.moderate_review(db, review_id, body)], user.user_id
-        )[0]
-
     @router.post(
         "/reviews/{review_id}/retry",
         response_model=ReviewRead,
@@ -389,7 +387,7 @@ def create_router(app, engine, settings, logger):
     def retry(review_id: int, body: SentimentRetryWrite | None = None, user=Depends(staff_user), db=Depends(db_session)):
         review = service.locked_review(db, review_id)
         if review.moderation_status != "approved":
-            raise HTTPException(409, "Cần duyệt đánh giá trước khi phân tích lại")
+            raise HTTPException(409, "Chỉ phân tích nhận xét đang công khai")
         current = db.get(ReviewSentiment, review_id, with_for_update=True)
         if current and current.decision_source == "staff":
             if body is None:
