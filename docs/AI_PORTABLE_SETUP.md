@@ -2,7 +2,7 @@
 
 Công cụ gán nhãn AI và UI 100 câu pilot có profile Docker riêng, không cần venv/GPU trên host: [AI_ASSISTED_LABELING.md](AI_ASSISTED_LABELING.md).
 
-Không cần sao chép `.local`, `.env.microservices`, tài khoản, volume DB hoặc đường dẫn `C:/code` từ máy tác giả. Model và dữ liệu lớn không nằm trong Git; repository chứa cấu hình khóa phiên bản và lệnh tải lại. Các kết quả đã đo để đọc báo cáo nằm trong `docs/reports/evidence`, tách khỏi cache dùng khi chạy.
+Không cần sao chép `.local`, `.env.microservices`, tài khoản, volume DB hoặc đường dẫn `C:/code` từ máy tác giả. Model và dữ liệu huấn luyện lớn không nằm trong Git; repository chứa cấu hình khóa phiên bản và lệnh tải lại. Riêng KB dùng chung đã có PDF và ba tài liệu trích xuất trong `pipelines/knowledge/snapshot`: chạy `python scripts/ai/restore_knowledge.py`, rồi [nạp vào database của máy mới](../pipelines/knowledge/README.md). Các kết quả đã đo để đọc báo cáo nằm trong `docs/reports/evidence`, tách khỏi cache dùng khi chạy.
 
 ## Khởi chạy chatbot trên máy mới
 
@@ -93,4 +93,4 @@ Kiểm tra giao diện tự động trên runtime demo là tùy chọn. Trong `a
 
 Source, Compose bổ sung, cấu hình mẫu/lock, công cụ tải dữ liệu/model, tài liệu và snapshot bằng chứng gọn có thể đưa vào Git. `.env*` riêng, `.local`, `.venv-ai-research`, raw review và weights vẫn bị bỏ qua. Nhãn thật nhóm tạo cần được chuyển giao riêng theo điều kiện dữ liệu; tuyệt đối không coi chúng là đã có trên Git chỉ vì code nhập dữ liệu có trên Git.
 
-Chưa có commit hoặc push do trợ lý thực hiện. Kiểm tra `git status` và chọn các thay đổi sau khi nhóm xem lại.
+Với phần KB dùng chung, thay đổi snapshot/manifest được gửi qua pull request để nhóm xem lại trước khi merge.

@@ -26,7 +26,7 @@
       "block_index": 1, "excerpt": "Chuyển động máy quay có thể góp phần thể hiện cảm xúc."
     },
     {
-      "source_id": "cinema-booking-guide", "version": "draft-1",
+      "source_id": "cinema-booking-guide", "version": "draft-2-20261120",
       "concept_id": "seat-selection", "predicate": "holds-seat", "qualifier": "chat-assistant-search", "value": "no",
       "block_index": 1, "excerpt": "Việc tra cứu trong trợ lý chưa giữ ghế."
     }

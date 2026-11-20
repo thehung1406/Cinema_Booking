@@ -5,3 +5,7 @@ docs/reports/*.docx binary
 pipelines/configs/cinema_four_vi_labels.v1.json -text
 pipelines/configs/ai_research.four-vi.v1.json -text
 pipelines/configs/four_vi_semantic_inputs.v1.json -text
+
+# Knowledge source checksums and shared snapshot bytes must survive Windows/Linux pulls.
+pipelines/knowledge/*.md text eol=lf
+pipelines/knowledge/snapshot/** -text

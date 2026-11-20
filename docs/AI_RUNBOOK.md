@@ -158,7 +158,7 @@ Neo4j, công bố phiên bản KB và so sánh hai mô hình demo được hư�
 
 Manifest: `pipelines/knowledge/sources.json`. Có hướng dẫn nội bộ, sách Open SUNY thật và bản tóm tắt/dịch Wikibooks có attribution/license. Bản tóm tắt không được mô tả là đã crawl toàn bộ website. Tất cả đang là draft chờ kiểm tra nội dung/quyền dùng theo bối cảnh.
 
-PDF local: `.local/knowledge/raw/exploring-movie-construction.pdf`. SHA-256 trong manifest; bản tải từ mirror cơ sở giáo dục vì URL nhà xuất bản trả 403 lúc tải. Không thêm PDF vào Git. Có 94 trang PDF; trang PDF có thể khác số trang in trong sách. Trích xuất báo các trang ít text; chưa OCR và chưa tự phê duyệt.
+PDF local: `.local/knowledge/raw/exploring-movie-construction.pdf`. Bản PDF nguyên gốc và corpus dùng chung đã được lưu trong `pipelines/knowledge/snapshot`; chạy `python scripts/ai/restore_knowledge.py` để khôi phục theo [hướng dẫn KB](../pipelines/knowledge/README.md). SHA-256 trong manifest; bản tải từ mirror cơ sở giáo dục vì URL nhà xuất bản trả 403 lúc tải. Có 94 trang PDF; trang PDF có thể khác số trang in trong sách. Trích xuất báo các trang ít text; chưa OCR và chưa tự phê duyệt.
 
 ```powershell
 & $py scripts/ai/prepare_knowledge.py pipelines/knowledge/sources.json cinema-booking-guide pipelines/knowledge/booking-guide.md --output .local/knowledge/booking-guide.json

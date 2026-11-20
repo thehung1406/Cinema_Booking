@@ -2,7 +2,7 @@
 
 ## Khởi động Neo4j và tạo bản đồ thị
 
-Dùng môi trường Python nghiên cứu đã cài AI Service và các thư viện chuẩn bị nguồn. Nếu chưa có dữ liệu, tải và kiểm checksum PDF bằng `scripts/ai/fetch_knowledge_sources.py`, rồi chạy ba lệnh trích xuất trong [hướng dẫn KB](AI_RUNBOOK.md#5-kb-đa-nguồn-và-sách-pdf).
+Dùng môi trường Python nghiên cứu đã cài AI Service và các thư viện chuẩn bị nguồn. Máy mới chạy `python scripts/ai/restore_knowledge.py` để lấy PDF, ba bản trích xuất và Cypher từ gói đã lưu trong Git; xem [hướng dẫn KB](../pipelines/knowledge/README.md). Khi muốn trích lại từ đầu, tải và kiểm checksum PDF bằng `scripts/ai/fetch_knowledge_sources.py`, rồi chạy ba lệnh trích xuất trong [runbook](AI_RUNBOOK.md#5-kb-đa-nguồn-và-sách-pdf).
 
 Từ thư mục gốc, chọn tên project Compose của môi trường demo. Cấu hình mật khẩu Neo4j riêng trong biến môi trường hoặc tệp cấu hình riêng của project.
 
