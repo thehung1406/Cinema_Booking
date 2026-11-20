@@ -34,9 +34,9 @@ $sentimentCompose = @('--env-file', '.env.microservices', '-p', 'backend', '-f',
 docker compose @sentimentCompose up -d --no-deps --build --wait review-service review-worker
 ```
 
-Giữ project name và các tệp Compose theo runtime đang dùng; ví dụ này không tự khởi tạo database hay bật các dịch vụ nền còn thiếu. Với profile chatbot `cinema-ai-demo`, giữ `-p cinema-ai-demo` và thêm `-f compose.ai-local.yml` trước tệp sentiment. Hai artifact được mount ở runtime, không đóng vào image Docker. Đăng nhập tài khoản có quyền duyệt review, mở **Duyệt đánh giá → Nhãn cảm xúc → So sánh hai mô hình**.
+Giữ project name và các tệp Compose theo runtime đang dùng; ví dụ này không tự khởi tạo database hay bật các dịch vụ nền còn thiếu. Hai artifact được mount ở runtime, không đóng vào image Docker. Đăng nhập tài khoản có quyền `reviews.moderate`, mở **Quản trị rạp chiếu → Nhận xét người dùng** để xem kết quả. API so sánh hai mô hình được mô tả trong [hướng dẫn demo](../../../docs/AI_GRAPH_DEMO.md#demo-so-sánh-hai-mô-hình-cảm-xúc).
 
-Profile này giữ nguyên hành vi demo hiện có, gồm cấu hình tự duyệt review của profile. Việc bổ sung artifact không công bố hai mô hình làm model production. Các giới hạn và hướng dẫn vận hành vẫn ở [hướng dẫn demo](../../../docs/AI_GRAPH_DEMO.md#demo-so-sánh-hai-mô-hình-cảm-xúc).
+Nhận xét được công khai ngay. Worker dùng Logistic Regression trước và thử ViSoBERT khi điểm cao nhất dưới ngưỡng cấu hình; không cần nhân viên xác nhận nhãn. Chỉ có file trên Git chưa làm worker hoạt động: nếu chạy riêng `compose.yml`, cấu hình mặc định vẫn tắt phân tích. Khi cập nhật hoặc khởi động lại các dịch vụ Review, tiếp tục dùng cả hai tệp Compose trong lệnh trên để giữ mô hình được gắn đúng. Hai artifact vẫn là mô hình demo, giữ nguyên metadata `production_promoted=false`.
 
 ## Thử riêng bằng Python, không cần Docker
 

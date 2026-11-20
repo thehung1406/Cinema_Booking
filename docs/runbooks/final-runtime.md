@@ -48,7 +48,7 @@ Xác nhận 9 API healthy, gateway `/health/ready`, đủ 5 verified watermark, 
 
 Mỗi service chỉ có own DB owner credential. Report source capture chạy bằng image owner và DB owner tương ứng; Reporting bootstrap chỉ nhận own DB + private HTTP key, không nhận DSN nguồn. JWT signing key ring chỉ Identity; VNPay merchant key chỉ Payment API; SMTP password chỉ Notification dispatcher. RabbitMQ publisher/consumer có permission theo vai trò và topic producer cụ thể. Root runtime không dùng broad `env_file` trên service.
 
-API AI không có model thì trả trạng thái phụ thuộc tương ứng; Review sentiment backend mặc định `disabled`. `model-store/` đang rỗng; chỉ mount artifact được duyệt read-only vào Review inference worker. Train/evaluate ở `pipelines/ml`, không ở request hoặc API image.
+API AI không có model thì trả trạng thái phụ thuộc tương ứng; Review sentiment backend mặc định `disabled`. Hai mô hình cảm xúc phim đã có trong `pipelines/models/sentiment-demo`; kiểm tra bằng `python scripts/ai/check_sentiment_models.py`, rồi chạy Review với cả `compose.yml` và `compose.ai-sentiment-demo.yml` theo [hướng dẫn kích hoạt](../../pipelines/models/sentiment-demo/README.md#chạy-trong-ứng-dụng). Profile gắn artifact read-only và có đủ thư viện suy luận. Chỉ chạy Compose cơ bản sẽ giữ phân tích ở trạng thái tắt. Train/evaluate ở `pipelines/ml`, không ở request hoặc API image.
 
 ## Giám sát và diễn tập
 

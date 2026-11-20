@@ -42,6 +42,8 @@ Theo [runtime chung](../../docs/runbooks/final-runtime.md) khi chạy đầy đ�
 
 Worker có image stage riêng với sklearn/joblib; API image không chứa thư viện huấn luyện. Mặc định `REVIEW_SENTIMENT_BACKEND=disabled`, công việc giữ pending. Chỉ đưa artifact đáng tin cậy, được đánh giá trên review phim vào `model-store/sentiment/`, mount read-only rồi cấu hình worker. Image mặc định hỗ trợ sklearn; transformers cần image/dependencies/Java/segmenter phù hợp. Baseline chạy trên dữ liệu ngân hàng chưa được coi là model phim đã nghiệm thu.
 
+Hai artifact phim đã chia sẻ trên Git LFS có thể chạy bằng profile `compose.ai-sentiment-demo.yml`; xem [hướng dẫn kích hoạt](../../pipelines/models/sentiment-demo/README.md#chạy-trong-ứng-dụng). Profile này gắn đúng thư mục mô hình và dùng image có đủ thư viện. Giữ cả `compose.yml` và overlay này khi cập nhật các dịch vụ Review; chỉ rebuild bằng Compose cơ bản sẽ trở về cấu hình phân tích mặc định.
+
 Lease phục hồi worker crash; retry có giới hạn. Model lỗi không xóa review hoặc tạo nhãn giả. Train/evaluate ở `pipelines/ml`, ngoài API request.
 
 Công cụ gán nhãn, cấu hình nghiên cứu và kiểm thử: [AI_RUNBOOK.md](../../docs/AI_RUNBOOK.md). Kết quả hiện có và phần còn thiếu: [AI_IMPLEMENTATION_STATUS.md](../../docs/AI_IMPLEMENTATION_STATUS.md).
