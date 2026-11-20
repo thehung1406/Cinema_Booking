@@ -147,11 +147,20 @@
   box-shadow: 0 20px 80px #0006;
 }
 .customer-theme .assistant-flow { background: var(--paper); border-color: var(--line); }
-.customer-theme :is(.assistant-launcher, .assistant-primary, .assistant-panel .assistant-brand-icon) { background: var(--action); color: #fff; border-color: var(--action); border-radius: 8px; }
-.customer-theme :is(.assistant-launcher:hover, .assistant-primary:hover:not(:disabled)) { background: #bb2330; }
+.customer-theme .assistant-launcher { background: var(--surface); color: var(--ink); border-color: #746045; border-radius: 16px; box-shadow: 0 8px 32px #0003; }
+.customer-theme .assistant-launcher:hover { background: var(--elevated); border-color: var(--warm); }
+.customer-theme .assistant-launcher-icon { background: #30281d; color: var(--warm); }
+.customer-theme .assistant-launcher-copy > span { color: var(--muted); }
+.customer-theme .assistant-launcher-arrow { color: var(--warm); }
+.customer-theme :is(.assistant-primary, .assistant-panel .assistant-brand-icon) { background: var(--action); color: #fff; border-color: var(--action); border-radius: 12px; }
+.customer-theme .assistant-primary:hover:not(:disabled) { background: #bb2330; }
+.customer-theme .assistant-welcome-mark { background: #30281d; color: var(--warm); border-color: #746045; }
+.customer-theme .assistant-suggestion-icon { background: var(--elevated); color: var(--warm); }
 .customer-theme .assistant-header { color: var(--ink); background: var(--surface); border-bottom: 1px solid var(--line); }
 .customer-theme :is(.assistant-header h2, .assistant-tools h3, .assistant-welcome h3, .assistant-showtime-info h3, .assistant-source-body h4, .assistant-booking h3, .assistant-booking h4) { font-weight: 500; }
 .customer-theme :is(.assistant-toolbar, .assistant-tools, .assistant-composer) { background: var(--surface); }
+.customer-theme .assistant-composer form { background: var(--paper); border-color: #777d8d; }
+.customer-theme .assistant-composer textarea { background: transparent; border: 0; box-shadow: none; }
 .customer-theme :is(.assistant-new, .assistant-close) { border-color: #777d8d; color: var(--ink); }
 .customer-theme :is(.assistant-message, .assistant-showtime, .assistant-sources, .assistant-booking, .assistant-suggestions button) { background: var(--surface); border-color: var(--line); border-radius: 12px; }
 .customer-theme .assistant-showtime { border-left-color: var(--warm); }
@@ -203,7 +212,9 @@
   .customer-theme .detail-copy { order: 1; }
   .customer-theme .auth-art { border: 0; }
   .customer-theme .auth-card { padding: 32px 24px; }
-  .customer-theme .assistant-panel { border-radius: 12px; }
+}
+@media (max-width: 640px) {
+  .customer-theme .assistant-panel { border-radius: 0; }
 }
 @media (max-width: 639px) {
   .customer-theme .movie-grid { grid-template-columns: 1fr; }

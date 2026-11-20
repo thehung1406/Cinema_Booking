@@ -58,6 +58,27 @@ try {
   await page.goto(base+'/about');
   await page.getByRole('button', { name: 'Hỏi trợ lý', exact: true }).click();
   const assistant = page.getByRole('dialog', { name: 'Trợ lý Cinema' });
+  await assistant.evaluate(el => Promise.all(el.getAnimations().map(animation => animation.finished)));
+  for (const [width, height] of [[320, 568], [390, 844], [768, 1024], [1024, 768], [1440, 900]]) {
+    await page.setViewportSize({ width, height });
+    await page.keyboard.press('Escape');
+    await assistant.waitFor({ state: 'detached' });
+    await page.getByRole('button', { name: 'Hỏi trợ lý', exact: true }).click();
+    await assistant.evaluate(el => Promise.all(el.getAnimations().map(animation => animation.finished)));
+    assert.equal(await page.getByRole('log').evaluate(el => el.scrollTop), 0, 'An empty conversation opens at the welcome, including short mobile screens');
+    const frame = await assistant.boundingBox();
+    assert.ok(frame.x >= 0 && frame.y >= 0 && frame.x + frame.width <= width + 1 && frame.y + frame.height <= height + 1, `Chat fits ${width}x${height}: ${JSON.stringify(frame)}`);
+    if (width >= 1024) assert.ok(frame.width >= 840, 'Wide assistant leaves room for booking and sources');
+    const input = await page.getByLabel('Câu hỏi cho trợ lý').boundingBox();
+    assert.equal(await page.getByLabel('Câu hỏi cho trợ lý').evaluate(el => el.labels[0].textContent), 'Câu hỏi cho trợ lý', 'Visible composer label matches its accessible name');
+    assert.ok(input.height >= 44 && input.y + input.height <= height, 'Composer remains reachable on short screens');
+    assert.equal(await assistant.evaluate(el => el.scrollWidth > el.clientWidth), false, 'Chat does not scroll sideways');
+    if (process.env.UI_SCREENSHOT_DIR) {
+      await mkdir(process.env.UI_SCREENSHOT_DIR, { recursive: true });
+      await page.screenshot({ path: `${process.env.UI_SCREENSHOT_DIR}/ai-welcome-${width}.png` });
+    }
+  }
+  await page.setViewportSize({ width: 375, height: 812 });
   assert.ok((await assistant.boundingBox()).width >= 375);
   assert.equal(await page.getByLabel('Phim cho trợ lý').count(), 0);
   await page.getByRole('button', { name: 'Bộ lọc', exact: true }).click();
@@ -77,12 +98,17 @@ try {
   await page.getByRole('link', { name: 'Mở nguồn · trang PDF 7' }).waitFor();
   if (process.env.UI_SCREENSHOT_DIR) {
     await mkdir(process.env.UI_SCREENSHOT_DIR, { recursive: true });
-    await page.screenshot({ path: process.env.UI_SCREENSHOT_DIR+'/ai-cards-375.png', fullPage: true });
+    await page.screenshot({ path: process.env.UI_SCREENSHOT_DIR+'/ai-cards-375.png' });
   }
   await page.keyboard.press('Escape');
   await assistant.waitFor({ state: 'detached' });
   assert.equal(await page.getByRole('button', { name: 'Hỏi trợ lý', exact: true }).evaluate(el => el === document.activeElement), true);
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.getByRole('button', { name: 'Hỏi trợ lý', exact: true }).hover();
+  assert.equal(await page.getByRole('button', { name: 'Hỏi trợ lý', exact: true }).evaluate(el => getComputedStyle(el).transform), 'none', 'Reduced motion keeps the launcher still on hover');
+  if (process.env.UI_SCREENSHOT_DIR) await page.getByRole('button', { name: 'Hỏi trợ lý', exact: true }).screenshot({ path: `${process.env.UI_SCREENSHOT_DIR}/ai-launcher.png` });
   await page.getByRole('button', { name: 'Hỏi trợ lý', exact: true }).click();
+  assert.equal(await assistant.evaluate(el => getComputedStyle(el).animationName), 'none', 'Reduced motion skips dialog entrance');
   await page.getByRole('button', { name: 'Lịch sử', exact: true }).click();
   const savedButton = page.getByRole('button', { name: /^Hội thoại đã lưu/ });
   await savedButton.click();

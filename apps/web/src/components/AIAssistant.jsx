@@ -9,9 +9,9 @@ import ChatBooking from './ChatBooking';
 import './AIAssistant.css';
 
 const SUGGESTIONS = [
-  { icon: <Film size={19} aria-hidden="true" />, label: 'Gợi ý phim tối nay', question: 'Tối nay có phim hài nào còn suất chiếu cho hai người?' },
-  { icon: <Ticket size={19} aria-hidden="true" />, label: 'Cách đặt vé', question: 'Tôi đặt vé trên website như thế nào?' },
-  { icon: <BookOpen size={19} aria-hidden="true" />, label: 'Hỏi về điện ảnh', question: 'Cinematography là gì?' },
+  { icon: <Film size={20} aria-hidden="true" />, label: 'Gợi ý phim tối nay', detail: 'Tìm phim và suất chiếu phù hợp', question: 'Tối nay có phim hài nào còn suất chiếu cho hai người?' },
+  { icon: <Ticket size={20} aria-hidden="true" />, label: 'Cách đặt vé', detail: 'Chọn suất, chọn ghế và thanh toán', question: 'Tôi đặt vé trên website như thế nào?' },
+  { icon: <BookOpen size={20} aria-hidden="true" />, label: 'Hỏi về điện ảnh', detail: 'Thể loại, câu chuyện và góc máy', question: 'Cinematography là gì?' },
 ];
 
 function readDraft(userId) {
@@ -164,7 +164,6 @@ export default function AIAssistant() {
   useLayoutEffect(() => {
     if (!open || !panel.current) return;
     if (!panel.current.open) panel.current.showModal();
-    if (messageViewport.current) messageViewport.current.scrollTop = messageViewport.current.scrollHeight;
   }, [open]);
   function dismiss() {
     setOpen(false);
@@ -220,9 +219,9 @@ export default function AIAssistant() {
       messageViewport.current.scrollTop = top + messageViewport.current.scrollHeight - height;
       historyScroll.current = null;
     } else {
-      messageViewport.current.scrollTop = messageViewport.current.scrollHeight;
+      messageViewport.current.scrollTop = messages.length || pendingQuestion || bookingDraft?.showtimeId ? messageViewport.current.scrollHeight : 0;
     }
-  }, [messages, pendingQuestion, bookingDraft?.showtimeId]);
+  }, [open, messages, pendingQuestion, bookingDraft?.showtimeId]);
 
   function updateBooking(draft) {
     if (!userId || getCurrentUser()?.id !== userId) return;
@@ -365,8 +364,11 @@ export default function AIAssistant() {
           <div className="assistant-shell">
             <header className="assistant-header">
               <div className="assistant-identity">
-                <span className="assistant-brand-icon"><MessageCircle size={24} aria-hidden="true" /></span>
-                <h2 id="cinema-assistant-title">Trợ lý Cinema</h2>
+                <span className="assistant-brand-icon"><Ticket size={24} aria-hidden="true" /></span>
+                <div className="assistant-title-block">
+                  <h2 id="cinema-assistant-title">Trợ lý Cinema</h2>
+                  <p>Phim, lịch chiếu và vé của bạn</p>
+                </div>
               </div>
               <div className="assistant-header-actions">
                 {loggedIn && <button type="button" className="assistant-new" onClick={startConversation}
@@ -459,12 +461,16 @@ export default function AIAssistant() {
                   className="assistant-text-button">Tải tin nhắn cũ hơn</button>}
                 {!messages.length && !pendingQuestion && !busy && (
                   <div className="assistant-welcome">
-                    <h3>Bạn muốn hỏi gì?</h3>
-                    <p>Tra suất chiếu, giá vé, cách đặt vé hoặc tìm hiểu về điện ảnh.</p>
+                    <div className="assistant-welcome-mark" aria-hidden="true"><Ticket size={32} /></div>
+                    <p className="assistant-welcome-label">Trợ lý điện ảnh của bạn</p>
+                    <h3>Buổi xem phim này,<br />bạn muốn xem gì?</h3>
+                    <p>Tìm một bộ phim hợp gu, chọn suất chiếu hoặc hỏi về vé của bạn.</p>
                     {loggedIn && <div className="assistant-suggestions">
-                      {SUGGESTIONS.map(({ icon, label, question: suggestion }) => (
-                        <button key={label} type="button" onClick={() => chooseSuggestion(suggestion)}>
-                          {icon}<span>{label}</span><ArrowRight size={16} aria-hidden="true" />
+                      {SUGGESTIONS.map(({ icon, label, detail, question: suggestion }) => (
+                        <button key={label} type="button" aria-label={label} onClick={() => chooseSuggestion(suggestion)}>
+                          <span className="assistant-suggestion-icon">{icon}</span>
+                          <span className="assistant-suggestion-copy"><strong>{label}</strong><span>{detail}</span></span>
+                          <ArrowUpRight size={16} aria-hidden="true" />
                         </button>
                       ))}
                     </div>}
@@ -486,10 +492,12 @@ export default function AIAssistant() {
             <footer className="assistant-composer">
               {error && <p role="alert" className="assistant-error">{error}</p>}
               {loggedIn ? (
+                <>
+                <label htmlFor="assistant-question" className="assistant-composer-label">Câu hỏi cho trợ lý</label>
                 <form onSubmit={send}>
-                  <textarea ref={composer} aria-label="Câu hỏi cho trợ lý" maxLength={2000} rows={2}
+                  <textarea id="assistant-question" ref={composer} maxLength={2000} rows={2}
                     value={pendingQuestion ? '' : question} readOnly={busy}
-                    onChange={event => setQuestion(event.target.value)} placeholder="Nhập câu hỏi…" required
+                    onChange={event => setQuestion(event.target.value)} placeholder="Bạn muốn xem phim gì?" required
                     onKeyDown={event => {
                       if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) {
                         event.preventDefault();
@@ -500,6 +508,8 @@ export default function AIAssistant() {
                     Gửi <Send size={17} aria-hidden="true" />
                   </button>
                 </form>
+                <p className="assistant-composer-hint"><span>Phim · Suất chiếu · Đơn vé</span><span className="assistant-keyboard-tip">Enter để gửi · Shift + Enter xuống dòng</span></p>
+                </>
               ) : <div className="assistant-guest-actions">
                 <Link className="assistant-primary" to="/login" onClick={dismiss}>Đăng nhập để trò chuyện <ArrowRight size={16} aria-hidden="true" /></Link>
                 <Link className="assistant-direct-link" to="/ticket-booking" onClick={dismiss}>Đặt vé <ArrowUpRight size={15} aria-hidden="true" /></Link>
@@ -509,8 +519,10 @@ export default function AIAssistant() {
         </dialog>
       )}
       <button ref={launcher} onClick={() => setOpen(true)} aria-expanded={open} aria-controls="cinema-assistant"
-        aria-haspopup="dialog" className="assistant-launcher">
-        <MessageCircle size={20} aria-hidden="true" /> Hỏi trợ lý
+        aria-haspopup="dialog" aria-label="Hỏi trợ lý" className="assistant-launcher">
+        <span className="assistant-launcher-icon"><Ticket size={24} aria-hidden="true" /></span>
+        <span className="assistant-launcher-copy"><strong>Hỏi trợ lý</strong><span>Phim hay, lịch chiếu & vé</span></span>
+        <ArrowUpRight size={19} aria-hidden="true" className="assistant-launcher-arrow" />
       </button>
     </aside>
   );
