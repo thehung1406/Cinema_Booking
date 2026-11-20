@@ -1,0 +1,77 @@
+{
+  "version": 1,
+  "created_at": "2026-11-20T00:00:00+00:00",
+  "documents": [
+    {
+      "source_id": "cinema-booking-guide",
+      "version": "draft-2-20261120",
+      "file": "booking-guide.json",
+      "source_sha256": "1ac353a67161e1a96e6977a111f18e175271bf63f8889ee07e4356f7f5f88049",
+      "approved": false,
+      "blocks": 10
+    },
+    {
+      "source_id": "open-suny-film-construction",
+      "version": "2017",
+      "file": "film-book.json",
+      "source_sha256": "789d951902d630beafbb81ec77253cfb2c52111595066eae97715c9e6983a258",
+      "approved": false,
+      "blocks": 84
+    },
+    {
+      "source_id": "wikibooks-cinematography-summary",
+      "version": "oldid-3335736-summary-1",
+      "file": "cinematography-summary.json",
+      "source_sha256": "192c94bc9b099dffb0cca095cac2daa34fee774f55edf18ee5568955d69cc7a1",
+      "approved": false,
+      "blocks": 3
+    }
+  ],
+  "graph": {
+    "release_id": "2a11f6834bd478155ce4eb8b579b8853cada33280720de7b55199cfb4f102e1d",
+    "claims": 5,
+    "curation": "pipelines/knowledge/graph-curation.v1.json"
+  },
+  "files": [
+    {
+      "path": "booking-guide.extraction.json",
+      "bytes": 240,
+      "sha256": "900b5bcac1393dc63bd6d0b596a42810e481d4c8a5e6b81e7db18d52a29169d4"
+    },
+    {
+      "path": "booking-guide.json",
+      "bytes": 4297,
+      "sha256": "00aae455ea89cf478aa7d49aa0a2c6e2e9178cf04ead1699d9dd6953b299566c"
+    },
+    {
+      "path": "cinematography-summary.extraction.json",
+      "bytes": 250,
+      "sha256": "908b91eea129fa555c2f2190c2c237aa253d8f438bacdc37c7b034343ab6a1ab"
+    },
+    {
+      "path": "cinematography-summary.json",
+      "bytes": 2137,
+      "sha256": "bb2942b9c0bb72b8bb930d8ff743fa9e90bb7e4fe1ad74d5e2e8e8c3eeb123b9"
+    },
+    {
+      "path": "film-book.extraction.json",
+      "bytes": 1447,
+      "sha256": "0e5ecc63fda34f448b44863f540507e8b19bb933a744707284244587fa877f54"
+    },
+    {
+      "path": "film-book.json",
+      "bytes": 216264,
+      "sha256": "9c3b6a1e67654f27f1b95998764826e37ea0dd0f9e297b440f77b7ab9c01d666"
+    },
+    {
+      "path": "graph/demo.cypher",
+      "bytes": 8760,
+      "sha256": "d505a49cb0592a2f5df25b44da15c9ecefa469fabdc3d0a35efd58b74ca841ab"
+    },
+    {
+      "path": "raw/exploring-movie-construction.pdf",
+      "bytes": 10954345,
+      "sha256": "789d951902d630beafbb81ec77253cfb2c52111595066eae97715c9e6983a258"
+    }
+  ]
+}

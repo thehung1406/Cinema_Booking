@@ -1,0 +1,54 @@
+{
+  "source_id": "open-suny-film-construction",
+  "sha256": "789d951902d630beafbb81ec77253cfb2c52111595066eae97715c9e6983a258",
+  "pages_or_blocks": 84,
+  "characters": 202527,
+  "warnings": [
+    {
+      "page": 2,
+      "issue": "Sparse text; inspect blank page/image or supply reviewed OCR"
+    },
+    {
+      "page": 6,
+      "issue": "Sparse text; inspect blank page/image or supply reviewed OCR"
+    },
+    {
+      "page": 8,
+      "issue": "Sparse text; inspect blank page/image or supply reviewed OCR"
+    },
+    {
+      "page": 10,
+      "issue": "Sparse text; inspect blank page/image or supply reviewed OCR"
+    },
+    {
+      "page": 14,
+      "issue": "Sparse text; inspect blank page/image or supply reviewed OCR"
+    },
+    {
+      "page": 16,
+      "issue": "Sparse text; inspect blank page/image or supply reviewed OCR"
+    },
+    {
+      "page": 56,
+      "issue": "Sparse text; inspect blank page/image or supply reviewed OCR"
+    },
+    {
+      "page": 82,
+      "issue": "Sparse text; inspect blank page/image or supply reviewed OCR"
+    },
+    {
+      "page": 88,
+      "issue": "Sparse text; inspect blank page/image or supply reviewed OCR"
+    },
+    {
+      "page": 90,
+      "issue": "Sparse text; inspect blank page/image or supply reviewed OCR"
+    },
+    {
+      "page": 94,
+      "issue": "Sparse text; inspect blank page/image or supply reviewed OCR"
+    }
+  ],
+  "review_required": true,
+  "ocr_performed": false
+}
