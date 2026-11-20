@@ -111,8 +111,8 @@ export function DocumentsPage() {
     <PageHeading title="Tài liệu chatbot" description="Nhập tài liệu văn bản, kiểm tra nội dung và phê duyệt từng phiên bản. Chatbot chỉ tra cứu tài liệu đã duyệt và đến thời điểm hiệu lực."
       createLabel="Nhập tài liệu" onCreate={() => setEditor({})} />
     {notice && <p className="admin-notice" role="status">{notice}</p>}
-    <section className="admin-panel mb-5">
-      <h2 className="font-bold mb-3">Kiểm tra truy xuất Knowledge Base</h2>
+    <details className="admin-panel admin-advanced mb-5">
+      <summary>Công cụ nâng cao · Kiểm tra truy xuất Knowledge Base</summary>
       <form onSubmit={async event => {
         event.preventDefault(); setTraceBusy(true); setTraceError(''); setTrace(null);
         try { const response = await api.post('/admin/knowledge/search', { question: searchQuestion, scope: searchScope, strategy: searchStrategy }); setTrace(response.data); }
@@ -135,7 +135,7 @@ export function DocumentsPage() {
           <p className="whitespace-pre-wrap">{source.text}</p>
         </article>)}
       </div>}
-    </section>
+    </details>
     <section className="admin-panel">
       <div className="admin-toolbar"><Field label="Tìm tài liệu" type="search" placeholder="Tiêu đề hoặc mã nguồn" value={query} onChange={(event) => { setQuery(event.target.value); setOffset(0); }} /></div>
       <DataTable columns={[
@@ -230,7 +230,7 @@ export function ReportsPage() {
         <div className="admin-stat"><span>Độ phủ phân tích cảm xúc</span><strong>{data.sentiments.coverage}%</strong><small>{data.sentiments.total} đánh giá được duyệt</small></div>
       </div>
       <section className="admin-panel"><h2 className="admin-section-title">Doanh thu theo phim</h2>
-        <DataTable columns={[{ key: "title", label: "Phim" }, { key: "revenue", label: "Doanh thu", render: (row) => formatCurrency(row.revenue) }, { key: "bookings", label: "Đơn hợp lệ" }, { key: "tickets", label: "Vé đã bán" }]}
+        <DataTable columns={[{ key: "title", label: "Phim" }, { key: "revenue", label: "Doanh thu", render: (row) => <div className="admin-revenue"><span>{formatCurrency(row.revenue)}</span><meter min={0} max={Math.max(1, ...data.by_film.map(film => Number(film.revenue)))} value={Number(row.revenue)} aria-label={`Doanh thu ${row.title}`} /></div> }, { key: "bookings", label: "Đơn hợp lệ" }, { key: "tickets", label: "Vé đã bán" }]}
           rows={data.by_film.map((film) => ({ ...film, id: film.film_id }))} />
       </section>
       <section className="admin-panel"><h2 className="admin-section-title">Cảm xúc đánh giá</h2>

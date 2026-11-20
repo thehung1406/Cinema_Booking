@@ -28,3 +28,6 @@ Thumbs.db
 *.njsproj
 *.sln
 *.sw?
+
+# Local visual QA artifacts and browser profiles
+.taste-skill/

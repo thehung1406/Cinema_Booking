@@ -44,18 +44,18 @@ export default function MovieDetail() {
   return (
     <>
       <section className="detail-hero">
-        <div className="shell grid gap-7 md:grid-cols-[240px_1fr] items-center">
+        <div className="shell grid gap-7 md:grid-cols-[300px_1fr] items-center">
           <Poster
             src={movie.image}
             title={movie.title}
-            className="rounded-xl max-w-[200px] md:max-w-none mx-auto"
+            className="detail-poster max-w-[200px] md:max-w-none mx-auto"
           />
           <div>
-            <p className="text-red-300 text-xs font-bold uppercase tracking-widest">
+            <p className="eyebrow">
               Thông tin phim
             </p>
             <h1 className="page-title">{movie.title}</h1>
-            <div className="flex flex-wrap gap-3 text-sm text-gray-300 mb-6">
+            <div className="flex flex-wrap gap-3 text-sm text-gray-600 mb-6">
               {movie.rating && (
                 <span className="bg-red-700 text-white px-2 py-1 rounded">
                   {movie.rating}
@@ -69,7 +69,7 @@ export default function MovieDetail() {
               )}
               {movie.genre && <span>{movie.genre}</span>}
             </div>
-            <p className="text-gray-300 mb-6">
+            <p className="text-gray-600 mb-6">
               Chọn rạp và suất chiếu để đặt ghế yêu thích của bạn.
             </p>
             <div className="flex flex-wrap gap-3">
@@ -79,7 +79,7 @@ export default function MovieDetail() {
               </Button>
               {movie.trailer && (
                 <button
-                  className="btn border border-gray-600 text-white"
+                  className="btn btn-secondary"
                   onClick={() => setTrailerOpen(true)}
                 >
                   <Play size={16} />

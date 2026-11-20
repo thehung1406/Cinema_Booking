@@ -247,8 +247,11 @@ export default function UserInfo() {
                 const state = paymentState(booking);
                 const copy = statusCopy[state];
                 return (
-                  <article key={booking.id}>
-                    <BookingSummary booking={booking} />
+                  <article key={booking.id} className="order-history">
+                    <details>
+                      <summary><div><span className="text-sm text-gray-600">Đơn #{booking.id}</span><h3 className="text-lg mt-1">{booking.filmTitle || "Đơn vé"}</h3><span className="text-sm text-gray-600">{copy[0]}</span></div><span className="text-sm">Xem chi tiết</span></summary>
+                      <BookingSummary booking={booking} />
+                    </details>
                     <div className="flex flex-wrap justify-between items-center gap-3 px-4 py-3">
                       <span
                         className={`rounded-full px-3 py-2 text-xs font-semibold ${copy[1]}`}

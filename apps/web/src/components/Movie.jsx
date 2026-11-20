@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Search } from "lucide-react";
 import useFilms from "../hooks/useFilms";
 import { isNowShowing, isUpcoming } from "../utils/filmUtils";
@@ -7,7 +8,14 @@ import { PageState } from "./ui/Primitives";
 
 export default function Movie() {
   const { data: movies, loading, error, retry } = useFilms();
-  const [filter, setFilter] = useState("all");
+  const [params, setParams] = useSearchParams();
+  const status = params.get("status");
+  const filter = ["showing", "upcoming"].includes(status) ? status : "all";
+  const setFilter = (value) => setParams(previous => {
+    const next = new URLSearchParams(previous);
+    next.set("status", value);
+    return next;
+  });
   const [query, setQuery] = useState("");
   const filtered = movies.filter(
     (movie) =>
@@ -20,11 +28,11 @@ export default function Movie() {
   return (
     <div className="shell page-section">
       <p className="eyebrow">Khám phá điện ảnh</p>
-      <h1 className="page-title">Chọn phim cho buổi hẹn tiếp theo</h1>
+      <h1 className="page-title">Phim tại rạp</h1>
       <p className="text-gray-500 mb-8">
         Xem thông tin phim và tìm lịch chiếu tại rạp bạn yêu thích.
       </p>
-      <div className="surface flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+      <div className="catalog-toolbar flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <div className="filter-buttons" aria-label="Lọc phim">
           {[
             ["all", "Tất cả"],
@@ -75,7 +83,7 @@ export default function Movie() {
         <PageState
           title="Không tìm thấy phim phù hợp"
           message="Thử đổi tên phim hoặc chọn danh mục khác."
-        />
+        ><button className="btn btn-secondary" onClick={() => { setQuery(""); setFilter("all"); }}>Xóa bộ lọc</button></PageState>
       )}
     </div>
   );

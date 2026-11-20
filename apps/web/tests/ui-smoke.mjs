@@ -231,6 +231,7 @@ await context.route("**/*", async (route) => {
       paymentMethod: "Online",
       seats: [{ seat_id: 3, price: 120000 }],
       foodItems: [],
+      reservationId: null,
     });
     body = { bookingId: 77 };
   } else if (path === "/food-items") body = [];
@@ -241,6 +242,13 @@ await context.route("**/*", async (route) => {
       status = 503;
       body = { detail: "Test connection failure" };
     }
+  } else if (path === "/payment/status/77") {
+    if (bookingFail) status = 503;
+    body = { booking_id: 77, provider_status: booking.paymentStatus,
+      fulfillment_status: booking.bookingStatus === "CONFIRMED" ? "ISSUED" : booking.paymentStatus === "FAILED" ? "FAILED" : "AWAITING_PAYMENT",
+      can_retry: booking.bookingStatus === "PENDING" };
+  } else if (path === "/tickets/booking/77") {
+    body = [{ ticket_code: "fixture-ticket-77", status: "ISSUED" }];
   } else if (path === "/payment/vnpay-url") {
     assert.deepEqual(request.postDataJSON(), { bookingId: 77 });
     status = 503;
@@ -309,31 +317,36 @@ async function layout(label, capture = false) {
         ).length,
     );
   assert.equal(unlabeled, 0, label + ": icon labels");
-  if (capture && screenshotDir)
+  if (capture && screenshotDir) {
+    await page.evaluate(async () => { await document.fonts.ready; await Promise.all(document.getAnimations().filter(a => a.effect?.getTiming().iterations !== Infinity).map(a => a.finished.catch(() => {}))); });
     await page.screenshot({
       path: resolve(screenshotDir, label + ".png"),
       fullPage: true,
     });
+  }
   results.push(label);
 }
 try {
-  for (const width of [375, 768, 1440]) {
+  for (const width of [320, 375, 390, 768, 820, 1024, 1440]) {
     await page.setViewportSize({ width, height: 900 });
     await open("/", films[0].title);
     await layout("home-" + width, true);
-    assert.equal(
-      await page.locator(".hero h1").count(),
-      1,
-      "Only active carousel slide exists",
-    );
-    await page
-      .getByRole("button", { name: "Phim tiếp theo", exact: true })
-      .click();
-    await page
-      .getByRole("heading", { name: films[1].title, exact: true })
-      .first()
-      .waitFor();
+    assert.equal(await page.locator("#main-content").evaluate(el => getComputedStyle(el).animationName), "user-page-enter", "User pages enter on navigation");
+    assert.equal(await page.locator('[aria-roledescription="carousel"]').count(), 0, "Editorial hero has no carousel");
+    await page.getByRole("link", { name: "Xem tất cả", exact: true }).first().click();
+    assert.equal(new URL(page.url()).searchParams.get("status"), "showing");
+    await page.getByRole("button", { name: "Sắp chiếu", exact: true }).click();
+    assert.equal(new URL(page.url()).searchParams.get("status"), "upcoming");
+    await page.reload();
+    await page.getByRole("heading", { name: "Phim tại rạp", exact: true }).waitFor();
+    assert.equal(await page.locator(".movie-card").count(), 1);
+    await page.goBack();
+    await page.getByRole("button", { name: "Đang chiếu", exact: true }).waitFor();
+    await open("/", films[0].title);
     if (width < 1024) {
+      await page.getByRole("button", { name: "Mở menu" }).click();
+      await page.keyboard.press("Escape");
+      assert.equal(await page.getByRole("button", { name: "Mở menu" }).evaluate(el => el === document.activeElement), true, "Menu restores focus");
       await page.getByRole("button", { name: "Mở menu" }).click();
       await page
         .locator("#mobile-navigation")
@@ -345,7 +358,7 @@ try {
         "Menu closes after navigation",
       );
     }
-    await open("/movie", "Chọn phim cho buổi hẹn tiếp theo");
+    await open("/movie", "Phim tại rạp");
     await page.getByLabel("Tìm phim theo tên").fill("Hành trình");
     assert.equal(await page.locator(".movie-card").count(), 1);
     await layout("movies-" + width, true);
@@ -400,6 +413,23 @@ try {
       (await page.locator("body").innerText()).includes(films[0].title),
     );
     await layout("account-" + width, true);
+    await open("/cinema", "Chọn rạp cho buổi xem");
+    await page.getByRole("link", { name: "Chọn lịch tại rạp" }).waitFor();
+    await layout("cinema-" + width, true);
+    await page.getByRole("link", { name: "Chọn lịch tại rạp" }).click();
+    assert.equal(new URL(page.url()).searchParams.get("theaterId"), "1");
+    await page.getByLabel("1. Chọn phim").selectOption("1");
+    await page.waitForFunction(() => !document.querySelector("#booking-theater").disabled);
+    assert.equal(await page.getByLabel("2. Chọn rạp").inputValue(), "1", "Film selection keeps the originating theater when available");
+    await open("/contact", "Thông tin cho buổi xem phim");
+    assert.equal(await page.locator("form").count(), 0, "No simulated contact submission");
+    assert.equal(await page.getByRole("link", { name: "Mở email hỗ trợ" }).getAttribute("href"), "mailto:hoidap@cgv.vn");
+    await layout("support-" + width, true);
+    await open("/about", "Phim, rạp và buổi xem của bạn");
+    await page.locator('[data-moment-mounted="1"]').waitFor();
+    await layout("about-" + width, true);
+    await open("/missing-editorial-page", "Không tìm thấy trang");
+    await layout("404-" + width, true);
     await open("/login", "Chào mừng trở lại");
     await layout("login-" + width, true);
     await page.getByRole("button", { name: "Đăng ký tài khoản" }).click();
@@ -514,10 +544,10 @@ try {
     .first()
     .waitFor();
   filmsEmpty = true;
-  await open("/", "Một bộ phim. Một trải nghiệm mới.");
+  await open("/", "Phim & lịch chiếu tại CGV");
   await layout("home-empty-375", true);
   filmsEmpty = false;
-  await open("/movie", "Chọn phim cho buổi hẹn tiếp theo");
+  await open("/movie", "Phim tại rạp");
   await page.getByLabel("Tìm phim theo tên").fill("không có phim này");
   await page
     .getByRole("heading", { name: "Không tìm thấy phim phù hợp" })
@@ -605,7 +635,7 @@ try {
   await page.locator("#cinema-assistant").waitFor({ state: "detached" });
   assert.equal(await page.locator("#cinema-assistant").count(), 0);
   await page.emulateMedia({ reducedMotion: "reduce" });
-  await open("/movie", "Chọn phim cho buổi hẹn tiếp theo");
+  await open("/movie", "Phim tại rạp");
   await page
     .getByRole("link", { name: /^Xem chi tiết/ })
     .first()
@@ -630,7 +660,7 @@ try {
         passedLayouts: results.length,
         layouts: results,
         checked: [
-          "carousel",
+          "editorial hero", "URL filters reload/back", "cinema context", "support without simulated send",
           "mobile menu",
           "search",
           "trailer keyboard",

@@ -39,12 +39,12 @@ export default function CinemaOperations({ permissions }) {
     };
   }, [allowed]);
   if (!allowed || (!items.length && !error)) return null;
-  return <section className="admin-panel" aria-label="Tác vụ cấu hình rạp">
-    <h2>Tác vụ cấu hình rạp</h2>
+  return <details className="admin-panel admin-operations" open={Boolean(error) || items.some(item => item.status === "FAILED")} aria-label="Tác vụ cấu hình rạp">
+    <summary>Tác vụ cấu hình rạp <span className="admin-badge">{items.length} tác vụ</span></summary>
     {error && <p role="alert" className="admin-error">{error}</p>}
     {items.map((item) => <p key={item.operation_id} role="status" className={item.status === "FAILED" ? "admin-error" : "admin-notice"}>
       Phòng #{item.room_id} · {item.status}: {item.message}
       {item.status === "FAILED" && " Kiểm tra lại cấu hình; dùng Mở nhận hold trên lịch chiếu khi cấu hình hiện tại có thể bán."}
     </p>)}
-  </section>;
+  </details>;
 }

@@ -3,7 +3,7 @@ import { ArrowRight, CalendarDays, Film, MapPin } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import api from "../config/api";
 import { formatDate, formatTime, localDateInput } from "../utils/formatters";
-import { BookingSteps, Button, PageState } from "./ui/Primitives";
+import { BookingSteps, Button, PageState, Poster } from "./ui/Primitives";
 
 export default function TicketBooking() {
   const navigate = useNavigate();
@@ -145,7 +145,7 @@ export default function TicketBooking() {
                 value={movieId}
                 onChange={(e) => {
                   setMovieId(e.target.value);
-                  setCinemaId("");
+                  if (movieId) setCinemaId("");
                   setShowtimeId(null);
                 }}
                 disabled={loading}
@@ -285,6 +285,7 @@ export default function TicketBooking() {
         </section>
         <aside className="surface booking-summary">
           <h2 className="text-lg font-bold mb-5">Lựa chọn của bạn</h2>
+          {movie && <div className="flex items-start gap-4 mb-6"><Poster src={movie.image} title={movie.title} className="!w-20 shrink-0" /><p className="text-lg">{movie.title}</p></div>}
           <dl className="space-y-4 text-sm">
             {[
               ["Phim", movie?.title],

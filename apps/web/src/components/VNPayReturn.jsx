@@ -74,7 +74,7 @@ export default function VNPayReturn() {
     {booking && <BookingSummary booking={booking} />}
     {stage === "ISSUED" && tickets.length > 0 && <section className="surface mt-5">
       <h2 className="font-bold text-lg mb-4">Vé điện tử của bạn</h2>
-      <div className="flex flex-wrap gap-6">{tickets.map(ticket => <div key={ticket.ticket_code} className="bg-white p-3 max-w-full">
+      <div className="flex flex-wrap gap-6">{tickets.map(ticket => <div key={ticket.ticket_code} className="ticket-qr max-w-full">
         <QRCode value={ticket.ticket_code} size={130} level="H" role="img" aria-label={`Mã QR vé ${ticket.ticket_code}`} />
         <p className="text-xs mt-3 break-all max-w-48">{ticket.ticket_code}</p><p>{ticket.status === "USED" ? "Đã sử dụng" : "Đã cấp vé"}</p>
       </div>)}</div>

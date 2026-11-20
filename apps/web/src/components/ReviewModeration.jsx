@@ -118,7 +118,7 @@ export default function ReviewModeration() {
     finally { setBusy(false); }
   }
   if (!allowed) return <p className="p-8">Chức năng dành cho nhân viên kiểm duyệt.</p>;
-  return <main className="max-w-4xl mx-auto p-6"><h1 className="text-2xl font-bold">Duyệt đánh giá</h1>
+  return <div className="shell page-section moderation-page"><h1 className="text-2xl font-bold">Duyệt đánh giá</h1>
     <div className="flex gap-3 my-5" role="tablist" aria-label="Loại rà soát">
       <button role="tab" aria-selected={tab === 'content'} onClick={() => { setTab('content'); setOffset(0); }}>Nội dung chờ duyệt</button>
       <button role="tab" aria-selected={tab === 'sentiment'} onClick={() => { setTab('sentiment'); setOffset(0); }}>Nhãn cảm xúc</button>
@@ -129,7 +129,7 @@ export default function ReviewModeration() {
     {!reviews.length && <p className="py-6">Không có đánh giá đang chờ duyệt.</p>}
     {reviews.map(r => <article key={r.id} className="my-4 border rounded p-4"><p className="font-semibold">{r.author} · phiên bản {r.content_version}</p><p className="whitespace-pre-wrap break-words my-3">{r.content}</p><button disabled={busy} onClick={() => moderate(r, 'approved')} className="bg-green-700 text-white rounded px-4 py-2 mr-3">Duyệt</button><button disabled={busy} onClick={() => moderate(r, 'rejected')} className="text-red-700">Từ chối</button></article>)}
     </> : <>
-      {demoEnabled && <SentimentDemo />}
+      {demoEnabled && <details className="surface my-6"><summary>Công cụ nâng cao</summary><SentimentDemo /></details>}
       <label className="block my-4">Trạng thái
         <select className="border rounded p-2 ml-3" value={status} onChange={e => { setStatus(e.target.value); setOffset(0); }}>
           <option value="needs_review">Cần rà soát</option><option value="succeeded">Đã có nhãn hiệu lực</option>
@@ -143,5 +143,5 @@ export default function ReviewModeration() {
         <button disabled={offset + 20 >= total || busy} onClick={() => setOffset(v => v + 20)}>Trang sau</button>
       </div>
     </>}
-  </main>;
+  </div>;
 }

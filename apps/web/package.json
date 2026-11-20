@@ -16,7 +16,8 @@
     "test:annotation": "node tests/annotation-ui.mjs",
     "test:food": "node tests/food-flow.mjs",
     "test:admin": "node tests/admin-flow.mjs",
-    "test:payment": "node tests/payment-flow.mjs"
+    "test:payment": "node tests/payment-flow.mjs",
+    "test:auth": "node tests/auth-flow.mjs"
   },
   "dependencies": {
     "@tailwindcss/aspect-ratio": "^0.4.2",

@@ -120,6 +120,14 @@ await page.route("**/*", async (route) => {
 try {
   await page.goto(`${baseURL}/admin`);
   await page.getByRole("heading", { name: "Quản lý phim", exact: true }).waitFor();
+  await page.setViewportSize({ width: 1440, height: 768 });
+  await page.evaluate(() => document.fonts.ready);
+  await page.locator('.admin-sidebar').evaluate(sidebar => { sidebar.scrollTop = sidebar.scrollHeight; });
+  assert.ok(await page.locator('.admin-back').evaluate(link => {
+    const bounds = link.getBoundingClientRect();
+    return bounds.top >= 0 && bounds.bottom <= innerHeight;
+  }), 'All admin sidebar links must be reachable on shorter desktop screens');
+  await page.setViewportSize({ width: 1440, height: 1000 });
   await page.getByRole("button", { name: "Thêm phim", exact: false }).click();
   await page.getByLabel("Tên phim *", { exact: true }).fill("Phim mới kiểm thử");
   await page.getByLabel("Hành động", { exact: true }).check();
@@ -217,6 +225,16 @@ try {
   assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), "Film table scrolls inside its panel on mobile");
   if (screenshotDir) await page.screenshot({ path: resolve(screenshotDir, "admin-films-mobile.png"), fullPage: true });
 
+  for (const width of [320, 390, 768, 820, 1024, 1440]) {
+    await page.setViewportSize({ width, height: width === 820 ? 1180 : width === 768 ? 1024 : 900 });
+    for (const route of ["films", "rooms", "rooms/1/seats", "showtimes", "prices", "employees", "roles", "documents", "reports"]) {
+      await page.goto(`${baseURL}/admin/${route}`);
+      await page.locator(".admin-content h1").waitFor();
+      await page.evaluate(() => document.fonts.ready);
+      assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `Admin ${route} ${width} overflow`);
+      if (screenshotDir) await page.screenshot({ path: resolve(screenshotDir, `admin-${route.replaceAll("/", "-")}-${width}.png`), fullPage: true });
+    }
+  }
   role = "MANAGER";
   await page.goto(`${baseURL}/admin`);
   await page.getByRole("heading", { name: "Quản lý phim", exact: true }).waitFor();
