@@ -16,6 +16,6 @@ export default function EditorialMoment() {
     return () => { active = false; animation?.destroy?.(); delete element.dataset.momentMounted; };
   }, []);
   return <section ref={root} className="editorial-moment" data-moment="word-highlight">
-    <div className="shell"><p className="mo-wh__text">Từ bộ phim bạn chọn đến chỗ ngồi của bạn. Xem lịch chiếu, chọn ghế và theo dõi đơn vé tại CGV.</p><Link className="btn btn-secondary mt-8" to="/ticket-booking">Chọn lịch chiếu</Link></div>
+    <div className="shell"><p className="mo-wh__text">Từ <strong>bộ phim bạn chọn</strong> đến <strong>chỗ ngồi của bạn.</strong> Xem lịch chiếu, chọn ghế và theo dõi đơn vé tại CGV.</p><Link className="btn btn-secondary mt-8" to="/ticket-booking">Chọn lịch chiếu</Link></div>
   </section>;
 }

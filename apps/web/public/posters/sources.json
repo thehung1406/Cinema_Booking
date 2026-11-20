@@ -1,0 +1,93 @@
+{
+  "purpose": "Authentic film posters for user-requested local testing; film imagery belongs to its respective rights holders. Local screening dates and prices are test data, not a current commercial cinema programme.",
+  "films": [
+    {
+      "id": 5,
+      "title": "Toy Story",
+      "duration_minutes": 85,
+      "release_date": "1995-11-22",
+      "description": "Woody và Buzz Lightyear cùng những món đồ chơi tìm đường trở về bên chủ nhân Andy.",
+      "image": "/posters/toy-story.jpg",
+      "source": "https://movies.disney.com/toy-story",
+      "poster_source": "https://lumiere-a.akamaihd.net/v1/images/p_toystory_19639_424d94a0.jpeg?region=0%2C0%2C540%2C810"
+    },
+    {
+      "id": 6,
+      "title": "Aladdin",
+      "duration_minutes": 90,
+      "release_date": "1992-11-25",
+      "description": "Aladdin gặp vị thần trong cây đèn và bước vào hành trình thay đổi cuộc đời ở Agrabah.",
+      "image": "/posters/aladdin.jpg",
+      "source": "https://movies.disney.com/aladdin",
+      "poster_source": "https://lumiere-a.akamaihd.net/v1/images/p_aladdin1992_20486_174ba005.jpeg?region=0%2C0%2C540%2C810"
+    },
+    {
+      "id": 7,
+      "title": "The Little Mermaid",
+      "duration_minutes": 82,
+      "release_date": "1989-11-16",
+      "description": "Nàng tiên cá Ariel khao khát khám phá thế giới con người và phải đánh đổi để thực hiện ước mơ.",
+      "image": "/posters/the-little-mermaid.jpg",
+      "source": "https://movies.disney.com/the-little-mermaid",
+      "poster_source": "https://lumiere-a.akamaihd.net/v1/images/p_thelittlemermaid_6a6ef760.jpeg?region=0%2C0%2C300%2C450"
+    },
+    {
+      "id": 8,
+      "title": "The Nightmare Before Christmas",
+      "duration_minutes": 76,
+      "release_date": "1993-10-13",
+      "description": "Jack Skellington khám phá thị trấn Giáng sinh và muốn mang ngày lễ ấy về thế giới Halloween.",
+      "image": "/posters/the-nightmare-before-christmas.jpg",
+      "source": "https://movies.disney.com/the-nightmare-before-christmas",
+      "poster_source": "https://lumiere-a.akamaihd.net/v1/images/p_thenightmarebeforechristmas_2428_acaebc42.jpeg?region=0%2C0%2C540%2C810"
+    },
+    {
+      "id": 9,
+      "title": "Dumbo",
+      "duration_minutes": 64,
+      "release_date": "1941-10-31",
+      "description": "Chú voi Dumbo học cách biến đôi tai khác biệt thành khả năng đặc biệt nhờ sự giúp đỡ của người bạn Timothy.",
+      "image": "/posters/dumbo.jpg",
+      "source": "https://movies.disney.com/dumbo",
+      "poster_source": "https://lumiere-a.akamaihd.net/v1/images/p_dumbo_19904_2e1de476.jpeg?region=0%2C0%2C540%2C810"
+    },
+    {
+      "id": 10,
+      "title": "Bambi",
+      "duration_minutes": 70,
+      "release_date": "1942-08-13",
+      "description": "Chú nai Bambi lớn lên trong khu rừng, khám phá tình bạn, gia đình và những thay đổi của thiên nhiên.",
+      "image": "/posters/bambi.jpg",
+      "source": "https://movies.disney.com/bambi",
+      "poster_source": "https://lumiere-a.akamaihd.net/v1/images/p_bambi_19754_990e0e5a.jpeg?region=0%2C0%2C540%2C810"
+    },
+    {
+      "id": 1,
+      "title": "Dune: Hành Tinh Cát - Phần 2",
+      "image": "/posters/film-1.jpg",
+      "source": "https://en.wikipedia.org/wiki/Dune:_Part_Two",
+      "poster_source": "https://thumb.wikimedia.org/wikipedia/en/thumb/5/52/Dune_Part_Two_poster.jpeg/250px-Dune_Part_Two_poster.jpeg"
+    },
+    {
+      "id": 2,
+      "title": "Mai",
+      "image": "/posters/film-2.jpg",
+      "source": "https://en.wikipedia.org/wiki/Mai_(2024_film)",
+      "poster_source": "https://thumb.wikimedia.org/wikipedia/en/thumb/3/36/Mai_2024_poster.jpg/250px-Mai_2024_poster.jpg"
+    },
+    {
+      "id": 3,
+      "title": "Kung Fu Panda 4",
+      "image": "/posters/film-3.jpg",
+      "source": "https://en.wikipedia.org/wiki/Kung_Fu_Panda_4",
+      "poster_source": "https://thumb.wikimedia.org/wikipedia/en/thumb/7/7f/Kung_Fu_Panda_4_poster.jpg/250px-Kung_Fu_Panda_4_poster.jpg"
+    },
+    {
+      "id": 4,
+      "title": "Godzilla x Kong: Đế Chế Mới",
+      "image": "/posters/film-4.jpg",
+      "source": "https://en.wikipedia.org/wiki/Godzilla_x_Kong:_The_New_Empire",
+      "poster_source": "https://thumb.wikimedia.org/wikipedia/en/thumb/b/be/Godzilla_x_kong_the_new_empire_poster.jpg/250px-Godzilla_x_kong_the_new_empire_poster.jpg"
+    }
+  ]
+}

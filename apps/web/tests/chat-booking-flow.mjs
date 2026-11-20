@@ -99,6 +99,7 @@ async function run({ typed, lookupTool, food, retry, conflict }) {
     else {
       await chat.getByRole('button', { name: 'Đặt trong chat', exact: true }).nth(1).click();
       await chat.getByRole('button', { name: /^Ghế A5,/ }).click();
+      assert.equal(await chat.getByRole('button', { name: /^Ghế A5,/ }).evaluate(el => getComputedStyle(el).backgroundColor), 'rgb(217, 45, 58)', 'Selected chat seat keeps its fill while hovered');
       await chat.getByRole('button', { name: /^Ghế A6,/ }).click();
     }
     assert.equal(checkouts.length, 0);

@@ -1,4 +1,6 @@
-import { Route, Routes, useLocation } from "react-router-dom";
+import { useEffect } from "react";
+import { Route, Routes, useMatch } from "react-router-dom";
+import "./customer-theme.css";
 import NotFound from "./components/NotFound";
 import LoginPage from "./components/LoginPage";
 import HomePage from "./components/HomePage";
@@ -25,9 +27,14 @@ import { DocumentsPage, ReportsPage } from "./components/admin/AdminKnowledgeRep
 
 
 function App() {
-  const location = useLocation();
+  const adminPage = useMatch("/admin/*");
+  const moderationPage = useMatch("/review-moderation");
+  const staffPage = Boolean(adminPage || moderationPage);
+  useEffect(() => {
+    document.querySelector('meta[name="theme-color"]')?.setAttribute("content", staffPage ? "#f7f6f3" : "#101117");
+  }, [staffPage]);
   return (
-    <div>
+    <div className={staffPage ? undefined : "customer-theme"}>
       <Routes>
         <Route path="/admin" element={<AdminLayout />}>
           <Route path="films" element={<FilmsPage />} />
@@ -67,7 +74,7 @@ function App() {
         <Route path="loginpage" element={<LoginPage />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
-      {!location.pathname.startsWith("/admin") && <AIAssistant />}
+      {!adminPage && <AIAssistant />}
     </div>
   );
 }

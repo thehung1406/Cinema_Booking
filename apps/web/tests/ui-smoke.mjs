@@ -294,6 +294,11 @@ async function open(path, heading) {
 }
 async function layout(label, capture = false) {
   assert.equal(
+    await page.locator("#root > div").evaluate(el => getComputedStyle(el).backgroundColor),
+    "rgb(16, 17, 23)",
+    label + ": customer cinema theme covers the whole page",
+  );
+  assert.equal(
     await page.evaluate(
       () => document.documentElement.scrollWidth > innerWidth,
     ),
@@ -327,6 +332,40 @@ async function layout(label, capture = false) {
   results.push(label);
 }
 try {
+  let releaseFilms;
+  const filmResponse = new Promise(resolve => { releaseFilms = resolve; });
+  const holdFilms = async route => { await filmResponse; await route.fallback(); };
+  await page.route("**/films/", holdFilms);
+  await page.goto(baseURL + "/");
+  await page.getByRole("heading", { name: "Đang tìm những bộ phim dành cho bạn…", exact: true }).waitFor();
+  try {
+    assert.equal(await page.locator("#main-content").evaluate(el => el.getBoundingClientRect().height >= innerHeight - document.querySelector(".site-header").getBoundingClientRect().height - 1), true, "Home reserves its first screen while films load");
+  } finally { releaseFilms(); }
+  await page.getByRole("heading", { name: films[0].title, exact: true, level: 1 }).waitFor();
+  await page.unroute("**/films/", holdFilms);
+  await open("/", films[0].title);
+  await page.setViewportSize({ width: 768, height: 1024 });
+  await page.locator(".site-footer").scrollIntoViewIfNeeded();
+  await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+  assert.equal(await page.locator(".assistant").evaluate(el => getComputedStyle(el).position), "static", "Assistant stays below the footer when footer actions are visible");
+  await page.setViewportSize({ width: 1280, height: 720 });
+  await open("/", films[0].title);
+  for (const name of ["Lọc theo rạp", "Ngày xem"]) {
+    assert.equal(await page.getByLabel(name, { exact: true }).evaluate(el => Array.from(el.labels || []).some(label => label.getBoundingClientRect().height > 0)), true, name + ": filter has a visible label");
+  }
+  const themeFailures = [];
+  for (const path of ["/admin/films", "/review-moderation", "/Review-Moderation/", "/review-moderation//", "/%72eview-moderation", "/%61dmin/films"]) {
+    await page.goto(baseURL + path);
+    if (await page.locator(".customer-theme").count()) themeFailures.push(path + ": customer theme leaked into staff page");
+    assert.equal(await page.locator("html").evaluate(el => getComputedStyle(el).backgroundColor), "rgb(247, 246, 243)");
+  }
+  await open("/ticket-booking", "Chọn lịch chiếu");
+  for (const label of ["2. Chọn rạp", "3. Chọn ngày"]) {
+    const control = page.getByLabel(label);
+    assert.equal(await control.isDisabled(), true);
+    if (await control.evaluate(el => getComputedStyle(el).backgroundColor) !== "rgb(36, 39, 52)") themeFailures.push(label + ": disabled field looks enabled");
+  }
+  assert.deepEqual(themeFailures, [], "Theme isolation and disabled fields");
   for (const width of [320, 375, 390, 768, 820, 1024, 1440]) {
     await page.setViewportSize({ width, height: 900 });
     await open("/", films[0].title);
@@ -374,6 +413,7 @@ try {
     );
     await open("/TicketBooking?filmId=1", "Chọn lịch chiếu");
     await page.getByLabel("2. Chọn rạp").selectOption("1");
+    assert.equal(await page.getByLabel("3. Chọn ngày").evaluate(el => getComputedStyle(el).backgroundColor), "rgb(16, 17, 23)", "Enabled date uses its normal surface");
     await page.getByLabel("3. Chọn ngày").fill(date);
     await page.getByRole("button", { name: /18:30/ }).waitFor();
     await layout("showtimes-" + width, true);
