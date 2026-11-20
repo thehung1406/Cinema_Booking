@@ -11,8 +11,8 @@ services:
       HF_HUB_OFFLINE: '1'
       TRANSFORMERS_OFFLINE: '1'
     volumes:
-      - ${REVIEW_DEMO_LR_ARTIFACT:?Set path to the trusted film LR artifact}:/models/demo/lr:ro
-      - ${REVIEW_DEMO_VISOBERT_ARTIFACT:?Set path to the trusted film ViSoBERT artifact}:/models/demo/visobert:ro
+      - ${REVIEW_DEMO_LR_ARTIFACT:-./pipelines/models/sentiment-demo/lr}:/models/demo/lr:ro
+      - ${REVIEW_DEMO_VISOBERT_ARTIFACT:-./pipelines/models/sentiment-demo/visobert}:/models/demo/visobert:ro
   review-worker:
     image: cinema-review:sentiment-demo
     build:
@@ -28,5 +28,5 @@ services:
       HF_HUB_OFFLINE: '1'
       TRANSFORMERS_OFFLINE: '1'
     volumes:
-      - ${REVIEW_DEMO_LR_ARTIFACT:?Set path to the trusted film LR artifact}:/models:ro
-      - ${REVIEW_DEMO_VISOBERT_ARTIFACT:?Set path to the trusted film ViSoBERT artifact}:/opt/demo-visobert:ro
+      - ${REVIEW_DEMO_LR_ARTIFACT:-./pipelines/models/sentiment-demo/lr}:/models:ro
+      - ${REVIEW_DEMO_VISOBERT_ARTIFACT:-./pipelines/models/sentiment-demo/visobert}:/opt/demo-visobert:ro

@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "stage": "supplementary-weak-supervision-development-pilot",
+  "training_commit": "7d9ca6f79b7b613b650b30e3b02946217cb8b871",
+  "base_model": {
+    "repository": "uitnlp/visobert",
+    "revision": "196a62afad9cbe4f52a54aabad828b13f0eec59a"
+  },
+  "files": [
+    {
+      "path": "lr/metadata.json",
+      "bytes": 2603,
+      "sha256": "734073b0b907e654075e48290ca26be5bca13fd5525d04aab6a224066e739a75"
+    },
+    {
+      "path": "lr/model.joblib",
+      "bytes": 2190964,
+      "sha256": "ffe808b09fd9d1c40e6fc50a67c5d70f70c45e4eb0a7eb5e89831cb43e545078"
+    },
+    {
+      "path": "visobert/metadata.json",
+      "bytes": 2876,
+      "sha256": "caee75b044fe689d9996fecc4ad4950b8b66ccae708a2b85c55131e3e1e5e1f9"
+    },
+    {
+      "path": "visobert/config.json",
+      "bytes": 859,
+      "sha256": "845e5325cce06c9d5b8be96eaedb0b83f79103eeb694772d1f0bddabf972bf41"
+    },
+    {
+      "path": "visobert/model.safetensors",
+      "bytes": 390297116,
+      "sha256": "a0129511a7972bc53d08badeb8336e82096a554972f52a7322e5e7f17e6a1dc0"
+    },
+    {
+      "path": "visobert/sentencepiece.bpe.model",
+      "bytes": 470732,
+      "sha256": "02aaf05cda4db99e86b7c76eba6258867ce4d043da0fed19c87a7d46c8b53a65"
+    },
+    {
+      "path": "visobert/special_tokens_map.json",
+      "bytes": 280,
+      "sha256": "06e405a36dfe4b9604f484f6a1e619af1a7f7d09e34a8555eb0b77b66318067f"
+    },
+    {
+      "path": "visobert/tokenizer_config.json",
+      "bytes": 1230,
+      "sha256": "a01b61bae21770afdb367d1987659cde76d8dd618e66e532df830b9ab84e0a64"
+    },
+    {
+      "path": "visobert/tokenizer.json",
+      "bytes": 1802897,
+      "sha256": "3feb78081252fc85422f95a0a0284b6a03cc3522d0dbbcb2c86f2c15c3e5f0c8"
+    }
+  ]
+}

@@ -93,4 +93,6 @@ Kiểm tra giao diện tự động trên runtime demo là tùy chọn. Trong `a
 
 Source, Compose bổ sung, cấu hình mẫu/lock, công cụ tải dữ liệu/model, tài liệu và snapshot bằng chứng gọn có thể đưa vào Git. `.env*` riêng, `.local`, `.venv-ai-research`, raw review và weights vẫn bị bỏ qua. Nhãn thật nhóm tạo cần được chuyển giao riêng theo điều kiện dữ liệu; tuyệt đối không coi chúng là đã có trên Git chỉ vì code nhập dữ liệu có trên Git.
 
+Ngoại lệ dùng chung: hai artifact cảm xúc phim LR/ViSoBERT đã huấn luyện nằm trong `pipelines/models/sentiment-demo`, với tệp nhị phân lưu bằng Git LFS. Chạy `git lfs install`, `git lfs pull` và `python scripts/ai/check_sentiment_models.py`; [hướng dẫn chi tiết](../pipelines/models/sentiment-demo/README.md). Các checkpoint, dữ liệu train và cache model riêng khác vẫn không được đưa vào Git.
+
 Với phần KB dùng chung, thay đổi snapshot/manifest được gửi qua pull request để nhóm xem lại trước khi merge.
