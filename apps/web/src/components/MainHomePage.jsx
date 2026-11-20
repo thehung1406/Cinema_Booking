@@ -9,8 +9,8 @@ import PositiveFilms from "./PositiveFilms";
 
 export default function MainHomePage() {
   const { data: films, loading, error, retry } = useFilms();
-  if (loading) return <PageState loading title="Đang tìm những bộ phim dành cho bạn…" />;
-  if (error) return <PageState title="Chưa tải được danh sách phim" message={error} onRetry={retry} />;
+  if (loading) return <section className="home-state"><PageState loading title="Đang tìm những bộ phim dành cho bạn…" /></section>;
+  if (error) return <section className="home-state"><PageState title="Chưa tải được danh sách phim" message={error} onRetry={retry} /></section>;
   const { nowShowing, upcoming } = classifyMovies(films);
   const movie = nowShowing[0] || upcoming[0];
   return <>
@@ -26,7 +26,7 @@ export default function MainHomePage() {
           </div>
           <div className="hero-note"><span>Phim. Rạp. Suất chiếu.</span><Link to="/ticket-booking">Chọn buổi xem của bạn <ArrowRight size={16} aria-hidden="true" /></Link></div>
         </div>
-        {movie && <div className="hero-art"><Poster src={movie.image} title={movie.title} fetchPriority="high" /></div>}
+        <div className="hero-art"><Poster src={movie?.image} title={movie?.title || "CGV Cinema Booking"} fetchPriority="high" /></div>
       </div>
     </section>
     <section className="shell page-section home-programme">

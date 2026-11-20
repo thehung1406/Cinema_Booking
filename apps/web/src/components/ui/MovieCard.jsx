@@ -6,10 +6,10 @@ import { formatDate } from "../../utils/formatters";
 
 export default function MovieCard({ movie }) {
   return (
-    <article className="movie-card">
+    <article className="movie-card card">
       <Link
         to={`/MovieDetail/${movie.id}`}
-        className="movie-poster-link"
+        className="movie-poster-link m-zoom"
         aria-label={`Xem chi tiết ${movie.title}`}
       >
         <Poster src={movie.image} title={movie.title} loading="lazy" />

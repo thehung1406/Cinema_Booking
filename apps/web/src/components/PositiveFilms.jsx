@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import api from "../config/api";
-import { Button, PageState, Poster } from "./ui/Primitives";
+import { Button, FormField, PageState, Poster } from "./ui/Primitives";
 
 export default function PositiveFilms() {
   const [films, setFilms] = useState([]);
@@ -46,26 +46,30 @@ export default function PositiveFilms() {
         và còn suất chiếu.
       </p>
       <div className="flex flex-wrap gap-3 mb-5">
-        <select
-          aria-label="Lọc theo rạp"
-          value={theater}
-          onChange={(e) => setTheater(e.target.value)}
-          className="border rounded p-2"
-        >
-          <option value="">Tất cả rạp</option>
-          {theaters.map((t) => (
-            <option key={t.id} value={t.id}>
-              {t.name}
-            </option>
-          ))}
-        </select>
-        <input
-          aria-label="Ngày xem"
-          type="date"
-          value={date}
-          onChange={(e) => setDate(e.target.value)}
-          className="border rounded p-2"
-        />
+        <FormField id="positive-theater" label="Rạp chiếu">
+          <select
+            id="positive-theater"
+            aria-label="Lọc theo rạp"
+            value={theater}
+            onChange={(e) => setTheater(e.target.value)}
+          >
+            <option value="">Tất cả rạp</option>
+            {theaters.map((t) => (
+              <option key={t.id} value={t.id}>
+                {t.name}
+              </option>
+            ))}
+          </select>
+        </FormField>
+        <FormField id="positive-date" label="Ngày xem">
+          <input
+            id="positive-date"
+            aria-label="Ngày xem"
+            type="date"
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+          />
+        </FormField>
       </div>
       {status === "loading" && <PageState loading title="Đang tải phản hồi…" />}
       {status === "error" && (
@@ -83,10 +87,11 @@ export default function PositiveFilms() {
       {status === "ready" && (
         <div className="movie-grid">
           {films.map((f) => (
-            <article key={f.film_id} className="movie-card">
+            <article key={f.film_id} className="movie-card card">
               <Link
                 to={`/movie/${f.film_id}`}
                 aria-label={`Xem chi tiết ${f.title}`}
+                className="movie-poster-link m-zoom"
               >
                 <Poster src={f.image} title={f.title} loading="lazy" />
               </Link>
@@ -94,7 +99,7 @@ export default function PositiveFilms() {
                 <h3>
                   <Link to={`/movie/${f.film_id}`}>{f.title}</Link>
                 </h3>
-                <p className="!text-green-700">
+                <p className="text-green-700">
                   {Math.round(f.summary.positive_ratio * 100)}% tích cực
                 </p>
                 <p>

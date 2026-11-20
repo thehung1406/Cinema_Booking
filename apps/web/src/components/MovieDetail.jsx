@@ -43,14 +43,14 @@ export default function MovieDetail() {
   ];
   return (
     <>
-      <section className="detail-hero">
+      <section className="detail-hero" data-enter>
         <div className="shell grid gap-7 md:grid-cols-[300px_1fr] items-center">
           <Poster
             src={movie.image}
             title={movie.title}
             className="detail-poster max-w-[200px] md:max-w-none mx-auto"
           />
-          <div>
+          <div className="hero-copy detail-copy">
             <p className="eyebrow">
               Thông tin phim
             </p>
