@@ -109,7 +109,7 @@ def retrieve(db, question, limit=3, *, strategy="lexical", scope=None, embedding
             fusion[index] = fusion.get(index, 0) + 1 / (60 + rank + 1)
     for index, (chunk, doc) in enumerate(rows):
         if strategy == "lexical":
-            if len(query_tokens & tokens(doc.title + " " + chunk.content)) < 2:
+            if len(query_tokens & tokens(doc.title + " " + chunk.content)) < max(1, min(2, len(query_tokens))):
                 continue
             score = sum(a*b for a, b in zip(query_vector, chunk.embedding))
             eligible = score >= .15

@@ -319,6 +319,9 @@ def chat(db, user_id, request, redis, reader, config, *, graph=None, booking=Non
         proposed_intent = deterministic
     elif refining_recommendation:
         proposed_intent = "recommend"
+    elif deterministic in {"get_ticket_prices", "get_seat_availability"} and (
+            context.showtime_id or re.search(SHOWTIME_PATTERN, message_text)):
+        proposed_intent = deterministic
     elif config.llm_provider != "disabled":
         try:
             from .llm import plan
@@ -372,6 +375,10 @@ def chat(db, user_id, request, redis, reader, config, *, graph=None, booking=Non
         validate_context(reader, context)
     intent = proposed_intent or (preliminary if not read_context or preliminary == "recommend" and not pending_tool
         else resolve_intent(reader, request.message, context, pending_tool))
+    if pending_tool and read_context and not explicit_knowledge and not (agent_result is not None or agent_context_ready):
+        resolved = resolve_intent(reader, request.message, context, pending_tool)
+        if resolved == pending_tool:
+            intent = pending_tool
     # A known booking context remains relevant to short answers such as "hai vé".
     if (pending_tool == "recommend" and intent in {"knowledge", "recommend", "get_showtimes"}
             and not explicit_knowledge and len(message_text.split()) <= 8

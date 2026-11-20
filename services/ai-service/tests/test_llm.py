@@ -7,6 +7,20 @@ from pydantic import ValidationError
 from ai_service.config import Settings
 from ai_service.llm import structured
 from ai_service.schemas import GroundedAnswer
+from ai_service.schemas import AssistantPlan
+
+
+@pytest.mark.parametrize('value', ['', None])
+def test_planner_unspecified_scopes_use_defaults(value):
+    result = AssistantPlan.model_validate({'intent': 'recommend', 'context': {
+        'knowledge_scope': value, 'budget_scope': value}})
+    assert result.context.knowledge_scope == 'policy'
+    assert result.context.budget_scope == 'unknown'
+
+
+def test_planner_rejects_unknown_scope():
+    with pytest.raises(ValidationError):
+        AssistantPlan.model_validate({'intent': 'recommend', 'context': {'knowledge_scope': 'invented'}})
 
 
 @pytest.mark.parametrize(("provider", "base_url", "expected_url"), [
