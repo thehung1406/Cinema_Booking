@@ -7,7 +7,9 @@ const browser = await chromium.launch({ headless: true, ...(process.env.BROWSER_
 const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
 page.setDefaultTimeout(10000);
 const user = { id: 9, role: 'STAFF', username: 'review-staff', access_token: 'isolated-token', permissions: ['reviews.moderate'] };
-await page.addInitScript(value => localStorage.setItem('userInfo', JSON.stringify(value)), user);
+await page.addInitScript(value => {
+  if (!sessionStorage.getItem('reviewRoleOverride')) localStorage.setItem('userInfo', JSON.stringify(value));
+}, user);
 const errors = [], writes = [];
 page.on('pageerror', error => errors.push(error.message));
 let failList = false, failDelete = false, reviewOnly = true, mine = null;
@@ -121,6 +123,17 @@ try {
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), true);
   }
   assert.equal((await page.locator('body').innerText()).includes('chờ duyệt'), false);
+  for (const role of ['USER', 'STAFF', 'MANAGER', 'ADMIN', null]) {
+    await page.evaluate(({ user, role }) => {
+      sessionStorage.setItem('reviewRoleOverride', 'true');
+      if (role) localStorage.setItem('userInfo', JSON.stringify({ ...user, role }));
+      else localStorage.removeItem('userInfo');
+    }, { user, role });
+    await page.reload();
+    await page.getByText('Nhận xét được đăng ngay', { exact: true }).waitFor();
+    assert.equal(await page.locator('.review-sentiment').count() > 0, role === 'ADMIN', `Sentiment visible only for ADMIN, role=${role}`);
+    assert.equal(await page.locator('.reviews-overview').count(), role === 'ADMIN' ? 1 : 0);
+  }
   assert.deepEqual(errors, []);
   console.log(JSON.stringify({ passed: ['redirect and review-only permission', 'filters and pagination', 'delete cancellation and retry',
     'load failure and retry', 'mobile layout', 'immediate public review with pending analysis'], browserErrors: errors }));

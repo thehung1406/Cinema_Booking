@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import api from "../config/api";
-import { getAccessToken } from "../services/authStorage";
+import { getAccessToken, getCurrentUser } from "../services/authStorage";
 import { Button, PageState } from "./ui/Primitives";
 import { formatDate } from "../utils/formatters";
 import { Pencil, Trash2, BadgeCheck, MessageSquare } from "lucide-react";
@@ -33,14 +33,14 @@ function ReviewAvatar({ name, avatar }) {
   </span>;
 }
 
-function ReviewEntry({ review, own = false, busy, onEdit, onRemove }) {
+function ReviewEntry({ review, own = false, showSentiment = false, busy, onEdit, onRemove }) {
   return <article className={`review-entry${own ? " review-entry-own" : ""}`}>
     <ReviewAvatar name={review.author} avatar={review.author_avatar} />
     <div className="review-body">
       <div className="review-byline"><strong>{review.author || "Khán giả"}</strong>{own && <span className="review-you">Bạn</span>}
         <time dateTime={review.updated_at}>{formatDate(review.updated_at)}</time></div>
       <div className="review-meta">{review.verified_purchase && <span className="review-purchased"><BadgeCheck size={14} aria-hidden="true" />Đã mua vé</span>}
-        <span className={`review-sentiment review-sentiment-${review.sentiment || "pending"}`}>{labels[review.sentiment] || statuses[review.analysis_status]}</span>
+        {showSentiment && <span className={`review-sentiment review-sentiment-${review.sentiment || "pending"}`}>{labels[review.sentiment] || statuses[review.analysis_status]}</span>}
         {own && review.moderation_status !== "approved" && <span>{moderation[review.moderation_status]}</span>}</div>
       <p className="review-text">{review.content}</p>
       {own && <div className="review-actions"><button type="button" disabled={busy} onClick={onEdit}><Pencil size={15} aria-hidden="true" />Chỉnh sửa</button>
@@ -63,10 +63,11 @@ export default function FilmReviews({ filmId }) {
   const [loadError, setLoadError] = useState("");
   const [attempt, setAttempt] = useState(0);
   const loggedIn = Boolean(getAccessToken());
+  const isAdmin = loggedIn && getCurrentUser()?.role === "ADMIN";
   const load = useCallback(
     async (signal) => {
       const [stats, list, own] = await Promise.all([
-        api.get(`/films/${filmId}/sentiment-summary`, { signal }),
+        isAdmin ? api.get(`/films/${filmId}/sentiment-summary`, { signal }) : Promise.resolve({ data: null }),
         api.get(`/films/${filmId}/reviews`, {
           signal,
           params: { skip: page * 20, limit: 20 },
@@ -80,7 +81,7 @@ export default function FilmReviews({ filmId }) {
       setMine(own.data);
       setLoadError("");
     },
-    [filmId, loggedIn, page],
+    [filmId, loggedIn, isAdmin, page],
   );
   useEffect(() => {
     const controller = new AbortController();
@@ -150,14 +151,14 @@ export default function FilmReviews({ filmId }) {
     <header className="reviews-heading"><div><p className="reviews-eyebrow">Góc khán giả</p><h2 id="review-title">Cảm nhận về bộ phim</h2></div><MessageSquare size={24} aria-hidden="true" /></header>
     {loading && <PageState loading title="Đang tải đánh giá…" />}
     {loadError && <PageState title="Chưa tải được đánh giá" message={loadError} onRetry={() => setAttempt(v => v + 1)} />}
-    {summary && <div className="reviews-overview" aria-label="Tổng hợp cảm xúc">
+    {isAdmin && summary && <div className="reviews-overview" aria-label="Tổng hợp cảm xúc">
       <span>{summary.total} nhận xét đã phân tích</span>
       {Object.entries(labels).map(([key, label]) => <span key={key} className={`review-sentiment review-sentiment-${key}`}>{label} <strong>{summary[key]}</strong></span>)}
       {(summary.pending + (summary.needs_review || 0)) > 0 && <span>{summary.pending + (summary.needs_review || 0)} đang phân tích</span>}
     </div>}
     {error && <p role="alert" className="reviews-error">{error}</p>}
     {notice && <p role="status" className="reviews-notice">{notice}</p>}
-    {mine && <ReviewEntry review={mine} own busy={busy} onEdit={() => { setContent(mine.content); setEditVersion(mine.content_version); setNotice(""); }} onRemove={remove} />}
+    {mine && <ReviewEntry review={mine} own showSentiment={isAdmin} busy={busy} onEdit={() => { setContent(mine.content); setEditVersion(mine.content_version); setNotice(""); }} onRemove={remove} />}
     {loggedIn ? (!mine || editVersion !== null) && <form onSubmit={save} className="review-composer">
       <label htmlFor="review-content">{mine ? "Cập nhật cảm nhận" : "Viết cảm nhận về phim"}</label>
       <textarea id="review-content" value={content} onChange={e => setContent(e.target.value)} minLength={5} maxLength={3000}
@@ -167,7 +168,7 @@ export default function FilmReviews({ filmId }) {
         <Button type="submit" busy={busy} disabled={busy || content.trim().length < 5}>{mine ? "Lưu chỉnh sửa" : "Gửi đánh giá"}</Button>
       </div></div>
     </form> : <div className="reviews-login"><Button to="/login" variant="secondary">Đăng nhập để nhận xét</Button></div>}
-    <div className="review-list">{publicReviews.map(review => <ReviewEntry key={review.id} review={review} />)}</div>
+    <div className="review-list">{publicReviews.map(review => <ReviewEntry key={review.id} review={review} showSentiment={isAdmin} />)}</div>
     {!loading && !loadError && !mine && !reviews.length && <p className="reviews-empty">Chưa có nhận xét. Hãy chia sẻ cảm nhận đầu tiên về bộ phim.</p>}
     {(page > 0 || reviews.length >= 20) && <nav className="reviews-pagination" aria-label="Phân trang nhận xét">
       <Button variant="secondary" disabled={!page} onClick={() => setPage(v => v - 1)}>Trang trước</Button><span>Trang {page + 1}</span>
