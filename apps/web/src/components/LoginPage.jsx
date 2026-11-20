@@ -1,12 +1,15 @@
-import { Button, FormField } from "./ui/Primitives";
-import React, { useState } from "react";
+import { Button, FormField, Poster } from "./ui/Primitives";
+import React, { useEffect, useRef, useState } from "react";
+import "./LoginPage.css";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import api from "../config/api";
 import { getCurrentUser, setSession } from "../services/authStorage";
 import logger from "../utils/logger";
+import useFilms from "../hooks/useFilms";
 
 const LoginPage = () => {
   const navigate = useNavigate();
+  const { data: films } = useFilms();
   const location = useLocation();
   const [formData, setFormData] = useState({
     username: "",
@@ -20,6 +23,12 @@ const LoginPage = () => {
   const [isSignUp, setIsSignUp] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const heading = useRef(null);
+  const previousMode = useRef(isSignUp);
+  useEffect(() => {
+    if (previousMode.current !== isSignUp) heading.current?.focus({ preventScroll: true });
+    previousMode.current = isSignUp;
+  }, [isSignUp]);
   const handleChange = (e) => {
     const { id, value } = e.target;
     setFormData((prevState) => ({
@@ -32,6 +41,7 @@ const LoginPage = () => {
     setIsSignUp(!isSignUp);
     setError("");
   };
+  const fieldError = (name) => error.toLocaleLowerCase("vi").includes(name) ? error : undefined;
   // Form validation
   const validateForm = () => {
     if (isSignUp) {
@@ -57,8 +67,12 @@ const LoginPage = () => {
         setError("Mật khẩu xác nhận không khớp");
         return false;
       }
-      if (formData.password.length < 6) {
-        setError("Mật khẩu phải có ít nhất 6 ký tự");
+      if (Array.from(formData.password).length < 8) {
+        setError("Mật khẩu phải có ít nhất 8 ký tự");
+        return false;
+      }
+      if (new TextEncoder().encode(formData.password).length > 72) {
+        setError("Mật khẩu không được vượt quá 72 byte UTF-8");
         return false;
       }
     } else {
@@ -173,6 +187,11 @@ const LoginPage = () => {
   };
   return (
     <div className="auth-page">
+      <aside className="auth-art" aria-label="CGV Cinema Booking">
+        <Link to="/" className="brand">CGV<span>Cinema booking</span></Link>
+        {films[0]?.image && <Poster src={films[0].image} title={films[0].title} />}
+        <div><h2>Buổi hẹn<br />với màn ảnh.</h2><p className="mt-6 text-gray-600">Chọn phim. Đặt ghế. Theo dõi đơn vé.</p></div>
+      </aside>
       <div className="auth-card">
         <Link
           to="/"
@@ -181,8 +200,9 @@ const LoginPage = () => {
         >
           CGV
         </Link>
+        <div key={isSignUp ? "signup" : "login"} className="auth-form-panel">
         <p className="eyebrow">Tài khoản Cinema</p>
-        <h1 className="page-title !text-3xl">
+        <h1 ref={heading} tabIndex={-1} className="page-title !text-3xl">
           {isSignUp ? "Tạo tài khoản" : "Chào mừng trở lại"}
         </h1>
         <p className="text-gray-500 text-sm leading-6 mb-6">
@@ -203,13 +223,14 @@ const LoginPage = () => {
             <div
               id="auth-error"
               role="alert"
-              className="bg-red-50 text-red-800 border border-red-200 p-3 rounded-lg text-sm"
+              className="auth-error bg-red-50 text-red-800 border border-red-200 p-3 rounded-lg text-sm"
             >
               {error}
             </div>
           )}
           <FormField
             label="Tên đăng nhập"
+            error={fieldError("tên đăng nhập")}
             id="username"
             name="username"
             autoComplete="username"
@@ -224,6 +245,7 @@ const LoginPage = () => {
             <>
               <FormField
                 label="Họ và tên"
+                error={fieldError("họ tên")}
                 id="fullName"
                 name="fullName"
                 autoComplete="name"
@@ -234,6 +256,7 @@ const LoginPage = () => {
               />
               <FormField
                 label="Email"
+                error={fieldError("email")}
                 id="email"
                 name="email"
                 type="email"
@@ -259,12 +282,14 @@ const LoginPage = () => {
           )}
           <FormField
             label="Mật khẩu"
+            error={fieldError("mật khẩu")}
             id="password"
             name="password"
             type="password"
             autoComplete={isSignUp ? "new-password" : "current-password"}
-            hint={isSignUp ? "Ít nhất 6 ký tự." : undefined}
-            minLength={isSignUp ? 6 : undefined}
+            hint={isSignUp ? "Tối thiểu 8 ký tự, tối đa 72 byte UTF-8." : undefined}
+            minLength={isSignUp ? 8 : undefined}
+            maxLength={isSignUp ? 72 : undefined}
             value={formData.password}
             onChange={handleChange}
             required
@@ -273,6 +298,7 @@ const LoginPage = () => {
           {isSignUp && (
             <FormField
               label="Xác nhận mật khẩu"
+              error={fieldError("không khớp")}
               id="confirmPassword"
               name="confirmPassword"
               type="password"
@@ -298,6 +324,7 @@ const LoginPage = () => {
         <Link to="/" className="block text-center text-sm text-gray-500 py-3">
           ← Về trang chủ
         </Link>
+        </div>
       </div>
     </div>
   );

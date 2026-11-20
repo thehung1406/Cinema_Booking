@@ -6,6 +6,7 @@ import { AUTH_SESSION_CHANGED_EVENT, clearSession, getAccessToken } from "../../
 import "./admin.css";
 import CinemaOperations from "./CinemaOperations";
 
+const navGroups = { films: "Nội dung & vận hành", employees: "Tài khoản & quyền", documents: "Tri thức & báo cáo" };
 const sections = [
   ["films", "Phim", "films.manage", <Film size={19} aria-hidden="true" />],
   ["rooms", "Phòng chiếu & ghế", "rooms.manage", <Armchair size={19} aria-hidden="true" />],
@@ -67,7 +68,7 @@ export default function AdminLayout() {
       <Link to="/admin" className="admin-brand">CGV <span>QUẢN TRỊ RẠP</span></Link>
       <p className="admin-nav-label">Không gian làm việc</p>
       <nav aria-label="Quản trị">{allowed.map(([path, label, , icon]) =>
-        <NavLink key={path} to={`/admin/${path}`}>{icon}{label}</NavLink>)}</nav>
+        <div key={path}>{navGroups[path] && <p className="admin-nav-group">{navGroups[path]}</p>}<NavLink to={`/admin/${path}`}>{icon}{label}</NavLink></div>)}</nav>
       <Link to="/" className="admin-back"><ArrowLeft size={17} /> Về trang đặt vé</Link>
     </aside>
     <div className="admin-main">

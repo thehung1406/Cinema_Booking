@@ -10,7 +10,7 @@
   display: flex;
   justify-content: flex-end;
   padding: 12px 20px;
-  background: #171920;
+  background: #eeede8;
 }
 
 .assistant-launcher,
@@ -27,7 +27,7 @@
 }
 
 .assistant-launcher {
-  border-radius: 999px;
+  border-radius: 4px;
   padding-inline: 18px;
   box-shadow: 0 6px 24px #35101530;
 }
@@ -52,11 +52,11 @@ body:has(.assistant-panel[open]) { overflow: hidden; }
   margin: 0;
   padding: 0;
   border: 1px solid #ffffff25;
-  border-radius: 22px;
+  border-radius: 8px;
   overflow: hidden;
   color: var(--assistant-ink);
   background: #fbf8f7;
-  box-shadow: 0 22px 76px #24121c48;
+  box-shadow: 0 16px 64px #20232c26;
 }
 
 .assistant-panel::backdrop { background: #20182062; }
@@ -68,8 +68,8 @@ body:has(.assistant-panel[open]) { overflow: hidden; }
   flex: none;
   gap: 12px;
   padding: 17px 24px;
-  background: #30171e;
-  color: #fff;
+  background: #f7f6f3;
+  color: #20232c;
 }
 .assistant-identity, .assistant-header-actions, .assistant-new { display: flex; align-items: center; gap: 10px; }
 .assistant-identity { gap: 12px; min-width: 0; }
@@ -84,9 +84,9 @@ body:has(.assistant-panel[open]) { overflow: hidden; }
 }
 .assistant-header h2 { font-size: 21px; font-weight: 700; letter-spacing: -.025em; line-height: 1.2; }
 .assistant-new, .assistant-close { border-radius: 10px; }
-.assistant-new { border: 1px solid #ffffff35; padding: 0 12px; font-size: 13px; font-weight: 600; white-space: nowrap; }
+.assistant-new { border: 1px solid #c9c8c1; padding: 0 12px; font-size: 13px; font-weight: 600; white-space: nowrap; }
 .assistant-close { display: grid; place-items: center; width: 44px; }
-.assistant-new:hover:not(:disabled), .assistant-close:hover { background: #ffffff19; }
+.assistant-new:hover:not(:disabled), .assistant-close:hover { background: #eeede8; }
 .assistant-new:disabled, .assistant-text-button:disabled { opacity: .55; }
 
 .assistant-toolbar {
@@ -325,3 +325,12 @@ body:has(.assistant-panel[open]) { overflow: hidden; }
   .assistant-composer form { gap: 7px; }
   .assistant-composer button { padding-inline: 12px; }
 }
+
+.assistant-panel{font-family:"Hanken Grotesk",Arial,sans-serif;--assistant-ink:#20232c;--assistant-muted:#656774;--assistant-line:#deddd7;--assistant-wine:#c92530;background:#f7f6f3;}
+.assistant-panel .assistant-brand-icon{color:white;background:#c92530;border-radius:4px;}
+.assistant-panel .assistant-note,.assistant-panel time,.assistant-message-meta:not(:empty),.assistant-showtime-footer p,.assistant-showtime-price{font-size:13px;}
+.assistant-launcher{box-shadow:none;border:1px solid #c92530;background:#c92530;}
+.assistant-message,.assistant-showtime,.assistant-suggestions button,.assistant-booking{border-radius:6px;}
+.assistant-advanced{grid-column:1/-1;}
+.assistant-advanced summary{font-size:13px;display:flex;align-items:center;}
+.assistant-flow{border-top:1px solid #deddd7;}

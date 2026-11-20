@@ -77,7 +77,9 @@ function PermissionEditor({ role, allPermissions, assigned, ownRole, onSaved }) 
   }}>
     {ownRole && <p className="admin-error">Không thể sửa quyền của vai trò mà tài khoản hiện tại đang sử dụng.</p>}
     <fieldset className="admin-form-fields" disabled={busy || ownRole}>
-      <MultiChoice label={`Quyền của vai trò ${role.name}`} items={allPermissions.map((permission) => ({ ...permission, name: `${permission.name} (${permission.code})` }))} value={chosen} onChange={setChosen} />
+      <h3 className="admin-section-title">Quyền của vai trò {role.name}</h3>
+      <div className="admin-permissions">{[...new Set(allPermissions.map(permission => permission.code.split(".")[0]))].map(group =>
+        <MultiChoice key={group} label={group} items={allPermissions.filter(permission => permission.code.split(".")[0] === group).map(permission => ({ ...permission, name: `${permission.name} (${permission.code})` }))} value={chosen} onChange={setChosen} />)}</div>
       <div><button className="admin-primary" disabled={busy || ownRole}>{busy ? "Đang lưu…" : "Lưu phân quyền"}</button></div>
     </fieldset>
     {error && <p className="admin-error" role="alert">{error}</p>}

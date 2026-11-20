@@ -39,8 +39,8 @@ export default function PositiveFilms() {
     return () => controller.abort();
   }, [theater, date, attempt]);
   return (
-    <section className="mt-12 pt-10 border-t border-gray-200">
-      <h2 className="text-2xl font-bold mb-2">Phim được đánh giá tích cực</h2>
+    <section className="positive-films page-section">
+      <h2 className="mb-4">Phim được đánh giá tích cực</h2>
       <p className="text-gray-600 mb-4">
         Phản hồi cộng đồng trong 30 ngày, xếp hạng có tính đến số lượng đánh giá
         và còn suất chiếu.

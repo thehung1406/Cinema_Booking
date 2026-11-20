@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import api from "../../config/api";
+import { Poster } from "../ui/Primitives";
 import { formatCurrency, formatDate, localDateInput } from "../../utils/formatters";
 import { ConfirmAction, DataTable, Editor, Field, MultiChoice, PageHeading, Pagination } from "./AdminShared";
 import { errorText, useAdminData } from "./adminData";
@@ -50,7 +51,7 @@ function EntityPage({ resource, title, description, createLabel, columns, defaul
 export function FilmsPage() {
   return <EntityPage resource="films" title="Quản lý phim" createLabel="Thêm phim" description="Quản lý nội dung, thể loại, định dạng và thời gian phát hành phim."
     columns={(catalog) => [
-      { key: "title", label: "Phim", render: (row) => <>{row.title}<small>{row.rating || "Chưa phân loại"} · {row.language || "Chưa có ngôn ngữ"}</small></> },
+      { key: "title", label: "Phim", render: (row) => <div className="admin-film"><Poster src={row.image} title={row.title} loading="lazy" /><div>{row.title}<small>{row.rating || "Chưa phân loại"} · {row.language || "Chưa có ngôn ngữ"}</small></div></div> },
       { key: "duration_minutes", label: "Thời lượng", render: (row) => `${row.duration_minutes || "—"} phút` },
       { key: "genre_ids", label: "Thể loại", render: (row) => row.genre_ids.map((id) => lookup(catalog.genres, id)?.name).join(", ") },
       { key: "release_date", label: "Thời gian phát hành", render: (row) => <>{formatDate(row.release_date)}<small>đến {formatDate(row.end_date)}</small></> },
@@ -59,6 +60,7 @@ export function FilmsPage() {
     prepare={(value) => numbers(value, ["duration_minutes"])}
     fields={(value, set, setValue, catalog) => <>
       <Field label="Tên phim *" required maxLength={100} value={value.title} onChange={set("title")} />
+      <h3 className="admin-section-title">Phát hành & thông tin phim</h3>
       <div className="admin-form-grid"><Field label="Thời lượng (phút) *" required type="number" min={1} max={600} value={value.duration_minutes} onChange={set("duration_minutes")} />
         <Field label="Phân loại độ tuổi" maxLength={10} value={value.rating} onChange={set("rating")} />
         <Field label="Ngày khởi chiếu *" required type="date" value={value.release_date} onChange={set("release_date")} />
@@ -67,8 +69,10 @@ export function FilmsPage() {
         <Field label="Phụ đề" maxLength={50} value={value.subtitle} onChange={set("subtitle")} /></div>
       <MultiChoice label="Thể loại *" items={catalog.genres || []} value={value.genre_ids} onChange={(ids) => setValue((old) => ({ ...old, genre_ids: ids }))} />
       <MultiChoice label="Định dạng *" items={catalog.formats || []} value={value.format_ids} onChange={(ids) => setValue((old) => ({ ...old, format_ids: ids }))} />
+      <h3 className="admin-section-title">Hình ảnh & trailer</h3>
       <Field label="Đường dẫn ảnh poster" maxLength={255} value={value.image} onChange={set("image")} />
       <Field label="Đường dẫn trailer" maxLength={255} value={value.trailer} onChange={set("trailer")} />
+      {value.image && <div className="admin-media-preview"><Poster src={value.image} title={value.title} /><p className="text-sm text-gray-600">Xem trước poster</p></div>}
       <Field label="Nội dung phim" type="textarea" maxLength={20000} value={value.description} onChange={set("description")} />
     </>} />;
 }

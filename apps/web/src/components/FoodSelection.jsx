@@ -154,8 +154,8 @@ export default function FoodSelection() {
         {menuLoading ? <PageState loading title="Đang tải thực đơn…" /> : menuError ?
           <PageState title="Chưa tải được thực đơn" message={menuError} onRetry={() => setAttempt(v => v + 1)} /> :
           <div className="grid gap-4 sm:grid-cols-2">
-            {items.filter(item => item.category === category).map(item => <article className="surface flex flex-col" key={item.id}>
-              <div className="bg-red-50 text-red-700 rounded-xl p-5 mb-4 flex justify-center" aria-hidden="true">
+            {items.filter(item => item.category === category).map(item => <article className="surface food-item flex flex-col" key={item.id}>
+              <div className="food-art mb-6" aria-hidden="true">
                 {item.category === "DRINK" ? <CupSoda size={42} /> : <Popcorn size={42} />}
               </div>
               <h2 className="text-lg font-bold mb-2">{item.name}</h2>

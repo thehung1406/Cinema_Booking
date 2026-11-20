@@ -445,11 +445,11 @@ export default function AIAssistant() {
                       <input aria-label="Ngày xem cho trợ lý" type="date" value={context.show_date || ''} disabled={busy}
                         onChange={event => choose('show_date', event.target.value)} />
                     </label>
-                    <label>Mã suất chiếu
+                    <details className="assistant-advanced"><summary>Nâng cao</summary><label>Mã suất chiếu
                       <input aria-label="Mã suất chiếu" type="number" min="1" placeholder="Ví dụ 16"
                         value={context.showtime_id || ''} disabled={busy}
                         onChange={event => choose('showtime_id', Number(event.target.value))} />
-                    </label>
+                    </label></details>
                   </div>
                 </section>
               )}

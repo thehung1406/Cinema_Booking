@@ -108,6 +108,7 @@ try {
   assert.equal(decisions[0].analysis_generation, 3);
   await page.setViewportSize({ width: 1440, height: 1000 });
   await page.goto(base+'/admin/documents');
+  await page.getByText('Công cụ nâng cao · Kiểm tra truy xuất Knowledge Base', { exact: true }).click();
   await page.getByLabel('Câu hỏi kiểm tra').fill('Khái niệm quay phim là gì?');
   await page.getByRole('button', { name: 'Xem nguồn tìm được' }).click();
   await page.getByText('Nội dung kiểm thử PDF.', { exact: true }).waitFor();

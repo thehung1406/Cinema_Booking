@@ -11,7 +11,7 @@ export function Button({
   disabled,
   ...props
 }) {
-  const classes = `btn btn-${variant} ${className}`;
+  const classes = `btn btn-${variant} btn--${variant} ${className}`;
   if (to)
     return (
       <Link to={to} className={classes} {...props}>

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import api from "../../config/api";
+import { PageHeading } from "./AdminShared";
 import { formatCurrency } from "../../utils/formatters";
 
 const reasons = {
@@ -43,13 +44,12 @@ export default function PaymentReconciliation() {
     finally { setBusy(false); }
   }
   return <section className="admin-panel">
-    <h1>Đối soát thanh toán</h1>
-    <p>Các khoản thu cần kiểm tra vé hoặc chứng từ provider. Xác minh giao dịch và liên hệ khách trước khi xử lý tiền.</p>
+    <PageHeading title="Đối soát thanh toán" description="Các khoản thu cần kiểm tra vé hoặc chứng từ provider. Xác minh giao dịch và liên hệ khách trước khi xử lý tiền." />
     {error && <p role="alert">{error}</p>}{notice && <p role="status">{notice}</p>}
     <button onClick={() => setAttempt(v => v + 1)}>Tải lại hồ sơ</button>
     {!data ? <p role="status">Đang tải đối soát…</p> : <>
       <p>{data.total} hồ sơ đang mở</p>
-      {data.items.length === 0 ? <p>Không có hồ sơ trong trang này.</p> : <div className="overflow-x-auto"><table className="w-full text-sm">
+      {data.items.length === 0 ? <p>Không có hồ sơ trong trang này.</p> : <div className="admin-table-scroll"><table className="admin-table">
         <thead><tr><th>Giao dịch / Đơn</th><th>Vấn đề</th><th>Số tiền</th><th>Tham chiếu</th><th>Phát hiện</th><th>Thao tác</th></tr></thead>
         <tbody>{data.items.map(row => <tr key={row.id}>
           <td>{row.payment_id} / {row.booking_id || "—"}</td><td>{reasons[row.reason] || "Cần kiểm tra"}</td>
@@ -62,7 +62,7 @@ export default function PaymentReconciliation() {
       <div className="flex gap-3 mt-4"><button disabled={offset === 0} onClick={() => setOffset(v => Math.max(0, v - 25))}>Trang trước</button>
         <button disabled={offset + 25 >= data.total} onClick={() => setOffset(v => v + 25)}>Trang sau</button></div>
     </>}
-    {selected && <form onSubmit={retry} className="mt-5">
+    {selected && <form onSubmit={retry} className="admin-panel mt-5">
       <label>Lý do thử xác nhận giao dịch #{selected.payment_id}<textarea required maxLength={500} value={reason} onChange={e => setReason(e.target.value)} className="block w-full border p-3" /></label>
       <button disabled={busy || !reason.trim()} type="submit">{busy ? "Đang gửi…" : "Ghi nhận lý do và thử lại"}</button>
       <button type="button" disabled={busy} onClick={() => setSelected(null)}>Đóng</button>
