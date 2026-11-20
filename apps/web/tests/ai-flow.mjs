@@ -56,6 +56,19 @@ await page.route('**/*', async route => {
 try {
   const base = process.env.UI_BASE_URL || 'http://127.0.0.1:5173';
   await page.goto(base+'/about');
+  await page.setViewportSize({ width: 1440, height: 900 });
+  const launcherButton = page.getByRole('button', { name: 'Hỏi trợ lý', exact: true });
+  assert.equal((await launcherButton.boundingBox()).width, 72, 'Launcher starts compact');
+  if (process.env.UI_SCREENSHOT_DIR) {
+    await mkdir(process.env.UI_SCREENSHOT_DIR, { recursive: true });
+    await launcherButton.screenshot({ path: `${process.env.UI_SCREENSHOT_DIR}/ai-launcher-compact.png` });
+  }
+  await launcherButton.hover();
+  await launcherButton.evaluate(el => Promise.all(el.getAnimations().map(animation => animation.finished)));
+  assert.equal((await launcherButton.boundingBox()).width, 280, 'Hover expands the launcher');
+  await page.mouse.move(0, 0);
+  await launcherButton.evaluate(el => Promise.all(el.getAnimations().map(animation => animation.finished)));
+  assert.equal((await launcherButton.boundingBox()).width, 72, 'Leaving collapses the launcher');
   await page.getByRole('button', { name: 'Hỏi trợ lý', exact: true }).click();
   const assistant = page.getByRole('dialog', { name: 'Trợ lý Cinema' });
   await assistant.evaluate(el => Promise.all(el.getAnimations().map(animation => animation.finished)));
