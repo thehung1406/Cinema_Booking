@@ -4,6 +4,8 @@ Chạy phần AI trên máy mới sau khi pull: [hướng dẫn Docker CPU/GPU, 
 
 Knowledge base dùng chung đã có PDF và dữ liệu trích xuất trong Git. Chạy `python scripts/ai/restore_knowledge.py` rồi làm theo [hướng dẫn khôi phục và nạp KB](pipelines/knowledge/README.md).
 
+Hai mô hình cảm xúc phim LR/ViSoBERT đã huấn luyện được chia sẻ bằng Git LFS. Sau `git lfs pull`, chạy `python scripts/ai/check_sentiment_models.py`; xem [hướng dẫn tải và chạy mô hình](pipelines/models/sentiment-demo/README.md).
+
 Hệ thống đặt vé FastAPI/React đã chuyển sang **9 service có database riêng**: Identity, Catalog, Cinema, Booking, Payment, Review, AI, Notification và Reporting. Gateway cung cấp API chung; Booking giữ ghế/cấp vé, Payment xử lý VNPay và saga, Reporting đọc projection từ sự kiện. Runtime cuối không chạy monolith/Celery cũ.
 
 Source monolith đã được xóa; test/CI hiện chỉ dùng package service và fixture SQL độc lập. Xem [kết quả dọn source](docs/migration/backend-removal.md).

@@ -13,4 +13,4 @@ CMD ["python", "-m", "review_service.worker"]
 
 FROM api AS sentiment-demo
 RUN pip install --no-cache-dir --index-url https://download.pytorch.org/whl/cpu torch==2.10.0+cpu
-RUN pip install --no-cache-dir scikit-learn==1.9.0 transformers==4.57.1
+RUN pip install --no-cache-dir scikit-learn==1.9.0 joblib==1.5.3 transformers==4.57.1

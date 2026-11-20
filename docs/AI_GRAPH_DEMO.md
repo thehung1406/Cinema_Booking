@@ -71,7 +71,7 @@ Dùng `scripts/ai/benchmark_rag_answers.py` với hai lượt `--strategy bm25` 
 
 Dùng cùng một nhận xét để chạy TF-IDF + Logistic Regression và ViSoBERT. Mỗi kết quả hiển thị phiên bản, nhãn, ba xác suất và trạng thái cần rà soát. API chỉ cho tài khoản có quyền duyệt review. Lượt so sánh không ghi nhãn vào review hay thay model của worker.
 
-Lấy hai thư mục artifact của pilot phim từ thành viên giữ dữ liệu hoặc tạo lại theo [hướng dẫn huấn luyện](reports/AI_FILM_HUMAN_PILOT_2026-11-04.md). Giữ các file mô hình ngoài Git. Chỉ nạp thư mục do nhóm tạo hoặc nhận từ người tin cậy vì Logistic Regression dùng định dạng Joblib.
+Hai artifact pilot phim đã được chia sẻ qua Git LFS trong `pipelines/models/sentiment-demo`. Chạy `git lfs install`, `git lfs pull`, rồi `python scripts/ai/check_sentiment_models.py` để kiểm tra đủ trọng số/tokenizer và checksum. Xem [hướng dẫn mô hình dùng chung](../pipelines/models/sentiment-demo/README.md). Nếu muốn train lại, dùng [hướng dẫn huấn luyện](reports/AI_FILM_HUMAN_PILOT_2026-11-04.md). Chỉ nạp artifact tin cậy vì Logistic Regression dùng định dạng Joblib.
 
 - Thư mục LR cần `metadata.json` và `model.joblib`.
 - Thư mục ViSoBERT cần `metadata.json`, `config.json`, `model.safetensors` và các file tokenizer đã lưu cùng model. Có thể bỏ các thư mục checkpoint huấn luyện.
@@ -79,8 +79,8 @@ Lấy hai thư mục artifact của pilot phim từ thành viên giữ dữ li�
 Khi Gateway và cơ sở dữ liệu Review đã chạy, đặt `$runtimeCompose` theo tên project, tệp môi trường và danh sách tệp Compose của hệ thống đang chạy. Thêm `compose.ai-sentiment-demo.yml` sau các tệp đó cho phiên demo.
 
 ```powershell
-$env:REVIEW_DEMO_LR_ARTIFACT = (Resolve-Path '<thu-muc-artifact-lr>').Path
-$env:REVIEW_DEMO_VISOBERT_ARTIFACT = (Resolve-Path '<thu-muc-artifact-visobert>').Path
+$env:REVIEW_DEMO_LR_ARTIFACT = (Resolve-Path 'pipelines/models/sentiment-demo/lr').Path
+$env:REVIEW_DEMO_VISOBERT_ARTIFACT = (Resolve-Path 'pipelines/models/sentiment-demo/visobert').Path
 $runtimeCompose = @('--env-file', '.env.microservices', '-p', 'backend', '-f', 'compose.yml')
 $sentimentCompose = $runtimeCompose + @('-f', 'compose.ai-sentiment-demo.yml')
 docker compose @sentimentCompose up -d --no-deps --build --wait gateway review-service review-worker

@@ -18,3 +18,6 @@ model-store
 .venv-ai-research
 pipelines/ml/runs
 pipelines/ml/data/reviewed
+
+# Models are mounted read-only at runtime, not sent with every image build.
+pipelines/models/sentiment-demo

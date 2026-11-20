@@ -53,6 +53,7 @@ wheels/
 *.egg
 .venv/
 .venv-ai-research/
+.venv-sentiment/
 venv/
 ENV/
 env/
