@@ -73,6 +73,12 @@ class PlannerContext(ToolContext):
     # stricter generation grammar than Pydantic Decimal's number-or-string union.
     budget_amount: int | None = Field(default=None, gt=0, le=100000000)
 
+    @field_validator('budget_scope', 'knowledge_scope', mode='before')
+    @classmethod
+    def unspecified_scope(cls, value, info):
+        # Models sometimes emit empty optional scopes instead of omitting them.
+        return cls.model_fields[info.field_name].default if value in ('', None) else value
+
 
 class AssistantPlan(BaseModel):
     model_config = ConfigDict(extra="forbid")

@@ -12,30 +12,39 @@ if ($LASTEXITCODE -ne 0) { throw 'Start Docker Desktop, then rerun this script.'
 function Test-ChatEndpoint([string]$Uri) {
     try { $taskResponse = Invoke-WebRequest -Uri $Uri -UseBasicParsing -TimeoutSec 3; return $taskResponse.StatusCode -eq 200 } catch { return $false }
 }
-if (-not (Test-ChatEndpoint 'http://127.0.0.1:11434/api/tags')) {
-    $taskOllama = Join-Path $taskRoot '.local\ollama\ollama.exe'
-    if (-not (Test-Path -LiteralPath $taskOllama)) { throw 'Local Ollama is missing; see docs/AI_LOCAL_CHAT.md.' }
-    $env:OLLAMA_HOST = '127.0.0.1:11434'
-    $env:OLLAMA_MODELS = Join-Path $taskRoot '.local\ollama-models'
-    Start-Process -FilePath $taskOllama -ArgumentList 'serve' -WindowStyle Hidden -RedirectStandardOutput (Join-Path $taskRuntime 'ollama.log') -RedirectStandardError (Join-Path $taskRuntime 'ollama-errors.log') | Out-Null
-    $taskUntil = (Get-Date).AddSeconds(30)
-    while (-not (Test-ChatEndpoint 'http://127.0.0.1:11434/api/tags')) {
-        if ((Get-Date) -gt $taskUntil) { throw 'Ollama did not start; inspect .local/runtime/ollama-errors.log.' }
-        Start-Sleep -Milliseconds 300
+$taskConfig = & docker compose -p backend --project-directory $taskRoot --env-file (Join-Path $taskRoot '.env.microservices') config --format json
+if ($LASTEXITCODE -ne 0) { throw 'Cannot resolve chatbot runtime configuration.' }
+$taskAI = ($taskConfig | ConvertFrom-Json).services.'ai-service'.environment
+if ($taskAI.AI_LLM_PROVIDER -eq 'ollama') {
+    $taskModel = if ($taskAI.AI_LLM_MODEL) { $taskAI.AI_LLM_MODEL } else { 'qwen3:4b' }
+    $taskOllamaOrigin = if ($taskAI.AI_LLM_BASE_URL) { $taskAI.AI_LLM_BASE_URL } elseif ($taskAI.AI_OLLAMA_BASE_URL) { $taskAI.AI_OLLAMA_BASE_URL } else { 'http://127.0.0.1:11434' }
+    $taskOllamaOrigin = $taskOllamaOrigin.TrimEnd('/').Replace('host.docker.internal', '127.0.0.1')
+    if (-not (Test-ChatEndpoint "$taskOllamaOrigin/api/tags")) {
+        if ($taskOllamaOrigin -ne 'http://127.0.0.1:11434') { throw 'Configured Ollama endpoint is not ready.' }
+        $taskOllama = Join-Path $taskRoot '.local\ollama\ollama.exe'
+        if (-not (Test-Path -LiteralPath $taskOllama)) { throw 'Local Ollama is missing; see docs/AI_LOCAL_CHAT.md.' }
+        $env:OLLAMA_HOST = '127.0.0.1:11434'
+        $env:OLLAMA_MODELS = Join-Path $taskRoot '.local\ollama-models'
+        Start-Process -FilePath $taskOllama -ArgumentList 'serve' -WindowStyle Hidden -RedirectStandardOutput (Join-Path $taskRuntime 'ollama.log') -RedirectStandardError (Join-Path $taskRuntime 'ollama-errors.log') | Out-Null
+        $taskUntil = (Get-Date).AddSeconds(30)
+        while (-not (Test-ChatEndpoint "$taskOllamaOrigin/api/tags")) {
+            if ((Get-Date) -gt $taskUntil) { throw 'Ollama did not start; inspect .local/runtime/ollama-errors.log.' }
+            Start-Sleep -Milliseconds 300
+        }
     }
+    Write-Output "Warming up $taskModel before enabling chat requests..."
+    $taskPayload = @{ model=$taskModel; stream=$false; think=$false; keep_alive='30m'; options=@{num_predict=1}; messages=@(@{role='user';content='Ready?'}) } | ConvertTo-Json -Depth 6 -Compress
+    Invoke-RestMethod -Uri "$taskOllamaOrigin/api/chat" -Method Post -Body $taskPayload -ContentType 'application/json' -TimeoutSec 180 | Out-Null
 }
-Write-Output 'Warming up qwen3:4b before enabling chat requests...'
-$taskPayload = @{ model='qwen3:4b'; stream=$false; think=$false; keep_alive='30m'; options=@{num_predict=1}; messages=@(@{role='user';content='Ready?'}) } | ConvertTo-Json -Depth 6 -Compress
-Invoke-RestMethod -Uri 'http://127.0.0.1:11434/api/chat' -Method Post -Body $taskPayload -ContentType 'application/json' -TimeoutSec 180 | Out-Null
 
 Push-Location $taskRoot
 try {
     $taskServices = @('gateway','identity-service','catalog-service','cinema-service','booking-service','review-service','ai-service','payment-service','reporting-service')
     if ($Build) {
-        & docker compose --env-file .env.microservices build @taskServices
+        & docker compose -p backend --env-file .env.microservices build @taskServices
         if ($LASTEXITCODE -ne 0) { throw 'Owner image build failed.' }
     }
-    & docker compose --env-file .env.microservices up -d --no-build @taskServices cinema-worker
+    & docker compose -p backend --env-file .env.microservices up -d --no-build @taskServices cinema-worker
     if ($LASTEXITCODE -ne 0) { throw 'Owner API startup failed.' }
     $taskUntil = (Get-Date).AddSeconds(60)
     while (-not (Test-ChatEndpoint 'http://127.0.0.1:8080/health/ready')) {

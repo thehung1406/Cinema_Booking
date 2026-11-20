@@ -4,6 +4,7 @@ import csv
 from datetime import datetime, timezone
 import hashlib
 import json
+import os
 from pathlib import Path
 import re
 import statistics
@@ -46,7 +47,10 @@ def run(corpus, cases_file, output, strategy, embedding_url, reranker_url, *, re
             raise ValueError("Reviewed benchmark requires approved sources")
     elif any(q.get('annotation_origin') != 'ai-authored-development' or not q.get('synthetic') for q in cases):
         raise ValueError("Specify --reviewed-gold for a human-curated benchmark")
-    settings = Settings(database_url='sqlite://', redis_url='redis://localhost/0', llm_provider='ollama', llm_timeout_seconds=20)
+    settings = Settings(database_url='sqlite://', redis_url='redis://localhost/0',
+                        llm_provider=os.environ.get('AI_LLM_PROVIDER', 'ollama'), llm_timeout_seconds=20)
+    if settings.llm_provider == 'disabled':
+        raise ValueError('Benchmark requires an enabled LLM provider')
     base, _, addition = strategy.partition("+")
     if addition and not settings.graph_uri:
         raise ValueError("Graph comparison needs a configured Neo4j release")
@@ -55,20 +59,22 @@ def run(corpus, cases_file, output, strategy, embedding_url, reranker_url, *, re
     dependencies = [('embedding', embedding_url)] if base in {'dense','hybrid','rerank'} else []
     if base == 'rerank':
         dependencies.append(('reranker', reranker_url))
-    runtime = {}
+    runtime = {'provider': settings.llm_provider,
+               'model': {'name': settings.openai_model if settings.llm_provider == 'openai' else settings.llm_model}}
     with httpx.Client(timeout=180, trust_env=False) as client:
         for name, origin in dependencies:
             response = client.get(origin.rstrip('/') + '/health/ready')
             response.raise_for_status()
             runtime[name] = response.json()
-        response = client.get(settings.llm_base_url + '/api/tags')
-        response.raise_for_status()
-        runtime['model'] = next({'name':m['name'], 'digest':m['digest']} for m in response.json()['models'] if m['name'] == settings.llm_model)
-        start = time.perf_counter()
-        response = client.post(settings.llm_base_url + '/api/chat', json=dict(model=settings.llm_model,
-            messages=[dict(role='user', content='Ready')], options=dict(num_predict=1), think=False, stream=False, keep_alive='5m'))
-        response.raise_for_status()
-        runtime['llm_warmup_ms'] = (time.perf_counter()-start)*1000
+        if settings.llm_provider == 'ollama':
+            response = client.get(settings.llm_base_url + '/api/tags')
+            response.raise_for_status()
+            runtime['model'] = next({'name':m['name'], 'digest':m['digest']} for m in response.json()['models'] if m['name'] == settings.llm_model)
+            start = time.perf_counter()
+            response = client.post(settings.llm_base_url + '/api/chat', json=dict(model=settings.llm_model,
+                messages=[dict(role='user', content='Ready')], options=dict(num_predict=1), think=False, stream=False, keep_alive='5m'))
+            response.raise_for_status()
+            runtime['llm_warmup_ms'] = (time.perf_counter()-start)*1000
     report = dict(stage='human-curated-evaluation' if reviewed_gold else 'ai-authored-development-not-independent-gold',
         created_at=datetime.now(timezone.utc).isoformat(),
         approval='Approved corpus' if reviewed_gold else 'Draft sources temporarily enabled only in SQLite RAM',
