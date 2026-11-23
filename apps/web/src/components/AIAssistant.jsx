@@ -14,6 +14,13 @@ const SUGGESTIONS = [
   { icon: <BookOpen size={20} aria-hidden="true" />, label: 'Hỏi về điện ảnh', detail: 'Thể loại, câu chuyện và góc máy', question: 'Cinematography là gì?' },
 ];
 
+const CHAT_FAILURE_MESSAGES = {
+  404: 'Mình chưa mở được hội thoại này. Bạn có thể gửi lại câu hỏi.',
+  409: 'Hội thoại vừa thay đổi. Bạn mở Lịch sử, chọn Tải lại hội thoại rồi gửi lại nhé.',
+  422: 'Mình chưa tra được với thông tin này. Bạn thử nêu rõ phim, rạp, ngày hoặc suất chiếu nhé.',
+  429: 'Bạn thử gửi lại sau khoảng một phút nhé.',
+};
+
 function readDraft(userId) {
   if (!userId) return null;
   try {
@@ -64,6 +71,7 @@ function AssistantMessage({ message, onNavigate, onBook }) {
   }
 
   function showSource(number) {
+    if (!sourcesPanel.current) return;
     sourcesPanel.current.open = true;
     sourcesPanel.current.querySelector(`[data-source-number="${number}"]`)?.focus();
   }
@@ -132,6 +140,7 @@ export default function AIAssistant() {
   const [pendingQuestion, setPendingQuestion] = useState('');
   const [conversationId, setConversationId] = useState(null);
   const [context, setContext] = useState({});
+  const [resetFiltersPending, setResetFiltersPending] = useState(false);
   const [conversations, setConversations] = useState([]);
   const [historyBusy, setHistoryBusy] = useState(false);
   const [hasMoreConversations, setHasMoreConversations] = useState(false);
@@ -141,6 +150,7 @@ export default function AIAssistant() {
   const [theaters, setTheaters] = useState([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const [chatNotice, setChatNotice] = useState('');
   const [loggedIn, setLoggedIn] = useState(Boolean(getAccessToken()));
   const userId = loggedIn ? getCurrentUser()?.id : null;
   const [bookingDraft, setBookingDraft] = useState(() => readDraft(getCurrentUser()?.id));
@@ -179,7 +189,11 @@ export default function AIAssistant() {
       restoreHistoryFocus.current = false;
     }
   }, [busy, conversationId]);
-  function reset() { activeRequest.current?.abort(); activeRequest.current = null; setBusy(false); setConversationId(null); setMessages([]); setContext({}); setBeforeId(null); setQuestion(''); setPendingQuestion(''); setError(''); }
+  function reset() {
+    activeRequest.current?.abort(); activeRequest.current = null;
+    setBusy(false); setConversationId(null); setMessages([]); setContext({}); setBeforeId(null);
+    setQuestion(''); setPendingQuestion(''); setError(''); setChatNotice(''); setResetFiltersPending(false);
+  }
   useEffect(() => {
     const changed = () => {
       reset(); historyRequest.current?.abort(); setConversations([]); setHasMoreConversations(false);
@@ -219,9 +233,10 @@ export default function AIAssistant() {
       messageViewport.current.scrollTop = top + messageViewport.current.scrollHeight - height;
       historyScroll.current = null;
     } else {
-      messageViewport.current.scrollTop = messages.length || pendingQuestion || bookingDraft?.showtimeId ? messageViewport.current.scrollHeight : 0;
+      messageViewport.current.scrollTop = messages.length || pendingQuestion || chatNotice || bookingDraft?.showtimeId
+        ? messageViewport.current.scrollHeight : 0;
     }
-  }, [open, messages, pendingQuestion, bookingDraft?.showtimeId]);
+  }, [open, messages, pendingQuestion, chatNotice, bookingDraft?.showtimeId]);
 
   function updateBooking(draft) {
     if (!userId || getCurrentUser()?.id !== userId) return;
@@ -253,8 +268,14 @@ export default function AIAssistant() {
   async function send(event) {
     event.preventDefault(); if (busy || historyBusy || !question.trim()) return;
     const text = question.trim();
+    setChatNotice('');
     const command = bookingCommand(text);
     if (command) {
+      if (command.ordinal !== null && resetFiltersPending) {
+        setError('');
+        setChatNotice('Bạn hãy tra lịch chiếu lại để chọn suất.');
+        return;
+      }
       const card = command.ordinal !== null ? showtimeAtOrdinal(messages, command.ordinal) : bookingDraft && { showtime_id: bookingDraft.showtimeId };
       if (!card && command.ordinal === null) setError('Hãy chọn một suất trước khi nhập tên ghế.');
       else if (startBooking(card, command.seatNames)) {
@@ -265,22 +286,27 @@ export default function AIAssistant() {
     }
     setBusy(true); setPendingQuestion(text); setError('');
     const controller = new AbortController(); activeRequest.current = controller;
+    const payload = { message: text, conversation_id: conversationId, context };
+    if (resetFiltersPending) payload.reset_filters = true;
     try {
-      const { data } = await api.post('/ai/chat', { message: text, conversation_id: conversationId, context }, { timeout: 25000, signal: controller.signal });
+      const { data } = await api.post('/ai/chat', payload, { timeout: 25000, signal: controller.signal });
       if (controller.signal.aborted) return;
       setMessages(old => [...old, { role: 'user', answer: text }, { role: 'assistant', ...data }]);
       setConversationId(data.conversation_id); setContext(data.context); setQuestion('');
+      setResetFiltersPending(false);
       setConversations(old => {
         const existing = old.find(c => c.id === data.conversation_id);
         return [{ ...existing, id: data.conversation_id, title: existing?.title || text.replace(/\s+/g, ' ').slice(0, 200),
           updated_at: data.as_of }, ...old.filter(c => c.id !== data.conversation_id)];
       });
     } catch (e) {
-      if (e.code === 'ERR_CANCELED') return;
-      setError(typeof e.response?.data?.detail === 'string' ? e.response.data.detail : 'Trợ lý đang bận. Vui lòng thử lại hoặc đặt vé trực tiếp.');
-      if (e.response?.status === 404) {
+      const status = e.response?.status;
+      if (controller.signal.aborted || e.code === 'ERR_CANCELED' || status === 401) return;
+      setChatNotice(CHAT_FAILURE_MESSAGES[status] || 'Mình chưa tra được lúc này. Bạn thử gửi lại nhé.');
+      if (status === 404) {
         setConversations(old => old.filter(c => c.id !== conversationId));
-        setConversationId(null); setMessages([]); setContext({}); setBeforeId(null);
+        setConversationId(null); setMessages([]); setBeforeId(null);
+        if (!resetFiltersPending) setContext({});
       }
     } finally {
       if (activeRequest.current === controller) { setBusy(false); setPendingQuestion(''); }
@@ -303,7 +329,13 @@ export default function AIAssistant() {
       setMessages(old => older ? [...loaded, ...old] : loaded);
       setBeforeId(data.next_before_id);
       if (!older) {
-        setConversationId(data.id); setContext(data.context); setQuestion(''); setTool(null);
+        const sameConversation = id === conversationId;
+        setConversationId(data.id); setTool(null); setChatNotice('');
+        if (!sameConversation || !resetFiltersPending) setContext(data.context);
+        if (!sameConversation) {
+          setQuestion('');
+          setResetFiltersPending(false);
+        }
         requestAnimationFrame(() => messageViewport.current?.focus());
       }
     } catch (e) {
@@ -341,6 +373,17 @@ export default function AIAssistant() {
   }
   function choose(key, value) {
     setContext(old => ({ ...old, [key]: value || null, ...(key === 'showtime_id' ? {} : { showtime_id: null }) }));
+  }
+  const hasAnyFilter = Boolean(
+    context.film_id || context.theater_id || context.show_date || context.showtime_id
+    || context.film_name || context.theater_name || context.genre || context.language || context.city || context.format
+    || context.duration_max || context.start_after || context.start_before || context.budget_amount || context.party_size > 1
+  );
+  function clearFilters() {
+    setContext({});
+    setResetFiltersPending(true);
+    setError('');
+    setChatNotice('');
   }
   const selectedFilters = ['film_id', 'theater_id', 'show_date', 'showtime_id'].filter(key => context[key]).length;
   const controlsDisabled = busy || historyBusy;
@@ -452,6 +495,8 @@ export default function AIAssistant() {
                         value={context.showtime_id || ''} disabled={busy}
                         onChange={event => choose('showtime_id', Number(event.target.value))} />
                     </label></details>
+                    {hasAnyFilter && <button type="button" className="assistant-text-button" disabled={busy}
+                      onClick={clearFilters}>Xóa bộ lọc</button>}
                   </div>
                 </section>
               )}
@@ -459,7 +504,7 @@ export default function AIAssistant() {
               <div className="assistant-transcript" ref={messageViewport} role="log" aria-label="Tin nhắn" tabIndex={-1}>
                 {beforeId && <button type="button" disabled={controlsDisabled} onClick={() => loadConversation(conversationId, true)}
                   className="assistant-text-button">Tải tin nhắn cũ hơn</button>}
-                {!messages.length && !pendingQuestion && !busy && (
+                {!messages.length && !pendingQuestion && !chatNotice && !busy && (
                   <div className="assistant-welcome">
                     <div className="assistant-welcome-mark" aria-hidden="true"><Ticket size={32} /></div>
                     <p className="assistant-welcome-label">Trợ lý điện ảnh của bạn</p>
@@ -482,6 +527,7 @@ export default function AIAssistant() {
                   </div>
                   : <AssistantMessage key={message.id ? `saved:${message.id}` : `local:${index}`} message={message} onNavigate={dismiss} onBook={startBooking} />)}
                 {pendingQuestion && <p className="assistant-user-message"><span className="sr-only">Bạn: </span>{pendingQuestion}</p>}
+                {chatNotice && <AssistantMessage message={{ answer: chatNotice }} />}
                 {busy && <p className="assistant-loading" role="status"><span aria-hidden="true" />{pendingQuestion ? 'Đang tìm thông tin…' : 'Đang xử lý…'}</p>}
                 {userId && bookingDraft && <ChatBooking key={`${userId}:${bookingDraft.showtimeId}`} draft={bookingDraft} userId={userId}
                   onReservation={reservationId => updateBooking({ ...bookingDraftRef.current, reservationId })}

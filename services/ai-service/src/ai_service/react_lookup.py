@@ -21,7 +21,7 @@ FIRST_SHOW = re.compile(r"\bsuat (?:dau(?: tien)?|thu (?:nhat|1))\b")
 NEXT_SHOW = re.compile(r"\bsuat (?:tiep(?: theo)?|ke(?: tiep)?|thu (?:hai|2))\b")
 SEAT_NUMBERS = ("mot", "hai", "ba", "bon", "nam", "sau", "bay", "tam", "chin", "muoi")
 COUNT = rf"\d{{1,2}}|{'|'.join(SEAT_NUMBERS)}"
-PRICE_IF_ENOUGH = re.compile(rf"\bneu\s+{FIRST_SHOW.pattern}\s+(?:con\s+)?du\s+(?:({COUNT})\s+)?ghe\b[^.!?;]{{0,55}}\b(?:bao|tra|xem|cho biet) gia\b")
+PRICE_IF_ENOUGH = re.compile(rf"\bneu\s+{FIRST_SHOW.pattern}\s+(?:(?:co|con)\s+)?du\s+(?:({COUNT})\s+)?ghe\b[^.!?;]{{0,55}}\b(?:bao|tra|xem|cho biet) gia\b")
 CHECK_IF_SHORT = re.compile(rf"\bneu\s+(?:khong du|thieu(?: ghe)?)\b[^.!?;]{{0,55}}\b(?:kiem tra|xem|tra)\b[^.!?;]{{0,30}}{NEXT_SHOW.pattern}")
 INSTRUCTIONS = (
     "Bạn tra dữ kiện suất chiếu theo câu hỏi. Gọi get_showtimes trước để lấy ID suất theo thứ tự. "
@@ -72,6 +72,10 @@ def party_size(text, default):
     if not match or not match[1]:
         return default
     return int(match[1]) if match[1].isdecimal() else SEAT_NUMBERS.index(match[1]) + 1
+
+
+def showtime_description(source):
+    return re.sub(r", mã suất \d+\.?$", ".", source["text"])
 
 
 def run_lookup(reader, settings, question, context, evening, party, deadline):
@@ -135,7 +139,10 @@ def run_lookup(reader, settings, question, context, evening, party, deadline):
                 if count.showtime_id != show_id:
                     raise ValueError("Invalid seat count evidence")
                 order = "Suất đầu" if show_id == show_ids[0] else "Suất tiếp theo"
-                answer_parts.append(f"{order} (#{show_id}) còn {count.available_seats} ghế trống lúc tra cứu.")
+                clock = sources[show_ids.index(show_id)]["title"].removeprefix("Suất ")
+                if re.fullmatch(r"(?:[01]\d|2[0-3]):[0-5]\d", clock):
+                    order += f" ({clock})"
+                answer_parts.append(f"{order} còn {count.available_seats} ghế trống lúc tra cứu.")
                 observation = count.model_dump()
                 if show_id != show_ids[0]:
                     status, stop = "ok", "checked_next_showtime"
@@ -151,7 +158,9 @@ def run_lookup(reader, settings, question, context, evening, party, deadline):
                 if not prices:
                     break
                 sources.extend(prices)
-                answer_parts.extend(price["text"] for price in prices)
+                for price in prices:
+                    text = price["text"].removeprefix(f"Suất {show_id}, ")
+                    answer_parts.append(text[:1].upper() + text[1:])
                 status, stop = "ok", "checked_prices"
                 observation = {"prices": [price["text"] for price in prices]}
             logger.info("react_lookup tool=%s protocol=%s elapsed_ms=%d", name,
@@ -168,7 +177,7 @@ def run_lookup(reader, settings, question, context, evening, party, deadline):
     if not sources:
         return None
     if not answer_parts:
-        answer_parts.extend(source["text"] for source in sources)
+        answer_parts.extend(showtime_description(source) for source in sources)
     if status == "partial":
         answer_parts.append("Mình chưa hoàn tất các bước kiểm tra còn lại. Bạn có thể thử lại hoặc mở suất để kiểm tra trực tiếp.")
     return LookupResult("\n\n".join(answer_parts), status, sources, [])

@@ -29,9 +29,24 @@ LABELS = {"film_id": "phim", "theater_id": "rạp", "show_date": "ngày xem", "s
 PLANNER_TIMEOUT = 5
 CHAT_INFERENCE_BUDGET = 16
 RECOMMENDATION_FILTERS = ("show_date", "genre", "party_size", "budget_amount", "budget_scope", "start_after")
+SHOWTIME_SCOPE = ("film_id", "theater_id", "show_date")
+SHOWTIME_DETAIL_TOOLS = {"get_ticket_prices", "get_seat_availability"}
 SHOWTIME_PATTERN = r"(?:ma suat|suat chieu so)\s*(\d+)"
+SHOWTIME_ORDINAL = re.compile(
+    r"\bsuat\s+(?:(dau(?:\s+tien)?)|thu\s*(\d{1,2}|nhat|hai|ba|tu|bon|nam|sau|bay|tam|chin|muoi))\b"
+)
+ORDINAL_WORDS = {"nhat": 1, "hai": 2, "ba": 3, "tu": 4, "bon": 4, "nam": 5, "sau": 6, "bay": 7, "tam": 8, "chin": 9, "muoi": 10}
+START_AFTER_PATTERN = re.compile(r"\b(?:sau|tu)\s*(\d{1,2})(?:\s*(?:h|gio)|:)\s*(\d{2})?")
 BOOKING_REQUEST = re.compile(r"\b(?:dat|mua)(?: [\w]+){0,4} ve\b")
+BOOKING_ACTION = re.compile(r"\b(?:dat ho|giu ho|thanh toan ho|xac nhan thanh toan)\b")
 BOOKING_POLICY = ("chinh sach", "huong dan", "cach ", "hoan tien", "doi ve", "huy ve", "giu ghe bao lau")
+GENRE_PHRASES = {
+    "phim hai": "Hài", "phim kinh di": "Kinh dị", "phim hanh dong": "Hành động",
+    "phim hoat hinh": "Hoạt hình", "phim tinh cam": "Tình cảm", "khoa hoc vien tuong": "Khoa học viễn tưởng",
+    "phim vien tuong": "Viễn tưởng", "phim tam ly": "Tâm lý", "phim phieu luu": "Phiêu lưu",
+    "phim gia dinh": "Gia đình", "phim giat gan": "Giật gân",
+}
+GENRE_DISCOVERY = re.compile(rf"\b(?:{'|'.join(GENRE_PHRASES)}) (?:gi|nao)\b")
 FILM_LIST_PATTERN = (
     r"\b(?:danh sach|liet ke)(?: nhung| cac)? phim\b|\bphim (?:gi|nao)\b"
     r"|^\s*(?:(?:nhung|cac) )?phim (?:hien )?(?:dang chieu|sap chieu|sap ra mat)\b"
@@ -54,9 +69,11 @@ def detect_intent(message):
     booking_request = BOOKING_REQUEST.search(text)
     if booking_request and (policy or any(term in text for term in ("nhu the nao", "the nao", "lam sao"))):
         return "knowledge"
+    if not policy and BOOKING_ACTION.search(text):
+        return "out_of_scope"
     if not policy and is_personal_order(text):
         return "get_my_booking"
-    if any(w in text for w in ("dat ho", "giu ho", "thanh toan ho", "xac nhan thanh toan", "don hang cua", "don hang toi")):
+    if any(w in text for w in ("don hang cua", "don hang toi")):
         return "out_of_scope"
     if not policy and "thanh toan" not in text and booking_request:
         return "recommend"
@@ -76,11 +93,13 @@ def detect_intent(message):
         return "get_showtimes"
     if "suat chieu" in text and re.search(r"\b(?:luc|vao)\s*\d{1,2}(?:h|\s*gio|:)", text):
         return "get_showtimes"
+    if is_filtered_film_discovery(text):
+        return "recommend"
     if re.search(FILM_LIST_PATTERN, text) or re.fullmatch(r"(?:hien tai |hien )?phim dang chieu[?!.\s]*", text):
         if re.search(UPCOMING_FILM_PATTERN, text):
             return "get_upcoming_films"
         if re.search(CURRENT_FILM_PATTERN, text):
-            return "recommend" if re.search(r"\b(?:sau|tu)\s*\d{1,2}(?:h|gio|:)", text) else "get_showing_films"
+            return "get_showing_films"
     if "suat chieu" in text or "toi nay" in text:
         return "get_showtimes"
     if is_film_education(text):
@@ -90,25 +109,38 @@ def detect_intent(message):
     return "knowledge"
 
 
+def is_filtered_film_discovery(text):
+    return (re.search(CURRENT_FILM_PATTERN, text) and not re.search(UPCOMING_FILM_PATTERN, text)
+            and (GENRE_DISCOVERY.search(text) or (re.search(FILM_LIST_PATTERN, text) and START_AFTER_PATTERN.search(text))))
+
+
 def is_film_education(text):
     return any(re.search(rf"\b{term}\b", text) for term in FILM_EDUCATION_TERMS) or (
         "la gi" in text and any(w in text for w in ("the loai", "dien anh", "quay phim", "dung phim"))
     )
 
 
-def infer_context(reader, message, context):
+def infer_context(reader, message, context, _matched=None, _ambiguous=None):
     text = folded(message)
     today = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh")).date()
     if "ngay kia" in text:
         context.show_date = today + timedelta(days=2)
+        if _matched is not None:
+            _matched.add("show_date")
     elif "ngay mai" in text or "toi mai" in text:
         context.show_date = today + timedelta(days=1)
+        if _matched is not None:
+            _matched.add("show_date")
     elif "hom nay" in text or "toi nay" in text:
         context.show_date = today
+        if _matched is not None:
+            _matched.add("show_date")
     date_match = re.search(r"\b\d{4}-\d{2}-\d{2}\b", message)
     if date_match:
         try:
             context.show_date = datetime.strptime(date_match.group(), "%Y-%m-%d").date()
+            if _matched is not None:
+                _matched.add("show_date")
         except ValueError:
             raise HTTPException(422, "Ngày không hợp lệ")
     matches = reader.matches(message)
@@ -116,9 +148,15 @@ def infer_context(reader, message, context):
         rows = getattr(matches, field)
         if len(rows) == 1:
             setattr(context, field, rows[0].id)
+            if _matched is not None:
+                _matched.add(field)
+        elif len(rows) > 1 and _ambiguous is not None:
+            _ambiguous.add(field)
     match = re.search(SHOWTIME_PATTERN, text)
     if match:
         context.showtime_id = int(match[1])
+        if _matched is not None:
+            _matched.add("showtime_id")
     return context
 
 
@@ -137,8 +175,7 @@ def infer_preferences(message, context):
             context.show_date = datetime.strptime(date_match[0], "%Y-%m-%d").date()
         except ValueError:
             raise HTTPException(422, "Ngày không hợp lệ")
-    for phrase, genre in (("phim hai", "Hài"), ("phim kinh di", "Kinh dị"), ("phim hanh dong", "Hành động"),
-                          ("phim hoat hinh", "Hoạt hình"), ("phim tinh cam", "Tình cảm")):
+    for phrase, genre in GENRE_PHRASES.items():
         if phrase in text:
             context.genre = genre
     party = re.search(r"\b(\d{1,2}|hai|ba|bon|nam)\s*(?:nguoi|ve)\b", text)
@@ -160,7 +197,7 @@ def infer_preferences(message, context):
             context.budget_scope = "total"
         elif any(w in text for w in ("moi ve", "/ve")):
             context.budget_scope = "per_ticket"
-    clock = re.search(r"(?:sau|tu)\s*(\d{1,2})(?:h|gio|:)\s*(\d{2})?", text)
+    clock = START_AFTER_PATTERN.search(text)
     if clock:
         try:
             context.start_after = time(int(clock[1]), int(clock[2] or 0))
@@ -222,7 +259,7 @@ def select_evidence(question, evidence, config, *, deadline=None):
 
 
 def showtime_choices(sources, context):
-    scope = context.model_dump(mode="json", include={"film_id", "theater_id", "show_date"})
+    scope = context.model_dump(mode="json", include=set(SHOWTIME_SCOPE))
     choices = {}
     for source in sources:
         match = re.fullmatch(r"showtime:([1-9]\d*)", source["id"])
@@ -230,6 +267,30 @@ def showtime_choices(sources, context):
             showtime_id = int(match[1])
             choices[showtime_id] = dict(scope, showtime_id=showtime_id)
     return list(choices.values())
+
+
+def showtime_ordinal(message_text):
+    match = SHOWTIME_ORDINAL.search(message_text)
+    if not match:
+        return None
+    if match[1]:
+        return 1
+    value = match[2]
+    return int(value) if value.isdecimal() else ORDINAL_WORDS[value]
+
+
+def lookup_ordinal_in_scope(reader, context, ordinal, evening):
+    lookup = ToolCall(name="get_showtimes", context=context)
+    missing = missing_fields(lookup)
+    if missing:
+        labels = ", ".join(LABELS[field] for field in missing)
+        return [], (f"Bạn vui lòng chọn {labels} để mình tra đúng suất nhé.", "needs_clarification", missing)
+    choices = showtime_choices(run_tool(reader, lookup, evening), context)
+    if not 1 <= ordinal <= len(choices):
+        return choices, ("Mình chưa tìm thấy suất tương ứng với phim, rạp và ngày đã chọn. Bạn thử chọn suất khác nhé.",
+                         "no_results", [])
+    context.showtime_id = choices[ordinal - 1]["showtime_id"]
+    return choices, None
 
 
 def chat(db, user_id, request, redis, reader, config, *, graph=None, booking=None):
@@ -250,6 +311,8 @@ def chat(db, user_id, request, redis, reader, config, *, graph=None, booking=Non
     else:
         previous, previous_updated_at = {}, None
     db.rollback()  # Release history read connection before calling another service.
+    if request.reset_filters:
+        previous = {}
     previous_context = ToolContext.model_validate(previous.get("context", {}))
     submitted = request.context.model_dump(mode="json", exclude_unset=True)
     values = previous.get("context", {}) | submitted
@@ -257,7 +320,14 @@ def chat(db, user_id, request, redis, reader, config, *, graph=None, booking=Non
     message_text = folded(request.message)
     deterministic = detect_intent(request.message)
     personal_lookup = deterministic == "get_my_booking"
-    booking_request = deterministic == "recommend" and BOOKING_REQUEST.search(message_text)
+    explicit_recommendation = deterministic == "recommend" and (
+        BOOKING_REQUEST.search(message_text) or is_filtered_film_discovery(message_text)
+    )
+    explicit_showtime = re.search(SHOWTIME_PATTERN, message_text) or (
+        request.context.showtime_id is not None and request.context.showtime_id != previous_context.showtime_id
+    )
+    ordinal = None if explicit_showtime else showtime_ordinal(message_text)
+    pending_ordinal = None if explicit_showtime else previous.get("pending_ordinal")
     pending_tool = previous.get("pending_tool")
     listing = deterministic in {"get_showing_films", "get_upcoming_films"}
     clarification = clarification_needed(request.message) if deterministic == "knowledge" else None
@@ -294,7 +364,7 @@ def chat(db, user_id, request, redis, reader, config, *, graph=None, booking=Non
             reader.deadline = min(reader.deadline, inference_deadline)
             try:
                 context = infer_context(reader, request.message, context)
-                needed = [name for name in ("film_id", "theater_id", "show_date") if not getattr(context, name)]
+                needed = [name for name in SHOWTIME_SCOPE if not getattr(context, name)]
                 party = react_lookup.party_size(message_text, context.party_size)
                 if not 1 <= party <= 20:
                     agent_result = react_lookup.LookupResult("Bạn muốn kiểm tra từ 1 đến 20 ghế cho bao nhiêu người?", "needs_clarification", [], [])
@@ -315,12 +385,11 @@ def chat(db, user_id, request, redis, reader, config, *, graph=None, booking=Non
         proposed_intent, planner_mode = "react_lookup", "react_lookup"
     elif agent_context_ready:
         proposed_intent, planner_mode = "get_showtimes", "react_fallback"
-    elif listing or clarification or personal_lookup or booking_request:
+    elif listing or clarification or personal_lookup or explicit_recommendation:
         proposed_intent = deterministic
     elif refining_recommendation:
         proposed_intent = "recommend"
-    elif deterministic in {"get_ticket_prices", "get_seat_availability"} and (
-            context.showtime_id or re.search(SHOWTIME_PATTERN, message_text)):
+    elif deterministic in SHOWTIME_DETAIL_TOOLS and (context.showtime_id or explicit_showtime or ordinal is not None):
         proposed_intent = deterministic
     elif config.llm_provider != "disabled":
         try:
@@ -333,6 +402,8 @@ def chat(db, user_id, request, redis, reader, config, *, graph=None, booking=Non
             patch = proposed.context.model_dump(mode="json", exclude_unset=True, exclude_none=True,
                 exclude={"film_id", "theater_id", "showtime_id"})
             patch = {key: value for key, value in patch.items() if value != ""}
+            if patch.get("start_after") == "00:00:00" and not re.search(r"\b0{1,2}(?:h|\s*gio|:00)\b", message_text):
+                patch.pop("start_after", None)
             for field in ("party_size", "budget_scope", "knowledge_scope"):
                 default = ToolContext.model_fields[field].default
                 if patch.get(field) == default and getattr(context, field) != default:
@@ -350,26 +421,45 @@ def chat(db, user_id, request, redis, reader, config, *, graph=None, booking=Non
         preliminary not in {"knowledge", "out_of_scope", "get_my_booking"}
         or (bool(pending_tool) and preliminary == "knowledge" and not explicit_knowledge)
     )
+    matched_fields, ambiguous_fields = set(), set()
     # FAQ needs only the AI-owned approved KB; do not call Catalog/Cinema unnecessarily.
     if read_context:
-        context = infer_context(reader, request.message, context)
+        context = infer_context(reader, request.message, context, _matched=matched_fields, _ambiguous=ambiguous_fields)
     if not personal_lookup:
         context = infer_preferences(request.message, context)
-    ordinal = None if listing or personal_lookup or agent_result is not None or agent_context_ready else re.search(r"suat thu\s*(\d+|hai|ba|bon)\b", message_text)
-    if ordinal:
-        index = {"hai": 2, "ba": 3, "bon": 4}.get(ordinal[1])
-        index = index if index is not None else int(ordinal[1])
+    if (listing or personal_lookup or preliminary == "out_of_scope" or agent_result is not None or agent_context_ready
+            or (preliminary == "knowledge" and explicit_knowledge)):
+        ordinal = None
+    detail_lookup = preliminary in SHOWTIME_DETAIL_TOOLS or pending_tool in SHOWTIME_DETAIL_TOOLS
+    ambiguous_scope = bool(ambiguous_fields) and detail_lookup and (ordinal is not None or pending_ordinal is not None)
+    if ambiguous_scope:
+        for field in ambiguous_fields:
+            setattr(context, field, None)
+    scope_changed = any(
+        getattr(context, field) != getattr(previous_context, field) for field in (*SHOWTIME_SCOPE, "start_after")
+    )
+    needs_schedule = ordinal is not None and (ambiguous_scope or scope_changed or pending_ordinal is not None)
+    if needs_schedule:
+        context.showtime_id = None
+    elif ordinal is not None:
         choices = previous.get("options", [])
-        if not 1 <= index <= len(choices):
+        if not 1 <= ordinal <= len(choices):
             raise HTTPException(422, "Chưa có suất tương ứng trong danh sách gần nhất; hãy chọn lại suất")
-        selected = choices[index-1]
+        selected = choices[ordinal - 1]
         context.showtime_id, context.film_id, context.theater_id = selected["showtime_id"], selected["film_id"], selected["theater_id"]
-        context.show_date = datetime.strptime(selected["show_date"], "%Y-%m-%d").date()
+        if selected.get("show_date"):
+            context.show_date = datetime.strptime(selected["show_date"], "%Y-%m-%d").date()
+    if "showtime_id" in matched_fields and (
+            preliminary in SHOWTIME_DETAIL_TOOLS or pending_tool in SHOWTIME_DETAIL_TOOLS):
+        for field in SHOWTIME_SCOPE:
+            submitted_changed = field in submitted and getattr(request.context, field) != getattr(previous_context, field)
+            if field not in matched_fields and not submitted_changed:
+                setattr(context, field, None)
     selection_changed = any(getattr(context, field) != getattr(previous_context, field)
-                            for field in ("film_id", "theater_id", "show_date"))
+                            for field in SHOWTIME_SCOPE)
     # The UI echoes the full context, so an unchanged ID may still be stale.
     if (context.showtime_id is not None and context.showtime_id == previous_context.showtime_id
-            and selection_changed and not ordinal and not re.search(SHOWTIME_PATTERN, folded(request.message))):
+            and selection_changed and ordinal is None and not explicit_showtime):
         context.showtime_id = None
     if read_context:
         validate_context(reader, context)
@@ -387,12 +477,21 @@ def chat(db, user_id, request, redis, reader, config, *, graph=None, booking=Non
     evening = "toi nay" in message_text or (
         previous.get("evening", False) and (intent == pending_tool or refining_recommendation)
     )
+    scoped_ordinal = ordinal if needs_schedule else None
+    if ordinal is None and intent == pending_tool:
+        scoped_ordinal = pending_ordinal
+    ordinal_choices, ordinal_notice = None, None
+    if scoped_ordinal is not None and intent in SHOWTIME_DETAIL_TOOLS:
+        context.showtime_id = None
+        ordinal_choices, ordinal_notice = lookup_ordinal_in_scope(reader, context, scoped_ordinal, evening)
     sources, missing = [], []
     status, mode = "ok", planner_mode
     cards, has_more = [], False
     private_order = None
     if agent_result is not None:
         answer, status, sources, missing = agent_result
+    elif ordinal_notice is not None:
+        answer, status, missing = ordinal_notice
     elif personal_lookup:
         if booking is None:
             answer, status = "Chưa thể tra đơn lúc này. Bạn có thể thử lại sau.", "tool_unavailable"
@@ -506,6 +605,7 @@ def chat(db, user_id, request, redis, reader, config, *, graph=None, booking=Non
                 answer = "\n\n".join(s["text"] for s in sources) if sources else empty_answers[intent]
                 status = "ok" if sources else "no_results"
                 if mode == "react_fallback" and sources:
+                    answer = "\n\n".join(react_lookup.showtime_description(source) for source in sources)
                     answer += "\n\nMình mới tìm được lịch chiếu. Hãy chọn suất để kiểm tra ghế và giá."
                     status = "partial"
             except Exception:
@@ -514,12 +614,16 @@ def chat(db, user_id, request, redis, reader, config, *, graph=None, booking=Non
     links = [dict(title=s["title"], url=s["url"]) for s in sources if s["kind"] != "document"]
     if intent in {"get_showtimes", "react_lookup"}:
         options = showtime_choices(sources, context)
-    elif intent == "recommend" or listing or selection_changed:
+    elif ordinal_choices is not None:
+        options = ordinal_choices
+    elif intent == "recommend" or listing or selection_changed or needs_schedule:
         options = cards
     else:
         options = previous.get("options", [])
     state = dict(context=context.model_dump(mode="json"), pending_tool=intent if missing and intent != "react_lookup" else None,
                  active_recommendation=intent == "recommend", evening=evening, options=options)
+    if ordinal_choices is not None and missing:
+        state["pending_ordinal"] = scoped_ordinal
     if personal_lookup:
         state = previous | {"context": context.model_dump(mode="json")}
     result = dict(conversation_id=conversation_id, answer=answer, sources=sources, links=links, cards=cards, has_more=has_more,
@@ -527,7 +631,7 @@ def chat(db, user_id, request, redis, reader, config, *, graph=None, booking=Non
                 as_of=utcnow(), tool=intent if intent.startswith(("get_", "search_")) or intent == "react_lookup" else None)
     if intent == "knowledge" and graph is not None:
         result["graph_retrieval"] = graph_state
-    if intent in {"recommend", "get_showtimes", "react_lookup"}:
+    if intent in {"recommend", "get_showtimes", "react_lookup"} or request.reset_filters or needs_schedule or ordinal_choices is not None:
         result["showtime_options"] = True
     if private_order is not None:
         result["booking"] = private_order

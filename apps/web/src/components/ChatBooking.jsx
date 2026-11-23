@@ -217,8 +217,8 @@ export default function ChatBooking({ draft, userId, onReservation, onDiscard })
       <div className="assistant-booking-actions">
         {seconds > 0 && <button type="button" className="assistant-primary" onClick={checkout} disabled={busy || !preview}>Xác nhận đặt vé</button>}
         <button type="button" className="assistant-direct-link" onClick={() => seconds > 0 ? release() : refresh()} disabled={busy}>{seconds > 0 ? 'Đổi ghế' : 'Cập nhật ghế'}</button>
-        <button type="button" className="assistant-direct-link" onClick={() => release(true)} disabled={busy}>Hủy giữ ghế</button>
-        <button type="button" className="assistant-direct-link" onClick={onDiscard} disabled={busy}>Đóng bước đặt vé</button>
+        {seconds > 0 && <button type="button" className="assistant-direct-link" onClick={() => release(true)} disabled={busy}>Hủy giữ ghế</button>}
+        {(seconds === 0 || checkoutConflict) && <button type="button" className="assistant-direct-link" onClick={onDiscard} disabled={busy}>Đóng bước đặt vé</button>}
       </div>
     </> : <>
       <p>Đã chọn {selected.length} ghế{draft.partySize ? ` · yêu cầu ban đầu ${draft.partySize} vé` : ''}. Bạn có thể gõ “ghế A5 A6”.</p>

@@ -53,7 +53,12 @@ class ReadSession:
             raise HTTPException(503, 'AI request deadline exceeded')
         try:
             response=self.http.request(method,origin+path,headers={'X-Service-Key':self.settings.service_key},timeout=min(5,remaining),follow_redirects=False,**kwargs)
-            if response.status_code in {404,422}:raise HTTPException(422,'Ngữ cảnh không hợp lệ')
+            if response.status_code in {404, 422}:
+                try:
+                    detail = response.json().get("detail")
+                except (ValueError, AttributeError):
+                    detail = None
+                raise HTTPException(422, detail if isinstance(detail, str) and detail.strip() else "Ngữ cảnh không hợp lệ")
             response.raise_for_status();return response.json()
         except (httpx.HTTPError,ValueError) as exc:raise HTTPException(503,'Không thể tra cứu dữ liệu owner') from exc
 
