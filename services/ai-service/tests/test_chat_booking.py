@@ -1,11 +1,13 @@
 import json
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
+from zoneinfo import ZoneInfo
 
 import httpx
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.pool import StaticPool
 
+from ai_service import llm
 from ai_service.main import create_app
 from ai_service.models import Base
 from ai_service.chat import detect_intent
@@ -23,6 +25,18 @@ def test_booking_policy_takes_precedence_over_booking_request():
     assert detect_intent("Đặt vé rồi có được hoàn tiền không?") == "knowledge"
     assert detect_intent("Tôi đặt vé trên website như thế nào?") == "knowledge"
     assert detect_intent("Đặt hai vé phim hài tối nay") == "recommend"
+    assert detect_intent("Tôi muốn đặt hôm nay hai vé") == "recommend"
+    assert detect_intent("Đặt hộ tôi hai vé") == "out_of_scope"
+
+
+def test_booking_policy_question_with_an_ordinal_uses_knowledge(client_factory):
+    def owner(request):
+        pytest.fail(f"Policy question tried to use a business read: {request.url.path}")
+
+    with client_factory(owner) as client:
+        response = client.post("/ai/chat", headers=HEADERS, json={"message": "Cách đặt vé suất đầu tiên?"})
+    assert response.status_code == 200, response.text
+    assert response.json()["status"] == "no_evidence"
 
 
 @pytest.fixture
@@ -76,6 +90,187 @@ def test_booking_writes_preserve_customer_authorization_and_idempotency(client_f
             created = client.post("/ai/booking/checkout", headers=headers, json=checkout)
             assert created.status_code == 201 and created.json() == {"bookingId": 77, "expiresAt": DEADLINE}
     assert calls == ["/seats/hold", "/seats/release", "/bookings", "/bookings"]
+
+
+@pytest.mark.parametrize("question,context,status,tool,theater,showtime", [
+    ("Suất đầu tiên ở Rạp mới giá vé bao nhiêu?", {}, "ok", "get_ticket_prices", 2, 21),
+    ("Suất thứ hai còn ghế nào ở Rạp mới?", {}, "ok", "get_seat_availability", 2, 20),
+    ("Suất đầu ở Rạp trống giá vé bao nhiêu?", {}, "no_results", "get_ticket_prices", 3, None),
+    ("Suất đầu ở Rạp mới giá vé bao nhiêu?", {"show_date": None}, "needs_clarification", "get_ticket_prices", 2, None),
+    ("Suất đầu tại Galaxy Nguyễn Du giá vé bao nhiêu?", {}, "needs_clarification", "get_ticket_prices", None, None),
+])
+def test_ordinal_lookup_uses_the_new_theater(client_factory, question, context, status, tool, theater, showtime):
+    day = (date.today() + timedelta(days=3)).isoformat()
+    calls = []
+
+    def owner(request):
+        path = request.url.path
+        payload = json.loads(request.content)
+        if path.endswith("/matches"):
+            return httpx.Response(200, json={"film_id": [], "theater_id": [
+                {"id": id, "name": name} for id, name in [(2, "Rạp mới"), (3, "Rạp trống"),
+                                                          (4, "Galaxy"), (5, "Galaxy Nguyễn Du")]
+                if name in payload["message"]
+            ]})
+        if path.endswith("/context"):
+            return httpx.Response(200, json={"film_name": "Phim A", "theater_name": None})
+        assert path.endswith("/tool")
+        call = payload["call"]
+        name, scope = call["name"], call["context"]
+        calls.append((name, scope["theater_id"], scope["showtime_id"]))
+        ids = {1: [11], 2: [21, 20], 3: []}[scope["theater_id"]] if name == "get_showtimes" else [scope["showtime_id"]]
+        return httpx.Response(200, json=[dict(
+            id=f"{'showtime' if name == 'get_showtimes' else 'detail'}:{id}", title=f"Suất {id}",
+            text=f"Thông tin suất {id}", url=f"/seat-selection/{id}", kind="live",
+        ) for id in ids])
+
+    with client_factory(owner) as client:
+        first = client.post("/ai/chat", headers=HEADERS, json={
+            "message": "Lịch chiếu?", "context": {"film_id": 1, "theater_id": 1, "show_date": day},
+        }).json()
+        response = client.post("/ai/chat", headers=HEADERS, json={
+            "message": question, "conversation_id": first["conversation_id"], "context": context,
+        })
+        followup_message = "Suất thứ hai còn ghế nào?" if showtime == 21 else day if context else None
+        if followup_message:
+            followup = client.post("/ai/chat", headers=HEADERS, json={
+                "message": followup_message, "conversation_id": first["conversation_id"],
+            })
+    assert response.status_code == 200, response.text
+    result = response.json()
+    assert (result["status"], result["tool"]) == (status, tool)
+    assert (result["context"]["theater_id"], result["context"]["showtime_id"]) == (theater, showtime)
+    expected_calls = [("get_showtimes", 1, None)]
+    if status == "needs_clarification":
+        assert result["missing_fields"] == ["theater_id" if theater is None else "show_date"]
+    else:
+        expected_calls.append(("get_showtimes", theater, None))
+    if showtime:
+        expected_calls.append((tool, theater, showtime))
+        assert result["links"][0]["url"] == f"/seat-selection/{showtime}"
+    else:
+        assert result["links"] == []
+    if followup_message:
+        assert followup.status_code == 200, followup.text
+        next_turn = followup.json()
+        assert next_turn["status"] == "ok"
+        if showtime == 21:
+            assert next_turn["links"][0]["url"] == "/seat-selection/20"
+            expected_calls.append(("get_seat_availability", 2, 20))
+        else:
+            assert next_turn["links"][0]["url"] == "/seat-selection/21"
+            expected_calls.extend([("get_showtimes", 2, None), ("get_ticket_prices", 2, 21)])
+    assert calls == expected_calls
+
+
+def test_ordinal_schedule_lookup_can_be_retried_after_owner_failure(client_factory):
+    scope = {"film_id": 1, "theater_id": 2, "show_date": (date.today() + timedelta(days=3)).isoformat()}
+    schedules = 0
+
+    def owner(request):
+        nonlocal schedules
+        path = request.url.path
+        if path.endswith("/matches"):
+            return httpx.Response(200, json={"film_id": [], "theater_id": []})
+        if path.endswith("/context"):
+            return httpx.Response(200, json={"film_name": "Phim A", "theater_name": "Rạp mới"})
+        name = json.loads(request.content)["call"]["name"]
+        if name == "get_showtimes":
+            schedules += 1
+            if schedules == 1:
+                return httpx.Response(503)
+        return httpx.Response(200, json=[dict(
+            id="showtime:21" if name == "get_showtimes" else "price:21",
+            title="Suất 21", text="Suất 21", url="/seat-selection/21", kind="live",
+        )])
+
+    with client_factory(owner) as client:
+        first = client.post("/ai/chat", headers=HEADERS, json={"message": "Cách đặt vé?"}).json()
+        query = {"message": "Giá vé suất đầu tiên?", "conversation_id": first["conversation_id"], "context": scope}
+        failed = client.post("/ai/chat", headers=HEADERS, json=query)
+        recovered = client.post("/ai/chat", headers=HEADERS, json=query)
+    assert failed.status_code == 503
+    assert recovered.status_code == 200, recovered.text
+    assert recovered.json()["links"][0]["url"] == "/seat-selection/21"
+    assert schedules == 2
+
+
+def test_reset_filters_clears_saved_selection_without_losing_history(client_factory):
+    def owner(request):
+        if request.url.path.endswith("/matches"):
+            return httpx.Response(200, json={"film_id": [], "theater_id": []})
+        if request.url.path.endswith("/context"):
+            return httpx.Response(200, json={"film_name": None, "theater_name": None})
+        assert json.loads(request.content)["call"]["name"] == "get_showtimes"
+        return httpx.Response(200, json=[dict(id="showtime:11", title="Suất 11", text="Suất 11",
+                                             url="/seat-selection/11", kind="live")])
+
+    with client_factory(owner) as client:
+        first = client.post("/ai/chat", headers=HEADERS, json={"message": "Lịch chiếu?", "context": {
+            "film_id": 1, "theater_id": 1, "show_date": (date.today() + timedelta(days=3)).isoformat(),
+            "genre": "Hài", "party_size": 2, "budget_amount": "200000", "budget_scope": "total",
+        }}).json()
+        conversation_id = first["conversation_id"]
+        response = client.post("/ai/chat", headers=HEADERS, json={
+            "message": "Cách đặt vé?", "conversation_id": conversation_id,
+            "reset_filters": True, "context": {"theater_id": 2},
+        })
+        assert response.status_code == 200, response.text
+        result = response.json()
+        assert result["conversation_id"] == conversation_id and result["showtime_options"] is True
+        assert {key: result["context"][key] for key in (
+            "film_id", "theater_id", "show_date", "showtime_id", "genre", "party_size", "budget_amount",
+        )} == {"film_id": None, "theater_id": 2, "show_date": None, "showtime_id": None,
+               "genre": "", "party_size": 1, "budget_amount": None}
+        missing = client.post("/ai/chat", headers=HEADERS, json={
+            "message": "Giá vé suất đầu tiên?", "conversation_id": conversation_id,
+        })
+        assert missing.status_code == 422, missing.text
+        history = client.get(f"/ai/conversations/{conversation_id}", headers=HEADERS).json()
+    assert history["context"] == result["context"]
+    assert [m["content"] for m in history["messages"] if m["role"] == "user"] == ["Lịch chiếu?", "Cách đặt vé?"]
+
+
+@pytest.mark.parametrize("question,provider,day_offset,cutoff,genre,party,ids", [
+    ("Tối mai phim nào chiếu sau 19 giờ?", "disabled", 1, "19:00:00", "", 1, [12]),
+    ("Tối mai phim nào chiếu sau 19h?", "disabled", 1, "19:00:00", "", 1, [12]),
+    ("Tối nay có phim hài nào còn suất chiếu cho hai người?", "disabled", 0, "18:00:00", "Hài", 2, [11, 12]),
+    ("Tối nay có phim hài nào còn suất chiếu cho hai người?", "ollama", 0, "18:00:00", "Hài", 2, [11, 12]),
+])
+def test_film_discovery_uses_explicit_filters_when_the_model_is_unavailable(
+        client_factory, monkeypatch, question, provider, day_offset, cutoff, genre, party, ids):
+    day = (datetime.now(ZoneInfo("Asia/Ho_Chi_Minh")).date() + timedelta(days=day_offset)).isoformat()
+    queries = []
+
+    def timeout(*args):
+        raise TimeoutError("Planner timed out")
+
+    def owner(request):
+        path = request.url.path
+        if path.endswith("/matches"):
+            return httpx.Response(200, json=[])
+        if path.endswith("/candidates"):
+            return httpx.Response(200, json=[1])
+        if path.endswith("/films/batch"):
+            return httpx.Response(200, json=[{"id": 1, "title": "Phim chỉ có suất 18:30"}])
+        assert path.endswith("/options")
+        query = json.loads(request.content)
+        queries.append({field: query[field] for field in ("show_date", "start_after", "genre", "party_size")})
+        return httpx.Response(200, json={"items": [dict(
+            showtime_id=id, sales_version=1, film_id=id - 10, film_title=f"Phim {id}", theater_id=1,
+            theater_name="Rạp A", room_name="Phòng A", show_date=day, start_time=start,
+            format="2D", available_seats=4, min_ticket_price=90000, minimum_total=party * 90000,
+            party_size=party, currency="VND", url=f"/seat-selection/{id}",
+        ) for id, start in [(11, "18:30:00"), (12, "19:15:00")] if start >= query["start_after"]]})
+
+    monkeypatch.setattr(llm, "plan", timeout)
+    with client_factory(owner, llm_provider=provider, direct_reads_enabled=True) as client:
+        response = client.post("/ai/chat", headers=HEADERS, json={"message": question})
+    assert response.status_code == 200, response.text
+    result = response.json()
+    assert result["status"] == "ok"
+    assert [card["showtime_id"] for card in result["cards"]] == ids
+    assert queries == [dict(show_date=day, start_after=cutoff, genre=genre, party_size=party)]
 
 
 @pytest.mark.parametrize("conditional", [False, True])

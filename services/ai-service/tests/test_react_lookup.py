@@ -16,21 +16,23 @@ def test_react_handles_the_supported_conditions_in_their_requested_order():
     assert not applies(folded("Nếu suất đầu không đủ hai ghế thì báo giá. Nếu đủ thì kiểm tra suất tiếp theo."))
 
 
-@pytest.mark.parametrize(("available", "scenario", "last_action", "last_id"), [
-    (2, "valid", "get_ticket_prices", 11),
-    (1, "valid", "get_seat_availability", 12),
-    (1, "unknown", "create_booking", 12),
-    (1, "out_of_scope", "get_seat_availability", 998),
-    (1, "repeat", "get_seat_availability", 11),
-    (1, "no_next", "", 0),
-    (1, "timeout", "", 0),
-    (1, "unavailable", "", 0),
+@pytest.mark.parametrize(("condition", "available", "scenario", "last_action", "last_id"), [
+    ("còn đủ", 2, "valid", "get_ticket_prices", 11),
+    ("còn đủ", 1, "valid", "get_seat_availability", 12),
+    ("có đủ", 2, "valid", "get_ticket_prices", 11),
+    ("có đủ", 1, "valid", "get_seat_availability", 12),
+    ("còn đủ", 1, "unknown", "create_booking", 12),
+    ("còn đủ", 1, "out_of_scope", "get_seat_availability", 998),
+    ("còn đủ", 1, "repeat", "get_seat_availability", 11),
+    ("còn đủ", 1, "no_next", "", 0),
+    ("còn đủ", 1, "timeout", "", 0),
+    ("còn đủ", 1, "unavailable", "", 0),
 ])
 @pytest.mark.parametrize(("provider", "json_fallback"), [
     ("openai", None), ("ollama", None), ("ollama", "rejected"), ("openai", "rejected"), ("ollama", "no_call"),
     ("ollama", "late_rejection"),
 ])
-def test_tool_observation_drives_the_next_action(client_factory, monkeypatch, available, scenario, last_action, last_id, provider, json_fallback):
+def test_tool_observation_drives_the_next_action(client_factory, monkeypatch, condition, available, scenario, last_action, last_id, provider, json_fallback):
     day = (date.today() + timedelta(days=3)).isoformat()
     actions = []
     native_attempts = 0
@@ -48,9 +50,13 @@ def test_tool_observation_drives_the_next_action(client_factory, monkeypatch, av
         call = json.loads(request.content)["call"]
         actions.append((call["name"], call["context"]["showtime_id"]))
         if call["name"] == "get_showtimes":
-            return httpx.Response(200, json=[{"id": f"showtime:{id}", "title": f"Suất {id}", "text": f"Mã suất {id}", "url": f"/seat-selection/{id}", "kind": "live"} for id in ((11,) if scenario == "no_next" else (11, 12))])
+            showtimes = [(11, "20:00")] if scenario == "no_next" else [(11, "20:00"), (12, "21:30")]
+            return httpx.Response(200, json=[
+                {"id": f"showtime:{id}", "title": f"Suất {clock}", "text": f"01/12/2030, {clock}, định dạng 2D, mã suất {id}.",
+                 "url": f"/seat-selection/{id}", "kind": "live"} for id, clock in showtimes
+            ])
         assert call["name"] == "get_ticket_prices"
-        return httpx.Response(200, json=[{"id": "price:1", "title": "Ghế thường", "text": "Ghế thường: 90,000 VND", "url": "/seat-selection/11", "kind": "live"}])
+        return httpx.Response(200, json=[{"id": "price:1", "title": "Ghế thường", "text": "Suất 11, ghế thường: 90,000 VND.", "url": "/seat-selection/11", "kind": "live"}])
 
     def model(request):
         nonlocal native_attempts
@@ -106,19 +112,24 @@ def test_tool_observation_drives_the_next_action(client_factory, monkeypatch, av
     with client_factory(owner, llm_provider=provider, openai_api_key="fixture-token", react_lookup_enabled=True) as client:
         http_client = httpx.Client
         monkeypatch.setattr(llm.httpx, "Client", lambda **kwargs: http_client(transport=httpx.MockTransport(model), **kwargs))
-        response = client.post("/ai/chat", headers=HEADERS, json={"message": f"Tìm các suất của phim X tại rạp Y ngày {day}. Nếu suất đầu còn đủ hai ghế thì báo giá từng loại. Nếu không đủ thì kiểm tra suất tiếp theo."})
+        response = client.post("/ai/chat", headers=HEADERS, json={"message": f"Tìm các suất của phim X tại rạp Y ngày {day}. Nếu suất đầu {condition} hai ghế thì báo giá từng loại. Nếu không đủ thì kiểm tra suất tiếp theo."})
     assert response.status_code == 200, response.text
     if json_fallback:
         assert native_attempts == (2 if json_fallback == "late_rejection" and scenario != "unavailable" else 1)
     data = response.json()
+    answer = data["answer"]
+    assert all(raw_id not in answer.lower() for raw_id in ("#11", "#12", "suất 11", "suất 12", "mã suất"))
     if scenario == "unavailable":
         assert data["mode"] == "react_fallback" and data["status"] == "partial"
+        assert "20:00" in answer and "21:30" in answer
         assert actions == [("get_showtimes", None)]
         return
     assert data["mode"] == "react_lookup"
+    assert f"Suất đầu (20:00) còn {available} ghế trống" in answer
+    assert data["links"][0]["url"] == "/seat-selection/11"
     if scenario == "valid":
         assert data["status"] == "ok"
-        assert ("90,000 VND" if available == 2 else "5 ghế") in data["answer"]
+        assert ("Ghế thường: 90,000 VND." if available == 2 else "Suất tiếp theo (21:30) còn 5 ghế trống") in answer
         assert actions == [("get_showtimes", None), ("get_seat_availability", 11), (last_action, last_id)]
     else:
         assert data["status"] == ("ok" if scenario == "no_next" else "partial")
