@@ -35,7 +35,7 @@ services:
       published: '8080'
       target: 8080
     image: cinema-gateway:local
-    restart: unless-stopped
+    restart: 'no'
   rabbitmq:
     healthcheck:
       interval: 5s
@@ -69,7 +69,7 @@ services:
       type: volume
       volume: {}
     environment: {}
-    restart: unless-stopped
+    restart: 'no'
   mailpit:
     image: axllent/mailpit:v1.24
     networks:
@@ -81,7 +81,7 @@ services:
       published: '8025'
       target: 8025
     environment: {}
-    restart: unless-stopped
+    restart: 'no'
   ai-redis:
     healthcheck:
       interval: 3s
@@ -95,7 +95,7 @@ services:
     networks:
       backend: null
     environment: {}
-    restart: unless-stopped
+    restart: 'no'
   ai-db:
     environment:
       POSTGRES_DB: cinema_ai
@@ -116,7 +116,7 @@ services:
       target: /var/lib/postgresql/data
       type: volume
       volume: {}
-    restart: unless-stopped
+    restart: 'no'
   ai-migrate:
     build:
       context: .
@@ -196,7 +196,7 @@ services:
       published: '8082'
       target: 8082
     image: cinema-ai:local
-    restart: unless-stopped
+    restart: 'no'
   booking-db:
     environment:
       POSTGRES_DB: cinema_booking
@@ -217,7 +217,7 @@ services:
       target: /var/lib/postgresql/data
       type: volume
       volume: {}
-    restart: unless-stopped
+    restart: 'no'
   booking-migrate:
     build:
       context: .
@@ -263,7 +263,7 @@ services:
     networks:
       backend: null
     image: cinema-booking:local
-    restart: unless-stopped
+    restart: 'no'
   booking-relay:
     build:
       context: .
@@ -287,7 +287,7 @@ services:
     networks:
       backend: null
     image: cinema-booking:local
-    restart: unless-stopped
+    restart: 'no'
   booking-service:
     build:
       context: .
@@ -322,7 +322,7 @@ services:
       published: '8087'
       target: 8087
     image: cinema-booking:local
-    restart: unless-stopped
+    restart: 'no'
   booking-worker:
     build:
       context: .
@@ -341,7 +341,7 @@ services:
     networks:
       backend: null
     image: cinema-booking:local
-    restart: unless-stopped
+    restart: 'no'
   catalog-db:
     environment:
       POSTGRES_DB: cinema_catalog
@@ -362,7 +362,7 @@ services:
       target: /var/lib/postgresql/data
       type: volume
       volume: {}
-    restart: unless-stopped
+    restart: 'no'
   catalog-migrate:
     build:
       context: .
@@ -417,7 +417,7 @@ services:
       published: '8085'
       target: 8085
     image: cinema-catalog:local
-    restart: unless-stopped
+    restart: 'no'
   cinema-db:
     environment:
       POSTGRES_DB: cinema_cinema
@@ -438,7 +438,7 @@ services:
       target: /var/lib/postgresql/data
       type: volume
       volume: {}
-    restart: unless-stopped
+    restart: 'no'
   cinema-migrate:
     build:
       context: .
@@ -495,7 +495,7 @@ services:
       published: '8086'
       target: 8086
     image: cinema-cinema:local
-    restart: unless-stopped
+    restart: 'no'
   cinema-worker:
     build:
       context: .
@@ -518,7 +518,7 @@ services:
     networks:
       backend: null
     image: cinema-cinema:local
-    restart: unless-stopped
+    restart: 'no'
   identity-db:
     environment:
       POSTGRES_DB: cinema_identity
@@ -539,7 +539,7 @@ services:
       target: /var/lib/postgresql/data
       type: volume
       volume: {}
-    restart: unless-stopped
+    restart: 'no'
   identity-migrate:
     build:
       context: .
@@ -598,7 +598,7 @@ services:
       published: '8084'
       target: 8084
     image: cinema-identity:local
-    restart: unless-stopped
+    restart: 'no'
   notification-api:
     build:
       context: .
@@ -630,7 +630,7 @@ services:
       published: '8081'
       target: 8081
     image: cinema-notification:local
-    restart: unless-stopped
+    restart: 'no'
   notification-consumer:
     build:
       context: .
@@ -654,7 +654,7 @@ services:
       NOTIFICATION_SERVICE_KEY: ${INTERNAL_SERVICE_KEY}
     networks:
       backend: null
-    restart: unless-stopped
+    restart: 'no'
     image: cinema-notification:local
   notification-db:
     environment:
@@ -676,7 +676,7 @@ services:
       target: /var/lib/postgresql/data
       type: volume
       volume: {}
-    restart: unless-stopped
+    restart: 'no'
   notification-dispatcher:
     build:
       context: .
@@ -704,7 +704,7 @@ services:
       NOTIFICATION_SMTP_PASSWORD: ${NOTIFICATION_SMTP_PASSWORD:-}
     networks:
       backend: null
-    restart: unless-stopped
+    restart: 'no'
     image: cinema-notification:local
   notification-migrate:
     build:
@@ -745,7 +745,7 @@ services:
       target: /var/lib/postgresql/data
       type: volume
       volume: {}
-    restart: unless-stopped
+    restart: 'no'
   payment-migrate:
     build:
       context: .
@@ -789,7 +789,7 @@ services:
     networks:
       backend: null
     image: cinema-payment:local
-    restart: unless-stopped
+    restart: 'no'
   payment-service:
     build:
       context: .
@@ -827,7 +827,7 @@ services:
       published: '8088'
       target: 8088
     image: cinema-payment:local
-    restart: unless-stopped
+    restart: 'no'
   payment-worker:
     build:
       context: .
@@ -853,7 +853,7 @@ services:
     networks:
       backend: null
     image: cinema-payment:local
-    restart: unless-stopped
+    restart: 'no'
   review-db:
     environment:
       POSTGRES_DB: cinema_review
@@ -874,7 +874,7 @@ services:
       target: /var/lib/postgresql/data
       type: volume
       volume: {}
-    restart: unless-stopped
+    restart: 'no'
   review-migrate:
     build:
       context: .
@@ -889,7 +889,6 @@ services:
         condition: service_healthy
         required: true
     environment:
-      REVIEW_AUTO_APPROVE: ${REVIEW_AUTO_APPROVE:-false}
       REVIEW_DATABASE_URL: postgresql+psycopg2://review_owner:${REVIEW_DB_PASSWORD}@review-db:5432/cinema_review
       REVIEW_IDENTITY_ORIGIN: http://identity-service:8084
       REVIEW_SENTIMENT_BACKEND: ${REVIEW_SENTIMENT_BACKEND:-disabled}
@@ -925,7 +924,7 @@ services:
     networks:
       backend: null
     image: cinema-review:local
-    restart: unless-stopped
+    restart: 'no'
   review-service:
     build:
       context: .
@@ -936,7 +935,6 @@ services:
         condition: service_completed_successfully
         required: true
     environment:
-      REVIEW_AUTO_APPROVE: ${REVIEW_AUTO_APPROVE:-false}
       REVIEW_DATABASE_URL: postgresql+psycopg2://review_owner:${REVIEW_DB_PASSWORD}@review-db:5432/cinema_review
       REVIEW_IDENTITY_ORIGIN: http://identity-service:8084
       REVIEW_SENTIMENT_BACKEND: ${REVIEW_SENTIMENT_BACKEND:-disabled}
@@ -966,7 +964,7 @@ services:
       published: '8083'
       target: 8083
     image: cinema-review:local
-    restart: unless-stopped
+    restart: 'no'
   review-worker:
     build:
       context: .
@@ -994,7 +992,7 @@ services:
       target: /models
       type: bind
     image: cinema-review-worker:local
-    restart: unless-stopped
+    restart: 'no'
   reporting-db:
     image: postgres:15-alpine
     environment:
@@ -1012,7 +1010,7 @@ services:
       interval: 3s
       timeout: 3s
       retries: 20
-    restart: unless-stopped
+    restart: 'no'
   reporting-migrate:
     build: &id001
       context: .
@@ -1052,7 +1050,7 @@ services:
       interval: 10s
       timeout: 8s
       retries: 5
-    restart: unless-stopped
+    restart: 'no'
   reporting-worker:
     build: *id001
     image: cinema-reporting:local
@@ -1073,7 +1071,7 @@ services:
         condition: service_healthy
     networks:
     - backend
-    restart: unless-stopped
+    restart: 'no'
   reporting-bootstrap:
     build: *id001
     image: cinema-reporting:local
@@ -1107,7 +1105,7 @@ services:
         condition: service_healthy
     networks:
     - backend
-    restart: unless-stopped
+    restart: 'no'
   payment-report-source:
     build:
       context: .
@@ -1129,7 +1127,7 @@ services:
         condition: service_healthy
     networks:
     - backend
-    restart: unless-stopped
+    restart: 'no'
   catalog-report-source:
     build:
       context: .
@@ -1151,7 +1149,7 @@ services:
         condition: service_healthy
     networks:
     - backend
-    restart: unless-stopped
+    restart: 'no'
   cinema-report-source:
     build:
       context: .
@@ -1173,7 +1171,7 @@ services:
         condition: service_healthy
     networks:
     - backend
-    restart: unless-stopped
+    restart: 'no'
   review-report-source:
     build:
       context: .
@@ -1196,7 +1194,7 @@ services:
         condition: service_healthy
     networks:
     - backend
-    restart: unless-stopped
+    restart: 'no'
   web:
     build:
       context: .
@@ -1209,7 +1207,7 @@ services:
         condition: service_healthy
     networks:
     - backend
-    restart: unless-stopped
+    restart: 'no'
 networks:
   backend:
     driver: bridge

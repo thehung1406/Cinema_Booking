@@ -13,6 +13,7 @@ class AuthorFact(BaseModel):
     user_id: int
     film_id: int
     author: str
+    author_avatar: str | None = None
     verified_purchase: bool
 
 
@@ -44,9 +45,11 @@ class ReadClient:
                 items=kwargs['json']['items']
                 profiles=self.direct(self.settings.identity_origin,'POST','/internal/v1/users/profiles',json={'user_ids':sorted({r['user_id'] for r in items})})
                 verified=self.direct(self.settings.booking_origin,'POST','/internal/v1/booking-read/verified',json={'items':items})
-                names={r['id']:r['username'] for r in profiles};proof={(r['user_id'],r['film_id']):r['verified_purchase'] for r in verified}
+                names={r['id']:r for r in profiles};proof={(r['user_id'],r['film_id']):r['verified_purchase'] for r in verified}
                 if set(proof)!={(r['user_id'],r['film_id']) for r in items}:raise HTTPException(503,'Incomplete purchase evidence')
-                return [{**r,'author':names.get(r['user_id'],'Khán giả'),'verified_purchase':proof[(r['user_id'],r['film_id'])]} for r in items]
+                return [{**r,'author':names.get(r['user_id'],{}).get('full_name') or names.get(r['user_id'],{}).get('username','Khán giả'),
+                         'author_avatar':names.get(r['user_id'],{}).get('avatar'),
+                         'verified_purchase':proof[(r['user_id'],r['film_id'])]} for r in items]
             raise ValueError('Unsupported direct read')
         if len(self.settings.service_key) < 32:
             raise HTTPException(503, "Review read credential is not configured")

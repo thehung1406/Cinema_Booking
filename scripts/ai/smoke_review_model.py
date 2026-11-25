@@ -57,7 +57,7 @@ def main():
         engine=create_engine(db_url,connect_args={'options':f'-csearch_path={schema}'})
         Base.metadata.create_all(engine)
         MessagingBase.metadata.create_all(engine)
-        settings=Settings(database_url=db_url,writes_enabled=True,auto_approve=True,
+        settings=Settings(database_url=db_url,writes_enabled=True,
             sentiment_backend=args.backend,sentiment_model_path=str(model),amqp_public_url=publisher_url)
         connection=connect(operator_url)
         channel=connection.channel()
@@ -68,7 +68,7 @@ def main():
             review=service.create_review(db,film_id=900001,user_id=900001,content=sample['text'],settings=settings)
             identifier=review.id
         status=process_one(engine,settings)
-        if status not in {'succeeded','needs_review'}:
+        if status != 'succeeded':
             raise AssertionError('Real artifact inference did not complete')
         with Session(engine) as db:
             result=db.get(ReviewSentiment,identifier)
@@ -93,7 +93,7 @@ def main():
         assert published==2 and {event['event_type'] for event in events}=={'ReviewChanged.v1','ReviewSentimentUpdated.v1'}
         report=dict(created_at=datetime.now(timezone.utc).isoformat(),stage='real-artifact-isolated-technical-smoke',
             production_changed=False,human_label_decision_performed=False,
-            moderation='Test configuration auto_approve=True; not a human approval',
+            moderation='Reviews are published immediately; no human approval',
             model_metadata_sha256=hashlib.sha256((model/'metadata.json').read_bytes()).hexdigest(),
             input_sample_id=sample['id'],input_split='Bank validation, not final test',
             input_text_sha256=hashlib.sha256(sample['text'].encode()).hexdigest(),

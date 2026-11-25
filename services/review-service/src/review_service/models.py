@@ -20,7 +20,7 @@ class Review(Base):
     film_id: Mapped[int] = mapped_column(Integer)  # Validated through read API.
     content: Mapped[str] = mapped_column(String(3000))
     content_version: Mapped[int] = mapped_column(default=1)
-    moderation_status: Mapped[str] = mapped_column(String(20), default="pending")
+    moderation_status: Mapped[str] = mapped_column(String(20), default="approved")
     is_deleted: Mapped[bool] = mapped_column(default=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)

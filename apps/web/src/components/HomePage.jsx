@@ -32,7 +32,6 @@ export default function HomePage() {
     <button aria-label="Đăng xuất" title="Đăng xuất" className="btn btn-icon" onClick={() => { clearSession(); navigate("/"); }}><LogOut size={18} aria-hidden="true" /></button>
   </> : <Link to="/LoginPage" className="account-link"><UserRound size={19} aria-hidden="true" /><span>Đăng nhập</span></Link>;
   const staffLinks = <>
-    {["ADMIN", "STAFF"].includes(user?.role) && <Link to="/review-moderation" className="staff-link">Duyệt đánh giá phim <ArrowUpRight size={16} /></Link>}
     {["ADMIN", "MANAGER", "STAFF"].includes(user?.role) && <Link to="/admin" className="staff-link">Quản trị rạp chiếu <ArrowUpRight size={16} /></Link>}
   </>;
   return <div className="site-app">

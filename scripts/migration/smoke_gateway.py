@@ -48,7 +48,7 @@ def main():
             assert proxied.status_code == 200 and isinstance(proxied.json(), list)
             assert proxied.headers.get("x-service-name") == "review"
             assert client.get(args.backend + "/films/positive-trending").status_code == 410
-            assert client.get(args.gateway + "/api/reviews/moderation/pending").status_code == 401
+            assert client.get(args.gateway + "/api/reviews").status_code == 401
             assert client.get(args.gateway + "/api/internal/v1/review-read/ownership").status_code == 404
             results.append({"path": "/films/positive-trending", "status": 200, "owner": "review"})
         slash = client.get(args.gateway + "/api/films")

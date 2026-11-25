@@ -9,7 +9,6 @@ from .config import Settings
 from .models import Review, ReviewSentiment, utcnow
 from .events import changed
 from .predictor import InputTooLong, load_predictor, validate_scores
-from .text import is_literal_negative_review
 
 
 def process_one(engine, settings, predictor=None):
@@ -36,29 +35,29 @@ def process_one(engine, settings, predictor=None):
         predict, model_version = predictor or load_predictor(settings.sentiment_backend, settings.sentiment_model_path)
         scores = predict(content)
         validate_scores(scores)
-        fallback_input_too_long = False
+        if not isinstance(model_version, str) or not model_version or len(model_version) > 200:
+            raise ValueError("Invalid model version")
         if (max(scores.values()) < settings.sentiment_review_threshold
                 and settings.sentiment_fallback_backend != "disabled"
                 and settings.sentiment_fallback_model_path):
-            fallback_predict, fallback_model_version = load_predictor(
-                settings.sentiment_fallback_backend, settings.sentiment_fallback_model_path,
-                reject_truncation=True)
             try:
+                fallback_predict, fallback_model_version = load_predictor(
+                    settings.sentiment_fallback_backend, settings.sentiment_fallback_model_path,
+                    reject_truncation=True)
                 fallback_scores = fallback_predict(content)
-            except InputTooLong:
-                fallback_input_too_long = True
-            else:
                 validate_scores(fallback_scores)
+                if not isinstance(fallback_model_version, str) or not fallback_model_version or len(fallback_model_version) > 200:
+                    raise ValueError("Invalid fallback model version")
+            except InputTooLong:
+                pass  # Keep the primary prediction when the fallback cannot accept the full text.
+            except Exception as exc:
+                logging.getLogger("cinema.review.worker").warning("sentiment_fallback_failed error_type=%s", type(exc).__name__)
+            else:
                 scores, model_version = fallback_scores, fallback_model_version
-        if not isinstance(model_version, str) or not model_version or len(model_version) > 200:
-            raise ValueError("Invalid model version")
         predicted_label = max(scores, key=scores.get)
         label = predicted_label
-        status = "succeeded" if scores[label] >= settings.sentiment_review_threshold else "needs_review"
+        status = "succeeded"
         decision_source = "model"
-        if (status == "needs_review" and not fallback_input_too_long and settings.sentiment_literal_negative_enabled
-                and is_literal_negative_review(content)):
-            label, status, decision_source = "negative", "succeeded", "rule"
     except Exception:
         scores, label, predicted_label, model_version, status, decision_source = {}, None, None, None, "failed", None
     with Session(engine) as db, db.begin():

@@ -65,6 +65,18 @@ def test_dynamic_grants_role_lock_and_unlock_do_not_trust_old_claims(identity_cl
     assert identity_client.put('/admin/employees/1/status', headers=admin, json={"is_active": False}).status_code == 409
 
 
+def test_review_only_staff_can_open_dashboard_without_other_admin_access(identity_client):
+    user = register(identity_client)
+    pair = login(identity_client)
+    admin = bearer(login(identity_client, 'admin'))
+    identity_client.put(f'/access-control/users/{user["id"]}/role', headers=admin, json={'role_id': 3})
+    identity_client.put('/access-control/roles/3/permissions', headers=admin, json={'permission_ids': [3]})
+    response = identity_client.get('/admin/session', headers=bearer(pair))
+    assert response.status_code == 200
+    assert response.json()['permissions'] == ['reviews.moderate']
+    assert identity_client.get('/admin/employees', headers=bearer(pair)).status_code == 403
+
+
 @pytest.mark.parametrize("mutation", ["expired", "wrong-key", "wrong-issuer", "wrong-audience", "wrong-type", "no-session", "forged-role", "no-exp", "no-kid", "none-alg"])
 def test_invalid_tokens_and_role_escalation(identity_client, identity_settings, mutation):
     user = register(identity_client)
@@ -120,7 +132,7 @@ def test_private_credentials_profile_allowlist_and_freeze(identity_client, ident
     response = identity_client.post(path, headers=headers, json={"token": pair["access_token"]})
     assert set(response.json()) == {"user_id", "role", "permissions", "is_active"}
     profiles = identity_client.post("/internal/v1/users/profiles", headers=headers, json={"user_ids": [user["id"]]}).json()
-    assert set(profiles[0]) == {"id", "username", "email", "full_name", "phone", "role"}
+    assert set(profiles[0]) == {"id", "username", "email", "full_name", "phone", "role", "avatar"}
     identity_settings.writes_enabled = False
     assert identity_client.post("/auth/logout", headers=bearer(pair)).status_code == 503
     assert identity_client.post("/auth/refresh", json={"refresh_token": pair["refresh_token"]}).status_code == 503

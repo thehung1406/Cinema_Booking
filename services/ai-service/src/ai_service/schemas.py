@@ -30,6 +30,7 @@ class ChatRequest(BaseModel):
     message: str = Field(min_length=1, max_length=2000)
     conversation_id: UUID | None = None
     context: ToolContext = Field(default_factory=ToolContext)
+    reset_filters: bool = False
 
     @field_validator("message")
     @classmethod

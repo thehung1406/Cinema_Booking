@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
-import { Film, Armchair, CalendarDays, Tags, Users, BookOpen, ChartColumn, Shield, ArrowLeft, LogOut } from "lucide-react";
+import { Film, Armchair, CalendarDays, Tags, Users, BookOpen, ChartColumn, Shield, ArrowLeft, LogOut, MessageSquare } from "lucide-react";
 import api from "../../config/api";
 import { AUTH_SESSION_CHANGED_EVENT, clearSession, getAccessToken } from "../../services/authStorage";
 import "./admin.css";
@@ -12,6 +12,7 @@ const sections = [
   ["rooms", "Phòng chiếu & ghế", "rooms.manage", <Armchair size={19} aria-hidden="true" />],
   ["showtimes", "Lịch chiếu", "showtimes.manage", <CalendarDays size={19} aria-hidden="true" />],
   ["prices", "Giá vé", "seat_types.manage", <Tags size={19} aria-hidden="true" />],
+  ["reviews", "Nhận xét người dùng", "reviews.moderate", <MessageSquare size={19} aria-hidden="true" />],
   ["employees", "Nhân viên", "users.manage", <Users size={19} aria-hidden="true" />],
   ["roles", "Phân quyền", "roles.manage", <Shield size={19} aria-hidden="true" />],
   ["documents", "Tài liệu chatbot", "knowledge.manage", <BookOpen size={19} aria-hidden="true" />],
