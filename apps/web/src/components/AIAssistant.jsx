@@ -266,7 +266,7 @@ export default function AIAssistant() {
     setBusy(true); setPendingQuestion(text); setError('');
     const controller = new AbortController(); activeRequest.current = controller;
     try {
-      const { data } = await api.post('/ai/chat', { message: text, conversation_id: conversationId, context }, { timeout: 25000, signal: controller.signal });
+      const { data } = await api.post('/ai/chat', { message: text, conversation_id: conversationId, context }, { timeout: 30000, signal: controller.signal });
       if (controller.signal.aborted) return;
       setMessages(old => [...old, { role: 'user', answer: text }, { role: 'assistant', ...data }]);
       setConversationId(data.conversation_id); setContext(data.context); setQuestion('');
@@ -277,8 +277,26 @@ export default function AIAssistant() {
       });
     } catch (e) {
       if (e.code === 'ERR_CANCELED') return;
+      const status = e.response?.status;
+      if (conversationId && (status === 409 || e.code === 'ECONNABORTED')) {
+        try {
+          const { data } = await api.get(`/ai/conversations/${conversationId}`, {
+            signal: controller.signal, params: { limit: 100 },
+          });
+          if (controller.signal.aborted) return;
+          setMessages(data.messages.map(m => ({ ...m.metadata, id: m.id, role: m.role, answer: m.content })));
+          setBeforeId(data.next_before_id);
+          setContext(data.context);
+          setError(e.code === 'ECONNABORTED'
+            ? 'Yêu cầu quá thời gian chờ. Đã tải lại hội thoại để kiểm tra phản hồi mới nhất.'
+            : 'Hội thoại vừa thay đổi và đã được tải lại. Bạn có thể gửi tiếp.');
+          return;
+        } catch {
+          // Fall back to standard error handling if reloading fails.
+        }
+      }
       setError(typeof e.response?.data?.detail === 'string' ? e.response.data.detail : 'Trợ lý đang bận. Vui lòng thử lại hoặc đặt vé trực tiếp.');
-      if (e.response?.status === 404) {
+      if (status === 404) {
         setConversations(old => old.filter(c => c.id !== conversationId));
         setConversationId(null); setMessages([]); setContext({}); setBeforeId(null);
       }

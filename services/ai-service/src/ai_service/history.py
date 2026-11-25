@@ -44,7 +44,3 @@ def delete_conversation(db, user_id, conversation_id, redis=None):
     db.execute(delete(AIMessage).where(AIMessage.conversation_id == conversation.id))
     db.delete(conversation)
     db.commit()
-    try:
-        redis.delete(f"ai:context:{user_id}:{conversation_id}")
-    except Exception:
-        pass  # DB ownership is authoritative even if a stale cache entry remains.
