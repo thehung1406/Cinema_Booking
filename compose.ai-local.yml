@@ -37,7 +37,7 @@ services:
       timeout: 5s
       retries: 30
     networks: [backend]
-    restart: unless-stopped
+    restart: 'no'
   ollama-init:
     build:
       context: .
