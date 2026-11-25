@@ -83,7 +83,19 @@ class PlannerContext(ToolContext):
 
 class AssistantPlan(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    intent: Literal["knowledge", "recommend", "search_films", "get_showtimes", "get_ticket_prices", "get_seat_availability", "get_positive_films", "out_of_scope"]
+    intent: Literal[
+        "knowledge",
+        "recommend",
+        "search_films",
+        "get_showing_films",
+        "get_upcoming_films",
+        "get_showtimes",
+        "get_ticket_prices",
+        "get_seat_availability",
+        "get_positive_films",
+        "get_my_booking",
+        "out_of_scope",
+    ]
     context: PlannerContext = Field(default_factory=PlannerContext)
 
 

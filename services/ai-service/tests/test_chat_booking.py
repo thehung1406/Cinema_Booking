@@ -380,3 +380,48 @@ def test_other_customers_orders_are_indistinguishable_from_missing_orders(client
         assert lookup["status"] == "no_results"
         assert lookup["answer"] == "Không tìm thấy đơn trong tài khoản của bạn."
         assert "booking" not in lookup
+
+
+@pytest.mark.parametrize('message', ['Trạng thái booking #123 của mình?', 'Tra mã booking 123'])
+def test_personal_lookup_uses_the_requested_booking_id(client_factory, message, monkeypatch):
+    from ai_service.schemas import AssistantPlan
+
+    def owner(request):
+        assert request.headers['authorization'] == 'Bearer customer-token'
+        if request.url.path == '/bookings/123':
+            return httpx.Response(200, json={
+                'bookingId': 123, 'userId': 7, 'filmTitle': 'Phim kiểm thử',
+                'bookingStatus': 'PENDING', 'totalAmount': 170000, 'seats': [],
+            })
+        assert request.url.path == '/payment/status/123'
+        return httpx.Response(200, json={'booking_id': 123, 'fulfillment_status': 'ISSUED'})
+
+    monkeypatch.setattr(llm, 'plan', lambda *args, **kwargs: AssistantPlan(intent='get_my_booking'))
+    with client_factory(owner, llm_provider='openai', openai_api_key='test-key') as client:
+        result = client.post('/ai/chat', headers=HEADERS, json={'message': message})
+    assert result.status_code == 200, result.text
+    assert result.json()['booking']['booking_id'] == 123
+
+
+@pytest.mark.parametrize('message', [
+    'Tra booking #0 của mình', 'Tra booking #ABC', 'Tra mã booking',
+    'Tra booking #123 và #456', 'Tra đơn 123 với booking #456',
+    'Tra booking #123-456', 'Tra booking #1234567890123456789',
+    'Tra #456 và booking #123', 'Tra booking #123; 456',
+])
+def test_invalid_or_multiple_booking_ids_require_clarification(client_factory, message, monkeypatch):
+    from ai_service.schemas import AssistantPlan
+
+    requests = []
+
+    def owner(request):
+        requests.append(request.url.path)
+        return httpx.Response(404)
+
+    monkeypatch.setattr(llm, 'plan', lambda *args, **kwargs: AssistantPlan(intent='get_my_booking'))
+    with client_factory(owner, llm_provider='openai', openai_api_key='test-key') as client:
+        result = client.post('/ai/chat', headers=HEADERS, json={'message': message})
+    assert result.status_code == 200, result.text
+    assert requests == []
+    assert result.json()['status'] == 'needs_clarification'
+    assert 'booking' not in result.json()

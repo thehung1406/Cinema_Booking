@@ -45,6 +45,7 @@ def test_provider_switch_preserves_the_grounding_schema(monkeypatch, provider, b
         if provider == "openai":
             assert request.headers["Authorization"] == "Bearer test-key"
             assert body["model"] == "gpt-4.1-mini-2025-04-14" and body["store"] is False
+            assert body["temperature"] == 0
             assert body["text"]["format"]["schema"] == schema
             assert json.loads(body["input"]) == {"question": "Câu hỏi"}
             return httpx.Response(200, json={"status": "completed", "output": [
@@ -75,3 +76,77 @@ def test_openai_rejects_a_plain_http_endpoint(monkeypatch):
     monkeypatch.setenv("AI_LLM_BASE_URL", "http://llm.example.test/v1")
     with pytest.raises(ValidationError, match="OpenAI requires HTTPS"):
         Settings(database_url="sqlite://", redis_url="redis://localhost/0")
+
+
+@pytest.mark.parametrize("intent", ["get_showing_films", "get_upcoming_films", "get_my_booking"])
+def test_assistant_plan_supports_listing_and_personal_booking_intents(intent):
+    plan = AssistantPlan.model_validate({"intent": intent})
+    assert plan.intent == intent
+
+
+def test_plan_forwards_dialogue_state_to_structured(monkeypatch):
+    from datetime import date
+    from ai_service import llm
+    from ai_service.schemas import ToolContext
+
+    captured = {}
+
+    def fake_structured(settings, schema, system, payload, **kwargs):
+        captured["payload"] = payload
+        return AssistantPlan(intent="recommend")
+
+    monkeypatch.setattr(llm, "structured", fake_structured)
+    settings = Settings(database_url="sqlite://", redis_url="redis://localhost/0",
+                        llm_provider="openai", openai_api_key="test-key")
+    result = llm.plan(settings, "Đổi sang 3 người", ToolContext(), date(2026, 11, 25),
+                      pending_tool="recommend", active_recommendation=True)
+    assert result.intent == "recommend"
+    assert captured["payload"]["pending_tool"] == "recommend"
+    assert captured["payload"]["active_recommendation"] is True
+
+
+@pytest.mark.parametrize('method', ['structured', 'function_step'])
+@pytest.mark.parametrize('slot_wait', [0.5, 1.0])
+def test_model_call_spends_only_the_budget_remaining_after_acquiring_a_slot(monkeypatch, method, slot_wait):
+    from ai_service import llm
+
+    elapsed = 0.0
+    released = []
+    sent = []
+
+    class Slots:
+        def release(self):
+            released.append(True)
+
+    def acquire(settings, timeout):
+        nonlocal elapsed
+        assert timeout == pytest.approx(1.0)
+        elapsed += slot_wait
+        return Slots()
+
+    def respond(request):
+        sent.append(request.extensions['timeout']['read'])
+        return httpx.Response(200, json={'status': 'completed', 'output': [{
+            'type': 'message', 'content': [{'type': 'output_text', 'text': '{"intent":"knowledge"}'}],
+        }]})
+
+    client = httpx.Client
+    monkeypatch.setattr(llm, 'monotonic', lambda: elapsed)
+    monkeypatch.setattr(llm, '_acquire_slot', acquire)
+    monkeypatch.setattr(httpx, 'Client', lambda **kwargs: client(transport=httpx.MockTransport(respond), **kwargs))
+    settings = Settings(database_url='sqlite://', redis_url='redis://localhost/0', llm_timeout_seconds=1,
+                        llm_provider='openai', openai_api_key='test-key')
+
+    def invoke():
+        if method == 'structured':
+            return llm.structured(settings, AssistantPlan, 'Plan', {})
+        return llm.function_step(settings, 'Plan', [], [], 1.0)
+
+    if slot_wait == 1.0:
+        with pytest.raises(TimeoutError):
+            invoke()
+        assert sent == []
+    else:
+        invoke()
+        assert sent == [pytest.approx(0.5)]
+    assert released == [True]

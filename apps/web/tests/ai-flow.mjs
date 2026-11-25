@@ -18,6 +18,20 @@ let chatContext = { film_id: 1, theater_id: 1, show_date: '2030-12-01' };
 let chatFailure = null;
 const resetQuestion = 'Lịch chiếu sau khi xóa bộ lọc?';
 const resetRequests = [];
+let recoveryRequests = 0;
+let stallRecovery = false;
+let stalledRoute;
+await page.addInitScript(question => {
+  const send = XMLHttpRequest.prototype.send;
+  XMLHttpRequest.prototype.send = function (body) {
+    // Exercise Axios's native timeout path without waiting 30 seconds for the POST.
+    if (window.simulateChatPostTimeout && typeof body === 'string' && body.includes(question)) {
+      window.configuredChatTimeout = this.timeout;
+      this.timeout = 500;
+    }
+    return send.call(this, body);
+  };
+}, resetQuestion);
 const rawChatError = 'Chi tiết kỹ thuật kiểm thử';
 const doc = { id: 8, source_id: 'ui-book', title: 'Sách kiểm thử riêng', version: '1', source_url: 'https://example.org/fixture.pdf',
   effective_at: stamp, updated_at: stamp, approved: false,
@@ -33,6 +47,7 @@ await page.route('**/*', async route => {
   if (path === '/ai/chat' && req.postDataJSON().message === resetQuestion) {
     const payload = req.postDataJSON();
     resetRequests.push(payload);
+    if (chatFailure === 'timeout') return;
     if (chatFailure === 'network') return route.abort('failed');
     if (chatFailure) {
       status = chatFailure;
@@ -48,9 +63,16 @@ await page.route('**/*', async route => {
     links: [{ url: '/seat-selection/11', title: 'Chọn ghế' }],
     sources: [9, 10].map(id => ({ id: 'doc:'+id, kind: 'document', source_id: doc.source_id, title: doc.title, version: '1', text: doc.chunks[0].content, url: doc.source_url+'#page=7', provenance: { page_start: 7 } })) };
   else if (path === '/ai/conversations') body = savedChatDeleted ? [] : [savedChat];
-  else if (path === '/ai/conversations/'+chatId) body = { id: chatId, context: chatContext, messages: [
-    { id: 3, role: 'assistant', content: 'Lịch chiếu đã lưu.', metadata: {} },
-  ] };
+  else if (path === '/ai/conversations/'+chatId) {
+    recoveryRequests++;
+    if (stallRecovery) {
+      stalledRoute = route;
+      return;
+    }
+    body = { id: chatId, context: chatContext, next_before_id: null, messages: [
+      { id: 3, role: 'assistant', content: 'Lịch chiếu đã lưu.', metadata: {} },
+    ] };
+  }
   else if (path === '/ai/conversations/'+savedChat.id && req.method() === 'DELETE') {
     savedChatDeleted = true;
     body = {};
@@ -160,7 +182,6 @@ try {
     [429, /sau khoảng một phút/],
     [503, /Mình chưa tra được lúc này/],
     ['network', /Mình chưa tra được lúc này/],
-    [409, /Tải lại hội thoại rồi gửi lại/],
   ]) {
     chatFailure = failure;
     const attemptCount = resetRequests.length;
@@ -175,11 +196,43 @@ try {
       message: resetQuestion, conversation_id: chatId, context: { film_id: 2, showtime_id: null }, reset_filters: true,
     });
   }
+  for (const [failure, notice] of [
+    [409, /đã được tải lại/],
+    ['timeout', /Đã tải lại hội thoại để kiểm tra/],
+  ]) {
+    chatFailure = failure;
+    await page.evaluate(simulated => { window.simulateChatPostTimeout = simulated; }, failure === 'timeout');
+    const attempts = resetRequests.length;
+    const recoveries = recoveryRequests;
+    await send.click();
+    await log.getByText(notice).waitFor();
+    await log.getByText('Lịch chiếu đã lưu.').waitFor();
+    await send.waitFor({ state: 'visible' });
+    assert.equal(await send.isEnabled(), true);
+    assert.equal(await composer.inputValue(), resetQuestion);
+    assert.equal(recoveryRequests, recoveries + 1);
+    assert.equal(resetRequests.length, attempts + 1);
+  }
+  assert.equal(await page.evaluate(() => window.configuredChatTimeout), 30000);
+  await page.evaluate(() => { window.simulateChatPostTimeout = false; });
+
+  chatFailure = 409;
+  stallRecovery = true;
+  const attempts = resetRequests.length;
+  const recoveries = recoveryRequests;
+  await send.click();
+  await log.getByText(/Tải lại hội thoại rồi gửi lại/).waitFor({ timeout: 9000 });
+  assert.equal(await send.isEnabled(), true);
+  assert.equal(await composer.inputValue(), resetQuestion);
+  assert.equal(recoveryRequests, recoveries + 1);
+  assert.equal(resetRequests.length, attempts + 1);
+  stallRecovery = false;
+  await stalledRoute?.abort().catch(() => {});
+
   await page.getByRole('button', { name: 'Lịch sử', exact: true }).click();
   await page.getByRole('button', { name: 'Tải lại hội thoại', exact: true }).click();
-  await log.getByText('Lịch chiếu đã lưu.').waitFor();
+  await log.getByText(/Tải lại hội thoại rồi gửi lại/).waitFor({ state: 'hidden' });
   assert.equal(await composer.inputValue(), resetQuestion);
-  assert.equal(await log.getByText(/Tải lại hội thoại rồi gửi lại/).count(), 0);
   chatFailure = null;
   await send.click();
   await log.getByText('Đã tra lịch với bộ lọc hiện tại.').waitFor();
