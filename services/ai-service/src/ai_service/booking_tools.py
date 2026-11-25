@@ -12,9 +12,14 @@ from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, TypeAdapter, V
 
 Id = Annotated[int, Field(gt=0, strict=True)]
 Money = Annotated[Decimal, Field(ge=0, max_digits=12, decimal_places=2)]
-ORDER_ID = re.compile(r"\b(?:ma\s+don(?:\s+hang)?\s*#?\s*|don(?:\s+hang)?\s*#\s*|don\s+)([1-9]\d{0,17})\b")
+ORDER_REFERENCE = re.compile(
+    r"\b(?:(?:ma\s+(?:don(?:\s+hang)?|booking)|booking\s+id)\b\s*[:=]?\s*#?\s*"
+    r"|(?:don(?:\s+hang)?|booking)\b\s*[:=]?\s*(?:#\s*|(?=[+-]?[0-9])))"
+)
+ORDER_TOKEN = re.compile(r"[^\s,;!?()]+")
+ORDER_ID = re.compile(r"[1-9][0-9]{0,17}")
 PERSONAL_ORDER = re.compile(
-    r"\b(?:ve (?:vua mua|da mua|da dat|cua (?:toi|minh))|don (?:hang )?(?:cua (?:toi|minh)|toi|vua dat|gan nhat|moi nhat)|"
+    r"\b(?:ve (?:vua mua|da mua|da dat|cua (?:toi|minh))|(?:don (?:hang )?|booking )(?:cua (?:toi|minh)|toi|vua dat|gan nhat|moi nhat)|"
     r"(?:da tra tien|da thanh toan).{0,80}(?:chua (?:thay|co|nhan duoc) ve|ve dau)|"
     r"(?:xem|tra cuu|kiem tra) (?:trang thai )?(?:don dat ve|ve cua toi))\b"
 )
@@ -30,7 +35,7 @@ SAVED_LOOKUP = "Bạn đã tra đơn ở lượt này. Hãy gửi lại câu h�
 
 
 def is_personal_order(text):
-    return bool(ORDER_ID.search(text) or PERSONAL_ORDER.search(text))
+    return bool(ORDER_REFERENCE.search(text) or PERSONAL_ORDER.search(text))
 
 
 class SeatSelection(BaseModel):
@@ -171,8 +176,21 @@ class BookingTools:
             raise HTTPException(503, "Chưa xác minh được kết quả tạo đơn.") from exc
 
     def get_my_booking(self, text):
-        match = ORDER_ID.search(text)
-        order_id = int(match[1]) if match else None
+        references = list(ORDER_REFERENCE.finditer(text))
+        order_id = None
+        clarify = ("Bạn vui lòng cho mình một mã đơn đặt vé hợp lệ để tra đúng đơn.", "needs_clarification", None)
+        if references:
+            reference = references[0]
+            token = ORDER_TOKEN.match(text, reference.end())
+            candidate = token[0].rstrip(".") if token else ""
+            if len(references) != 1 or not ORDER_ID.fullmatch(candidate):
+                return clarify
+            remaining = text[token.end():]
+            if "#" in text[:reference.start()] or "#" in remaining or re.match(r"(?:[,;]|\s+(?:va|hoac)\b)\s*[0-9]", remaining):
+                return clarify
+            order_id = int(candidate)
+        elif "#" in text or not PERSONAL_ORDER.search(text):
+            return clarify
         try:
             raw = self._request(self.settings.booking_origin, "GET", f"/bookings/{order_id}" if order_id else "/bookings?limit=1")
             if not order_id:

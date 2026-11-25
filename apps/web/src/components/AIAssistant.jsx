@@ -302,21 +302,26 @@ export default function AIAssistant() {
     } catch (e) {
       const status = e.response?.status;
       if (controller.signal.aborted || e.code === 'ERR_CANCELED' || status === 401) return;
-      if (conversationId && (status === 409 || e.code === 'ECONNABORTED')) {
+      const timedOut = e.code === 'ECONNABORTED';
+      if (conversationId && (status === 409 || timedOut)) {
         try {
           const { data } = await api.get(`/ai/conversations/${conversationId}`, {
-            signal: controller.signal, params: { limit: 100 },
+            signal: controller.signal, params: { limit: 100 }, timeout: 5000,
           });
           if (controller.signal.aborted) return;
           setMessages(data.messages.map(m => ({ ...m.metadata, id: m.id, role: m.role, answer: m.content })));
           setBeforeId(data.next_before_id);
           if (!resetFiltersPending) setContext(data.context);
-          setChatNotice(e.code === 'ECONNABORTED'
+          setChatNotice(timedOut
             ? 'Yêu cầu quá thời gian chờ. Đã tải lại hội thoại để kiểm tra phản hồi mới nhất.'
             : 'Hội thoại vừa thay đổi và đã được tải lại. Bạn có thể gửi tiếp.');
           return;
         } catch {
-          // Fall back to standard error handling if reloading fails.
+          if (controller.signal.aborted) return;
+          if (timedOut) {
+            setChatNotice('Yêu cầu quá thời gian chờ. Bạn mở Lịch sử, chọn Tải lại hội thoại để kiểm tra trước khi gửi lại nhé.');
+            return;
+          }
         }
       }
       setChatNotice(CHAT_FAILURE_MESSAGES[status] || 'Mình chưa tra được lúc này. Bạn thử gửi lại nhé.');

@@ -300,3 +300,89 @@ def test_infer_preferences_supports_spaced_hour_and_extra_genres():
     ctx = chat.infer_preferences('Tôi muốn xem phim viễn tưởng sau 19 giờ', ToolContext())
     assert ctx.genre == 'Viễn tưởng'
     assert ctx.start_after == time(19, 0)
+
+
+@pytest.mark.parametrize('message', [
+    'Phim nào hợp cho hai người, tổng dưới 200k?',
+    'Phim hài nào hợp cho hai người, tổng dưới 200k?',
+    'Phim nào hợp cho hai người, tổng 200.000đ?',
+])
+def test_film_discovery_keeps_group_budget_through_date_followup(monkeypatch, message):
+    from types import SimpleNamespace
+
+    class RecommendationReader(Reader):
+        settings = SimpleNamespace(booking_origin='http://booking')
+        options = None
+
+        def call(self, origin, method, path, *, json):
+            assert path == '/internal/v1/booking-read/options'
+            self.options = json
+            return {'items': []}
+
+        def showing_films(self, context):
+            pytest.fail('A catalogue list ignores group size and budget')
+
+    engine = create_engine('sqlite://')
+    Base.metadata.create_all(engine)
+    settings = Settings(database_url='sqlite://', redis_url='redis://localhost/0',
+                        llm_provider='openai', openai_api_key='test-key')
+    reader, cache = RecommendationReader(), FakeCache()
+    monkeypatch.setattr(llm, 'plan', lambda *args, **kwargs: AssistantPlan(intent='get_showing_films'))
+    with Session(engine) as db:
+        first = chat.chat(db, 1, ChatRequest(message=message),
+                          cache, reader, settings)
+        assert first['status'] == 'needs_clarification' and first['missing_fields'] == ['show_date']
+        assert first['context']['party_size'] == 2
+        assert first['context']['budget_amount'] == '200000'
+        assert reader.options is None
+
+        chat.chat(db, 1, ChatRequest(message=Reader.day.isoformat(), conversation_id=first['conversation_id']),
+                  cache, reader, settings)
+    assert reader.options['party_size'] == 2
+    assert reader.options['budget_total'] == '200000'
+    assert reader.options['show_date'] == Reader.day.isoformat()
+    engine.dispose()
+
+
+@pytest.mark.parametrize('message,planned_date,selected_date,expected', [
+    ('Rạp có gì xem thứ Sáu này?', '2030-12-06', '2030-12-07', '2030-12-06'),
+    ('Rạp có gì xem 2030-12-08?', '2030-12-06', '2030-12-07', '2030-12-08'),
+    ('Dạo này rạp có gì xem?', None, '2030-12-07', '2030-12-07'),
+    ('Dạo này rạp có gì xem?', None, None, None),
+    ('Dạo này rạp có gì xem?', Reader.day.isoformat(), None, None),
+])
+def test_model_listing_only_uses_dates_from_the_current_turn(message, planned_date, selected_date, expected, monkeypatch):
+    from ai_service.schemas import PlannerContext
+
+    class ListingReader(Reader):
+        listing_context = None
+
+        def showing_films(self, context):
+            self.listing_context = context
+            return [], False
+
+    engine = create_engine('sqlite://')
+    Base.metadata.create_all(engine)
+    settings = Settings(database_url='sqlite://', redis_url='redis://localhost/0',
+                        llm_provider='openai', openai_api_key='test-key')
+    reader, cache = ListingReader(), FakeCache()
+    monkeypatch.setattr(llm, 'plan', lambda *args, **kwargs: AssistantPlan(
+        intent='get_showing_films', context=PlannerContext(show_date=planned_date)))
+    with Session(engine) as db:
+        first = chat.chat(db, 1, ChatRequest(message='Giá vé mã suất 1?',
+                          context=ToolContext(film_id=1, show_date=Reader.day)), cache, reader, settings)
+        assert first['context']['showtime_id'] == 1
+        assert first['context']['show_date'] == Reader.day.isoformat()
+        turn_context = ToolContext(**(first['context'] | {'show_date': selected_date or Reader.day}))
+        result = chat.chat(db, 1, ChatRequest(message=message, context=turn_context,
+                           conversation_id=first['conversation_id']), cache, reader, settings)
+    assert result['tool'] == 'get_showing_films'
+    assert reader.listing_context.model_dump(mode='json')['show_date'] == expected
+    assert reader.listing_context.film_id is reader.listing_context.showtime_id is None
+    engine.dispose()
+
+
+def test_total_ticket_count_is_not_a_budget():
+    context = chat.infer_preferences('Phim nào hợp cho tổng 2 người?', ToolContext())
+    assert context.party_size == 2
+    assert context.budget_amount is None

@@ -104,7 +104,7 @@ def run_lookup(reader, settings, question, context, evening, party, deadline):
                     raise TimeoutError("Chat inference budget exhausted")
                 decision = structured(settings.model_copy(update={"llm_timeout_seconds": timeout}), LookupDecision,
                                       INSTRUCTIONS + " Trả JSON đúng schema, dùng name=stop để kết thúc.",
-                                      request | {"observations": observations})
+                                      request | {"observations": observations}, deadline=deadline)
                 if decision.name == "stop":
                     stop = "model_finished"
                     break

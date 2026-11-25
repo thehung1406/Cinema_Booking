@@ -25,7 +25,7 @@ from .knowledge_retrieval import retrieve_knowledge
 from .history import owned_conversation
 
 LABELS = {"film_id": "phim", "theater_id": "rạp", "show_date": "ngày xem", "showtime_id": "mã suất chiếu"}
-# Owner reads have a 20-second deadline and the browser waits 25 seconds.
+# Owner reads have a 20-second deadline and the browser waits 30 seconds.
 PLANNER_TIMEOUT = 5
 CHAT_INFERENCE_BUDGET = 16
 RECOMMENDATION_FILTERS = ("show_date", "genre", "party_size", "budget_amount", "budget_scope", "start_after")
@@ -36,6 +36,17 @@ SHOWTIME_ORDINAL = re.compile(
     r"\bsuat\s+(?:(dau(?:\s+tien)?)|thu\s*(\d{1,2}|nhat|hai|ba|tu|bon|nam|sau|bay|tam|chin|muoi))\b"
 )
 ORDINAL_WORDS = {"nhat": 1, "hai": 2, "ba": 3, "tu": 4, "bon": 4, "nam": 5, "sau": 6, "bay": 7, "tam": 8, "chin": 9, "muoi": 10}
+PARTY_PATTERN = re.compile(r"\b(\d{1,2}|hai|ba|bon|nam)\s*(?:nguoi|ve)\b")
+VND_UNITS = r"k|nghin|ngan|trieu|tr|vnd|dong|d"
+BUDGET_PATTERN = re.compile(
+    rf"\b(?:duoi|ngan sach|toi da|tong(?=\s*\d+(?:[.,]\d+)?\s*(?:{VND_UNITS})\b))"
+    rf"\s*(\d+(?:[.,]\d+)?)\s*({VND_UNITS})?\b"
+)
+DATE_CUE = re.compile(
+    r"\b(?:thu\s+(?:hai|ba|tu|nam|sau|bay|[2-7])|chu nhat|cuoi (?:tuan|thang)|"
+    r"(?:tuan|thang) (?:nay|sau|toi|ke tiep)|ngay\s+\d{1,2}|\d{1,2}[/-]\d{1,2}|"
+    r"hom nay|ngay mai|ngay kia|toi nay|toi mai)\b"
+)
 START_AFTER_PATTERN = re.compile(r"\b(?:sau|tu)\s*(\d{1,2})(?:\s*(?:h|gio)|:)\s*(\d{2})?")
 BOOKING_REQUEST = re.compile(r"\b(?:dat|mua)(?: [\w]+){0,4} ve\b")
 BOOKING_ACTION = re.compile(r"\b(?:dat ho|giu ho|thanh toan ho|xac nhan thanh toan)\b")
@@ -114,8 +125,12 @@ def detect_intent(message):
 
 
 def is_filtered_film_discovery(text):
-    return (re.search(CURRENT_FILM_PATTERN, text) and not re.search(UPCOMING_FILM_PATTERN, text)
-            and (GENRE_DISCOVERY.search(text) or (re.search(FILM_LIST_PATTERN, text) and START_AFTER_PATTERN.search(text))))
+    if re.search(UPCOMING_FILM_PATTERN, text):
+        return False
+    genre = GENRE_DISCOVERY.search(text)
+    if (re.search(FILM_LIST_PATTERN, text) or genre) and (PARTY_PATTERN.search(text) or BUDGET_PATTERN.search(text) or START_AFTER_PATTERN.search(text)):
+        return True
+    return bool(genre and re.search(CURRENT_FILM_PATTERN, text))
 
 
 def is_film_education(text):
@@ -182,11 +197,11 @@ def infer_preferences(message, context):
     for phrase, genre in GENRE_PHRASES.items():
         if phrase in text:
             context.genre = genre
-    party = re.search(r"\b(\d{1,2}|hai|ba|bon|nam)\s*(?:nguoi|ve)\b", text)
+    party = PARTY_PATTERN.search(text)
     if party:
         value = {"hai": 2, "ba": 3, "bon": 4, "nam": 5}.get(party[1])
         context.party_size = value if value is not None else int(party[1])
-    amount = re.search(r"(?:duoi|ngan sach|toi da)\s*(\d+(?:[.,]\d+)?)\s*(k|nghin|ngan|trieu|tr|vnd|dong)?\b", text)
+    amount = BUDGET_PATTERN.search(text)
     if amount:
         raw = amount[1]
         if re.fullmatch(r"\d+[.,]\d{3}", raw):
@@ -361,6 +376,7 @@ def chat(db, user_id, request, redis, reader, config, *, graph=None, booking=Non
                 for field in RECOMMENDATION_FILTERS)
     )
     proposed_intent, planner_mode = None, "retrieval_only"
+    planned_listing_date = None
     agent_result, agent_context_ready = None, False
     if config.react_lookup_enabled and config.llm_provider != "disabled" and not (personal_lookup or explicit_knowledge):
         from . import react_lookup
@@ -400,7 +416,9 @@ def chat(db, user_id, request, redis, reader, config, *, graph=None, booking=Non
     elif config.llm_provider != "disabled":
         try:
             from .llm import plan
-            timeout = min(config.llm_timeout_seconds, PLANNER_TIMEOUT, inference_deadline - monotonic())
+            planner_start = monotonic()
+            planner_deadline = min(inference_deadline, planner_start + PLANNER_TIMEOUT)
+            timeout = min(config.llm_timeout_seconds, planner_deadline - planner_start)
             if timeout <= 0:
                 raise TimeoutError("Chat inference budget exhausted")
             planner_settings = config.model_copy(update={"llm_timeout_seconds": timeout})
@@ -411,6 +429,7 @@ def chat(db, user_id, request, redis, reader, config, *, graph=None, booking=Non
                 datetime.now(ZoneInfo("Asia/Ho_Chi_Minh")).date(),
                 pending_tool,
                 bool(previous.get("active_recommendation")),
+                planner_deadline,
             )
             patch = proposed.context.model_dump(mode="json", exclude_unset=True, exclude_none=True,
                 exclude={"film_id", "theater_id", "showtime_id"})
@@ -422,6 +441,8 @@ def chat(db, user_id, request, redis, reader, config, *, graph=None, booking=Non
                 if patch.get(field) == default and getattr(context, field) != default:
                     patch.pop(field)  # A model default must not erase a known preference.
             context = ToolContext.model_validate(context.model_dump(mode="json") | patch)
+            if DATE_CUE.search(message_text):
+                planned_listing_date = proposed.context.show_date
             proposed_intent, planner_mode = proposed.intent, "model_planned"
         except Exception:
             planner_mode = "model_unavailable"
@@ -438,7 +459,9 @@ def chat(db, user_id, request, redis, reader, config, *, graph=None, booking=Non
     is_personal = preliminary == "get_my_booking"
     if is_listing and not listing:
         selected_date = request.context.show_date if request.context.show_date != previous_context.show_date else None
-        context = context.model_copy(update={"film_id": None, "showtime_id": None, "show_date": selected_date})
+        context = context.model_copy(update={
+            "film_id": None, "showtime_id": None, "show_date": planned_listing_date or selected_date,
+        })
     read_context = not (is_listing or agent_result is not None or agent_context_ready) and (
         preliminary not in {"knowledge", "out_of_scope", "get_my_booking"}
         or (bool(pending_tool) and preliminary == "knowledge" and not explicit_knowledge)

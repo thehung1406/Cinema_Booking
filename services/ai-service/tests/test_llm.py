@@ -103,3 +103,50 @@ def test_plan_forwards_dialogue_state_to_structured(monkeypatch):
     assert result.intent == "recommend"
     assert captured["payload"]["pending_tool"] == "recommend"
     assert captured["payload"]["active_recommendation"] is True
+
+
+@pytest.mark.parametrize('method', ['structured', 'function_step'])
+@pytest.mark.parametrize('slot_wait', [0.5, 1.0])
+def test_model_call_spends_only_the_budget_remaining_after_acquiring_a_slot(monkeypatch, method, slot_wait):
+    from ai_service import llm
+
+    elapsed = 0.0
+    released = []
+    sent = []
+
+    class Slots:
+        def release(self):
+            released.append(True)
+
+    def acquire(settings, timeout):
+        nonlocal elapsed
+        assert timeout == pytest.approx(1.0)
+        elapsed += slot_wait
+        return Slots()
+
+    def respond(request):
+        sent.append(request.extensions['timeout']['read'])
+        return httpx.Response(200, json={'status': 'completed', 'output': [{
+            'type': 'message', 'content': [{'type': 'output_text', 'text': '{"intent":"knowledge"}'}],
+        }]})
+
+    client = httpx.Client
+    monkeypatch.setattr(llm, 'monotonic', lambda: elapsed)
+    monkeypatch.setattr(llm, '_acquire_slot', acquire)
+    monkeypatch.setattr(httpx, 'Client', lambda **kwargs: client(transport=httpx.MockTransport(respond), **kwargs))
+    settings = Settings(database_url='sqlite://', redis_url='redis://localhost/0', llm_timeout_seconds=1,
+                        llm_provider='openai', openai_api_key='test-key')
+
+    def invoke():
+        if method == 'structured':
+            return llm.structured(settings, AssistantPlan, 'Plan', {})
+        return llm.function_step(settings, 'Plan', [], [], 1.0)
+
+    if slot_wait == 1.0:
+        with pytest.raises(TimeoutError):
+            invoke()
+        assert sent == []
+    else:
+        invoke()
+        assert sent == [pytest.approx(0.5)]
+    assert released == [True]
